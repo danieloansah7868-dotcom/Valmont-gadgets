@@ -1,10 +1,12 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 // PRIVATE WHOLESALE PROFIT FORMULA ARCHITECTURE
 // Only retail prices are rendered publicly.
 // Profit = retail - wholesale - delivery/payment costs
 // Wholesale ledger stays private in backend calculation, never in UI.
+
+type ThemeId = "light" | "navy" | "gold";
 
 type CategoryId = "all" | "iphones" | "samsung" | "laptops" | "audio" | "chargers";
 
@@ -416,6 +418,28 @@ export default function Page() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
+  const [theme, setTheme] = useState<ThemeId>("light");
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("valmont_theme");
+    const initial: ThemeId = saved === "navy" || saved === "gold" ? saved : "light";
+    setTheme(initial);
+    document.documentElement.setAttribute("data-theme", initial);
+  }, []);
+
+  const applyTheme = (nextTheme: ThemeId) => {
+    setTheme(nextTheme);
+    document.documentElement.setAttribute("data-theme", nextTheme);
+    window.localStorage.setItem("valmont_theme", nextTheme);
+  };
+
+  // Theme-specific corporate surface classes.
+  const headerBg = theme === "navy" ? "bg-[#0b1a38] border-[#1e345e]" : theme === "gold" ? "bg-white border-[#f58c14] border-b-2" : "bg-white border-gray-200";
+  const cardBg = theme === "navy" ? "bg-[#132144] border-[#1e345e] text-white" : theme === "gold" ? "bg-white border-amber-200 hover:border-[#f58c14] hover:shadow-[0_12px_28px_rgba(245,140,20,.16)]" : "bg-white border-gray-200";
+  const searchBg = theme === "navy" ? "bg-[#122040] border-[#1e345e]" : "bg-white border-gray-300";
+  const pillInactive = theme === "navy" ? "bg-[#132144] text-[#8aa0c8] border-[#1e345e]" : theme === "gold" ? "bg-[#fffef7] text-[#0b1a38] border-amber-200" : "bg-white text-[#0b1a38] border-gray-300";
+  const pageBg = theme === "navy" ? "bg-[#070e20] text-white" : theme === "gold" ? "bg-[#fffaf0] text-[#0b1a38]" : "bg-[#f6f7f9] text-[#0b1a38]";
+  const mutedText = theme === "navy" ? "text-[#8aa0c8]" : "text-gray-500";
 
   const filtered = useMemo(() => {
     return PRODUCTS.filter((p) => {
@@ -456,8 +480,8 @@ export default function Page() {
   }, [cart, subtotal]);
 
   return (
-    <div className="min-h-screen bg-[#f6f7f9] text-[#0b1a38] antialiased">
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap'); *{font-family:'Inter',sans-serif;} .scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none} .scrollbar-hide::-webkit-scrollbar{display:none}`}</style>
+    <div className={`min-h-screen ${pageBg} antialiased`}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap'); *{font-family:'Inter',sans-serif;} .scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none} .scrollbar-hide::-webkit-scrollbar{display:none} .theme-btn.is-active{background:#0b1a38;color:#fff}`}</style>
 
       <div className="bg-[#0b1a38] text-white text-center py-2.5 px-4">
         <p className="text-[10px] md:text-[11px] font-extrabold tracking-[0.14em] uppercase leading-relaxed">
@@ -465,26 +489,31 @@ export default function Page() {
         </p>
       </div>
 
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+      <header className={`sticky top-0 z-40 border-b ${headerBg}`}>
         <div className="max-w-[1280px] mx-auto px-4 py-3.5 flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="font-black text-[15px] md:text-[18px] tracking-tight truncate">VALMONT GADGETS <span className="font-medium hidden md:inline text-gray-500">— Phones · Laptops · Smart Audio · Accessories</span></h1>
-            <p className="md:hidden text-[10px] font-semibold tracking-wide text-gray-500 uppercase mt-0.5">Phones · Laptops · Smart Audio · Accessories</p>
+            <h1 className={`font-black text-[15px] md:text-[18px] tracking-tight truncate ${theme === "navy" ? "text-white" : "text-[#0b1a38]"}`}>VALMONT GADGETS <span className={`font-medium hidden md:inline ${mutedText}`}>— Phones · Laptops · Smart Audio · Accessories</span></h1>
+            <p className={`md:hidden text-[10px] font-semibold tracking-wide uppercase mt-0.5 ${mutedText}`}>Phones · Laptops · Smart Audio · Accessories</p>
+          </div>
+          <div className={`hidden md:flex items-center rounded-full border p-1 ${theme === "navy" ? "bg-[#122040] border-[#1e345e]" : theme === "gold" ? "bg-[#fff7e6] border-amber-200" : "bg-gray-100 border-gray-300"}`} role="group" aria-label="Theme selection">
+            <span className={`px-2 text-[9px] font-black tracking-widest uppercase ${mutedText}`}>Theme</span>
+            {(["light", "navy", "gold"] as ThemeId[]).map((choice) => <button key={choice} data-theme={choice} onClick={() => applyTheme(choice)} aria-pressed={theme === choice} className={`theme-btn px-2 py-1 rounded-full text-[9px] font-black tracking-widest uppercase ${theme === choice ? "is-active" : ""}`}>{choice}</button>)}
           </div>
           <button onClick={() => setDrawerOpen(true)} className="bg-[#f58c14] hover:bg-[#e67f0f] text-white font-extrabold text-[12px] tracking-wide px-5 py-2.5 rounded-full shadow-sm transition">Cart ({totalQty})</button>
         </div>
         <div className="max-w-[1280px] mx-auto px-4 pb-3.5">
-          <div className="flex w-full rounded-xl overflow-hidden border border-gray-300 focus-within:border-[#0b1a38] bg-white">
-            <input value={searchInput} onChange={(e) => setSearchInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && setQuery(searchInput)} placeholder="Search iPhones, MacBooks, Samsung Galaxy, audio..." className="flex-1 px-4 py-3 text-[14px] font-medium placeholder:text-gray-400 outline-none" />
+          <div className="md:hidden flex justify-center mb-3"><div className={`flex items-center rounded-full border p-1 ${theme === "navy" ? "bg-[#122040] border-[#1e345e]" : theme === "gold" ? "bg-[#fff7e6] border-amber-200" : "bg-gray-100 border-gray-300"}`} role="group" aria-label="Theme selection"><span className={`px-2 text-[9px] font-black tracking-widest uppercase ${mutedText}`}>Theme</span>{(["light", "navy", "gold"] as ThemeId[]).map((choice) => <button key={choice} data-theme={choice} onClick={() => applyTheme(choice)} aria-pressed={theme === choice} className={`theme-btn px-2 py-1 rounded-full text-[9px] font-black tracking-widest uppercase ${theme === choice ? "is-active" : ""}`}>{choice}</button>)}</div></div>
+          <div className={`flex w-full rounded-xl overflow-hidden border focus-within:border-[#0b1a38] ${searchBg}`}>
+            <input value={searchInput} onChange={(e) => setSearchInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && setQuery(searchInput)} placeholder="Search iPhones, MacBooks, Samsung Galaxy, audio..." className={`flex-1 px-4 py-3 text-[14px] font-medium placeholder:text-gray-400 outline-none ${theme === "navy" ? "bg-[#122040] text-white" : "bg-white"}`} />
             <button onClick={() => setQuery(searchInput)} className="bg-[#0b1a38] hover:bg-black text-white font-extrabold text-[13px] tracking-widest px-7 md:px-8 py-3 transition">GO</button>
           </div>
         </div>
       </header>
 
-      <div className="bg-white border-b border-gray-200">
+      <div className={`border-b ${theme === "navy" ? "bg-[#0e1a33] border-[#1e345e]" : "bg-white border-gray-200"}`}>
         <div className="max-w-[1280px] mx-auto px-4 py-2.5 flex flex-wrap items-center justify-center md:justify-between gap-2 text-center">
           <p className="text-[11px] md:text-[12px] font-bold tracking-wide uppercase">Call to Order: 054 245 1578 · Pay with MoMo & Card · Swap Deals Accepted</p>
-          <p className="hidden md:block text-[10px] font-semibold text-gray-500 tracking-wide uppercase">Accra Showroom • East Legon • Open Mon-Sat 9AM-7PM</p>
+          <p className={`hidden md:block text-[10px] font-semibold tracking-wide uppercase ${mutedText}`}>Accra Showroom • East Legon • Open Mon-Sat 9AM-7PM</p>
         </div>
       </div>
 
@@ -501,7 +530,7 @@ export default function Page() {
               const count = cat.id === "all" ? PRODUCTS.length : PRODUCTS.filter((p) => p.category === cat.id).length;
               const active = activeCat === cat.id;
               return (
-                <button key={cat.id} onClick={() => setActiveCat(cat.id)} className={`shrink-0 whitespace-nowrap px-4 py-2.5 rounded-full text-[11px] font-extrabold tracking-widest uppercase border transition ${active ? "bg-[#0b1a38] text-white border-[#0b1a38] shadow" : "bg-white text-[#0b1a38] border-gray-300 hover:border-[#0b1a38]"}`}>
+                <button key={cat.id} onClick={() => setActiveCat(cat.id)} className={`shrink-0 whitespace-nowrap px-4 py-2.5 rounded-full text-[11px] font-extrabold tracking-widest uppercase border transition ${active ? (theme === "gold" ? "bg-[#f58c14] text-white border-[#f58c14] shadow" : "bg-[#0b1a38] text-white border-[#0b1a38] shadow") : `${pillInactive} hover:border-[#0b1a38]`}`}>
                   {cat.label} {cat.id === "all" ? `(${count})` : ""}
                 </button>
               );
@@ -510,7 +539,7 @@ export default function Page() {
         </div>
 
         <div className="flex items-center justify-between mb-3 px-1">
-          <p className="text-[11px] font-bold tracking-wide uppercase text-gray-500">{filtered.length} VERIFIED PRODUCTS {activeCat !== "all" ? `IN ${CATEGORIES.find((c) => c.id === activeCat)?.label.toUpperCase()}` : ""} {query ? `FOR "${query.toUpperCase()}"` : ""}</p>
+          <p className={`text-[11px] font-bold tracking-wide uppercase ${mutedText}`}>{filtered.length} VERIFIED PRODUCTS {activeCat !== "all" ? `IN ${CATEGORIES.find((c) => c.id === activeCat)?.label.toUpperCase()}` : ""} {query ? `FOR "${query.toUpperCase()}"` : ""}</p>
           <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400"><span>Verified Stock</span><span className="w-2 h-2 bg-[#16a34a] rounded-full inline-block"></span></div>
         </div>
 
@@ -518,20 +547,20 @@ export default function Page() {
           {filtered.map((product) => {
             const badgeColor = product.badge === "HOT" ? "bg-[#dc2626]" : product.badge === "DEAL" ? "bg-[#f58c14]" : "bg-[#0b1a38]";
             return (
-              <div key={product.id} className="bg-white rounded-xl border border-gray-200 p-3 flex flex-col hover:shadow-md transition-shadow">
+              <div key={product.id} className={`rounded-xl border p-3 flex flex-col hover:shadow-md transition-shadow ${cardBg}`}>
                 <div className="flex justify-between items-center mb-2">
                   <span className={`text-[9px] font-black tracking-widest uppercase px-2 py-1 rounded ${badgeColor} text-white`}>{product.badge}</span>
                   <span className="text-[9px] font-semibold text-gray-400 tracking-wide">{product.id}</span>
                 </div>
-                <div className="bg-[#fcfcfd] rounded-lg aspect-square flex items-center justify-center mb-3 p-3 border border-gray-100 overflow-hidden">
+                <div className={`rounded-lg aspect-square flex items-center justify-center mb-3 p-3 border overflow-hidden ${theme === "navy" ? "bg-[#0e1a33] border-[#1e345e]" : "bg-[#fcfcfd] border-gray-100"}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={product.image} alt={product.name} loading="lazy" className="object-contain w-full h-full max-h-[160px] mix-blend-multiply" />
                 </div>
-                <h3 className="font-extrabold text-[12.5px] leading-[1.25] text-[#0b1a38] mb-1 line-clamp-2 min-h-[32px]">{product.name}</h3>
-                <p className="text-[10.5px] text-gray-500 mb-2 leading-[1.3] font-medium line-clamp-2 min-h-[28px]">{product.specs}</p>
+                <h3 className={`font-extrabold text-[12.5px] leading-[1.25] mb-1 line-clamp-2 min-h-[32px] ${theme === "navy" ? "text-white" : "text-[#0b1a38]"}`}>{product.name}</h3>
+                <p className={`text-[10.5px] mb-2 leading-[1.3] font-medium line-clamp-2 min-h-[28px] ${theme === "navy" ? "text-[#8aa0c8]" : "text-gray-500"}`}>{product.specs}</p>
                 <div className="mt-auto">
                   <div className="flex items-baseline gap-2 mb-1">
-                    <span className="font-black text-[15px] text-[#0b1a38] tracking-tight">{formatGH(product.retail)}</span>
+                    <span className={`font-black text-[15px] tracking-tight ${theme === "navy" ? "text-white" : "text-[#0b1a38]"}`}>{formatGH(product.retail)}</span>
                     <span className="text-[11px] text-gray-400 line-through font-medium">{formatGH(product.compareAt)}</span>
                   </div>
                   <p className="text-[10px] font-bold text-[#16a34a] mb-3 tracking-wide uppercase">{product.stock}</p>
@@ -546,9 +575,9 @@ export default function Page() {
         </div>
 
         <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="bg-white border border-gray-200 rounded-xl p-4"><p className="text-[11px] font-extrabold tracking-widest uppercase mb-1">12-Month Warranty</p><p className="text-[12px] text-gray-600 leading-relaxed font-medium">Every device sealed, verified IMEI, with official Valmont warranty card and receipt.</p></div>
-          <div className="bg-white border border-gray-200 rounded-xl p-4"><p className="text-[11px] font-extrabold tracking-widest uppercase mb-1">Express Accra Delivery</p><p className="text-[12px] text-gray-600 leading-relaxed font-medium">Same-day delivery in Accra. Pay on delivery available. Inter-regional dispatch within 24 hours.</p></div>
-          <div className="bg-white border border-gray-200 rounded-xl p-4"><p className="text-[11px] font-extrabold tracking-widest uppercase mb-1">Swap & Trade-In</p><p className="text-[12px] text-gray-600 leading-relaxed font-medium">Trade your old phone or laptop for instant value. MoMo, Bank Transfer, and Card accepted.</p></div>
+          <div className={`border rounded-xl p-4 ${cardBg}`}><p className="text-[11px] font-extrabold tracking-widest uppercase mb-1">12-Month Warranty</p><p className="text-[12px] text-gray-600 leading-relaxed font-medium">Every device sealed, verified IMEI, with official Valmont warranty card and receipt.</p></div>
+          <div className={`border rounded-xl p-4 ${cardBg}`}><p className="text-[11px] font-extrabold tracking-widest uppercase mb-1">Express Accra Delivery</p><p className="text-[12px] text-gray-600 leading-relaxed font-medium">Same-day delivery in Accra. Pay on delivery available. Inter-regional dispatch within 24 hours.</p></div>
+          <div className={`border rounded-xl p-4 ${cardBg}`}><p className="text-[11px] font-extrabold tracking-widest uppercase mb-1">Swap & Trade-In</p><p className="text-[12px] text-gray-600 leading-relaxed font-medium">Trade your old phone or laptop for instant value. MoMo, Bank Transfer, and Card accepted.</p></div>
         </div>
       </main>
 
@@ -562,10 +591,11 @@ export default function Page() {
         <div className="border-t border-white/10"><div className="max-w-[1280px] mx-auto px-4 py-4 flex flex-col md:flex-row justify-between gap-2 text-[10px] tracking-widest uppercase font-semibold text-gray-400"><span>© 2026 VALMONT GADGETS — ALL RIGHTS RESERVED</span><span>BUILT FOR GHANA • DEEP NAVY & GOLD • ZERO EMOJI CORPORATE STANDARD</span></div></div>
       </footer>
 
+      <p className="sr-only" aria-live="polite">THEME ACTIVE: {theme.toUpperCase()}</p>
       {drawerOpen && (
         <div className="fixed inset-0 z-[60]">
           <div onClick={() => setDrawerOpen(false)} className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
-          <div className="absolute right-0 top-0 h-full w-full max-w-[420px] bg-white shadow-2xl flex flex-col">
+          <div className={`absolute right-0 top-0 h-full w-full max-w-[420px] shadow-2xl flex flex-col ${theme === "navy" ? "bg-[#0b1a38] text-white" : "bg-white"}`}>
             <div className="p-5 border-b border-gray-200 flex items-center justify-between"><h2 className="font-black text-[14px] tracking-widest uppercase">Your Cart</h2><button onClick={() => setDrawerOpen(false)} className="text-[11px] font-bold tracking-widest uppercase px-3 py-1.5 border border-gray-300 rounded-lg">Close</button></div>
             <div className="flex-1 overflow-auto p-4 space-y-3">
               {cart.length === 0 ? <div className="py-16 text-center"><p className="text-[12px] font-bold uppercase tracking-widest">Your cart is empty</p><p className="text-[11px] text-gray-500 mt-2">Add 2-column verified gadgets to checkout via WhatsApp</p></div> : cart.map((item) => {
