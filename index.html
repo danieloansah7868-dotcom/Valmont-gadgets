@@ -105,9 +105,9 @@ body { transition: background-color .2s ease, color .2s ease; }
 </div>
 
 <!-- 5. DEALS BAR -->
-<div class="bg-[#f0fdf4] border-b border-green-200">
+<div class="bg-[#fff7e6] border-b border-amber-200">
   <div class="max-w-[1280px] mx-auto px-4 py-2.5 text-center">
-    <p class="text-[11px] md:text-[12px] font-extrabold tracking-[0.14em] uppercase text-[#16a34a]">
+    <p class="text-[11px] md:text-[12px] font-extrabold tracking-[0.14em] uppercase text-[#f58c14]">
       EXECUTIVE MIDWEEK DEALS — WHILE STOCKS LAST • 100% Sealed & Verified
     </p>
   </div>
@@ -126,7 +126,7 @@ body { transition: background-color .2s ease, color .2s ease; }
   <div class="flex items-center justify-between mb-3 px-1">
     <p id="resultsCount" class="text-[11px] font-bold tracking-wide uppercase text-gray-500"></p>
     <div class="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-      <span>Verified Stock</span><span class="w-2 h-2 bg-[#16a34a] rounded-full inline-block"></span>
+      <span>Verified Stock</span><span class="w-2 h-2 bg-[#f58c14] rounded-full inline-block"></span>
     </div>
   </div>
 
@@ -174,7 +174,7 @@ body { transition: background-color .2s ease, color .2s ease; }
     <div>
       <p class="font-bold text-[11px] tracking-widest uppercase mb-3 text-gray-400">Payment</p>
       <ul class="space-y-2 text-[12px] font-medium text-gray-300">
-        <li>MTN MoMo & Vodafone Cash</li><li>Visa / Mastercard</li><li>Bank Transfer</li><li>Pay on Delivery (Accra)</li><li class="text-[#16a34a] font-bold">100% Sealed & Verified</li>
+        <li>MTN MoMo & Vodafone Cash</li><li>Visa / Mastercard</li><li>Bank Transfer</li><li>Pay on Delivery (Accra)</li><li class="text-[#f58c14] font-bold">100% Sealed & Verified</li>
       </ul>
     </div>
   </div>
@@ -200,7 +200,7 @@ body { transition: background-color .2s ease, color .2s ease; }
       <div class="flex justify-between mb-2 text-[12px] font-semibold text-gray-500 uppercase tracking-wide"><span>Subtotal</span><span id="cartSubtotal">GH₵ 0</span></div>
       <div class="flex justify-between mb-4 text-[14px] font-black text-[#0b1a38]"><span>Total Retail</span><span id="cartTotal">GH₵ 0</span></div>
       <p class="text-[10px] font-medium text-gray-500 mb-4 leading-relaxed uppercase tracking-wide">12-month warranty included. Free Accra delivery above GH₵ 5,000. MoMo & Card accepted.</p>
-      <a id="waCheckout" href="#" target="_blank" class="block w-full bg-[#16a34a] hover:bg-green-700 text-white text-center font-extrabold text-[12px] tracking-widest uppercase rounded-xl py-4 transition">Checkout via WhatsApp</a>
+      <a id="waCheckout" href="#" target="_blank" class="block w-full bg-[#f58c14] hover:bg-[#e67f0f] text-white text-center font-extrabold text-[12px] tracking-widest uppercase rounded-xl py-4 transition">Checkout via WhatsApp</a>
       <button id="clearCart" class="w-full mt-2 text-[11px] font-bold tracking-widest uppercase text-gray-500 py-2">Clear Cart</button>
     </div>
   </div>
@@ -672,7 +672,7 @@ function renderProducts() {
 
   productGridEl.innerHTML = filtered.map(product => {
     // PUBLIC RETAIL ONLY - wholesale never rendered
-    const badgeColor = product.badge === 'HOT' ? 'bg-[#dc2626]' : product.badge === 'DEAL' ? 'bg-[#f58c14]' : 'bg-[#0b1a38]';
+    const badgeColor = product.badge === 'HOT' ? 'bg-[#f58c14]' : product.badge === 'DEAL' ? 'bg-[#f58c14]' : 'bg-[#0b1a38]';
     const waText = encodeURIComponent(`Hello Valmont Gadgets, I want to order the ${product.name} (${formatPrice(product.retail)}). Please confirm stock and express Accra delivery!`);
     const waLink = `https://wa.me/233542451578?text=${waText}`;
 
@@ -692,10 +692,10 @@ function renderProducts() {
             <span class="price font-black text-[15px] text-[#0b1a38] tracking-tight">${formatPrice(product.retail)}</span>
             <span class="text-[11px] text-gray-400 line-through font-medium">${formatPrice(product.compareAt)}</span>
           </div>
-          <p class="text-[10px] font-bold text-[#16a34a] mb-3 tracking-wide uppercase">${product.stock}</p>
+          <p class="text-[10px] font-bold text-[#f58c14] mb-3 tracking-wide uppercase">${product.stock}</p>
           <div class="flex gap-2">
             <button data-add="${product.id}" class="bg-[#0b1a38] hover:bg-black text-white font-extrabold text-[11px] tracking-wide rounded-lg px-3 py-2.5 w-2/3 transition uppercase">Add to Cart</button>
-            <a href="${waLink}" target="_blank" rel="noopener" class="bg-[#16a34a] hover:bg-green-700 text-white font-extrabold text-[11px] tracking-widest rounded-lg px-3 py-2.5 w-1/3 text-center transition uppercase">WA</a>
+            <a href="${waLink}" target="_blank" rel="noopener" class="bg-[#f58c14] hover:bg-[#e67f0f] text-white font-extrabold text-[11px] tracking-widest rounded-lg px-3 py-2.5 w-1/3 text-center transition uppercase">WA</a>
           </div>
         </div>
       </div>
@@ -756,8 +756,8 @@ function updateCartUI() {
           <div class="flex gap-2 mt-2">
             <button data-dec="${prod.id}" class="text-[10px] font-bold uppercase tracking-wide px-2 py-1 border border-gray-300 rounded">-</button>
             <button data-inc="${prod.id}" class="text-[10px] font-bold uppercase tracking-wide px-2 py-1 border border-gray-300 rounded">+</button>
-            <a href="${waLink}" target="_blank" class="text-[10px] font-bold uppercase tracking-wide px-2 py-1 bg-[#16a34a] text-white rounded">WA</a>
-            <button data-rem="${prod.id}" class="text-[10px] font-bold uppercase tracking-wide px-2 py-1 text-red-600">Remove</button>
+            <a href="${waLink}" target="_blank" class="text-[10px] font-bold uppercase tracking-wide px-2 py-1 bg-[#f58c14] text-white rounded">WA</a>
+            <button data-rem="${prod.id}" class="text-[10px] font-bold uppercase tracking-wide px-2 py-1 text-[#f58c14]">Remove</button>
           </div>
         </div>
         <div class="text-right">

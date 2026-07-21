@@ -517,9 +517,9 @@ export default function Page() {
         </div>
       </div>
 
-      <div className="bg-[#f0fdf4] border-b border-green-200">
+      <div className="bg-[#fff7e6] border-b border-amber-200">
         <div className="max-w-[1280px] mx-auto px-4 py-2.5 text-center">
-          <p className="text-[11px] md:text-[12px] font-extrabold tracking-[0.14em] uppercase text-[#16a34a]">EXECUTIVE MIDWEEK DEALS — WHILE STOCKS LAST • 100% Sealed & Verified</p>
+          <p className="text-[11px] md:text-[12px] font-extrabold tracking-[0.14em] uppercase text-[#f58c14]">EXECUTIVE MIDWEEK DEALS — WHILE STOCKS LAST • 100% Sealed & Verified</p>
         </div>
       </div>
 
@@ -540,12 +540,12 @@ export default function Page() {
 
         <div className="flex items-center justify-between mb-3 px-1">
           <p className={`text-[11px] font-bold tracking-wide uppercase ${mutedText}`}>{filtered.length} VERIFIED PRODUCTS {activeCat !== "all" ? `IN ${CATEGORIES.find((c) => c.id === activeCat)?.label.toUpperCase()}` : ""} {query ? `FOR "${query.toUpperCase()}"` : ""}</p>
-          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400"><span>Verified Stock</span><span className="w-2 h-2 bg-[#16a34a] rounded-full inline-block"></span></div>
+          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400"><span>Verified Stock</span><span className="w-2 h-2 bg-[#f58c14] rounded-full inline-block"></span></div>
         </div>
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
           {filtered.map((product) => {
-            const badgeColor = product.badge === "HOT" ? "bg-[#dc2626]" : product.badge === "DEAL" ? "bg-[#f58c14]" : "bg-[#0b1a38]";
+            const badgeColor = product.badge === "HOT" ? "bg-[#f58c14]" : product.badge === "DEAL" ? "bg-[#f58c14]" : "bg-[#0b1a38]";
             return (
               <div key={product.id} className={`rounded-xl border p-3 flex flex-col hover:shadow-md transition-shadow ${cardBg}`}>
                 <div className="flex justify-between items-center mb-2">
@@ -563,10 +563,10 @@ export default function Page() {
                     <span className={`font-black text-[15px] tracking-tight ${theme === "navy" ? "text-white" : "text-[#0b1a38]"}`}>{formatGH(product.retail)}</span>
                     <span className="text-[11px] text-gray-400 line-through font-medium">{formatGH(product.compareAt)}</span>
                   </div>
-                  <p className="text-[10px] font-bold text-[#16a34a] mb-3 tracking-wide uppercase">{product.stock}</p>
+                  <p className="text-[10px] font-bold text-[#f58c14] mb-3 tracking-wide uppercase">{product.stock}</p>
                   <div className="flex gap-2">
                     <button onClick={() => addToCart(product.id)} className="bg-[#0b1a38] hover:bg-black text-white font-extrabold text-[11px] tracking-wide rounded-lg px-3 py-2.5 w-2/3 transition uppercase">Add to Cart</button>
-                    <a href={buildWALink(product.name, product.retail)} target="_blank" rel="noopener noreferrer" className="bg-[#16a34a] hover:bg-green-700 text-white font-extrabold text-[11px] tracking-widest rounded-lg px-3 py-2.5 w-1/3 text-center transition uppercase">WA</a>
+                    <a href={buildWALink(product.name, product.retail)} target="_blank" rel="noopener noreferrer" className="bg-[#f58c14] hover:bg-[#e67f0f] text-white font-extrabold text-[11px] tracking-widest rounded-lg px-3 py-2.5 w-1/3 text-center transition uppercase">WA</a>
                   </div>
                 </div>
               </div>
@@ -586,7 +586,7 @@ export default function Page() {
           <div><p className="font-black text-[13px] tracking-widest uppercase mb-3">Valmont Gadgets</p><p className="text-[12px] leading-relaxed text-gray-300 font-medium">Ghana&apos;s executive source for genuine mobile phones and laptops. Franko Trading standard verification.</p><p className="text-[11px] mt-4 font-bold tracking-wide text-[#f58c14]">valmontgadgets.com</p></div>
           <div><p className="font-bold text-[11px] tracking-widest uppercase mb-3 text-gray-400">Shop</p><ul className="space-y-2 text-[12px] font-medium text-gray-300"><li>iPhones & Apple</li><li>Samsung Galaxy</li><li>Executive Laptops</li><li>Smart Audio & AirPods</li><li>Chargers & Power Banks</li></ul></div>
           <div><p className="font-bold text-[11px] tracking-widest uppercase mb-3 text-gray-400">Support</p><ul className="space-y-2 text-[12px] font-medium text-gray-300"><li>Call: 054 245 1578</li><li>WhatsApp Order</li><li>Warranty Policy</li><li>Swap & Trade-In</li><li>Store: East Legon, Accra</li></ul></div>
-          <div><p className="font-bold text-[11px] tracking-widest uppercase mb-3 text-gray-400">Payment</p><ul className="space-y-2 text-[12px] font-medium text-gray-300"><li>MTN MoMo & Vodafone Cash</li><li>Visa / Mastercard</li><li>Bank Transfer</li><li>Pay on Delivery (Accra)</li><li className="text-[#16a34a] font-bold">100% Sealed & Verified</li></ul></div>
+          <div><p className="font-bold text-[11px] tracking-widest uppercase mb-3 text-gray-400">Payment</p><ul className="space-y-2 text-[12px] font-medium text-gray-300"><li>MTN MoMo & Vodafone Cash</li><li>Visa / Mastercard</li><li>Bank Transfer</li><li>Pay on Delivery (Accra)</li><li className="text-[#f58c14] font-bold">100% Sealed & Verified</li></ul></div>
         </div>
         <div className="border-t border-white/10"><div className="max-w-[1280px] mx-auto px-4 py-4 flex flex-col md:flex-row justify-between gap-2 text-[10px] tracking-widest uppercase font-semibold text-gray-400"><span>© 2026 VALMONT GADGETS — ALL RIGHTS RESERVED</span><span>BUILT FOR GHANA • DEEP NAVY & GOLD • ZERO EMOJI CORPORATE STANDARD</span></div></div>
       </footer>
@@ -612,8 +612,8 @@ export default function Page() {
                       <div className="flex gap-2 mt-2">
                         <button onClick={() => setCart((c) => c.map((x) => (x.id === item.id ? { ...x, qty: Math.max(1, x.qty - 1) } : x)))} className="text-[10px] font-bold uppercase px-2 py-1 border border-gray-300 rounded">-</button>
                         <button onClick={() => setCart((c) => c.map((x) => (x.id === item.id ? { ...x, qty: x.qty + 1 } : x)))} className="text-[10px] font-bold uppercase px-2 py-1 border border-gray-300 rounded">+</button>
-                        <a href={buildWALink(prod.name, prod.retail)} target="_blank" className="text-[10px] font-bold uppercase px-2 py-1 bg-[#16a34a] text-white rounded">WA</a>
-                        <button onClick={() => setCart((c) => c.filter((x) => x.id !== item.id))} className="text-[10px] font-bold uppercase px-2 py-1 text-red-600">Remove</button>
+                        <a href={buildWALink(prod.name, prod.retail)} target="_blank" className="text-[10px] font-bold uppercase px-2 py-1 bg-[#f58c14] text-white rounded">WA</a>
+                        <button onClick={() => setCart((c) => c.filter((x) => x.id !== item.id))} className="text-[10px] font-bold uppercase px-2 py-1 text-[#f58c14]">Remove</button>
                       </div>
                     </div>
                     <p className="font-black text-[12px] text-[#0b1a38]">{formatGH(prod.retail * item.qty)}</p>
@@ -625,7 +625,7 @@ export default function Page() {
               <div className="flex justify-between mb-2 text-[12px] font-semibold text-gray-500 uppercase tracking-wide"><span>Subtotal</span><span>{formatGH(subtotal)}</span></div>
               <div className="flex justify-between mb-4 text-[14px] font-black text-[#0b1a38]"><span>Total Retail</span><span>{formatGH(subtotal)}</span></div>
               <p className="text-[10px] font-medium text-gray-500 mb-4 leading-relaxed uppercase tracking-wide">12-month warranty included. Free Accra delivery above GH₵ 5,000. MoMo & Card accepted.</p>
-              <a href={`https://wa.me/233542451578?text=${checkoutText}`} target="_blank" rel="noopener noreferrer" className="block w-full bg-[#16a34a] hover:bg-green-700 text-white text-center font-extrabold text-[12px] tracking-widest uppercase rounded-xl py-4 transition">Checkout via WhatsApp</a>
+              <a href={`https://wa.me/233542451578?text=${checkoutText}`} target="_blank" rel="noopener noreferrer" className="block w-full bg-[#f58c14] hover:bg-[#e67f0f] text-white text-center font-extrabold text-[12px] tracking-widest uppercase rounded-xl py-4 transition">Checkout via WhatsApp</a>
               <button onClick={() => setCart([])} className="w-full mt-2 text-[11px] font-bold tracking-widest uppercase text-gray-500 py-2">Clear Cart</button>
               {/* Private profit summary - console only, not rendered publicly. Ledger accessible only in backend. */}
               <div className="hidden">
