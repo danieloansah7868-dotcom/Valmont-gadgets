@@ -1,11 +1,13 @@
-// Valmont Gadgets Admin JS Logic
+// Valmont Gadgets Admin Panel JS
 // BRAND: Deep navy #0b1a38, Gold-orange #f58c14, Slate panels #12234a
 // ZERO EMOJIS anywhere in UI.
 
 const SUPABASE_URL = "https://yrrqrvbkdziuyosedfx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_H3PK7UqMZcO2rsusl1_qQw_MypxJljs";
 
-// Same robust Database manager synced with Supabase & LocalStorage fallbacks
+// ============================================================
+// Database Manager — Supabase with LocalStorage fallback
+// ============================================================
 class ValmontAdminDatabase {
   constructor() {
     this.useSupabase = false;
@@ -15,9 +17,9 @@ class ValmontAdminDatabase {
       try {
         this.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         this.useSupabase = true;
-        console.log("Admin Supabase initialized successfully");
+        console.log("Admin Supabase initialized");
       } catch (err) {
-        console.warn("Admin Supabase connection failed, using LocalStorage fallback:", err);
+        console.warn("Supabase init failed, using LocalStorage:", err);
       }
     }
   }
@@ -36,7 +38,7 @@ class ValmontAdminDatabase {
           return data;
         }
       } catch (err) {
-        console.error("Supabase getProducts error, falling back:", err);
+        console.error("Supabase getProducts error:", err);
       }
     }
     return JSON.parse(localStorage.getItem("valmont_products") || "[]");
@@ -53,7 +55,7 @@ class ValmontAdminDatabase {
         if (error) throw error;
         if (data) return data;
       } catch (err) {
-        console.error("Supabase getProductById error, falling back:", err);
+        console.error("Supabase getProductById error:", err);
       }
     }
     const products = JSON.parse(localStorage.getItem("valmont_products") || "[]");
@@ -66,7 +68,7 @@ class ValmontAdminDatabase {
       name: product.name,
       slug: product.slug,
       category: product.category,
-      price: parseFloat(product.price),
+      price: parseFloat(product.price) || 0,
       wholesale_price: parseFloat(product.wholesale_price || 0),
       compare_at_price: parseFloat(product.compare_at_price || 0),
       specs: product.specs || "",
@@ -86,13 +88,13 @@ class ValmontAdminDatabase {
 
     if (this.useSupabase) {
       try {
-        const { data, error } = await this.supabaseClient
+        const { error } = await this.supabaseClient
           .from("products")
           .insert([newProduct]);
         if (error) throw error;
         return true;
       } catch (err) {
-        console.error("Supabase createProduct error, falling back:", err);
+        console.error("Supabase createProduct error:", err);
       }
     }
 
@@ -107,7 +109,7 @@ class ValmontAdminDatabase {
       name: product.name,
       slug: product.slug,
       category: product.category,
-      price: parseFloat(product.price),
+      price: parseFloat(product.price) || 0,
       wholesale_price: parseFloat(product.wholesale_price || 0),
       compare_at_price: parseFloat(product.compare_at_price || 0),
       specs: product.specs || "",
@@ -123,14 +125,14 @@ class ValmontAdminDatabase {
 
     if (this.useSupabase) {
       try {
-        const { data, error } = await this.supabaseClient
+        const { error } = await this.supabaseClient
           .from("products")
           .update(updatedFields)
           .eq("id", id);
         if (error) throw error;
         return true;
       } catch (err) {
-        console.error("Supabase updateProduct error, falling back:", err);
+        console.error("Supabase updateProduct error:", err);
       }
     }
 
@@ -147,14 +149,14 @@ class ValmontAdminDatabase {
   async deleteProduct(id) {
     if (this.useSupabase) {
       try {
-        const { data, error } = await this.supabaseClient
+        const { error } = await this.supabaseClient
           .from("products")
           .delete()
           .eq("id", id);
         if (error) throw error;
         return true;
       } catch (err) {
-        console.error("Supabase deleteProduct error, falling back:", err);
+        console.error("Supabase deleteProduct error:", err);
       }
     }
 
@@ -178,7 +180,7 @@ class ValmontAdminDatabase {
           return data;
         }
       } catch (err) {
-        console.error("Supabase getReviews error, falling back:", err);
+        console.error("Supabase getReviews error:", err);
       }
     }
     return JSON.parse(localStorage.getItem("valmont_reviews") || "[]");
@@ -187,14 +189,14 @@ class ValmontAdminDatabase {
   async approveReview(id) {
     if (this.useSupabase) {
       try {
-        const { data, error } = await this.supabaseClient
+        const { error } = await this.supabaseClient
           .from("reviews")
           .update({ is_approved: true })
           .eq("id", id);
         if (error) throw error;
         return true;
       } catch (err) {
-        console.error("Supabase approveReview error, falling back:", err);
+        console.error("Supabase approveReview error:", err);
       }
     }
 
@@ -208,17 +210,41 @@ class ValmontAdminDatabase {
     return false;
   }
 
+  async rejectReview(id) {
+    if (this.useSupabase) {
+      try {
+        const { error } = await this.supabaseClient
+          .from("reviews")
+          .update({ is_approved: false })
+          .eq("id", id);
+        if (error) throw error;
+        return true;
+      } catch (err) {
+        console.error("Supabase rejectReview error:", err);
+      }
+    }
+
+    const reviews = JSON.parse(localStorage.getItem("valmont_reviews") || "[]");
+    const idx = reviews.findIndex(r => r.id === id);
+    if (idx !== -1) {
+      reviews[idx].is_approved = false;
+      localStorage.setItem("valmont_reviews", JSON.stringify(reviews));
+      return true;
+    }
+    return false;
+  }
+
   async deleteReview(id) {
     if (this.useSupabase) {
       try {
-        const { data, error } = await this.supabaseClient
+        const { error } = await this.supabaseClient
           .from("reviews")
           .delete()
           .eq("id", id);
         if (error) throw error;
         return true;
       } catch (err) {
-        console.error("Supabase deleteReview error, falling back:", err);
+        console.error("Supabase deleteReview error:", err);
       }
     }
 
@@ -242,7 +268,7 @@ class ValmontAdminDatabase {
           return data;
         }
       } catch (err) {
-        console.error("Supabase getOrders error, falling back:", err);
+        console.error("Supabase getOrders error:", err);
       }
     }
     return JSON.parse(localStorage.getItem("valmont_orders") || "[]");
@@ -251,14 +277,14 @@ class ValmontAdminDatabase {
   async updateOrderStatus(id, status) {
     if (this.useSupabase) {
       try {
-        const { data, error } = await this.supabaseClient
+        const { error } = await this.supabaseClient
           .from("orders")
           .update({ status: status })
           .eq("id", id);
         if (error) throw error;
         return true;
       } catch (err) {
-        console.error("Supabase updateOrderStatus error, falling back:", err);
+        console.error("Supabase updateOrderStatus error:", err);
       }
     }
 
@@ -272,7 +298,7 @@ class ValmontAdminDatabase {
     return false;
   }
 
-  // --- IMAGES STORAGE UPLOADER ---
+  // --- IMAGE UPLOAD ---
   async uploadProductImage(file, onProgress) {
     if (this.useSupabase) {
       try {
@@ -280,10 +306,9 @@ class ValmontAdminDatabase {
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
         const filePath = `product-images/${fileName}`;
 
-        // Simulated progress bar triggers on client
         onProgress(20);
-        
-        const { data, error } = await this.supabaseClient.storage
+
+        const { error } = await this.supabaseClient.storage
           .from("product-images")
           .upload(filePath, file, { cacheControl: "3600", upsert: true });
 
@@ -301,10 +326,10 @@ class ValmontAdminDatabase {
       }
     }
 
-    // Local Storage Mock Upload - Read as Base64 data URL
+    // LocalStorage fallback — read as Base64 data URL
     return new Promise((resolve) => {
       const reader = new FileReader();
-      
+
       let progress = 0;
       const interval = setInterval(() => {
         progress += 25;
@@ -325,27 +350,30 @@ class ValmontAdminDatabase {
 // Instantiate Database
 const db = new ValmontAdminDatabase();
 
-// --- STATE MANAGEMENT ---
+// ============================================================
+// STATE MANAGEMENT
+// ============================================================
 let allProducts = [];
 let allOrders = [];
 let allReviews = [];
 
 let editingProductId = null;
 
-// Temporary states for current adding/editing form
-let uploadedImages = []; // Array of image URLs / Base64 Data
-let productColors = []; // Array of [{name, hex, available}]
-let productStorageOptions = []; // Array of [{size, price_adjustment}]
+// Form state
+let uploadedImages = [];
+let productColors = [];
+let productStorageOptions = [];
 
-// --- PAGE INITIALIZATION ---
+// ============================================================
+// PAGE INITIALIZATION
+// ============================================================
 window.addEventListener("DOMContentLoaded", () => {
-  // Check authorization
   checkAdminAuth();
 });
 
 function checkAdminAuth() {
   const isLoggedIn = sessionStorage.getItem("valmont_admin_logged_in") === "true";
-  
+
   if (!isLoggedIn) {
     document.getElementById("authGateOverlay").classList.remove("hidden");
     document.getElementById("adminMainContent").classList.add("hidden");
@@ -359,11 +387,11 @@ function checkAdminAuth() {
 function handleAuthSubmit(event) {
   event.preventDefault();
   const pass = document.getElementById("authPasswordInput").value.trim();
-  
+
   if (pass === "valmont2026") {
     sessionStorage.setItem("valmont_admin_logged_in", "true");
     checkAdminAuth();
-    showAdminToast("Access granted.");
+    showAdminToast("Access granted. Welcome to Admin Panel.");
   } else {
     document.getElementById("authErrorMessage").classList.remove("hidden");
     document.getElementById("authPasswordInput").value = "";
@@ -377,27 +405,29 @@ function handleAdminLogout() {
 }
 
 async function initializeDashboard() {
-  // 1. Fetch data
+  // Fetch all data
   allProducts = await db.getProducts();
   allOrders = await db.getOrders();
   allReviews = await db.getReviews();
 
-  // 2. Render Dashboard stats
+  // Render dashboard stats
   renderStats();
 
-  // 3. Render list tables
+  // Render tables
   renderProductsTable();
   renderOrdersTable();
   renderReviewsTable();
 
-  // 4. Fill products dropdown for Bulk Image Upload
+  // Populate bulk upload dropdown
   populateBulkProductsDropdown();
 
-  // 5. Init general click handlers and drag-and-drop zone
+  // Initialize image uploader
   initImageUploaderListeners();
 }
 
-// --- STATS COMPUTATION & RENDER ---
+// ============================================================
+// STATS RENDERING
+// ============================================================
 function renderStats() {
   // Product count
   document.getElementById("statTotalProducts").textContent = allProducts.length;
@@ -405,21 +435,20 @@ function renderStats() {
   // Order count
   document.getElementById("statTotalOrders").textContent = allOrders.length;
 
-  // Revenue stats
+  // Revenue (exclude cancelled)
   const revenue = allOrders
     .filter(o => o.status !== "Cancelled")
-    .reduce((sum, o) => sum + parseFloat(o.total_amount), 0);
+    .reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0);
   document.getElementById("statRevenue").textContent = `GH₵ ${revenue.toLocaleString()}`;
 
-  // Private Profit stats
-  // For each order, find wholesale cost of items
+  // Net Profit calculation
   let totalProfit = 0;
   allOrders.filter(o => o.status !== "Cancelled").forEach(order => {
-    order.items.forEach(item => {
+    (order.items || []).forEach(item => {
       const match = allProducts.find(p => p.id === item.id);
       if (match) {
         const itemWholesale = match.wholesale_price || 0;
-        const profitPerItem = item.price - itemWholesale - (order.total_amount >= 5000 ? 0 : 25); // simple flat estimates for extra shipping/momo fees
+        const profitPerItem = item.price - itemWholesale - (order.total_amount >= 5000 ? 0 : 25);
         totalProfit += profitPerItem * item.qty;
       }
     });
@@ -428,11 +457,13 @@ function renderStats() {
   document.getElementById("statProfit").textContent = `GH₵ ${Math.max(0, Math.round(totalProfit)).toLocaleString()}`;
 }
 
-// --- TAB ROUTING ---
+// ============================================================
+// TAB ROUTING
+// ============================================================
 function switchTab(tabId) {
   // Hide all sections
   document.querySelectorAll(".admin-tab-section").forEach(sec => sec.classList.add("hidden"));
-  // Remove active styling from buttons
+  // Reset nav buttons
   document.querySelectorAll("[data-tab-nav]").forEach(btn => {
     btn.classList.remove("border-gold", "text-gold");
     btn.classList.add("border-transparent", "text-slate-400");
@@ -440,21 +471,23 @@ function switchTab(tabId) {
 
   // Show selected section
   document.getElementById(`section-${tabId}`).classList.remove("hidden");
-  
-  // Highlight navigation button
+
+  // Highlight active nav
   const activeBtn = document.querySelector(`[data-tab-nav="${tabId}"]`);
   if (activeBtn) {
     activeBtn.classList.remove("border-transparent", "text-slate-400");
     activeBtn.classList.add("border-gold", "text-gold");
   }
 
-  // Refresh data if switching tabs
+  // Refresh data when switching to dashboard
   if (tabId === "dashboard") {
     initializeDashboard();
   }
 }
 
-// --- PRODUCTS MANAGEMENT ---
+// ============================================================
+// PRODUCTS MANAGEMENT
+// ============================================================
 function renderProductsTable() {
   const tbody = document.getElementById("productsTableBody");
   if (!tbody) return;
@@ -471,20 +504,23 @@ function renderProductsTable() {
   }
 
   const categoryLabels = {
-    iphones: "iPhones and Apple",
+    iphones: "iPhones & Apple",
     samsung: "Samsung Galaxy",
     laptops: "Executive Laptops",
     audio: "Smart Audio",
-    power: "Power and Chargers"
+    power: "Power & Chargers"
   };
 
   tbody.innerHTML = allProducts.map(p => {
-    const isChecked = p.is_active ? "checked" : "";
+    const imgSrc = p.image_url || (p.images && p.images[0]) || "https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=800";
+    const statusClass = p.is_active ? "bg-green-950 text-green-400" : "bg-slate-950 text-slate-500";
+    const statusText = p.is_active ? "Active" : "Draft";
+
     return `
-      <tr class="border-b border-slate-850 hover:bg-slate-900/40">
+      <tr class="border-b border-slate-800 hover:bg-slate-900/40">
         <td class="px-6 py-4 whitespace-nowrap">
           <div class="h-10 w-10 rounded bg-slate-900 border border-slate-800 p-1 flex items-center justify-center overflow-hidden">
-            <img src="${p.image_url || 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=800'}" class="max-h-full max-w-full object-contain" />
+            <img src="${imgSrc}" class="max-h-full max-w-full object-contain" alt="${p.name}" />
           </div>
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
@@ -495,15 +531,15 @@ function renderProductsTable() {
           ${categoryLabels[p.category] || p.category}
         </td>
         <td class="px-6 py-4 whitespace-nowrap leading-tight">
-          <div class="text-xs font-extrabold text-white">GH₵ ${p.price.toLocaleString()}</div>
+          <div class="text-xs font-extrabold text-white">GH₵ ${(p.price || 0).toLocaleString()}</div>
           <div class="text-[10px] text-slate-400 font-bold">Wholesale: GH₵ ${(p.wholesale_price || 0).toLocaleString()}</div>
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-xs font-bold ${p.stock_quantity === 0 ? 'text-red-500' : 'text-slate-300'}">
-          ${p.stock_quantity}
+          ${p.stock_quantity || 0}
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
-          <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase ${p.is_active ? 'bg-green-950 text-green-400' : 'bg-slate-950 text-slate-500'}">
-            ${p.is_active ? 'Active' : 'Draft'}
+          <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase ${statusClass}">
+            ${statusText}
           </span>
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-right text-xs font-medium">
@@ -525,7 +561,7 @@ function renderProductsTable() {
   }).join("");
 }
 
-// Auto generate slug from title input
+// Auto-generate slug from product name
 function autoFillSlug() {
   const name = document.getElementById("prodName").value;
   const slugInput = document.getElementById("prodSlug");
@@ -538,7 +574,7 @@ function autoFillSlug() {
   slugInput.value = slug;
 }
 
-// Trigger edit mode
+// Open edit mode
 async function openEditProductForm(id) {
   const p = await db.getProductById(id);
   if (!p) return;
@@ -546,11 +582,11 @@ async function openEditProductForm(id) {
   editingProductId = p.id;
   document.getElementById("formTitleText").textContent = "Edit Product";
 
-  // Pre-fill fields
-  document.getElementById("prodName").value = p.name;
-  document.getElementById("prodSlug").value = p.slug;
-  document.getElementById("prodCategory").value = p.category;
-  document.getElementById("prodPrice").value = p.price;
+  // Pre-fill form fields
+  document.getElementById("prodName").value = p.name || "";
+  document.getElementById("prodSlug").value = p.slug || "";
+  document.getElementById("prodCategory").value = p.category || "iphones";
+  document.getElementById("prodPrice").value = p.price || "";
   document.getElementById("prodComparePrice").value = p.compare_at_price || "";
   document.getElementById("prodWholesalePrice").value = p.wholesale_price || "";
   document.getElementById("prodSpecs").value = p.specs || "";
@@ -563,18 +599,19 @@ async function openEditProductForm(id) {
   productColors = p.colors || [];
   productStorageOptions = p.storage_options || [];
 
-  // Update lists
+  // Update UI
   renderUploadedThumbnails();
   renderColorsList();
   renderStorageList();
 
-  // Scroll to form or switch tab if needed
+  // Switch to form tab
   switchTab("product-form");
 }
 
+// Reset form to blank state
 function resetProductForm() {
   editingProductId = null;
-  document.getElementById("formTitleText").textContent = "Add Premium Product";
+  document.getElementById("formTitleText").textContent = "Add New Product";
   document.getElementById("productCrudForm").reset();
 
   uploadedImages = [];
@@ -586,6 +623,7 @@ function resetProductForm() {
   renderStorageList();
 }
 
+// Handle form submit (create or update)
 async function handleProductFormSubmit(event) {
   event.preventDefault();
 
@@ -601,11 +639,11 @@ async function handleProductFormSubmit(event) {
   const stock = document.getElementById("prodStock").value || 0;
 
   if (!name || !slug || !price) {
-    showAdminToast("Please fill in Name, Slug and Price.");
+    showAdminToast("Please fill in Name, Slug, and Price.");
     return;
   }
 
-  // Validate images
+  // Prepare image data
   const mainImage = uploadedImages.length > 0 ? uploadedImages[0] : "";
   const additionalImages = uploadedImages.length > 1 ? uploadedImages.slice(1) : [];
 
@@ -639,24 +677,27 @@ async function handleProductFormSubmit(event) {
     resetProductForm();
     switchTab("dashboard");
   } else {
-    showAdminToast("Failed to save product details.");
+    showAdminToast("Failed to save product. Please try again.");
   }
 }
 
+// Delete product with confirmation
 async function triggerDeleteProduct(id, name) {
   const confirmDel = confirm(`Are you sure you want to permanently delete: ${name}?`);
   if (!confirmDel) return;
 
   const success = await db.deleteProduct(id);
   if (success) {
-    showAdminToast("Product successfully deleted.");
+    showAdminToast("Product deleted successfully.");
     initializeDashboard();
   } else {
     showAdminToast("Could not delete product.");
   }
 }
 
-// --- IMAGE UPLOADER HANDLERS (VANILLA & ROBUST DRAG-DROP) ---
+// ============================================================
+// IMAGE UPLOADER — Drag & Drop + Click
+// ============================================================
 function initImageUploaderListeners() {
   const zone = document.getElementById("imageDragZone");
   const input = document.getElementById("imageFileInput");
@@ -685,14 +726,14 @@ function initImageUploaderListeners() {
   input.addEventListener("change", () => {
     if (input.files && input.files.length > 0) {
       handleImageFilesUpload(input.files);
-      input.value = ""; // Reset
+      input.value = "";
     }
   });
 }
 
 async function handleImageFilesUpload(files) {
   if (uploadedImages.length >= 5) {
-    showAdminToast("Max 5 images per product reached.");
+    showAdminToast("Maximum 5 images per product reached.");
     return;
   }
 
@@ -701,11 +742,13 @@ async function handleImageFilesUpload(files) {
 
   progressContainer.classList.remove("hidden");
 
-  // Filter out non-images
-  const validFiles = Array.from(files).filter(f => ["image/jpeg", "image/png", "image/webp"].includes(f.type));
+  // Filter valid image files
+  const validFiles = Array.from(files).filter(f =>
+    ["image/jpeg", "image/png", "image/webp"].includes(f.type)
+  );
 
   if (validFiles.length === 0) {
-    showAdminToast("Please provide JPG, PNG, or WebP formats.");
+    showAdminToast("Please provide JPG, PNG, or WebP images only.");
     progressContainer.classList.add("hidden");
     return;
   }
@@ -766,14 +809,14 @@ function renderUploadedThumbnails() {
   }
 
   container.innerHTML = uploadedImages.map((img, idx) => {
-    const isMain = idx === 0 ? `<span class="absolute bottom-1 left-1 bg-gold text-slate-900 text-[8px] font-black uppercase px-1.5 py-0.5 rounded">Main</span>` : "";
+    const isMain = idx === 0
+      ? `<span class="absolute bottom-1 left-1 bg-gold text-slate-900 text-[8px] font-black uppercase px-1.5 py-0.5 rounded">Main</span>`
+      : "";
     return `
       <div class="preview-thumbnail">
-        <img src="${img}" class="object-contain" />
+        <img src="${img}" class="object-contain" alt="Product image ${idx + 1}" />
         ${isMain}
-        <button onclick="deleteUploadedImage(${idx})" type="button" class="preview-thumbnail-delete">✕</button>
-        
-        <!-- Order shifting buttons -->
+        <button onclick="deleteUploadedImage(${idx})" type="button" class="preview-thumbnail-delete">X</button>
         <div class="absolute bottom-1 right-1 flex gap-0.5 bg-slate-950/80 px-1 py-0.5 rounded">
           <button onclick="moveImageOrder(${idx}, 'left')" type="button" class="text-white hover:text-gold text-[9px] font-bold px-0.5" ${idx === 0 ? 'disabled' : ''}>&lt;</button>
           <button onclick="moveImageOrder(${idx}, 'right')" type="button" class="text-white hover:text-gold text-[9px] font-bold px-0.5" ${idx === uploadedImages.length - 1 ? 'disabled' : ''}>&gt;</button>
@@ -783,7 +826,9 @@ function renderUploadedThumbnails() {
   }).join("");
 }
 
-// --- COLORS SELECTION LISTS ---
+// ============================================================
+// COLOR VARIANTS MANAGEMENT
+// ============================================================
 function addColorOption() {
   const nameInput = document.getElementById("colorNameInput");
   const hexInput = document.getElementById("colorHexInput");
@@ -796,7 +841,7 @@ function addColorOption() {
     return;
   }
 
-  // Check duplicate
+  // Check for duplicates
   if (productColors.some(c => c.name.toLowerCase() === name.toLowerCase())) {
     showAdminToast("Color already added.");
     return;
@@ -834,23 +879,26 @@ function renderColorsList() {
   container.innerHTML = productColors.map((c, idx) => `
     <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded p-2 text-xs">
       <div class="flex items-center gap-2">
-        <span class="h-4.5 w-4.5 rounded-full border border-slate-700" style="background-color: ${c.hex};"></span>
+        <span class="h-5 w-5 rounded-full border border-slate-700 shrink-0" style="background-color: ${c.hex};"></span>
         <span class="text-white font-bold">${c.name}</span>
+        <span class="text-[9px] text-slate-500 font-mono">${c.hex}</span>
       </div>
       <div class="flex items-center gap-2.5">
         <label class="flex items-center gap-1 cursor-pointer select-none">
           <input type="checkbox" onchange="toggleColorAvailability(${idx})" ${c.available ? 'checked' : ''} class="accent-gold h-3.5 w-3.5" />
           <span class="text-[10px] text-slate-400 font-bold uppercase">Available</span>
         </label>
-        <button onclick="deleteColorOption(${idx})" type="button" class="text-red-500 hover:text-red-600 font-bold">
-          ✕
+        <button onclick="deleteColorOption(${idx})" type="button" class="text-red-500 hover:text-red-400 font-bold text-sm">
+          X
         </button>
       </div>
     </div>
   `).join("");
 }
 
-// --- STORAGE OPTIONS LISTS ---
+// ============================================================
+// STORAGE OPTIONS MANAGEMENT
+// ============================================================
 function addStorageOption() {
   const sizeInput = document.getElementById("storageSizeInput");
   const priceAdjInput = document.getElementById("storagePriceAdjustmentInput");
@@ -859,11 +907,11 @@ function addStorageOption() {
   const adj = parseFloat(priceAdjInput.value || 0);
 
   if (!size) {
-    showAdminToast("Please provide storage size (e.g. 128GB).");
+    showAdminToast("Please provide a storage size (e.g. 128GB).");
     return;
   }
 
-  // Duplicate Check
+  // Check for duplicates
   if (productStorageOptions.some(s => s.size.toLowerCase() === size.toLowerCase())) {
     showAdminToast("Storage size already added.");
     return;
@@ -889,7 +937,7 @@ function renderStorageList() {
   if (!container) return;
 
   if (productStorageOptions.length === 0) {
-    container.innerHTML = `<span class="text-slate-500 font-semibold text-xs">No storage adjustments added yet.</span>`;
+    container.innerHTML = `<span class="text-slate-500 font-semibold text-xs">No storage options added yet.</span>`;
     return;
   }
 
@@ -897,21 +945,25 @@ function renderStorageList() {
     <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded p-2 text-xs">
       <span class="text-white font-extrabold">${s.size}</span>
       <div class="flex items-center gap-3">
-        <span class="text-gold font-bold">${s.price_adjustment > 0 ? `+GH₵ ${s.price_adjustment}` : s.price_adjustment < 0 ? `-GH₵ ${Math.abs(s.price_adjustment)}` : 'No adjustment'}</span>
-        <button onclick="deleteStorageOption(${idx})" type="button" class="text-red-500 hover:text-red-600 font-bold">
-          ✕
+        <span class="text-gold font-bold">
+          ${s.price_adjustment > 0 ? `+GH₵ ${s.price_adjustment}` : s.price_adjustment < 0 ? `-GH₵ ${Math.abs(s.price_adjustment)}` : 'No adjustment'}
+        </span>
+        <button onclick="deleteStorageOption(${idx})" type="button" class="text-red-500 hover:text-red-400 font-bold text-sm">
+          X
         </button>
       </div>
     </div>
   `).join("");
 }
 
-// --- BULK IMAGE UPLOAD PANEL ---
+// ============================================================
+// BULK IMAGE UPLOAD
+// ============================================================
 function populateBulkProductsDropdown() {
   const select = document.getElementById("bulkProductSelect");
   if (!select) return;
 
-  select.innerHTML = `<option value="">-- Select Product --</option>` + 
+  select.innerHTML = `<option value="">-- Select Product --</option>` +
     allProducts.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
 }
 
@@ -925,7 +977,9 @@ async function triggerBulkImageUpload(files) {
   const p = allProducts.find(x => x.id === pId);
   if (!p) return;
 
-  const validFiles = Array.from(files).filter(f => ["image/jpeg", "image/png", "image/webp"].includes(f.type));
+  const validFiles = Array.from(files).filter(f =>
+    ["image/jpeg", "image/png", "image/webp"].includes(f.type)
+  );
   if (validFiles.length === 0) {
     showAdminToast("No valid JPG, PNG, or WebP images found.");
     return;
@@ -934,12 +988,12 @@ async function triggerBulkImageUpload(files) {
   // Current images count
   const curImages = [p.image_url, ...(p.images || [])].filter(Boolean);
   if (curImages.length + validFiles.length > 5) {
-    showAdminToast("Target product can only hold a maximum of 5 images total.");
+    showAdminToast("Product can only hold a maximum of 5 images total.");
     return;
   }
 
   const listContainer = document.getElementById("bulkUploadResultsList");
-  listContainer.innerHTML = `<span class="text-xs font-bold text-slate-400">Uploading bulk images...</span>`;
+  listContainer.innerHTML = `<span class="text-xs font-bold text-slate-400">Uploading ${validFiles.length} images...</span>`;
 
   let uploadedCount = 0;
   for (const file of validFiles) {
@@ -954,7 +1008,7 @@ async function triggerBulkImageUpload(files) {
     }
   }
 
-  // Save changes to db
+  // Save changes
   if (uploadedCount > 0) {
     const updated = {
       ...p,
@@ -962,17 +1016,17 @@ async function triggerBulkImageUpload(files) {
       images: curImages.slice(1)
     };
     await db.updateProduct(p.id, updated);
-    showAdminToast(`Successfully bulk-uploaded ${uploadedCount} images to ${p.name}.`);
+    showAdminToast(`Successfully uploaded ${uploadedCount} images to ${p.name}.`);
     listContainer.innerHTML = `<span class="text-xs font-bold text-green-500">Successfully added ${uploadedCount} images to ${p.name}!</span>`;
-    
-    // Refresh
     initializeDashboard();
   } else {
-    listContainer.innerHTML = `<span class="text-xs font-bold text-red-500">Upload failed.</span>`;
+    listContainer.innerHTML = `<span class="text-xs font-bold text-red-500">Upload failed. Please try again.</span>`;
   }
 }
 
-// --- ORDERS LIST MANAGEMENT ---
+// ============================================================
+// ORDERS MANAGEMENT
+// ============================================================
 function renderOrdersTable() {
   const tbody = document.getElementById("ordersTableBody");
   if (!tbody) return;
@@ -989,22 +1043,32 @@ function renderOrdersTable() {
   }
 
   tbody.innerHTML = allOrders.map(o => {
-    const formattedDate = new Date(o.created_at).toLocaleDateString("en-GH", { year: "numeric", month: "short", day: "numeric" });
-    
-    const itemsDescription = o.items.map(i => {
+    const formattedDate = new Date(o.created_at).toLocaleDateString("en-GH", {
+      year: "numeric", month: "short", day: "numeric"
+    });
+
+    const itemsDescription = (o.items || []).map(i => {
       const colorStorage = [i.selected_color, i.selected_storage].filter(Boolean).join("/");
       return `${i.name} ${colorStorage ? `(${colorStorage})` : ""} x${i.qty}`;
     }).join(", ");
 
+    const statusColors = {
+      Pending: "bg-yellow-950 text-yellow-400",
+      Processing: "bg-blue-950 text-blue-400",
+      Dispatched: "bg-purple-950 text-purple-400",
+      Delivered: "bg-green-950 text-green-400",
+      Cancelled: "bg-red-950 text-red-400"
+    };
+
     return `
-      <tr class="border-b border-slate-850 hover:bg-slate-900/40">
+      <tr class="border-b border-slate-800 hover:bg-slate-900/40">
         <td class="px-6 py-4 whitespace-nowrap text-xs font-black text-gold">
           #${o.reference_code}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-xs text-white">
           <div class="font-extrabold">${o.customer_name}</div>
           <div class="text-[10px] text-slate-500 font-bold">${o.customer_phone}</div>
-          <div class="text-[9px] text-slate-500 truncate max-w-[150px]">${o.customer_area}</div>
+          <div class="text-[9px] text-slate-500 truncate max-w-[150px]">${o.customer_area || ""}</div>
         </td>
         <td class="px-6 py-4 text-xs text-slate-300 font-medium max-w-[200px] truncate" title="${itemsDescription}">
           ${itemsDescription}
@@ -1033,7 +1097,6 @@ async function changeOrderStatus(id, newStatus) {
   const success = await db.updateOrderStatus(id, newStatus);
   if (success) {
     showAdminToast(`Order status updated to: ${newStatus}`);
-    // Refresh stats
     allOrders = await db.getOrders();
     renderStats();
   } else {
@@ -1041,7 +1104,9 @@ async function changeOrderStatus(id, newStatus) {
   }
 }
 
-// --- REVIEWS MANAGEMENT ---
+// ============================================================
+// REVIEWS MANAGEMENT
+// ============================================================
 function renderReviewsTable() {
   const tbody = document.getElementById("reviewsTableBody");
   if (!tbody) return;
@@ -1058,10 +1123,11 @@ function renderReviewsTable() {
   }
 
   tbody.innerHTML = allReviews.map(r => {
-    // Find target product name
     const prod = allProducts.find(p => p.id === r.product_id);
     const prodName = prod ? prod.name : "Unknown Product";
-    const dateStr = new Date(r.created_at).toLocaleDateString("en-GH", { year: "numeric", month: "short", day: "numeric" });
+    const dateStr = new Date(r.created_at).toLocaleDateString("en-GH", {
+      year: "numeric", month: "short", day: "numeric"
+    });
 
     const stars = Array(5).fill("").map((_, i) => `
       <svg class="w-3 h-3 ${i < r.rating ? 'text-gold fill-current' : 'text-slate-700'}" viewBox="0 0 20 20">
@@ -1069,12 +1135,33 @@ function renderReviewsTable() {
       </svg>
     `).join("");
 
-    const approveButton = r.is_approved ? 
-      `<span class="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-green-950 text-green-400">Approved</span>` : 
-      `<button onclick="triggerApproveReview('${r.id}')" class="bg-gold hover:bg-gold/90 text-slate-900 font-extrabold text-[10px] px-2.5 py-1 rounded uppercase tracking-wider transition-colors">Approve</button>`;
+    let statusBadge = "";
+    let actionButtons = "";
+
+    if (r.is_approved) {
+      statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-green-950 text-green-400">Approved</span>`;
+      actionButtons = `
+        <button onclick="triggerRejectReview('${r.id}')" class="bg-yellow-950/40 hover:bg-yellow-900/60 text-yellow-400 font-extrabold text-[10px] px-2.5 py-1 rounded uppercase tracking-wider transition-colors border border-yellow-900/30">Reject</button>
+        <button onclick="triggerDeleteReview('${r.id}')" class="text-red-500 hover:text-white transition-colors ml-2" title="Delete">
+          <svg class="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+        </button>
+      `;
+    } else {
+      statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-yellow-950 text-yellow-400">Pending</span>`;
+      actionButtons = `
+        <button onclick="triggerApproveReview('${r.id}')" class="bg-gold hover:bg-gold/90 text-slate-900 font-extrabold text-[10px] px-2.5 py-1 rounded uppercase tracking-wider transition-colors">Approve</button>
+        <button onclick="triggerDeleteReview('${r.id}')" class="text-red-500 hover:text-white transition-colors ml-2" title="Delete">
+          <svg class="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+        </button>
+      `;
+    }
 
     return `
-      <tr class="border-b border-slate-850 hover:bg-slate-900/40">
+      <tr class="border-b border-slate-800 hover:bg-slate-900/40">
         <td class="px-6 py-4 whitespace-nowrap text-xs font-bold text-white">
           ${r.customer_name}
         </td>
@@ -1088,14 +1175,10 @@ function renderReviewsTable() {
           ${r.comment || ""}
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
-          ${approveButton}
+          ${statusBadge}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-right">
-          <button onclick="triggerDeleteReview('${r.id}')" class="text-red-500 hover:text-white transition-colors" title="Delete">
-            <svg class="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-            </svg>
-          </button>
+          ${actionButtons}
         </td>
       </tr>
     `;
@@ -1105,11 +1188,22 @@ function renderReviewsTable() {
 async function triggerApproveReview(id) {
   const success = await db.approveReview(id);
   if (success) {
-    showAdminToast("Review successfully approved and visible on storefront.");
+    showAdminToast("Review approved and now visible on storefront.");
     allReviews = await db.getReviews();
     renderReviewsTable();
   } else {
     showAdminToast("Could not approve review.");
+  }
+}
+
+async function triggerRejectReview(id) {
+  const success = await db.rejectReview(id);
+  if (success) {
+    showAdminToast("Review rejected and hidden from storefront.");
+    allReviews = await db.getReviews();
+    renderReviewsTable();
+  } else {
+    showAdminToast("Could not reject review.");
   }
 }
 
@@ -1127,14 +1221,16 @@ async function triggerDeleteReview(id) {
   }
 }
 
-// --- ADMIN TOAST ALERT ---
+// ============================================================
+// TOAST NOTIFICATIONS
+// ============================================================
 function showAdminToast(msg) {
   const toast = document.getElementById("adminToast");
   if (!toast) return;
 
   toast.textContent = msg;
   toast.classList.add("show");
-  
+
   setTimeout(() => {
     toast.classList.remove("show");
   }, 4000);
