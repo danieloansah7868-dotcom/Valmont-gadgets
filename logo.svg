@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 80" width="100%" height="100%">
+  <defs>
+    <style>
+      .hex-bg { fill: #1e355c; }
+      .v-white { fill: none; stroke: #ffffff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .v-orange-fill { fill: #f68b1e; }
+      .text-valmont { font-family: 'Inter', -apple-system, sans-serif; font-weight: 800; font-size: 13px; fill: #0b1a38; letter-spacing: 4px; }
+      .text-gadgets { font-family: 'Inter', -apple-system, sans-serif; font-weight: 900; font-size: 26px; fill: #f68b1e; letter-spacing: 0.5px; }
+    </style>
+  </defs>
+
+  <!-- Hexagon Centered at cx=40, cy=40, radius S=32 -->
+  <g>
+    <!-- Points calculated for 0.73 ratio vertically oriented hexagon -->
+    <polygon class="hex-bg" points="40,8 63.36,24 63.36,56 40,72 16.64,56 16.64,24" />
+    
+    <!-- Left Device (Smartphone) -->
+    <rect class="v-white" x="19.7" y="18.1" width="19.5" height="34.3" rx="2" ry="2" />
+    
+    <!-- Home button dot on smartphone -->
+    <circle class="v-orange-fill" cx="29.5" cy="47.0" r="1.5" />
+    
+    <!-- Right Device (Laptop Screen) -->
+    <rect class="v-white" x="40.8" y="26.0" width="14.8" height="25.8" rx="1.5" ry="1.5" />
+    
+    <!-- Orange Laptop Base -->
+    <rect class="v-orange-fill" x="40.8" y="51.7" width="19.5" height="2.5" rx="0.5" ry="0.5" />
+  </g>
+
+  <!-- Typography -->
+  <text x="78" y="34" class="text-valmont">VALMONT</text>
+  <text x="78" y="60" class="text-gadgets">GADGETS</text>
+</svg>
