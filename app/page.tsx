@@ -581,15 +581,7 @@ export default function Page() {
         </div>
       </main>
 
-      <footer className="bg-[#0b1a38] text-white mt-12">
-        <div className="max-w-[1280px] mx-auto px-4 py-10 grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div><p className="font-black text-[13px] tracking-widest uppercase mb-3">Valmont Gadgets</p><p className="text-[12px] leading-relaxed text-gray-300 font-medium">Ghana&apos;s executive source for genuine mobile phones and laptops. Franko Trading standard verification.</p><p className="text-[11px] mt-4 font-bold tracking-wide text-[#f58c14]">valmontgadgets.com</p></div>
-          <div><p className="font-bold text-[11px] tracking-widest uppercase mb-3 text-gray-400">Shop</p><ul className="space-y-2 text-[12px] font-medium text-gray-300"><li>iPhones & Apple</li><li>Samsung Galaxy</li><li>Executive Laptops</li><li>Smart Audio & AirPods</li><li>Chargers & Power Banks</li></ul></div>
-          <div><p className="font-bold text-[11px] tracking-widest uppercase mb-3 text-gray-400">Support</p><ul className="space-y-2 text-[12px] font-medium text-gray-300"><li>Call: 054 245 1578</li><li>WhatsApp Order</li><li>Warranty Policy</li><li>Swap & Trade-In</li><li>Store: East Legon, Accra</li></ul></div>
-          <div><p className="font-bold text-[11px] tracking-widest uppercase mb-3 text-gray-400">Payment</p><ul className="space-y-2 text-[12px] font-medium text-gray-300"><li>MTN MoMo & Vodafone Cash</li><li>Visa / Mastercard</li><li>Bank Transfer</li><li>Pay on Delivery (Accra)</li><li className="text-[#f58c14] font-bold">100% Sealed & Verified</li></ul></div>
-        </div>
-        <div className="border-t border-white/10"><div className="max-w-[1280px] mx-auto px-4 py-4 flex flex-col md:flex-row justify-between gap-2 text-[10px] tracking-widest uppercase font-semibold text-gray-400"><span>© 2026 VALMONT GADGETS — ALL RIGHTS RESERVED</span><span>BUILT FOR GHANA • DEEP NAVY & GOLD • ZERO EMOJI CORPORATE STANDARD</span></div></div>
-      </footer>
+
 
       <p className="sr-only" aria-live="polite">THEME ACTIVE: {theme.toUpperCase()}</p>
       {drawerOpen && (

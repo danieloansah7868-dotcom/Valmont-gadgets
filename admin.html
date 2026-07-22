@@ -146,54 +146,86 @@
         <!-- Stat Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <!-- Total Products -->
-          <div class="bg-slate-panel border border-slate-800 p-5 rounded-lg flex items-center justify-between">
-            <div>
-              <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Total Products</span>
-              <h3 class="text-2xl font-black text-white mt-1" id="statTotalProducts">0</h3>
-            </div>
-            <div class="text-gold bg-navy-deep p-3 rounded-lg border border-slate-800">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-              </svg>
+          <div class="stat-flip-card" title="Hover to flip">
+            <div class="stat-flip-inner">
+              <div class="stat-flip-front bg-slate-panel border border-slate-800 p-5 rounded-lg flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Total Products</span>
+                  <h3 class="text-2xl font-black text-white mt-1" id="statTotalProducts">0</h3>
+                </div>
+                <div class="text-gold bg-navy-deep p-3 rounded-lg border border-slate-800">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="stat-flip-back bg-slate-panel border border-slate-800 rounded-lg flex flex-col items-center justify-center text-center px-4">
+                <span class="text-[10px] text-gold font-extrabold uppercase tracking-widest">Catalog</span>
+                <p class="text-xs text-slate-300 font-semibold mt-1.5 leading-snug">Live count of every verified device currently listed for sale.</p>
+              </div>
             </div>
           </div>
 
           <!-- Total Orders -->
-          <div class="bg-slate-panel border border-slate-800 p-5 rounded-lg flex items-center justify-between">
-            <div>
-              <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Total Orders</span>
-              <h3 class="text-2xl font-black text-white mt-1" id="statTotalOrders">0</h3>
-            </div>
-            <div class="text-gold bg-navy-deep p-3 rounded-lg border border-slate-800">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-              </svg>
+          <div class="stat-flip-card" title="Hover to flip">
+            <div class="stat-flip-inner">
+              <div class="stat-flip-front bg-slate-panel border border-slate-800 p-5 rounded-lg flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Total Orders</span>
+                  <h3 class="text-2xl font-black text-white mt-1" id="statTotalOrders">0</h3>
+                </div>
+                <div class="text-gold bg-navy-deep p-3 rounded-lg border border-slate-800">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="stat-flip-back bg-slate-panel border border-slate-800 rounded-lg flex flex-col items-center justify-center text-center px-4">
+                <span class="text-[10px] text-gold font-extrabold uppercase tracking-widest">Fulfilment</span>
+                <p class="text-xs text-slate-300 font-semibold mt-1.5 leading-snug">Every customer order received, from pending through delivered.</p>
+              </div>
             </div>
           </div>
 
           <!-- Total Revenue -->
-          <div class="bg-slate-panel border border-slate-800 p-5 rounded-lg flex items-center justify-between">
-            <div>
-              <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Gross Revenue</span>
-              <h3 class="text-2xl font-black text-white mt-1" id="statRevenue">GH₵ 0</h3>
-            </div>
-            <div class="text-gold bg-navy-deep p-3 rounded-lg border border-slate-800">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
+          <div class="stat-flip-card" title="Hover to flip">
+            <div class="stat-flip-inner">
+              <div class="stat-flip-front bg-slate-panel border border-slate-800 p-5 rounded-lg flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Gross Revenue</span>
+                  <h3 class="text-2xl font-black text-white mt-1" id="statRevenue">GH₵ 0</h3>
+                </div>
+                <div class="text-gold bg-navy-deep p-3 rounded-lg border border-slate-800">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="stat-flip-back bg-slate-panel border border-slate-800 rounded-lg flex flex-col items-center justify-center text-center px-4">
+                <span class="text-[10px] text-gold font-extrabold uppercase tracking-widest">Sales</span>
+                <p class="text-xs text-slate-300 font-semibold mt-1.5 leading-snug">Total amount paid across all non-cancelled orders.</p>
+              </div>
             </div>
           </div>
 
           <!-- Net Profit -->
-          <div class="bg-slate-panel border border-slate-800 p-5 rounded-lg flex items-center justify-between" title="Calculated as selling price minus supplier cost, delivery, and payment fees. Visible only on admin dashboard.">
-            <div>
-              <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Net Profit</span>
-              <h3 class="text-2xl font-black text-gold mt-1" id="statProfit">GH₵ 0</h3>
-            </div>
-            <div class="text-gold bg-navy-deep p-3 rounded-lg border border-slate-800">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-              </svg>
+          <div class="stat-flip-card" title="Calculated as selling price minus supplier cost, delivery, and payment fees. Visible only on admin dashboard. Hover to flip">
+            <div class="stat-flip-inner">
+              <div class="stat-flip-front bg-slate-panel border border-slate-800 p-5 rounded-lg flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Net Profit</span>
+                  <h3 class="text-2xl font-black text-gold mt-1" id="statProfit">GH₵ 0</h3>
+                </div>
+                <div class="text-gold bg-navy-deep p-3 rounded-lg border border-slate-800">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="stat-flip-back bg-slate-panel border border-slate-800 rounded-lg flex flex-col items-center justify-center text-center px-4">
+                <span class="text-[10px] text-gold font-extrabold uppercase tracking-widest">Margin</span>
+                <p class="text-xs text-slate-300 font-semibold mt-1.5 leading-snug">Revenue minus supplier cost, delivery, and payment fees.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -554,10 +586,7 @@
         </div>
       </section>
 
-    <!-- Footer -->
-    <footer class="bg-slate-panel border-t border-slate-800 py-6 text-center text-[10px] text-slate-500 font-bold uppercase tracking-widest shrink-0">
-      Valmont Gadgets Admin Center — Powered by Valmont Web Services
-    </footer>
+
 
   </div>
 
