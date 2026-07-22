@@ -138,15 +138,16 @@ class ValmontDatabase {
           .eq("is_active", true);
         if (error) throw error;
         if (data && data.length > 0) {
-          // Sync to LocalStorage as backup
-          localStorage.setItem("valmont_products", JSON.stringify(data));
-          return data;
+          const normalized = data.map(normalizeStorefrontProduct);
+          // Sync to LocalStorage as backup so admin edits reflect across tabs.
+          localStorage.setItem("valmont_products", JSON.stringify(normalized));
+          return normalized;
         }
       } catch (err) {
         console.error("Supabase getProducts error, falling back:", err);
       }
     }
-    return JSON.parse(localStorage.getItem("valmont_products")).filter(p => p.is_active);
+    return JSON.parse(localStorage.getItem("valmont_products")).map(normalizeStorefrontProduct).filter(p => p.is_active);
   }
 
   async getProductById(id) {
@@ -158,12 +159,13 @@ class ValmontDatabase {
           .eq("id", id)
           .single();
         if (error) throw error;
-        if (data) return data;
+        if (data) return normalizeStorefrontProduct(data);
       } catch (err) {
         console.error("Supabase getProductById error, falling back:", err);
       }
     }
-    return JSON.parse(localStorage.getItem("valmont_products")).find(p => p.id === id);
+    const product = JSON.parse(localStorage.getItem("valmont_products")).find(p => p.id === id);
+    return product ? normalizeStorefrontProduct(product) : product;
   }
 
   // --- REVIEWS ---
@@ -216,34 +218,68 @@ class ValmontDatabase {
 
   // --- ORDERS ---
   async createOrder(order) {
-    const newOrder = {
+    const subtotal = order.items.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || item.quantity || 1), 0);
+    const deliveryFee = Number(order.delivery_fee ?? (subtotal >= 5000 ? 0 : 150));
+    const total = Number(order.total_amount ?? order.total ?? subtotal + deliveryFee);
+    const customerId = crypto.randomUUID();
+    const customerPayload = {
+      id: customerId,
+      name: order.customer_name,
+      phone: order.customer_phone,
+      email: order.customer_email || "",
+      addresses: [{ zone: order.customer_area, street: order.customer_street || "" }]
+    };
+    const requestedOrder = {
       id: crypto.randomUUID(),
-      reference_code: order.reference_code,
+      order_number: order.reference_code || order.order_number,
+      customer_id: customerId,
+      items: order.items.map(item => ({
+        product_id: item.id || item.product_id,
+        product_name: item.name || item.product_name,
+        product_image: item.image_url || item.product_image || "",
+        selected_color: item.selected_color || "",
+        selected_storage: item.selected_storage || "",
+        quantity: Number(item.qty || item.quantity || 1),
+        unit_price: Number(item.price || item.unit_price || 0),
+        line_total: Number(item.price || item.unit_price || 0) * Number(item.qty || item.quantity || 1)
+      })),
+      subtotal,
+      delivery_fee: deliveryFee,
+      total,
+      status: "Pending",
+      payment_method: order.payment_method,
+      admin_notes: "",
+      created_at: new Date().toISOString()
+    };
+    const legacyOrder = {
+      ...requestedOrder,
+      reference_code: requestedOrder.order_number,
       customer_name: order.customer_name,
       customer_phone: order.customer_phone,
       customer_area: order.customer_area,
       customer_street: order.customer_street || "",
-      payment_method: order.payment_method,
-      total_amount: parseFloat(order.total_amount),
-      items: order.items,
-      status: "Pending",
-      created_at: new Date().toISOString()
+      total_amount: total
     };
 
     if (this.useSupabase) {
       try {
-        const { data, error } = await this.supabaseClient
-          .from("orders")
-          .insert([newOrder]);
+        await this.supabaseClient.from("customers").upsert([customerPayload], { onConflict: "id" });
+        const { error } = await this.supabaseClient.from("orders").insert([requestedOrder]);
         if (error) throw error;
         return true;
       } catch (err) {
-        console.error("Supabase createOrder error, falling back:", err);
+        try {
+          const { error } = await this.supabaseClient.from("orders").insert([legacyOrder]);
+          if (error) throw error;
+          return true;
+        } catch (legacyErr) {
+          console.error("Supabase createOrder error, falling back:", { err, legacyErr });
+        }
       }
     }
 
     const orders = JSON.parse(localStorage.getItem("valmont_orders"));
-    orders.unshift(newOrder);
+    orders.unshift(legacyOrder);
     localStorage.setItem("valmont_orders", JSON.stringify(orders));
     return true;
   }
@@ -251,6 +287,38 @@ class ValmontDatabase {
 
 // Instantiate Database Wrapper
 const db = new ValmontDatabase();
+
+function normalizeStorefrontProduct(product) {
+  const images = Array.isArray(product.images) ? product.images : parseJSONOrDefault(product.images, []);
+  const colors = Array.isArray(product.colors) ? product.colors : parseJSONOrDefault(product.colors, []);
+  const storageOptions = Array.isArray(product.storage_options) ? product.storage_options : parseJSONOrDefault(product.storage_options, []);
+  const stock = Number(product.stock ?? product.stock_quantity ?? 0);
+  const category = product.category || product.category_id || "gadgets";
+  const imageUrl = product.image_url || product.image || images[0] || "";
+  return {
+    ...product,
+    category,
+    category_id: product.category_id || category,
+    stock,
+    stock_quantity: stock,
+    image_url: imageUrl,
+    image: imageUrl,
+    images,
+    colors,
+    storage_options: storageOptions,
+    is_active: product.is_active !== false
+  };
+}
+
+function parseJSONOrDefault(value, fallback) {
+  if (!value) return fallback;
+  if (typeof value !== "string") return value;
+  try { return JSON.parse(value); } catch (_) { return fallback; }
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>'"]/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]));
+}
 
 // --- STATE MANAGEMENT ---
 let allProducts = [];
@@ -283,8 +351,10 @@ const topNoticeBanner = document.getElementById("topNoticeBanner");
 
 // --- INITIALIZATION ---
 window.addEventListener("DOMContentLoaded", async () => {
-  // Load products
+  // Load products and admin-controlled storefront content
   await loadAndRenderProducts();
+  await applyAdminSiteSettings();
+  initStorefrontRealtime();
   
   // Flash sale timer
   initFlashSaleTimer();
@@ -302,13 +372,82 @@ window.addEventListener("DOMContentLoaded", async () => {
 // --- LOAD AND RENDER CATALOGUE ---
 async function loadAndRenderProducts() {
   allProducts = await db.getProducts();
-  // Ensure compare_at_price follows required formula
-  allProducts = allProducts.map(p => ({ ...p, compare_at_price: Math.round(p.price * 1.15) }));
+  allProducts = allProducts.map(normalizeStorefrontProduct);
   renderStorefrontGrid();
   renderFlashSale();
   renderRecentlyViewedGrid();
   updateCartBadge();
   updateWishlistBadge();
+}
+
+async function applyAdminSiteSettings() {
+  const settings = await getAdminSiteSettings();
+  if (!settings) return;
+  const announcement = settings.announcement;
+  const announcementEl = document.querySelector("body > div:first-of-type p");
+  if (announcement && announcementEl) announcementEl.textContent = announcement;
+
+  const heroHeading = document.querySelector(".hero-deals h2");
+  if (settings.hero_headline && heroHeading) heroHeading.textContent = settings.hero_headline;
+
+  const heroSubtitle = document.querySelector(".hero-deals p");
+  if (settings.hero_subtitle && heroSubtitle) heroSubtitle.textContent = settings.hero_subtitle;
+
+  const infoBannerSpans = document.querySelectorAll(".bg-slate-950\/60 span");
+  if (infoBannerSpans[0] && settings.whatsapp) infoBannerSpans[0].textContent = `Call / WhatsApp to Order: ${settings.whatsapp}`;
+  if (infoBannerSpans[1]) infoBannerSpans[1].textContent = `${settings.store_hours || ""} • ${settings.address || ""}`.trim();
+
+  const brandLabels = document.querySelectorAll(".nav-brand-text");
+  brandLabels.forEach(label => { if (settings.store_name) label.textContent = settings.store_name.split(" ")[0].toUpperCase(); });
+
+  const faqItems = Array.isArray(settings.faq) ? settings.faq.filter(item => item.question && item.answer) : [];
+  const faqContainer = document.querySelector(".faq-item")?.parentElement;
+  if (faqContainer && faqItems.length) {
+    faqContainer.innerHTML = faqItems.map(item => `
+      <div class="faq-item bg-navy-deep border border-slate-800 rounded-lg overflow-hidden">
+        <button class="faq-header w-full px-5 py-3 text-left text-xs font-black uppercase tracking-wider text-slate-200 flex items-center justify-between">
+          <span>${escapeHTML(item.question)}</span>
+          <span class="text-gold">+</span>
+        </button>
+        <div class="faq-body max-h-0 overflow-hidden transition-all duration-300 bg-navy-deep/40 px-5">
+          <p class="py-3 text-xs text-slate-400 leading-relaxed font-medium">${escapeHTML(item.answer)}</p>
+        </div>
+      </div>
+    `).join("");
+    bindFaqAccordions();
+  }
+}
+
+async function getAdminSiteSettings() {
+  const local = parseJSONOrDefault(localStorage.getItem("valmont_site_settings"), null);
+  let settings = local;
+  if (db.useSupabase) {
+    try {
+      const { data, error } = await db.supabaseClient.from("site_settings").select("key,value");
+      if (error) throw error;
+      if (Array.isArray(data) && data.length) {
+        settings = data.reduce((acc, row) => ({ ...acc, [row.key]: parseJSONOrDefault(row.value, row.value) }), settings || {});
+        localStorage.setItem("valmont_site_settings", JSON.stringify(settings));
+      }
+    } catch (error) {
+      console.warn("Site settings unavailable, using local copy.", error);
+    }
+  }
+  return settings;
+}
+
+function initStorefrontRealtime() {
+  if (!db.useSupabase || !db.supabaseClient.channel) return;
+  try {
+    db.supabaseClient
+      .channel("valmont-storefront-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "products" }, loadAndRenderProducts)
+      .on("postgres_changes", { event: "*", schema: "public", table: "reviews" }, () => activeQuickViewProduct && renderApprovedReviewsList(activeQuickViewProduct.id))
+      .on("postgres_changes", { event: "*", schema: "public", table: "site_settings" }, applyAdminSiteSettings)
+      .subscribe();
+  } catch (error) {
+    console.warn("Storefront realtime unavailable.", error);
+  }
 }
 
 function renderStorefrontGrid() {
@@ -1210,6 +1349,7 @@ async function submitCheckoutOrder() {
     items: cart.map(i => ({
       id: i.id,
       name: i.name,
+      image_url: i.image_url,
       qty: i.qty,
       price: i.price + (i.price_adjustment || 0),
       selected_color: i.selected_color,
@@ -1559,23 +1699,27 @@ function initUIEventListeners() {
   bindSearchInput(mobileSearchInput, mobileSearchBtn);
 
   // FAQ Accordion click
+  bindFaqAccordions();
+}
+
+function bindFaqAccordions() {
   document.querySelectorAll(".faq-header").forEach(hdr => {
-    hdr.addEventListener("click", () => {
+    hdr.onclick = () => {
       const item = hdr.parentElement;
       const body = item.querySelector(".faq-body");
       const active = item.classList.contains("active");
 
-      // Close other accordions
       document.querySelectorAll(".faq-item").forEach(other => {
         other.classList.remove("active");
-        other.querySelector(".faq-body").style.maxHeight = null;
+        const otherBody = other.querySelector(".faq-body");
+        if (otherBody) otherBody.style.maxHeight = null;
       });
 
-      if (!active) {
+      if (!active && body) {
         item.classList.add("active");
         body.style.maxHeight = body.scrollHeight + "px";
       }
-    });
+    };
   });
 }
 

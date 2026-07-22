@@ -1,23 +1,31 @@
--- Supabase Database Schema for Valmont Gadgets - COMPLETE
--- Includes all tables: products, orders, order_items, customers, customer_addresses, reviews, browsing_history
+-- Supabase Database Schema for Valmont Gadgets admin/storefront
+-- Matches the admin panel tables requested for products, categories, orders,
+-- customers, reviews and site_settings. IDs are TEXT so seeded/static products
+-- and slug-like categories can coexist with UUID strings from the admin.
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- CATEGORIES
+CREATE TABLE IF NOT EXISTS categories (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    sort_order INTEGER DEFAULT 0
+);
 
 -- PRODUCTS
 CREATE TABLE IF NOT EXISTS products (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     name TEXT NOT NULL,
     slug TEXT UNIQUE NOT NULL,
-    category TEXT NOT NULL,
-    price NUMERIC NOT NULL,
-    wholesale_price NUMERIC,
-    compare_at_price NUMERIC,
+    category_id TEXT REFERENCES categories(id) ON DELETE SET NULL,
+    price NUMERIC NOT NULL DEFAULT 0,
+    compare_at_price NUMERIC DEFAULT 0,
+    wholesale_price NUMERIC DEFAULT 0,
     specs TEXT,
     description TEXT,
     badge TEXT,
-    rating NUMERIC DEFAULT 4.8,
-    reviews_count INTEGER DEFAULT 0,
-    stock_quantity INTEGER DEFAULT 0,
+    stock INTEGER DEFAULT 0,
     image_url TEXT,
     images JSONB DEFAULT '[]'::jsonb,
     colors JSONB DEFAULT '[]'::jsonb,
@@ -29,67 +37,35 @@ CREATE TABLE IF NOT EXISTS products (
 
 -- CUSTOMERS
 CREATE TABLE IF NOT EXISTS customers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
-    phone TEXT NOT NULL,
-    email TEXT,
-    password_hash TEXT,
-    default_address_id UUID,
-    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
--- CUSTOMER ADDRESSES
-CREATE TABLE IF NOT EXISTS customer_addresses (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     name TEXT NOT NULL,
     phone TEXT,
-    zone TEXT,
-    street TEXT,
-    landmark TEXT,
-    is_default BOOLEAN DEFAULT false,
-    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+    email TEXT,
+    addresses JSONB DEFAULT '[]'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- ORDERS
 CREATE TABLE IF NOT EXISTS orders (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     order_number TEXT UNIQUE NOT NULL,
-    customer_id UUID REFERENCES customers(id),
-    customer_name TEXT NOT NULL,
-    customer_phone TEXT NOT NULL,
-    customer_email TEXT,
-    delivery_address TEXT,
-    delivery_zone TEXT,
+    customer_id TEXT REFERENCES customers(id) ON DELETE SET NULL,
+    items JSONB DEFAULT '[]'::jsonb,
+    subtotal NUMERIC DEFAULT 0,
     delivery_fee NUMERIC DEFAULT 0,
-    subtotal NUMERIC,
-    total NUMERIC NOT NULL,
+    total NUMERIC NOT NULL DEFAULT 0,
+    status TEXT DEFAULT 'Pending',
     payment_method TEXT,
-    payment_status TEXT DEFAULT 'Pending',
-    order_status TEXT DEFAULT 'Pending',
     admin_notes TEXT,
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- ORDER ITEMS
-CREATE TABLE IF NOT EXISTS order_items (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
-    product_id UUID REFERENCES products(id),
-    product_name TEXT,
-    product_image TEXT,
-    selected_color TEXT,
-    selected_storage TEXT,
-    quantity INTEGER,
-    unit_price NUMERIC,
-    line_total NUMERIC
-);
-
 -- REVIEWS
 CREATE TABLE IF NOT EXISTS reviews (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    product_id TEXT REFERENCES products(id) ON DELETE CASCADE,
     customer_name TEXT NOT NULL,
     rating INTEGER CHECK (rating >= 1 AND rating <= 5) NOT NULL,
     comment TEXT,
@@ -97,20 +73,65 @@ CREATE TABLE IF NOT EXISTS reviews (
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- BROWSING HISTORY
-CREATE TABLE IF NOT EXISTS browsing_history (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
-    product_id UUID REFERENCES products(id) ON DELETE CASCADE,
-    viewed_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+-- SITE SETTINGS
+CREATE TABLE IF NOT EXISTS site_settings (
+    key TEXT PRIMARY KEY,
+    value JSONB NOT NULL DEFAULT 'null'::jsonb,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- Compatibility additions for deployments that already had the older schema.
+ALTER TABLE products ADD COLUMN IF NOT EXISTS category_id TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INTEGER DEFAULT 0;
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS addresses JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS items JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'Pending';
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method TEXT;
+
 -- Indexes
-CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
+CREATE INDEX IF NOT EXISTS idx_products_category_id ON products(category_id);
 CREATE INDEX IF NOT EXISTS idx_products_is_active ON products(is_active);
+CREATE INDEX IF NOT EXISTS idx_categories_sort_order ON categories(sort_order);
+CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON orders(customer_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
 CREATE INDEX IF NOT EXISTS idx_reviews_product_id ON reviews(product_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_is_approved ON reviews(is_approved);
-CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
-CREATE INDEX IF NOT EXISTS idx_customer_addresses_customer ON customer_addresses(customer_id);
 
--- Storage bucket note: Create "product-images" bucket with public read access in Supabase dashboard.
+-- Default categories
+INSERT INTO categories (id, name, slug, sort_order) VALUES
+  ('iphones', 'iPhones and Apple', 'iphones', 1),
+  ('samsung', 'Samsung Galaxy', 'samsung', 2),
+  ('laptops', 'Executive Laptops', 'laptops', 3),
+  ('audio', 'Smart Audio', 'audio', 4),
+  ('power', 'Power and Chargers', 'power', 5)
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, slug = EXCLUDED.slug, sort_order = EXCLUDED.sort_order;
+
+-- Storage bucket used by the admin panel for product images.
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('product-images', 'product-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Public read/upload access for product images used by the static admin panel.
+-- In production, restrict INSERT/UPDATE with Supabase Auth if a private admin
+-- account is added later.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Public product image reads'
+  ) THEN
+    CREATE POLICY "Public product image reads"
+      ON storage.objects FOR SELECT
+      USING (bucket_id = 'product-images');
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Admin product image uploads'
+  ) THEN
+    CREATE POLICY "Admin product image uploads"
+      ON storage.objects FOR INSERT
+      WITH CHECK (bucket_id = 'product-images');
+  END IF;
+END $$;
