@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Valmont Gadgets — Executive Admin Panel</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Supabase CDN Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Custom Assets Styles -->
+  <link rel="stylesheet" href="assets/css/gadgets.css">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: {
+              deep: '#0b1a38',
+              light: '#1e2d4d',
+            },
+            gold: '#f58c14',
+            slate: {
+              panel: '#12234a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-[#0b1a38] text-[#f1f5f9] font-sans antialiased">
+
+  <!-- ================= AUTH GATE OVERLAY ================= -->
+  <div id="authGateOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-navy-deep px-4 hidden">
+    <div class="w-full max-w-md bg-slate-panel border border-slate-700 p-8 rounded-xl shadow-2xl">
+      <div class="text-center mb-6">
+        <h2 class="text-xl font-black text-white tracking-wide uppercase">Valmont Executive Portal</h2>
+        <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1.5">Secure Gate Validation</p>
+      </div>
+      
+      <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2">Provide Security Code</label>
+          <div class="relative">
+            <input type="password" id="authPasswordInput" placeholder="Security Code" required class="w-full bg-navy-deep border border-slate-700 text-white text-sm px-4 py-3 rounded-lg outline-none focus:border-gold font-mono" />
+          </div>
+          <p id="authErrorMessage" class="text-xs text-red-500 font-bold mt-2 hidden">Invalid credentials. Access Denied.</p>
+        </div>
+        
+        <button type="submit" class="w-full bg-gold hover:bg-gold/90 text-navy-deep font-black text-xs uppercase py-3.5 rounded-lg tracking-widest transition-all">
+          Authorize Session
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MAIN ADMIN WRAPPER ================= -->
+  <div id="adminMainContent" class="min-h-screen flex flex-col hidden">
+    
+    <!-- Top Header -->
+    <header class="bg-slate-panel border-b border-slate-800 py-4 px-6 shrink-0">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <span class="text-gold font-black text-sm tracking-widest uppercase bg-navy-deep px-3 py-1 rounded border border-slate-700">VALMONT</span>
+          <div>
+            <h1 class="text-base font-black text-white tracking-wide">Gadgets Admin Workspace</h1>
+            <p class="text-[10px] text-slate-400 font-bold tracking-widest uppercase">Verified Corporate Channel</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-4">
+          <a href="/" target="_blank" class="bg-slate-850 hover:bg-slate-800 text-slate-300 font-extrabold text-[10px] uppercase tracking-wider px-4 py-2 rounded-lg border border-slate-700 transition">
+            View Storefront
+          </a>
+          <button onclick="handleAdminLogout()" class="bg-red-950/40 hover:bg-red-900/60 text-red-400 font-extrabold text-[10px] uppercase tracking-wider px-4 py-2 rounded-lg border border-red-900/30 transition">
+            Disconnect
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Sub Navigation Tabs -->
+    <nav class="bg-navy-deep border-b border-slate-800/80 px-6 overflow-x-auto no-scrollbar">
+      <div class="max-w-7xl mx-auto flex gap-4 md:gap-8">
+        <button onclick="switchTab('dashboard')" data-tab-nav="dashboard" class="py-4 border-b-2 border-gold text-gold font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
+          Dashboard Summary
+        </button>
+        <button onclick="switchTab('product-form'); resetProductForm();" data-tab-nav="product-form" class="py-4 border-b-2 border-transparent text-slate-400 hover:text-white font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
+          Manage Product
+        </button>
+        <button onclick="switchTab('bulk-upload')" data-tab-nav="bulk-upload" class="py-4 border-b-2 border-transparent text-slate-400 hover:text-white font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
+          Bulk Image Load
+        </button>
+        <button onclick="switchTab('orders')" data-tab-nav="orders" class="py-4 border-b-2 border-transparent text-slate-400 hover:text-white font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
+          Customer Orders
+        </button>
+        <button onclick="switchTab('reviews')" data-tab-nav="reviews" class="py-4 border-b-2 border-transparent text-slate-400 hover:text-white font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
+          Review Moderation
+        </button>
+      </div>
+    </nav>
+
+    <!-- Content Sections container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
+      
+      <!-- ================= TAB: DASHBOARD ================= -->
+      <section id="section-dashboard" class="admin-tab-section space-y-6">
+        
+        <!-- Grid metrics -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Total Products -->
+          <div class="bg-slate-panel border border-slate-800 p-5 rounded-lg flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Inventory Stock</span>
+              <h3 class="text-2xl font-black text-white mt-1" id="statTotalProducts">0</h3>
+            </div>
+            <div class="text-gold bg-navy-deep p-3 rounded-lg border border-slate-800">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Total Orders -->
+          <div class="bg-slate-panel border border-slate-800 p-5 rounded-lg flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Total Orders</span>
+              <h3 class="text-2xl font-black text-white mt-1" id="statTotalOrders">0</h3>
+            </div>
+            <div class="text-gold bg-navy-deep p-3 rounded-lg border border-slate-800">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Total Revenue -->
+          <div class="bg-slate-panel border border-slate-800 p-5 rounded-lg flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Gross Revenue</span>
+              <h3 class="text-2xl font-black text-white mt-1" id="statRevenue">GH₵ 0</h3>
+            </div>
+            <div class="text-gold bg-navy-deep p-3 rounded-lg border border-slate-800">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Private Profit Margin -->
+          <div class="bg-slate-panel border border-slate-800 p-5 rounded-lg flex items-center justify-between" title="Calculated as selling price minus supplier cost, delivery, and payment fees. Visible only on admin dashboard.">
+            <div>
+              <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Expected Net Profit</span>
+              <h3 class="text-2xl font-black text-gold mt-1" id="statProfit">GH₵ 0</h3>
+            </div>
+            <div class="text-gold bg-navy-deep p-3 rounded-lg border border-slate-800">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inventory List Card -->
+        <div class="bg-slate-panel border border-slate-800 rounded-lg overflow-hidden">
+          <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-black text-white uppercase tracking-wider">Premium Gadget Catalog</h3>
+              <p class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Manage stock details, parameters and retail status</p>
+            </div>
+            <button onclick="switchTab('product-form'); resetProductForm();" class="bg-gold hover:bg-gold/90 text-navy-deep font-extrabold text-xs uppercase px-5 py-2.5 rounded-lg tracking-wider transition-colors flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              Add Product
+            </button>
+          </div>
+          
+          <div class="overflow-x-auto no-scrollbar">
+            <table class="min-w-full divide-y divide-slate-800 text-left">
+              <thead class="bg-navy-deep text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <tr>
+                  <th class="px-6 py-3">Photo</th>
+                  <th class="px-6 py-3">Product Name</th>
+                  <th class="px-6 py-3">Category</th>
+                  <th class="px-6 py-3">Price Stats</th>
+                  <th class="px-6 py-3">Stock</th>
+                  <th class="px-6 py-3">Status</th>
+                  <th class="px-6 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="productsTableBody" class="divide-y divide-slate-800">
+                <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================= TAB: MANAGE / ADD / EDIT PRODUCT ================= -->
+      <section id="section-product-form" class="admin-tab-section hidden">
+        <div class="bg-slate-panel border border-slate-800 rounded-lg p-6">
+          <h3 class="text-sm font-black text-white uppercase tracking-wider border-b border-slate-800 pb-3 mb-6" id="formTitleText">Add Premium Product</h3>
+          
+          <form id="productCrudForm" onsubmit="handleProductFormSubmit(event)" class="space-y-6">
+            
+            <!-- Grid 1: Basic Info -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Product Name *</label>
+                <input type="text" id="prodName" oninput="autoFillSlug()" required placeholder="e.g. iPhone 15 Pro Max" class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-semibold" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Product Slug (Auto) *</label>
+                <input type="text" id="prodSlug" required placeholder="e.g. iphone-15-pro-max" class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-mono" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Category *</label>
+                <select id="prodCategory" required class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-semibold">
+                  <option value="iphones">iPhones & Apple</option>
+                  <option value="samsung">Samsung Galaxy</option>
+                  <option value="laptops">Executive Laptops</option>
+                  <option value="audio">Smart Audio</option>
+                  <option value="power">Power & Chargers</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Grid 2: Financial Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Retail Selling Price (GH₵) *</label>
+                <input type="number" id="prodPrice" required placeholder="e.g. 16500" class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-bold text-gold" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Compare-At Price (GH₵)</label>
+                <input type="number" id="prodComparePrice" placeholder="e.g. 18000" class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-bold" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Wholesale Cost (GH₵) — Private</label>
+                <input type="number" id="prodWholesalePrice" placeholder="e.g. 13900" class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-bold" />
+                <p class="text-[9px] text-slate-500 font-bold uppercase mt-1">Never displayed to customers</p>
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Badge Indicator</label>
+                <select id="prodBadge" class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-semibold">
+                  <option value="none">None</option>
+                  <option value="HOT">HOT</option>
+                  <option value="SEALED">SEALED</option>
+                  <option value="DEAL">DEAL</option>
+                  <option value="BESTSELLER">BESTSELLER</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Grid 3: Specifications and Parameters -->
+            <div class="grid grid-cols-1 gap-6">
+              <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Short Specifications line</label>
+                <input type="text" id="prodSpecs" placeholder="e.g. Titanium, A17 Pro, Sealed, eSIM plus Physical SIM" class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-semibold" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Full Description</label>
+                <textarea id="prodDescription" rows="4" placeholder="Detailed product descriptions, overview of key parameters..." class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-medium leading-relaxed"></textarea>
+              </div>
+            </div>
+
+            <!-- Image Uploader Core section -->
+            <div class="border-t border-slate-850 pt-6">
+              <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-3">Product Media Portfolio (Max 5 Images)</label>
+              
+              <div id="imageDragZone" class="drag-drop-zone rounded-xl p-8 text-center cursor-pointer mb-4">
+                <svg class="w-8 h-8 text-slate-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <p class="text-xs text-slate-300 font-bold uppercase tracking-wider">Drag and drop assets here, or click to browse</p>
+                <p class="text-[9px] text-slate-500 uppercase tracking-widest mt-1">Accepts JPG, PNG, and WebP format</p>
+                <input type="file" id="imageFileInput" class="hidden" multiple accept="image/*" />
+              </div>
+
+              <!-- Upload Progress -->
+              <div id="uploaderProgressContainer" class="bg-navy-deep rounded-full h-2 w-full overflow-hidden relative mb-4 hidden">
+                <div id="uploaderProgressBar" class="bg-gold h-full w-0 transition-all duration-300"></div>
+              </div>
+
+              <!-- Previews Thumbnails (With move/delete) -->
+              <div id="uploaderPreviewContainer" class="preview-thumbnail-container mt-3">
+                <!-- Dynamically Rendered Thumbnails -->
+              </div>
+            </div>
+
+            <!-- Grid 4: Color swatches & Storage pricing adjustments -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-slate-850 pt-6">
+              
+              <!-- Color variants -->
+              <div class="space-y-4">
+                <h4 class="text-xs font-black uppercase tracking-wider text-slate-300">Add Color Variant</h4>
+                <div class="flex items-center gap-3">
+                  <input type="text" id="colorNameInput" placeholder="Color Name (e.g. Midnight Black)" class="flex-1 bg-navy-deep border border-slate-700 rounded-lg p-2.5 text-xs text-white outline-none focus:border-gold font-semibold" />
+                  <input type="color" id="colorHexInput" value="#000000" class="h-10 w-10 bg-transparent border-0 cursor-pointer rounded overflow-hidden" />
+                  <button onclick="addColorOption()" type="button" class="bg-gold hover:bg-gold/90 text-navy-deep font-black text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-lg transition-colors">
+                    Add
+                  </button>
+                </div>
+                <div id="formColorsList" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  <!-- List of added colors -->
+                </div>
+              </div>
+
+              <!-- Storage Size Price Adjustments -->
+              <div class="space-y-4">
+                <h4 class="text-xs font-black uppercase tracking-wider text-slate-300">Add Storage Sizes & Adjustments</h4>
+                <div class="flex gap-2">
+                  <input type="text" id="storageSizeInput" placeholder="Size (e.g. 256GB)" class="w-1/3 bg-navy-deep border border-slate-700 rounded-lg p-2.5 text-xs text-white outline-none focus:border-gold font-semibold" />
+                  <input type="number" id="storagePriceAdjustmentInput" placeholder="Price Offset (e.g. 1200 or -500)" class="flex-1 bg-navy-deep border border-slate-700 rounded-lg p-2.5 text-xs text-white outline-none focus:border-gold font-bold text-gold" />
+                  <button onclick="addStorageOption()" type="button" class="bg-gold hover:bg-gold/90 text-navy-deep font-black text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-lg transition-colors">
+                    Add
+                  </button>
+                </div>
+                <div id="formStorageList" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  <!-- List of added storage options -->
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Bottom: Form Actions -->
+            <div class="border-t border-slate-850 pt-6 flex items-center justify-between">
+              <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Initial Stock Quantity *</label>
+                <input type="number" id="prodStock" required value="0" class="bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-bold w-32" />
+              </div>
+              
+              <div class="flex gap-4">
+                <button onclick="resetProductForm(); switchTab('dashboard');" type="button" class="bg-slate-900 hover:bg-slate-800 text-slate-400 font-extrabold text-xs uppercase px-6 py-3 rounded-lg tracking-wider border border-slate-700 transition">
+                  Cancel
+                </button>
+                <button type="submit" class="bg-gold hover:bg-gold/90 text-navy-deep font-black text-xs uppercase px-8 py-3 rounded-lg tracking-widest transition-all">
+                  Publish Product
+                </button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </section>
+
+      <!-- ================= TAB: BULK IMAGE LOAD ================= -->
+      <section id="section-bulk-upload" class="admin-tab-section hidden">
+        <div class="bg-slate-panel border border-slate-800 rounded-lg p-6 max-w-xl mx-auto">
+          <h3 class="text-sm font-black text-white uppercase tracking-wider border-b border-slate-800 pb-3 mb-6">Bulk Image Load</h3>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Select Target Product</label>
+              <select id="bulkProductSelect" class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-semibold">
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Choose Assets to Append</label>
+              <div class="border-2 dashed border-slate-700 rounded-xl p-8 text-center cursor-pointer bg-navy-deep hover:border-gold transition-colors" onclick="document.getElementById('bulkFileInput').click()">
+                <svg class="w-8 h-8 text-slate-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <p class="text-xs text-slate-300 font-bold uppercase tracking-wider">Select multiple product photos</p>
+                <input type="file" id="bulkFileInput" class="hidden" multiple accept="image/*" onchange="triggerBulkImageUpload(this.files); this.value=''" />
+              </div>
+            </div>
+
+            <div id="bulkUploadResultsList" class="py-2">
+              <!-- Upload outcome messages printed here -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB: CUSTOMER ORDERS ================= -->
+      <section id="section-orders" class="admin-tab-section hidden">
+        <div class="bg-slate-panel border border-slate-800 rounded-lg overflow-hidden">
+          <div class="p-5 border-b border-slate-800">
+            <h3 class="text-sm font-black text-white uppercase tracking-wider">Customer Purchase Orders</h3>
+            <p class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Manage and track delivery dispatches, payments, and invoices</p>
+          </div>
+          
+          <div class="overflow-x-auto no-scrollbar">
+            <table class="min-w-full divide-y divide-slate-800 text-left">
+              <thead class="bg-navy-deep text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <tr>
+                  <th class="px-6 py-3">Ref Code</th>
+                  <th class="px-6 py-3">Recipient Details</th>
+                  <th class="px-6 py-3">Items Purchased</th>
+                  <th class="px-6 py-3">Gross Invoice</th>
+                  <th class="px-6 py-3">Dispatch Status</th>
+                  <th class="px-6 py-3">Purchase Date</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTableBody" class="divide-y divide-slate-800">
+                <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB: REVIEWS MODERATION ================= -->
+      <section id="section-reviews" class="admin-tab-section hidden">
+        <div class="bg-slate-panel border border-slate-800 rounded-lg overflow-hidden">
+          <div class="p-5 border-b border-slate-800">
+            <h3 class="text-sm font-black text-white uppercase tracking-wider">User Reviews Moderation</h3>
+            <p class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Approve or remove customer reviews before publishing on storefront</p>
+          </div>
+          
+          <div class="overflow-x-auto no-scrollbar">
+            <table class="min-w-full divide-y divide-slate-800 text-left">
+              <thead class="bg-navy-deep text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <tr>
+                  <th class="px-6 py-3">Customer Name</th>
+                  <th class="px-6 py-3">Gadget Name</th>
+                  <th class="px-6 py-3">Star Rating</th>
+                  <th class="px-6 py-3">Customer Comment</th>
+                  <th class="px-6 py-3">Publish Status</th>
+                  <th class="px-6 py-3 text-right">Moderations</th>
+                </tr>
+              </thead>
+              <tbody id="reviewsTableBody" class="divide-y divide-slate-800">
+                <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer credit -->
+    <footer class="bg-slate-panel border-t border-slate-800 py-6 text-center text-[10px] text-slate-500 font-bold uppercase tracking-widest shrink-0">
+      Valmont Gadgets Admin Center • Powered by Valmont Web Services
+    </footer>
+
+  </div>
+
+  <!-- Admin Toast Alert container -->
+  <div id="adminToast" class="toast-msg"></div>
+
+  <!-- Admin JS Script -->
+  <script src="assets/js/admin.js"></script>
+
+</body>
+</html>
