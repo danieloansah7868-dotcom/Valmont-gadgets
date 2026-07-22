@@ -54,12 +54,12 @@
       
       <!-- Brand Logo & Title -->
       <a href="/" class="flex items-center shrink-0 gap-2">
-        <span class="text-gold font-black text-lg tracking-widest uppercase bg-navy-deep px-3 py-1 rounded border border-slate-700">VALMONT</span>
+        <span class="nav-brand-text text-gold font-black text-lg tracking-widest uppercase bg-navy-deep px-3 py-1 rounded border border-slate-700">VALMONT</span>
         <span class="hidden md:inline font-black text-xs tracking-widest uppercase text-slate-400">GADGETS</span>
       </a>
 
       <!-- Search Bar -->
-      <div class="flex-1 max-w-[500px] flex items-center border border-slate-700 rounded-lg overflow-hidden bg-navy-deep focus-within:border-gold transition-all">
+      <div class="nav-search-desktop flex-1 max-w-[500px] flex items-center border border-slate-700 rounded-lg overflow-hidden bg-navy-deep focus-within:border-gold transition-all">
         <div class="pl-3 text-slate-500">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -72,7 +72,7 @@
       </div>
 
       <!-- Right Header Actions (Account, Wishlist, Cart) -->
-      <div class="flex items-center gap-2 md:gap-4 shrink-0">
+      <div class="nav-icons flex items-center gap-2 md:gap-4 shrink-0">
         
         <!-- Account Dropdown Button -->
         <button id="accountBtn" onclick="openProfileModal();" class="flex items-center gap-1.5 font-bold text-xs text-slate-300 hover:text-gold py-1.5 px-2.5 rounded-lg hover:bg-navy-deep/40 transition">
@@ -98,6 +98,19 @@
           <span id="cartBadgeCount" class="absolute -top-1 -right-1 bg-gold text-slate-900 text-[9px] font-black rounded-full h-4.5 w-4.5 flex items-center justify-center">0</span>
         </button>
 
+      </div>
+    </div>
+    <div class="nav-mobile-search max-w-[1200px] mx-auto px-4 pb-3">
+      <div class="flex items-center border border-slate-700 rounded-lg overflow-hidden bg-navy-deep focus-within:border-gold transition-all">
+        <div class="pl-3 text-slate-500">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+        <input id="mobileSearchInput" type="text" placeholder="Search genuine gadgets..." class="w-full px-3 py-2 text-xs outline-none bg-transparent text-white font-medium placeholder:text-slate-500" />
+        <button id="mobileSearchBtn" class="bg-gold text-slate-900 px-4 py-2.5 font-black text-[11px] tracking-wider hover:bg-gold/90 transition uppercase">
+          Search
+        </button>
       </div>
     </div>
   </header>
@@ -152,7 +165,7 @@
           <span class="hidden sm:block text-[10px] font-bold tracking-widest uppercase text-slate-400">Verified electronics</span>
         </div>
 
-        <div class="hero-carousel" id="heroCarousel" aria-label="Executive Midweek Deals product carousel">
+        <div class="hero-carousel hero-flip-card-container" id="heroCarousel" aria-label="Executive Midweek Deals product carousel">
           <div class="hero-carousel__stage" id="heroCarouselStage"></div>
           <button class="hero-carousel__arrow hero-carousel__arrow--prev" id="heroPrev" type="button" aria-label="Previous product">&#8592;</button>
           <button class="hero-carousel__arrow hero-carousel__arrow--next" id="heroNext" type="button" aria-label="Next product">&#8594;</button>
@@ -268,7 +281,7 @@
       </div>
 
       <!-- Main Products Grid -->
-      <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+      <div id="productGrid" class="product-grid">
         <!-- Products cards injected dynamically -->
       </div>
 
@@ -862,28 +875,66 @@
   <script>
     (() => {
       const heroProducts = [
-        { id: "vmp-001", name: "iPhone 15 Pro Max", tagline: "Flagship. Sealed. Verified.", price: 16500, image: "https://images.unsplash.com/photo-1696446703255-020d67fa2f3b?q=80&w=800&auto=format&fit=crop" },
-        { id: "vmp-003", name: "MacBook Pro M3", tagline: "Executive computing. 12-month warranty.", price: 22500, image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=800&auto=format&fit=crop" },
-        { id: "vmp-002", name: "Samsung Galaxy S24 Ultra", tagline: "Android flagship. Genuine.", price: 15200, image: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=800&auto=format&fit=crop" },
-        { id: "vmp-004", name: "AirPods Pro 2", tagline: "Premium audio. Original packaging.", price: 3200, image: "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?q=80&w=800&auto=format&fit=crop" },
-        { id: "vmp-005", name: "Anker Power Bank", tagline: "Power anywhere. Fast charge.", price: 1250, image: "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop" }
+        { id: "vmp-001", name: "iPhone 15 Pro Max", tagline: "Titanium flagship, sealed and verified.", price: 16500, image: "https://images.unsplash.com/photo-1696446703255-020d67fa2f3b?w=400&h=400&fit=crop" },
+        { id: "vmp-003", name: "MacBook Pro M3", tagline: "Executive power with warranty support.", price: 22500, image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=400&fit=crop" },
+        { id: "vmp-002", name: "Samsung Galaxy S24 Ultra", tagline: "Galaxy AI flagship, ready to ship.", price: 15200, image: "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=400&h=400&fit=crop" },
+        { id: "vmp-004", name: "AirPods Pro", tagline: "Premium audio in original packaging.", price: 3200, image: "https://images.unsplash.com/photo-1606220588913-b3aacb4d2f40?w=400&h=400&fit=crop" },
+        { id: "vmp-005", name: "Anker Power Bank", tagline: "Fast backup power for every device.", price: 1250, image: "https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=400&h=400&fit=crop" }
       ];
       const stage = document.getElementById("heroCarouselStage");
       const dots = document.getElementById("heroDots");
+      if (!stage || !dots) return;
+
       let current = 0;
       let timer;
+
       function render(index) {
         current = (index + heroProducts.length) % heroProducts.length;
         const product = heroProducts[current];
-        stage.innerHTML = `<article class="hero-product-card" aria-live="polite"><div class="hero-product-card__face hero-product-card__front"><img class="hero-product-card__image" src="${product.image}" alt="${product.name} product image placeholder"><div class="hero-product-card__copy"><span class="hero-product-card__eyebrow">Executive deal ${current + 1} of ${heroProducts.length}</span><h3 class="hero-product-card__name">${product.name}</h3><p class="hero-product-card__tagline">${product.tagline}</p></div></div><div class="hero-product-card__face hero-product-card__back"><span class="hero-product-card__eyebrow">Verified and ready to ship</span><h3 class="hero-product-card__name">${product.name}</h3><p class="hero-product-card__price">GH₵ ${product.price.toLocaleString()}</p><button class="hero-product-card__button hero-product-card__button--bag" type="button" onclick="quickAddProduct('${product.id}')">Add to Bag</button><a class="hero-product-card__button hero-product-card__button--whatsapp" href="https://wa.me/233542451578?text=${encodeURIComponent("I would like to order " + product.name)}" target="_blank" rel="noopener">WhatsApp to order</a></div></article>`;
+        stage.innerHTML = `
+          <article class="hero-product-card flip-card" aria-live="polite">
+            <div class="hero-product-card__face hero-product-card__front">
+              <img class="hero-product-card__image" src="${product.image}" alt="${product.name} product image" loading="lazy">
+              <div class="hero-product-card__copy">
+                <span class="hero-product-card__eyebrow">Flash Sale Live</span>
+                <h3 class="hero-product-card__name">${product.name}</h3>
+                <p class="hero-product-card__tagline">${product.tagline}</p>
+              </div>
+            </div>
+            <div class="hero-product-card__face hero-product-card__back">
+              <h3 class="hero-product-card__name">${product.name}</h3>
+              <p class="hero-product-card__price">GH₵ ${product.price.toLocaleString()}</p>
+              <button class="hero-product-card__button hero-product-card__button--bag" type="button" onclick="quickAddProduct('${product.id}')">Add to Bag</button>
+              <a class="hero-product-card__button hero-product-card__button--whatsapp" href="https://wa.me/233542451578?text=${encodeURIComponent("I would like to order " + product.name)}" target="_blank" rel="noopener">WhatsApp to order</a>
+            </div>
+          </article>`;
         dots.querySelectorAll("button").forEach((dot, i) => dot.classList.toggle("is-active", i === current));
       }
+
       function advance(direction) {
         const card = stage.querySelector(".hero-product-card");
-        if (card) { card.classList.add("is-flipped"); setTimeout(() => render(current + direction), 1000); } else render(current + direction);
-        clearTimeout(timer); timer = setTimeout(() => advance(1), 4000);
+        if (card) {
+          card.classList.add("is-flipped");
+          setTimeout(() => render(current + direction), 1000);
+        } else {
+          render(current + direction);
+        }
+        clearTimeout(timer);
+        timer = setTimeout(() => advance(1), 4000);
       }
-      heroProducts.forEach((product, i) => { const dot = document.createElement("button"); dot.type = "button"; dot.className = "hero-carousel__dot"; dot.setAttribute("aria-label", `Show ${product.name}`); dot.onclick = () => { render(i); clearTimeout(timer); timer = setTimeout(() => advance(1), 4000); }; dots.appendChild(dot); });
+
+      heroProducts.forEach((product, i) => {
+        const dot = document.createElement("button");
+        dot.type = "button";
+        dot.className = "hero-carousel__dot";
+        dot.setAttribute("aria-label", `Show ${product.name}`);
+        dot.onclick = () => {
+          render(i);
+          clearTimeout(timer);
+          timer = setTimeout(() => advance(1), 4000);
+        };
+        dots.appendChild(dot);
+      });
       document.getElementById("heroPrev").onclick = () => advance(-1);
       document.getElementById("heroNext").onclick = () => advance(1);
       render(0);
