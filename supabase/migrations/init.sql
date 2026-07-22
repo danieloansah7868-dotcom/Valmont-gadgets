@@ -1,34 +1,92 @@
--- Supabase Database Schema for Valmont Gadgets
--- Date: 2026-07-22
+-- Supabase Database Schema for Valmont Gadgets - COMPLETE
+-- Includes all tables: products, orders, order_items, customers, customer_addresses, reviews, browsing_history
 
--- Enable UUID generation
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create Products Table
+-- PRODUCTS
 CREATE TABLE IF NOT EXISTS products (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     slug TEXT UNIQUE NOT NULL,
-    category TEXT NOT NULL, -- iphones, samsung, laptops, audio, power
+    category TEXT NOT NULL,
     price NUMERIC NOT NULL,
-    wholesale_price NUMERIC, -- PRIVATE, never shown to customers
-    compare_at_price NUMERIC, -- original price before discount
-    specs TEXT, -- short spec line
-    description TEXT, -- full description
-    badge TEXT, -- HOT, SEALED, DEAL, BESTSELLER, none
+    wholesale_price NUMERIC,
+    compare_at_price NUMERIC,
+    specs TEXT,
+    description TEXT,
+    badge TEXT,
     rating NUMERIC DEFAULT 4.8,
     reviews_count INTEGER DEFAULT 0,
     stock_quantity INTEGER DEFAULT 0,
-    image_url TEXT, -- main product image URL from Supabase storage
-    images JSONB DEFAULT '[]'::jsonb, -- array of additional image URLs
-    colors JSONB DEFAULT '[]'::jsonb, -- array of color options [{name, hex, available}]
-    storage_options JSONB DEFAULT '[]'::jsonb, -- array of storage sizes [{size, price_adjustment}]
+    image_url TEXT,
+    images JSONB DEFAULT '[]'::jsonb,
+    colors JSONB DEFAULT '[]'::jsonb,
+    storage_options JSONB DEFAULT '[]'::jsonb,
     is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Create Reviews Table
+-- CUSTOMERS
+CREATE TABLE IF NOT EXISTS customers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    email TEXT,
+    password_hash TEXT,
+    default_address_id UUID,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- CUSTOMER ADDRESSES
+CREATE TABLE IF NOT EXISTS customer_addresses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    phone TEXT,
+    zone TEXT,
+    street TEXT,
+    landmark TEXT,
+    is_default BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- ORDERS
+CREATE TABLE IF NOT EXISTS orders (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_number TEXT UNIQUE NOT NULL,
+    customer_id UUID REFERENCES customers(id),
+    customer_name TEXT NOT NULL,
+    customer_phone TEXT NOT NULL,
+    customer_email TEXT,
+    delivery_address TEXT,
+    delivery_zone TEXT,
+    delivery_fee NUMERIC DEFAULT 0,
+    subtotal NUMERIC,
+    total NUMERIC NOT NULL,
+    payment_method TEXT,
+    payment_status TEXT DEFAULT 'Pending',
+    order_status TEXT DEFAULT 'Pending',
+    admin_notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- ORDER ITEMS
+CREATE TABLE IF NOT EXISTS order_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES products(id),
+    product_name TEXT,
+    product_image TEXT,
+    selected_color TEXT,
+    selected_storage TEXT,
+    quantity INTEGER,
+    unit_price NUMERIC,
+    line_total NUMERIC
+);
+
+-- REVIEWS
 CREATE TABLE IF NOT EXISTS reviews (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id UUID REFERENCES products(id) ON DELETE CASCADE,
@@ -36,30 +94,23 @@ CREATE TABLE IF NOT EXISTS reviews (
     rating INTEGER CHECK (rating >= 1 AND rating <= 5) NOT NULL,
     comment TEXT,
     is_approved BOOLEAN DEFAULT false,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Create Orders Table (For syncing customer checkout details)
-CREATE TABLE IF NOT EXISTS orders (
+-- BROWSING HISTORY
+CREATE TABLE IF NOT EXISTS browsing_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    reference_code TEXT UNIQUE NOT NULL,
-    customer_name TEXT NOT NULL,
-    customer_phone TEXT NOT NULL,
-    customer_area TEXT NOT NULL,
-    customer_street TEXT,
-    payment_method TEXT NOT NULL,
-    total_amount NUMERIC NOT NULL,
-    items JSONB DEFAULT '[]'::jsonb, -- array of items [{id, name, qty, price, selected_color, selected_storage}]
-    status TEXT DEFAULT 'Pending' NOT NULL, -- Pending, Processing, Dispatched, Delivered, Cancelled
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+    customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+    viewed_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Index for searching and sorting
+-- Indexes
 CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
 CREATE INDEX IF NOT EXISTS idx_products_is_active ON products(is_active);
 CREATE INDEX IF NOT EXISTS idx_reviews_product_id ON reviews(product_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_is_approved ON reviews(is_approved);
-CREATE INDEX IF NOT EXISTS idx_orders_reference_code ON orders(reference_code);
+CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
+CREATE INDEX IF NOT EXISTS idx_customer_addresses_customer ON customer_addresses(customer_id);
 
--- Storage bucket setup guidelines (to be executed via Supabase UI or API):
--- Create bucket "product-images" and enable public read access.
+-- Storage bucket note: Create "product-images" bucket with public read access in Supabase dashboard.

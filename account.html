@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account — Valmont Gadgets</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="assets/css/gadgets.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: { deep: '#0b1a38', light: '#1e2d4d' },
+            gold: '#f58c14',
+            slate: { panel: '#12234a' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-navy-deep text-slate-100 font-sans antialiased">
+  <!-- Header -->
+  <header class="bg-slate-panel shadow-lg sticky top-0 z-40 border-b border-slate-800">
+    <div class="max-w-[1200px] mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2">
+        <span class="text-gold font-black text-lg tracking-widest uppercase bg-navy-deep px-3 py-1 rounded border border-slate-700">VALMONT</span>
+        <span class="hidden md:inline font-black text-xs tracking-widest uppercase text-slate-400">GADGETS</span>
+      </a>
+      <div class="flex items-center gap-4">
+        <a href="/" class="text-xs font-bold text-slate-300 hover:text-gold">Back to Store</a>
+        <button onclick="logoutCustomer()" class="text-xs font-bold bg-red-950/40 hover:bg-red-900/60 text-red-400 px-4 py-1.5 rounded-lg">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-[1200px] mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-2xl font-black">My Account</h1>
+        <p id="welcomeText" class="text-sm text-slate-400">Welcome back</p>
+      </div>
+      <div class="flex gap-2">
+        <a href="#profile" class="px-4 py-2 text-xs font-black border border-slate-700 rounded-lg hover:bg-slate-panel">Profile</a>
+        <a href="#addresses" class="px-4 py-2 text-xs font-black border border-slate-700 rounded-lg hover:bg-slate-panel">Addresses</a>
+        <a href="#orders" class="px-4 py-2 text-xs font-black border border-slate-700 rounded-lg hover:bg-slate-panel">Orders</a>
+      </div>
+    </div>
+
+    <!-- PROFILE SETTINGS -->
+    <section id="profile" class="mb-10 bg-slate-panel border border-slate-800 rounded-xl p-8">
+      <h2 class="font-black text-lg mb-6 flex items-center gap-3">PROFILE SETTINGS <span class="text-[10px] px-2 py-0.5 bg-navy-deep rounded text-gold">EDITABLE</span></h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <form id="profileForm" onsubmit="saveProfile(event)" class="space-y-5">
+            <div>
+              <label class="block text-xs font-black text-slate-400 mb-1.5">FULL NAME</label>
+              <input type="text" id="profileName" class="w-full bg-navy-deep border border-slate-700 px-4 py-3 rounded-lg text-sm font-medium focus:border-gold outline-none" required>
+            </div>
+            <div>
+              <label class="block text-xs font-black text-slate-400 mb-1.5">PHONE NUMBER</label>
+              <input type="tel" id="profilePhone" class="w-full bg-navy-deep border border-slate-700 px-4 py-3 rounded-lg text-sm font-medium focus:border-gold outline-none" required>
+            </div>
+            <div>
+              <label class="block text-xs font-black text-slate-400 mb-1.5">EMAIL ADDRESS</label>
+              <input type="email" id="profileEmail" class="w-full bg-navy-deep border border-slate-700 px-4 py-3 rounded-lg text-sm font-medium focus:border-gold outline-none" required>
+            </div>
+            <button type="submit" class="bg-gold hover:bg-gold/90 text-navy-deep font-black text-xs uppercase tracking-wider px-8 py-3.5 rounded-lg transition">SAVE PROFILE</button>
+          </form>
+        </div>
+        
+        <div class="bg-navy-deep border border-slate-700 rounded-lg p-6">
+          <h4 class="font-black text-sm mb-4">CHANGE PASSWORD</h4>
+          <form id="passwordForm" onsubmit="changePassword(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-black text-slate-400 mb-1.5">CURRENT PASSWORD</label>
+              <input type="password" id="currentPass" class="w-full bg-slate-panel border border-slate-700 px-4 py-3 rounded-lg text-sm font-medium focus:border-gold outline-none" required>
+            </div>
+            <div>
+              <label class="block text-xs font-black text-slate-400 mb-1.5">NEW PASSWORD</label>
+              <input type="password" id="newPass" class="w-full bg-slate-panel border border-slate-700 px-4 py-3 rounded-lg text-sm font-medium focus:border-gold outline-none" required>
+            </div>
+            <button type="submit" class="w-full bg-slate-panel hover:bg-slate-700 text-xs font-black uppercase tracking-wider px-6 py-3 rounded-lg border border-slate-700 transition">UPDATE PASSWORD</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- SAVED ADDRESSES -->
+    <section id="addresses" class="mb-10 bg-slate-panel border border-slate-800 rounded-xl p-8">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="font-black text-lg">SAVED ADDRESSES</h2>
+        <button onclick="showAddAddressModal()" class="bg-gold hover:bg-gold/90 text-navy-deep px-5 py-2 text-xs font-black rounded-lg">+ ADD ADDRESS</button>
+      </div>
+      
+      <div id="addressesList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </section>
+
+    <!-- ORDER HISTORY -->
+    <section id="orders" class="mb-10 bg-slate-panel border border-slate-800 rounded-xl p-8">
+      <h2 class="font-black text-lg mb-6">ORDER HISTORY</h2>
+      <div id="orderHistoryList" class="space-y-4"></div>
+    </section>
+
+    <!-- BROWSING HISTORY -->
+    <section class="mb-10 bg-slate-panel border border-slate-800 rounded-xl p-8">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="font-black text-lg">BROWSING HISTORY</h2>
+        <button onclick="clearBrowsingHistory()" class="text-xs font-bold px-4 py-2 bg-red-950/40 hover:bg-red-900/60 text-red-400 rounded-lg">CLEAR HISTORY</button>
+      </div>
+      <div id="browsingHistoryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4"></div>
+    </section>
+
+    <!-- WISHLIST -->
+    <section class="bg-slate-panel border border-slate-800 rounded-xl p-8">
+      <h2 class="font-black text-lg mb-6">WISHLIST</h2>
+      <div id="wishlistAccountGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4"></div>
+    </section>
+  </div>
+
+  <!-- Add/Edit Address Modal -->
+  <div id="addressModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden">
+    <div class="bg-slate-panel border border-slate-700 w-full max-w-md mx-4 rounded-xl p-7">
+      <div class="flex justify-between mb-6">
+        <h3 id="addressModalTitle" class="font-black text-lg">Add New Address</h3>
+        <button onclick="closeAddressModal()" class="text-xl leading-none">&times;</button>
+      </div>
+      
+      <form id="addressForm" onsubmit="saveAddress(event)" class="space-y-4">
+        <input type="hidden" id="addressId">
+        
+        <div>
+          <label class="text-xs font-bold text-slate-400 block mb-1">ADDRESS NAME</label>
+          <input type="text" id="addrName" placeholder="Home / Office" class="w-full bg-navy-deep border border-slate-700 px-4 py-3 rounded-lg text-sm" required>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-bold text-slate-400 block mb-1">RECIPIENT NAME</label>
+            <input type="text" id="addrRecipient" class="w-full bg-navy-deep border border-slate-700 px-4 py-3 rounded-lg text-sm" required>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-400 block mb-1">PHONE</label>
+            <input type="tel" id="addrPhone" class="w-full bg-navy-deep border border-slate-700 px-4 py-3 rounded-lg text-sm" required>
+          </div>
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-400 block mb-1">ZONE / AREA</label>
+          <select id="addrZone" class="w-full bg-navy-deep border border-slate-700 px-4 py-3 rounded-lg text-sm" required>
+            <option value="Accra Central">Accra Central</option>
+            <option value="East Legon, Accra">East Legon, Accra</option>
+            <option value="Airport Residential">Airport Residential</option>
+            <option value="Spintex Road">Spintex Road</option>
+            <option value="Kumasi Metropolis">Kumasi Metropolis</option>
+            <option value="Takoradi City">Takoradi City</option>
+            <option value="Other Ghana District">Other Ghana District</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-400 block mb-1">STREET ADDRESS</label>
+          <textarea id="addrStreet" rows="2" class="w-full bg-navy-deep border border-slate-700 px-4 py-3 rounded-lg text-sm" required></textarea>
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-400 block mb-1">LANDMARK (OPTIONAL)</label>
+          <input type="text" id="addrLandmark" class="w-full bg-navy-deep border border-slate-700 px-4 py-3 rounded-lg text-sm">
+        </div>
+        
+        <div class="flex items-center gap-2 pt-2">
+          <input type="checkbox" id="addrDefault" class="accent-gold">
+          <label for="addrDefault" class="text-xs font-bold text-slate-300">Set as default delivery address</label>
+        </div>
+        
+        <div class="pt-4 flex gap-3">
+          <button type="button" onclick="closeAddressModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-xs font-black py-3 rounded-lg">CANCEL</button>
+          <button type="submit" class="flex-1 bg-gold hover:bg-gold/90 text-navy-deep text-xs font-black py-3 rounded-lg">SAVE ADDRESS</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Order Details Modal -->
+  <div id="orderDetailsModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden">
+    <div class="bg-slate-panel border border-slate-700 w-full max-w-3xl mx-4 rounded-xl max-h-[90vh] overflow-y-auto">
+      <div class="p-6 border-b border-slate-800 flex justify-between items-center">
+        <div>
+          <h3 class="font-black text-lg">Order Details</h3>
+          <span id="orderModalRef" class="text-gold text-sm font-black"></span>
+        </div>
+        <button onclick="closeOrderModal()" class="text-xl">&times;</button>
+      </div>
+      
+      <div class="p-6 space-y-7">
+        <!-- Customer Info -->
+        <div>
+          <h4 class="font-black text-xs uppercase text-gold mb-3">CUSTOMER &amp; DELIVERY</h4>
+          <div id="orderCustomerInfo" class="bg-navy-deep border border-slate-700 p-5 rounded-lg text-sm grid grid-cols-1 md:grid-cols-2 gap-y-3"></div>
+        </div>
+        
+        <!-- Items -->
+        <div>
+          <h4 class="font-black text-xs uppercase text-gold mb-3">ITEMS ORDERED</h4>
+          <div id="orderItemsList" class="space-y-4"></div>
+        </div>
+        
+        <!-- Totals -->
+        <div class="bg-navy-deep border border-slate-700 p-5 rounded-lg">
+          <div class="flex justify-between text-xs font-bold"><span>Subtotal</span> <span id="orderModalSubtotal"></span></div>
+          <div class="flex justify-between text-xs font-bold mt-1"><span>Delivery Fee</span> <span id="orderModalDelivery"></span></div>
+          <div class="flex justify-between text-sm font-black border-t border-slate-700 mt-3 pt-3"><span>TOTAL</span> <span id="orderModalTotal" class="text-gold"></span></div>
+        </div>
+        
+        <!-- Status Timeline -->
+        <div>
+          <h4 class="font-black text-xs uppercase text-gold mb-3">ORDER STATUS TIMELINE</h4>
+          <div id="orderTimeline" class="flex flex-col gap-2 text-xs"></div>
+        </div>
+        
+        <div class="flex gap-3">
+          <button onclick="reorderFromOrder()" class="flex-1 bg-gold hover:bg-gold/90 text-navy-deep font-black text-xs py-3.5 rounded-lg">REORDER ITEMS</button>
+          <button onclick="closeOrderModal()" class="flex-1 bg-slate-700 text-xs font-black py-3.5 rounded-lg">CLOSE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastNotification" class="toast-msg"></div>
+
+  <script src="assets/js/account.js"></script>
+</body>
+</html>

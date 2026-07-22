@@ -1,6 +1,5 @@
 // Valmont Gadgets Storefront JS Logic
-// BRAND: Deep navy #0b1a38, Gold-orange #f58c14, Slate panels #12234a
-// ZERO EMOJIS anywhere in UI.
+// Clean production build
 
 const SUPABASE_URL = "https://yrrqrvbkdziuyosedfx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_H3PK7UqMZcO2rsusl1_qQw_MypxJljs";
