@@ -367,42 +367,32 @@ function renderStorefrontGrid() {
 
   productGrid.innerHTML = filtered.map(p => {
     // Discount percentage
-    let discBadge = "";
+    let discPct = "";
+    let compareMarkup = "";
     if (p.compare_at_price && p.compare_at_price > p.price) {
       const discPercent = Math.round(((p.compare_at_price - p.price) / p.compare_at_price) * 100);
-      discBadge = `<span class="discount-badge">-${discPercent}%</span>`;
+      discPct = `<span class="card-discount-pct">-${discPercent}%</span>`;
+      compareMarkup = `<span class="card-compare-price">GH₵ ${p.compare_at_price.toLocaleString()}</span>`;
     }
 
-    // Badge styling
+    // ONLY essential badge (HOT / SEALED / DEAL / BESTSELLER) - max 1-2
     let badgeMarkup = "";
-    if (p.badge && p.badge !== "none" && p.badge !== "") {
-      badgeMarkup = `<span class="product-badge">${p.badge}</span>`;
+    const allowedBadges = ["HOT", "SEALED", "DEAL", "BESTSELLER"];
+    if (p.badge && allowedBadges.includes(p.badge.toUpperCase())) {
+      badgeMarkup = `<span class="badge-premium">${p.badge}</span>`;
     }
 
-    // Wishlist status
+    // Wishlist status - heart visible on hover only (CSS handles)
     const isWishlisted = wishlist.includes(p.id);
     const wishlistLabel = isWishlisted ? `Remove ${p.name} from wishlist` : `Add ${p.name} to wishlist`;
 
-    // Stock element
-    let stockClass = "stock-in";
-    let stockLabel = "In Stock";
-    if (p.stock_quantity === 0) {
-      stockClass = "stock-out";
-      stockLabel = "Sold Out";
-    } else if (p.stock_quantity < 10) {
-      stockClass = "stock-low";
-      stockLabel = `${p.stock_quantity} units left`;
-    }
-
-    const compareMarkup = p.compare_at_price
-      ? `<span class="product-compare-price">GH₵ ${p.compare_at_price.toLocaleString()}</span>`
-      : "";
+    // Minimal rating: just stars, NO count
+    const ratingStars = "★".repeat(Math.floor(p.rating || 4.8)) + "☆".repeat(5 - Math.floor(p.rating || 4.8));
 
     return `
-      <div class="product-card group" onclick="openProductQuickView('${p.id}')">
-        <div class="product-image-container">
+      <div class="product-card" onclick="openProductQuickView('${p.id}')">
+        <div class="product-card-image">
           ${badgeMarkup}
-          ${discBadge}
 
           <button onclick="event.stopPropagation(); toggleWishlist('${p.id}')" class="wishlist-heart${isWishlisted ? " active" : ""}" type="button" aria-label="${wishlistLabel}">
             <svg class="w-4 h-4" fill="${isWishlisted ? "currentColor" : "none"}" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -410,26 +400,24 @@ function renderStorefrontGrid() {
             </svg>
           </button>
 
-          <div class="product-card-image"><img src="${p.image || p.image_url || '/assets/assets/images/products/iphone-13.jpg'}" alt="${p.name}" loading="lazy"></div>
+          <img src="${p.image || p.image_url || '/assets/images/products/iphone-17-pro-max.jpg'}" alt="${p.name}" loading="lazy">
         </div>
 
-        <div class="product-body">
-          <span class="product-category">${p.category}</span>
-          <h3 class="product-name">${p.name}</h3>
-          <p class="product-specs">${p.specs || ""}</p>
+        <div class="product-card-body">
+          <span class="card-category">${(p.category || "gadgets").toUpperCase()}</span>
+          <h3 class="card-title">${p.name}</h3>
+          <p class="card-specs">${p.specs || ""}</p>
 
-          <div class="product-price-row">
-            <span class="product-price">GH₵ ${p.price.toLocaleString()}</span>
+          <div class="card-price-row">
+            <span class="card-price">GH₵ ${p.price.toLocaleString()}</span>
             ${compareMarkup}
+            ${discPct}
           </div>
 
-          <div class="product-stock-row">
-            <span class="${stockClass}">${stockLabel}</span>
-            <div class="product-rating"><span class="star">★</span> ${p.rating || "4.8"} (${p.reviews_count || "0"})</div>
-          </div>
+          <div class="card-rating">${ratingStars}</div>
 
-          <button onclick="event.stopPropagation(); quickAddProduct('${p.id}')" ${p.stock_quantity === 0 ? 'disabled' : ''} class="add-to-bag-btn" type="button">
-            ${p.stock_quantity === 0 ? 'Sold Out' : 'Add to Bag'}
+          <button onclick="event.stopPropagation(); quickAddProduct('${p.id}')" ${p.stock_quantity === 0 ? 'disabled' : ''} class="card-add-btn" type="button">
+            ${p.stock_quantity === 0 ? 'SOLD OUT' : 'ADD TO BAG'}
           </button>
         </div>
       </div>

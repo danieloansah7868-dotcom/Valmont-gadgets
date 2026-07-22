@@ -1,10 +1,20 @@
 /* Valmont Gadgets Storefront Custom CSS Style Sheet */
-/* Jumia-Style Redesign: Brand Colors updated to Jumia Orange #f68b1e, Dark Gray #282828 */
+/* Premium Dark Theme - Tech Store */
+
+:root {
+  --bg-primary: #0a0e1a;
+  --bg-secondary: #151b2d;
+  --bg-card: #1a2235;
+  --accent: #f58c14;
+  --text-primary: #ffffff;
+  --text-secondary: #a0aec0;
+  --border: rgba(255,255,255,0.08);
+}
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: #f5f5f5;
-  color: #282828;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 /* Custom transitions and scrollbars */
@@ -16,21 +26,21 @@ body {
   scrollbar-width: none;
 }
 
-/* Custom UI Colors */
+/* Custom UI Colors - Premium Dark */
 .text-gold {
-  color: #f68b1e;
+  color: var(--accent);
 }
 .bg-gold {
-  background-color: #f68b1e;
+  background-color: var(--accent);
 }
 .border-gold {
-  border-color: #f68b1e;
+  border-color: var(--accent);
 }
 .bg-slate-panel {
-  background-color: #12234a;
+  background-color: var(--bg-secondary);
 }
 .bg-navy-deep {
-  background-color: #0b1a38;
+  background-color: var(--bg-primary);
 }
 
 /* Custom Scrollbar for list scroll areas */
@@ -39,14 +49,14 @@ body {
   height: 6px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #0b1a38;
+  background: var(--bg-primary);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #12234a;
+  background: var(--bg-secondary);
   border-radius: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #f58c14;
+  background: var(--accent);
 }
 
 /* Color swatches with ring outlines */
@@ -104,22 +114,34 @@ body {
   background-color: #0f172a;
 }
 
-/* Badge specific color styles */
-.badge-hot {
-  background-color: #ef4444;
-  color: #ffffff;
+/* Badge specific color styles - Premium */
+.badge-premium {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: var(--accent);
+  color: #0a0e1a;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 6px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
-.badge-sealed {
-  background-color: #10b981;
-  color: #ffffff;
-}
-.badge-deal {
-  background-color: #f58c14;
-  color: #0b1a38;
-}
-.badge-bestseller {
-  background-color: #3b82f6;
-  color: #ffffff;
+
+.badge-hot, .badge-sealed, .badge-deal, .badge-bestseller {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: var(--accent);
+  color: #0a0e1a;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 6px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  z-index: 2;
 }
 
 /* Toast notification */
@@ -258,242 +280,202 @@ body {
 
 
 /* ============================================================
-   JUMIA-STYLE PRODUCT CARDS - COMPLETE REDESIGN
+   PREMIUM DARK THEME PRODUCT CARDS - REDESIGN
    ============================================================ */
 .product-card {
-  background: #fff;
-  border: 1px solid #e8e8e8;
-  border-radius: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
   overflow: hidden;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
   position: relative;
-  display: flex;
-  flex-direction: column;
 }
 
 .product-card:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-  transform: translateY(-2px);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  border-color: rgba(245,140,20,0.3);
 }
 
 .product-card-image {
   width: 100%;
-  height: 200px;
-  background: #fff;
+  height: 240px;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 32px;
   position: relative;
-  border-bottom: 1px solid #f0f0f0;
 }
 
 .product-card-image img {
-  max-width: 90%;
-  max-height: 90%;
+  max-width: 85%;
+  max-height: 85%;
   object-fit: contain;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.5));
+  transition: transform 0.3s ease;
 }
 
-/* Jumia-style discount badge - top left */
-.jumia-discount-badge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background: #feefde;
-  color: #f68b1e;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 2px;
+.product-card:hover .product-card-image img {
+  transform: scale(1.05);
 }
 
-/* Official store badge */
-.official-store-badge {
+/* ONLY essential premium badge - max 2 */
+.badge-premium,
+.product-badge {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  background: #28a745;
-  color: #fff;
-  font-size: 9px;
-  font-weight: 700;
-  padding: 3px 6px;
-  border-radius: 2px;
-  letter-spacing: 0.05em;
+  top: 16px;
+  left: 16px;
+  background: var(--accent);
+  color: #0a0e1a;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 6px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  z-index: 2;
 }
 
-/* Wishlist heart */
-.card-wishlist {
+/* Remove clutter: no official store, free delivery, stock text, review counts in grid */
+
+/* Wishlist heart moved to hover overlay only */
+.card-wishlist,
+.wishlist-heart {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
+  top: 16px;
+  right: 16px;
   width: 32px;
   height: 32px;
-  background: rgba(255,255,255,0.95);
-  border: 1px solid #e8e8e8;
+  background: rgba(10,14,26,0.85);
+  border: 1px solid var(--border);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #999;
+  color: var(--text-secondary);
   font-size: 14px;
   opacity: 0;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  z-index: 3;
 }
 
-.product-card:hover .card-wishlist {
+.product-card:hover .card-wishlist,
+.product-card:hover .wishlist-heart {
   opacity: 1;
 }
 
-.card-wishlist:hover, .card-wishlist.active {
-  color: #f68b1e;
-  border-color: #f68b1e;
+.card-wishlist:hover, .card-wishlist.active,
+.wishlist-heart:hover, .wishlist-heart.active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(245,140,20,0.15);
 }
 
 .product-card-body {
-  padding: 12px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  flex: 1;
-  gap: 4px;
+  gap: 8px;
 }
 
 .card-category {
   font-size: 10px;
-  font-weight: 600;
-  color: #f68b1e;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  opacity: 0.8;
 }
 
 .card-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: #282828;
-  line-height: 1.4;
-  height: 40px;
-  overflow: hidden;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+  margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  margin: 0;
+  overflow: hidden;
 }
 
 .card-specs {
-  font-size: 11px;
-  color: #75757a;
-  line-height: 1.4;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
   margin: 0;
 }
 
-/* Jumia-style price row */
 .card-price-row {
   display: flex;
   align-items: baseline;
-  gap: 8px;
-  margin: 8px 0 4px 0;
-  flex-wrap: wrap;
+  gap: 12px;
+  margin: 12px 0 8px 0;
 }
 
 .card-price {
-  font-size: 18px;
-  font-weight: 700;
-  color: #282828;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
 }
 
 .card-compare-price {
-  font-size: 12px;
-  color: #75757a;
+  font-size: 13px;
+  color: var(--text-secondary);
   text-decoration: line-through;
+  opacity: 0.6;
 }
 
 .card-discount-pct {
-  background: #feefde;
-  color: #f68b1e;
   font-size: 11px;
   font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 2px;
+  color: var(--accent);
 }
 
-/* Rating row */
-.card-rating-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 4px 0 8px 0;
+/* Minimal rating - just stars, no count */
+.card-rating {
+  color: var(--accent);
+  font-size: 13px;
+  letter-spacing: 2px;
+  margin: 4px 0 12px 0;
 }
 
-.stars {
-  color: #f68b1e;
-  font-size: 12px;
-  letter-spacing: 1px;
-}
-
-.review-count {
-  font-size: 11px;
-  color: #75757a;
-}
-
-/* Stock indicator */
-.card-stock {
-  font-size: 11px;
-  margin-bottom: 8px;
-}
-
-.card-stock.in { color: #28a745; font-weight: 600; }
-.card-stock.low { color: #f68b1e; font-weight: 600; }
-.card-stock.out { color: #e74c3c; font-weight: 600; }
-
-/* Jumia Add to Cart button */
+/* Premium transparent add button */
 .card-add-btn {
   width: 100%;
-  background: #f68b1e;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  padding: 10px;
-  font-size: 13px;
+  background: transparent;
+  color: var(--accent);
+  border: 1.5px solid var(--accent);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 12px;
   font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s;
-  margin-top: auto;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .card-add-btn:hover {
-  background: #e07a17;
+  background: var(--accent);
+  color: var(--bg-primary);
 }
 
-/* Free delivery tag */
-.free-delivery-tag {
-  font-size: 10px;
-  color: #28a745;
-  font-weight: 600;
-  margin-top: 4px;
-}
-
-/* Grid layout */
+/* Grid - 4 columns, more spacing */
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-  background: #f5f5f5;
-  padding: 8px;
-  border-radius: 4px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  padding: 24px 0;
 }
 
 @media (max-width: 1200px) {
-  .product-grid { grid-template-columns: repeat(4, 1fr); }
-}
-@media (max-width: 900px) {
   .product-grid { grid-template-columns: repeat(3, 1fr); }
 }
-@media (max-width: 600px) {
-  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
-  .product-card-image { height: 160px; }
-  .card-price { font-size: 16px; }
+@media (max-width: 768px) {
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
 }
 
 #cart-count:empty,#wishlist-count:empty,.nav-badge:empty,.nav-badge[data-count="0"] {
@@ -651,243 +633,58 @@ body {
    Added breathing room throughout site, fixed typography hierarchy
    ============================================================ */
 
-/* Global spacing */
+/* Global spacing - Premium Dark */
 body {
   line-height: 1.6;
+  background: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 section {
-  padding: 80px 0 !important;
+  padding: 0 !important;
 }
 
-.wrap, .container {
+.wrap, .container, .max-w-\[1200px\] {
   max-width: 1200px !important;
-  padding: 0 32px !important;
-}
-
-/* More space between sections */
-.catalog-section, .faq-section, .order-system-section, .pricing-section {
-  margin-bottom: 40px;
-}
-
-/* Category filters - more space */
-.catalog-filters {
-  gap: 12px !important;
-  margin-bottom: 32px !important;
-}
-
-.catalog-filter-btn {
-  padding: 10px 24px !important;
-  font-size: 13px !important;
-}
-
-/* Search bar - cleaner */
-.catalog-search-container {
-  margin-bottom: 32px !important;
-  max-width: 700px;
-}
-
-.catalog-search-container input {
-  padding: 14px 20px !important;
-  font-size: 15px !important;
-}
-
-.catalog-search-container button {
-  padding: 14px 32px !important;
-  font-size: 14px !important;
-}
-
-/* Product grid - more space */
-.product-grid {
-  gap: 24px !important;
-}
-
-.product-card {
-  margin-bottom: 8px;
-}
-
-/* Hero section - less cramped */
-.deals-hero {
-  padding: 60px 0 !important;
-}
-
-.deals-heading {
-  font-size: clamp(32px, 5vw, 48px) !important;
-  margin-bottom: 16px !important;
-  letter-spacing: -0.02em !important;
-}
-
-.deals-sub {
-  font-size: 16px !important;
-  max-width: 600px;
-  margin: 0 auto 32px !important;
-  line-height: 1.6 !important;
-}
-
-/* Trust badges - more breathing room */
-.trust-badges-row {
-  gap: 32px !important;
-  margin-top: 48px !important;
-}
-
-.trust-badge {
-  padding: 24px !important;
-}
-
-/* FAQ - more space between items */
-.faq-list {
-  gap: 12px !important;
-}
-
-.faq-item {
-  padding: 4px 0;
-}
-
-.faq-header {
-  padding: 20px 24px !important;
-}
-
-.faq-header h4 {
-  font-size: 15px !important;
-  font-weight: 700 !important;
-}
-
-.faq-body p {
-  padding: 0 24px 20px !important;
-  font-size: 14px !important;
-  line-height: 1.7 !important;
-}
-
-/* Typography improvements */
-h2.t, .section-title {
-  font-size: clamp(28px, 4vw, 36px) !important;
-  font-weight: 800 !important;
-  letter-spacing: -0.01em !important;
-  margin-bottom: 16px !important;
-}
-
-.lead, .section-subtitle {
-  font-size: 16px !important;
-  line-height: 1.7 !important;
-  max-width: 640px;
-  margin: 0 auto 48px !important;
-}
-
-/* Navigation - cleaner */
-.navbar {
-  padding: 16px 0 !important;
-}
-
-.navlinks a {
-  font-size: 13px !important;
-  padding: 8px 16px !important;
-}
-
-/* Footer - more space */
-footer {
-  padding: 48px 0 !important;
-  margin-top: 80px !important;
-}
-
-/* Flash sales strip - less aggressive */
-.flash-sales-strip {
-  padding: 16px 24px !important;
-  margin-bottom: 32px !important;
-}
-
-.flash-sales-label {
-  font-size: 11px !important;
-  padding: 6px 16px !important;
-}
-
-/* Verified stock counter - subtler */
-.verified-stock-row {
-  margin-bottom: 32px !important;
-  padding-bottom: 20px !important;
-}
-
-.verified-stock-title {
-  font-size: 18px !important;
-  font-weight: 700 !important;
-}
-
-/* Cart drawer - more padding */
-.cart-panel {
-  padding: 32px !important;
-}
-
-.cart-items .cart-item {
-  padding: 16px 0 !important;
-}
-
-/* Modal spacing */
-.overlay-modal-body {
-  padding: 32px !important;
-}
-
-.overlay-modal-header {
-  padding: 20px 32px !important;
-}
-
-/* Buttons - more breathing room */
-.btn {
-  padding: 14px 32px !important;
-  font-size: 14px !important;
-}
-
-.btn-gold, .btn-primary {
-  letter-spacing: 0.02em !important;
-}
-
-/* Remove unnecessary elements that add clutter */
-.catalog-note, .board-foot {
-  font-size: 12px !important;
-  opacity: 0.7;
-}
-
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
 }
 
 /* Better focus states */
 input:focus, button:focus, select:focus {
-  outline: 2px solid #f58c14;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-/* Mobile improvements */
-@media (max-width: 768px) {
-  section { padding: 48px 0 !important; }
-  .wrap, .container { padding: 0 20px !important; }
-  .product-grid { gap: 16px !important; }
-  .trust-badges-row { gap: 16px !important; }
-  .deals-heading { font-size: 28px !important; }
-}
-
-@media (max-width: 480px) {
-  section { padding: 40px 0 !important; }
-  .product-grid { gap: 12px !important; }
-}
-
-/* --- Fixes required by task list --- */
-.card-title { font-size: 14px; line-height: 1.3; }
-.card-category { font-size: 10px; letter-spacing: 0.08em; }
+/* --- Cleanups for premium cards --- */
+.card-title { font-size: 16px; line-height: 1.3; }
+.card-category { font-size: 10px; letter-spacing: 0.15em; }
 #cart-count:empty, #wishlist-count:empty, .nav-badge:empty { display: none !important; }
 
-/* Additional fixes for actual markup IDs (cartBadgeCount, wishlistCountBadge) */
+/* Additional fixes */
 #cartBadgeCount:empty, #wishlistCountBadge:empty, #cart-count:empty, #wishlist-count:empty, .nav-badge:empty { display: none !important; }
 #cartBadgeCount[data-count="0"], #wishlistCountBadge[data-count="0"], .nav-badge[data-count="0"] { display: none !important; }
 
-/* Ensure product titles not cut off */
+/* Ensure product titles */
 .product-name, .card-title {
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.3;
-  overflow: visible;
-  white-space: normal;
-  text-overflow: clip;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 .product-category, .card-category {
   font-size: 10px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.15em;
+}
+
+/* Remove any remaining Jumia visual artifacts */
+.jumia-discount-badge,
+.official-store-badge,
+.free-delivery-tag,
+.card-stock,
+.product-stock-row,
+.review-count,
+.discount-badge,
+.product-badge:not(.badge-premium) {
+  display: none !important;
 }
