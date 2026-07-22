@@ -255,3 +255,38 @@ body {
 .animate-spin-custom {
   animation: spin 1s linear infinite;
 }
+
+/* ============================================================
+   STAT CARD FLIP ANIMATION (Admin Dashboard)
+   Front face shows the live metric; hover (or keyboard focus)
+   flips to a detail face. The stat IDs (statTotalProducts,
+   statTotalOrders, statRevenue, statProfit) stay on the front
+   face so admin.js renderStats() continues to populate them.
+   ============================================================ */
+.stat-flip-card {
+  perspective: 1000px;
+  min-height: 110px;
+}
+.stat-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 110px;
+  transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+  transform-style: preserve-3d;
+}
+.stat-flip-card:hover .stat-flip-inner,
+.stat-flip-card:focus-within .stat-flip-inner {
+  transform: rotateY(180deg);
+}
+.stat-flip-front,
+.stat-flip-back {
+  position: absolute;
+  inset: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: 0.5rem;
+}
+.stat-flip-back {
+  transform: rotateY(180deg);
+}
