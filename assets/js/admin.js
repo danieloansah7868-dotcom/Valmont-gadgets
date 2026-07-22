@@ -423,6 +423,10 @@ async function initializeDashboard() {
 
   // Initialize image uploader
   initImageUploaderListeners();
+
+  // Render new tabs
+  renderResellers();
+  renderActivityLog();
 }
 
 // ============================================================
@@ -626,6 +630,7 @@ function resetProductForm() {
 // Handle form submit (create or update)
 async function handleProductFormSubmit(event) {
   event.preventDefault();
+  logActivity("Product saved", document.getElementById("prodName").value.trim());
 
   const name = document.getElementById("prodName").value.trim();
   const slug = document.getElementById("prodSlug").value.trim();
@@ -688,6 +693,7 @@ async function triggerDeleteProduct(id, name) {
 
   const success = await db.deleteProduct(id);
   if (success) {
+    logActivity("Product deleted", name);
     showAdminToast("Product deleted successfully.");
     initializeDashboard();
   } else {
@@ -1186,6 +1192,7 @@ function renderReviewsTable() {
 }
 
 async function triggerApproveReview(id) {
+  logActivity("Review approved", id);
   const success = await db.approveReview(id);
   if (success) {
     showAdminToast("Review approved and now visible on storefront.");
@@ -1219,6 +1226,95 @@ async function triggerDeleteReview(id) {
   } else {
     showAdminToast("Failed to delete review.");
   }
+}
+
+function toggleHeaderMenu() {
+  const menu = document.getElementById("headerDropdown");
+  menu.classList.toggle("hidden");
+}
+
+// Close dropdown when clicking outside
+window.addEventListener("click", (e) => {
+  const menuContainer = document.getElementById("adminHeaderMenu");
+  if (menuContainer && !menuContainer.contains(e.target)) {
+    document.getElementById("headerDropdown").classList.add("hidden");
+  }
+});
+
+// ============================================================
+// RESELLERS
+// ============================================================
+let resellers = JSON.parse(localStorage.getItem("valmont_resellers") || "[]");
+
+function openResellerForm() {
+  const name = prompt("Reseller full name:");
+  if (!name) return;
+  const phone = prompt("Reseller phone:");
+  const newReseller = {
+    id: crypto.randomUUID(),
+    name: name,
+    phone: phone || "",
+    status: "active",
+    registered_at: new Date().toISOString()
+  };
+  resellers.push(newReseller);
+  localStorage.setItem("valmont_resellers", JSON.stringify(resellers));
+  renderResellers();
+  showAdminToast("Reseller registered.");
+}
+
+function renderResellers() {
+  const tbody = document.getElementById("resellersTableBody");
+  if (!tbody) return;
+  tbody.innerHTML = resellers.map(r => `
+    <tr class="border-b border-slate-800 hover:bg-slate-900/40">
+      <td class="px-4 py-3 text-xs font-bold text-white">${r.name}</td>
+      <td class="px-4 py-3 text-xs text-slate-300">${r.phone}</td>
+      <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-black uppercase ${r.status === 'active' ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-400'}">${r.status}</span></td>
+      <td class="px-4 py-3 text-xs text-slate-500">${new Date(r.registered_at).toLocaleDateString("en-GH")}</td>
+      <td class="px-4 py-3 text-right">
+        <button onclick="toggleResellerStatus('${r.id}')" class="text-gold hover:text-white text-xs font-black">Toggle</button>
+        <button onclick="deleteReseller('${r.id}')" class="text-red-500 hover:text-white text-xs font-black ml-3">Delete</button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+function toggleResellerStatus(id) {
+  const r = resellers.find(x => x.id === id);
+  if (r) { r.status = r.status === "active" ? "inactive" : "active"; localStorage.setItem("valmont_resellers", JSON.stringify(resellers)); renderResellers(); showAdminToast("Reseller status updated."); }
+}
+
+function deleteReseller(id) {
+  if (!confirm("Delete reseller?")) return;
+  resellers = resellers.filter(x => x.id !== id);
+  localStorage.setItem("valmont_resellers", JSON.stringify(resellers));
+  renderResellers();
+  showAdminToast("Reseller deleted.");
+}
+
+// ============================================================
+// ACTIVITY LOG
+// ============================================================
+function logActivity(action, target) {
+  const log = JSON.parse(localStorage.getItem("valmont_activity") || "[]");
+  log.unshift({ action, target, time: new Date().toISOString() });
+  if (log.length > 50) log.pop();
+  localStorage.setItem("valmont_activity", JSON.stringify(log));
+  renderActivityLog();
+}
+
+function renderActivityLog() {
+  const tbody = document.getElementById("activityLogBody");
+  if (!tbody) return;
+  const log = JSON.parse(localStorage.getItem("valmont_activity") || "[]");
+  tbody.innerHTML = log.map(l => `
+    <tr class="border-b border-slate-800 hover:bg-slate-900/40">
+      <td class="px-6 py-3 text-xs font-bold text-white">${l.action}</td>
+      <td class="px-6 py-3 text-xs text-slate-300 truncate max-w-[200px]">${l.target}</td>
+      <td class="px-6 py-3 text-xs text-slate-500">${new Date(l.time).toLocaleString("en-GH")}</td>
+    </tr>
+  `).join("");
 }
 
 // ============================================================

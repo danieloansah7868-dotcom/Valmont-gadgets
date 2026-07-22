@@ -79,11 +79,25 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-4 relative" id="adminHeaderMenu">
+          <div class="relative">
+            <button onclick="toggleHeaderMenu()" class="flex items-center gap-3 bg-slate-900 border border-slate-800 hover:border-gold rounded-lg px-3 py-2 transition-colors">
+              <div class="h-8 w-8 rounded-full bg-gradient-to-br from-gold to-amber-700 flex items-center justify-center text-navy-deep font-black text-xs shadow-md">VA</div>
+              <span class="text-xs font-extrabold text-white hidden sm:inline">Admin</span>
+            </button>
+            <div id="headerDropdown" class="hidden absolute right-0 mt-2 w-48 bg-slate-panel border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-40">
+              <a href="#" onclick="switchTab('profile'); toggleHeaderMenu();" class="block px-4 py-2.5 text-xs font-bold text-slate-300 hover:text-gold hover:bg-navy-deep transition">Profile</a>
+              <a href="#" onclick="switchTab('settings'); toggleHeaderMenu();" class="block px-4 py-2.5 text-xs font-bold text-slate-300 hover:text-gold hover:bg-navy-deep transition">Settings</a>
+              <a href="#" onclick="switchTab('resellers'); toggleHeaderMenu();" class="block px-4 py-2.5 text-xs font-bold text-slate-300 hover:text-gold hover:bg-navy-deep transition">Resellers</a>
+              <a href="#" onclick="switchTab('activity'); toggleHeaderMenu();" class="block px-4 py-2.5 text-xs font-bold text-slate-300 hover:text-gold hover:bg-navy-deep transition">Activity Log</a>
+              <div class="border-t border-slate-800"></div>
+              <a href="#" onclick="handleAdminLogout(); toggleHeaderMenu();" class="block px-4 py-2.5 text-xs font-extrabold text-red-400 hover:text-red-300 hover:bg-red-950 transition">Sign Out</a>
+            </div>
+          </div>
           <a href="/" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-extrabold text-[10px] uppercase tracking-wider px-4 py-2 rounded-lg border border-slate-700 transition">
             View Storefront
           </a>
-          <button onclick="handleAdminLogout()" class="bg-red-950/40 hover:bg-red-900/60 text-red-400 font-extrabold text-[10px] uppercase tracking-wider px-4 py-2 rounded-lg border border-red-900/30 transition">
+          <button onclick="handleAdminLogout()" class="bg-red-950/40 hover:bg-red-900/60 text-red-400 font-extrabold text-[10px] uppercase tracking-wider px-4 py-2 rounded-lg border border-red-900/30 transition hidden sm:inline-block">
             Disconnect
           </button>
         </div>
@@ -107,6 +121,18 @@
         </button>
         <button onclick="switchTab('reviews')" data-tab-nav="reviews" class="py-4 border-b-2 border-transparent text-slate-400 hover:text-white font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
           Reviews
+        </button>
+        <button onclick="switchTab('resellers')" data-tab-nav="resellers" class="py-4 border-b-2 border-transparent text-slate-400 hover:text-white font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
+          Resellers
+        </button>
+        <button onclick="switchTab('profile')" data-tab-nav="profile" class="py-4 border-b-2 border-transparent text-slate-400 hover:text-white font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
+          Profile
+        </button>
+        <button onclick="switchTab('settings')" data-tab-nav="settings" class="py-4 border-b-2 border-transparent text-slate-400 hover:text-white font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
+          Settings
+        </button>
+        <button onclick="switchTab('activity')" data-tab-nav="activity" class="py-4 border-b-2 border-transparent text-slate-400 hover:text-white font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
+          Activity Log
         </button>
       </div>
     </nav>
@@ -447,6 +473,86 @@
       </section>
 
     </main>
+
+      <!-- ================= TAB: RESELLERS ================= -->
+      <section id="section-resellers" class="admin-tab-section hidden">
+        <div class="bg-slate-panel border border-slate-800 rounded-lg overflow-hidden">
+          <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-black text-white uppercase tracking-wider">Reseller Network</h3>
+              <p class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Register and manage reseller accounts</p>
+            </div>
+            <button onclick="openResellerForm()" class="bg-gold hover:bg-gold/90 text-navy-deep font-extrabold text-xs uppercase px-5 py-2 rounded-lg tracking-wider">Register Reseller</button>
+          </div>
+          <div class="p-6">
+            <div id="resellerTable" class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-slate-800 text-left">
+                <thead class="bg-navy-deep text-[10px] font-black uppercase tracking-widest text-slate-400"><tr><th class="px-4 py-3">Name</th><th class="px-4 py-3">Phone</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Registered</th><th class="px-4 py-3 text-right">Actions</th></tr></thead>
+                <tbody id="resellersTableBody" class="divide-y divide-slate-800"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB: PROFILE ================= -->
+      <section id="section-profile" class="admin-tab-section hidden">
+        <div class="bg-slate-panel border border-slate-800 rounded-lg p-6 max-w-xl mx-auto">
+          <h3 class="text-sm font-black text-white uppercase tracking-wider border-b border-slate-800 pb-3 mb-6">Admin Profile</h3>
+          <div class="flex items-center gap-4 mb-6">
+            <div class="h-16 w-16 rounded-full bg-gradient-to-br from-gold to-amber-700 flex items-center justify-center text-navy-deep font-black text-xl shadow-lg border-2 border-gold">VA</div>
+            <div>
+              <h4 class="text-white font-black text-lg">Valmont Admin</h4>
+              <p class="text-xs text-slate-400 font-bold uppercase">Executive Level Access</p>
+            </div>
+          </div>
+          <form onsubmit="event.preventDefault(); showAdminToast('Profile updated.');" class="space-y-4">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Display Name</label>
+              <input type="text" value="Valmont Admin" class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold" />
+            </div>
+            <button type="submit" class="bg-gold hover:bg-gold/90 text-navy-deep font-black text-xs uppercase px-6 py-3 rounded-lg tracking-widest">Save Changes</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ================= TAB: SETTINGS ================= -->
+      <section id="section-settings" class="admin-tab-section hidden">
+        <div class="bg-slate-panel border border-slate-800 rounded-lg p-6 max-w-xl mx-auto">
+          <h3 class="text-sm font-black text-white uppercase tracking-wider border-b border-slate-800 pb-3 mb-6">Panel Settings</h3>
+          <form onsubmit="event.preventDefault(); showAdminToast('Settings saved.');" class="space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">Enable Email Notifications</span>
+              <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" checked class="sr-only peer"><div class="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-gold rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:h-5 after:w-5 after:rounded-full peer-checked:bg-gold transition-all"></div></label>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">Auto-Approve Reviews</span>
+              <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="sr-only peer"><div class="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-gold rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:h-5 after:w-5 after:rounded-full peer-checked:bg-gold transition-all"></div></label>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">Public Activity Log</span>
+              <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="sr-only peer"><div class="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-gold rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:h-5 after:w-5 after:rounded-full peer-checked:bg-gold transition-all"></div></label>
+            </div>
+            <button type="submit" class="bg-gold hover:bg-gold/90 text-navy-deep font-black text-xs uppercase px-6 py-3 rounded-lg tracking-widest">Save Settings</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ================= TAB: ACTIVITY LOG ================= -->
+      <section id="section-activity" class="admin-tab-section hidden">
+        <div class="bg-slate-panel border border-slate-800 rounded-lg overflow-hidden">
+          <div class="p-5 border-b border-slate-800">
+            <h3 class="text-sm font-black text-white uppercase tracking-wider">Admin Activity Log</h3>
+            <p class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">All actions taken in this session</p>
+          </div>
+          <div class="overflow-x-auto no-scrollbar">
+            <table class="min-w-full divide-y divide-slate-800 text-left">
+              <thead class="bg-navy-deep text-[10px] font-black uppercase tracking-widest text-slate-400"><tr><th class="px-6 py-3">Action</th><th class="px-6 py-3">Target</th><th class="px-6 py-3">Time</th></tr></thead>
+              <tbody id="activityLogBody" class="divide-y divide-slate-800"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
 
     <!-- Footer -->
     <footer class="bg-slate-panel border-t border-slate-800 py-6 text-center text-[10px] text-slate-500 font-bold uppercase tracking-widest shrink-0">
