@@ -6,150 +6,63 @@ const SUPABASE_KEY = "sb_publishable_H3PK7UqMZcO2rsusl1_qQw_MypxJljs";
 
 // Default Seed Products
 const DEFAULT_PRODUCTS_SEED = [
-  {
-    id: "vmp-001",
-    name: "iPhone 15 Pro Max",
-    slug: "iphone-15-pro-max",
-    category: "iphones",
-    price: 16500,
-    wholesale_price: 13900,
-    compare_at_price: 18000,
-    specs: "Titanium, A17 Pro, Sealed, eSIM plus Physical SIM",
-    description: "The ultimate iPhone featuring a strong and lightweight aerospace-grade titanium design with new contoured edges. Powerful camera upgrades enable the equivalent of seven pro lenses with incredible image quality, including a 5x Telephoto camera on iPhone 15 Pro Max.",
-    badge: "HOT",
-    rating: 4.9,
-    reviews_count: 3,
-    stock_quantity: 8,
-    image_url: "https://images.unsplash.com/photo-1696446703255-020d67fa2f3b?q=80&w=800&auto=format&fit=crop",
-    images: [
-      "https://images.unsplash.com/photo-1696446703255-020d67fa2f3b?q=80&w=800&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=800&auto=format&fit=crop"
-    ],
-    colors: [
-      { name: "Natural Titanium", hex: "#8a8883", available: true },
-      { name: "Black Titanium", hex: "#232426", available: true },
-      { name: "Blue Titanium", hex: "#2f4452", available: true },
-      { name: "White Titanium", hex: "#e3e2de", available: false }
-    ],
-    storage_options: [
-      { size: "256GB", price_adjustment: 0 },
-      { size: "512GB", price_adjustment: 2000 },
-      { size: "1TB", price_adjustment: 4000 }
-    ],
-    is_active: true
-  },
-  {
-    id: "vmp-002",
-    name: "Samsung Galaxy S24 Ultra",
-    slug: "samsung-galaxy-s24-ultra",
-    category: "samsung",
-    price: 15200,
-    wholesale_price: 12800,
-    compare_at_price: 16800,
-    specs: "Titanium Gray, S Pen, 200MP, Snapdragon 8 Gen 3",
-    description: "Welcome to the era of mobile AI. With Galaxy S24 Ultra in your hands, you can unleash whole new levels of creativity, productivity and possibility starting with the most important device in your life. Your smartphone.",
-    badge: "SEALED",
-    rating: 4.8,
-    reviews_count: 2,
-    stock_quantity: 12,
-    image_url: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=800&auto=format&fit=crop",
-    images: [
-      "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=800&auto=format&fit=crop"
-    ],
-    colors: [
-      { name: "Titanium Gray", hex: "#5c5c5c", available: true },
-      { name: "Titanium Black", hex: "#1a1a1a", available: true },
-      { name: "Titanium Yellow", hex: "#dfd2a7", available: false }
-    ],
-    storage_options: [
-      { size: "256GB", price_adjustment: -1000 },
-      { size: "512GB", price_adjustment: 0 },
-      { size: "1TB", price_adjustment: 3000 }
-    ],
-    is_active: true
-  },
-  {
-    id: "vmp-003",
-    name: "MacBook Pro M3",
-    slug: "macbook-pro-m3",
-    category: "laptops",
-    price: 22500,
-    wholesale_price: 19200,
-    compare_at_price: 24500,
-    specs: "14-inch Liquid Retina XDR, M3, 16GB RAM, 512GB SSD",
-    description: "The 14-inch MacBook Pro with M3 is the ultimate pro laptop for everyone. Featuring a brilliant Liquid Retina XDR display, a wide array of ports, and an incredibly fast processor that runs silently without draining battery.",
-    badge: "BESTSELLER",
-    rating: 4.9,
-    reviews_count: 1,
-    stock_quantity: 5,
-    image_url: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=800&auto=format&fit=crop",
-    images: [
-      "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=800&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?q=80&w=800&auto=format&fit=crop"
-    ],
-    colors: [
-      { name: "Space Black", hex: "#1d1d1f", available: true },
-      { name: "Silver", hex: "#e3e4e5", available: true }
-    ],
-    storage_options: [
-      { size: "512GB", price_adjustment: 0 },
-      { size: "1TB", price_adjustment: 2500 }
-    ],
-    is_active: true
-  },
-  {
-    id: "vmp-004",
-    name: "AirPods Pro 2nd Gen USB-C",
-    slug: "airpods-pro-2nd-gen-usb-c",
-    category: "audio",
-    price: 3200,
-    wholesale_price: 2550,
-    compare_at_price: 3800,
-    specs: "MagSafe, Adaptive Smart Audio, H2 Chip, Active Noise Cancellation",
-    description: "Rebuilt from the sound up. AirPods Pro feature up to 2x more Active Noise Cancellation than the previous generation, plus Adaptive Audio that dynamically tailors noise control to your environment.",
-    badge: "DEAL",
-    rating: 4.7,
-    reviews_count: 1,
-    stock_quantity: 15,
-    image_url: "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?q=80&w=800&auto=format&fit=crop",
-    images: [
-      "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?q=80&w=800&auto=format&fit=crop"
-    ],
-    colors: [
-      { name: "White", hex: "#ffffff", available: true }
-    ],
-    storage_options: [
-      { size: "Standard size", price_adjustment: 0 }
-    ],
-    is_active: true
-  },
-  {
-    id: "vmp-005",
-    name: "Anker 20,000mAh 65W Power Bank",
-    slug: "anker-20k-65w-power-bank",
-    category: "power",
-    price: 1250,
-    wholesale_price: 960,
-    compare_at_price: 1500,
-    specs: "65W Fast Charge, PowerCore 24K, LED Digital Display",
-    description: "Equipped with two high-power USB-C ports and one USB-A port, you can charge three devices simultaneously. The intelligent digital display shows remaining battery life, charge speed, and output wattage.",
-    badge: "HOT",
-    rating: 4.8,
-    reviews_count: 0,
-    stock_quantity: 3,
-    image_url: "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop",
-    images: [
-      "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop"
-    ],
-    colors: [
-      { name: "Black", hex: "#1c1c1c", available: true },
-      { name: "Silver", hex: "#c0c0c0", available: true }
-    ],
-    storage_options: [
-      { size: "20000mAh", price_adjustment: 0 }
-    ],
-    is_active: true
-  }
+  { id: "vmp-001", name: "iPhone 15 Pro Max", slug: "iphone-15-pro-max", category: "iphones", price: 16500, wholesale_price: 13900, compare_at_price: 18000, specs: "Titanium, A17 Pro, Sealed", description: "Premium iPhone 15 Pro Max", badge: "HOT", rating: 4.9, reviews_count: 3, stock_quantity: 8, image_url: "https://images.unsplash.com/photo-1696446703255-020d67fa2f3b?q=80&w=800&auto=format&fit=crop", image: "/images/products/iphone-17-pro-max.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-002", name: "iPhone 15 Pro", slug: "iphone-15-pro", category: "iphones", price: 14500, wholesale_price: 12200, compare_at_price: 16000, specs: "Titanium, A17 Pro", description: "iPhone 15 Pro", badge: "NEW", rating: 4.8, reviews_count: 5, stock_quantity: 10, image_url: "", image: "/images/products/iphone-17-pro-max.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-003", name: "iPhone 15", slug: "iphone-15", category: "iphones", price: 12500, wholesale_price: 10500, compare_at_price: 14000, specs: "A16 Bionic", description: "iPhone 15", badge: "", rating: 4.7, reviews_count: 8, stock_quantity: 15, image_url: "", image: "/images/products/iphone-16.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-004", name: "iPhone 14 Pro Max", slug: "iphone-14-pro-max", category: "iphones", price: 15500, wholesale_price: 13000, compare_at_price: 17000, specs: "A16 Bionic, Dynamic Island", description: "iPhone 14 Pro Max", badge: "HOT", rating: 4.6, reviews_count: 4, stock_quantity: 6, image_url: "", image: "/images/products/iphone-17-pro-max.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-005", name: "iPhone 13 Pro Max", slug: "iphone-13-pro-max", category: "iphones", price: 13500, wholesale_price: 11200, compare_at_price: 15000, specs: "A15 Bionic", description: "iPhone 13 Pro Max", badge: "", rating: 4.5, reviews_count: 7, stock_quantity: 9, image_url: "", image: "/images/products/iphone-13-pro-max.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-006", name: "iPhone 13", slug: "iphone-13", category: "iphones", price: 9800, wholesale_price: 8200, compare_at_price: 11000, specs: "A15 Bionic", description: "iPhone 13", badge: "DEAL", rating: 4.4, reviews_count: 12, stock_quantity: 20, image_url: "", image: "/images/products/iphone-13.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-007", name: "iPhone 11", slug: "iphone-11", category: "iphones", price: 7200, wholesale_price: 5900, compare_at_price: 8500, specs: "A13 Bionic", description: "iPhone 11", badge: "", rating: 4.3, reviews_count: 9, stock_quantity: 14, image_url: "", image: "/images/products/iphone-13.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-008", name: "iPad Pro M4", slug: "ipad-pro-m4", category: "iphones", price: 18500, wholesale_price: 15500, compare_at_price: 20000, specs: "M4 Chip, 11-inch", description: "iPad Pro M4", badge: "NEW", rating: 4.9, reviews_count: 3, stock_quantity: 5, image_url: "", image: "/images/products/iphone-17-air.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-009", name: "iPad Air M2", slug: "ipad-air-m2", category: "iphones", price: 14200, wholesale_price: 11900, compare_at_price: 15500, specs: "M2 Chip", description: "iPad Air M2", badge: "", rating: 4.8, reviews_count: 6, stock_quantity: 8, image_url: "", image: "/images/products/iphone-17-air.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-010", name: "iPad 10th", slug: "ipad-10th", category: "iphones", price: 8900, wholesale_price: 7400, compare_at_price: 10000, specs: "A14 Bionic", description: "iPad 10th Gen", badge: "DEAL", rating: 4.6, reviews_count: 11, stock_quantity: 18, image_url: "", image: "/images/products/iphone-17-air.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-011", name: "Apple Watch S9", slug: "apple-watch-s9", category: "iphones", price: 5800, wholesale_price: 4800, compare_at_price: 6500, specs: "S9 Chip, Always-On", description: "Apple Watch S9", badge: "", rating: 4.7, reviews_count: 14, stock_quantity: 22, image_url: "", image: "/images/products/iphone-17-air.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-012", name: "Apple Watch Ultra 2", slug: "apple-watch-ultra-2", category: "iphones", price: 9200, wholesale_price: 7700, compare_at_price: 10500, specs: "Ultra 2, Rugged", description: "Apple Watch Ultra 2", badge: "HOT", rating: 4.9, reviews_count: 5, stock_quantity: 7, image_url: "", image: "/images/products/iphone-17-pro-max.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-013", name: "Samsung Galaxy S24 Ultra", slug: "samsung-galaxy-s24-ultra", category: "samsung", price: 15200, wholesale_price: 12800, compare_at_price: 16800, specs: "Titanium, S Pen, 200MP", description: "Galaxy S24 Ultra", badge: "SEALED", rating: 4.8, reviews_count: 6, stock_quantity: 12, image_url: "", image: "/images/products/iphone-13.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-014", name: "Samsung Galaxy S24", slug: "samsung-galaxy-s24", category: "samsung", price: 12800, wholesale_price: 10700, compare_at_price: 14200, specs: "Snapdragon 8 Gen 3", description: "Galaxy S24", badge: "", rating: 4.7, reviews_count: 9, stock_quantity: 15, image_url: "", image: "/images/products/iphone-13.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-015", name: "Samsung Galaxy S23 Ultra", slug: "samsung-galaxy-s23-ultra", category: "samsung", price: 13500, wholesale_price: 11300, compare_at_price: 15000, specs: "200MP Camera", description: "Galaxy S23 Ultra", badge: "HOT", rating: 4.6, reviews_count: 8, stock_quantity: 10, image_url: "", image: "/images/products/iphone-13.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-016", name: "Samsung Galaxy S23", slug: "samsung-galaxy-s23", category: "samsung", price: 10500, wholesale_price: 8800, compare_at_price: 11800, specs: "Flagship 2023", description: "Galaxy S23", badge: "", rating: 4.5, reviews_count: 11, stock_quantity: 17, image_url: "", image: "/images/products/iphone-13.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-017", name: "Samsung Galaxy A55", slug: "samsung-galaxy-a55", category: "samsung", price: 6800, wholesale_price: 5600, compare_at_price: 7800, specs: "Exynos 1480", description: "Galaxy A55", badge: "DEAL", rating: 4.4, reviews_count: 7, stock_quantity: 25, image_url: "", image: "/images/products/iphone-13.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-018", name: "Samsung Galaxy A35", slug: "samsung-galaxy-a35", category: "samsung", price: 5200, wholesale_price: 4300, compare_at_price: 6000, specs: "Mid-range 2024", description: "Galaxy A35", badge: "", rating: 4.3, reviews_count: 6, stock_quantity: 30, image_url: "", image: "/images/products/iphone-13.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-019", name: "Samsung Galaxy Z Fold 5", slug: "samsung-galaxy-z-fold-5", category: "samsung", price: 17500, wholesale_price: 14600, compare_at_price: 19500, specs: "Foldable, S Pen", description: "Galaxy Z Fold 5", badge: "NEW", rating: 4.8, reviews_count: 4, stock_quantity: 4, image_url: "", image: "/images/products/iphone-13-pro-max.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-020", name: "Samsung Galaxy Z Flip 5", slug: "samsung-galaxy-z-flip-5", category: "samsung", price: 9800, wholesale_price: 8200, compare_at_price: 11200, specs: "Flip Phone", description: "Galaxy Z Flip 5", badge: "", rating: 4.6, reviews_count: 8, stock_quantity: 11, image_url: "", image: "/images/products/iphone-13-pro-max.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-021", name: "Samsung Galaxy A25", slug: "samsung-galaxy-a25", category: "samsung", price: 4200, wholesale_price: 3500, compare_at_price: 4900, specs: "Budget 2024", description: "Galaxy A25", badge: "DEAL", rating: 4.2, reviews_count: 5, stock_quantity: 28, image_url: "", image: "/images/products/iphone-13.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-022", name: "Samsung Galaxy S24 FE", slug: "samsung-galaxy-s24-fe", category: "samsung", price: 9200, wholesale_price: 7700, compare_at_price: 10500, specs: "Fan Edition", description: "Galaxy S24 FE", badge: "", rating: 4.5, reviews_count: 3, stock_quantity: 9, image_url: "", image: "/images/products/iphone-13.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-023", name: "Samsung Galaxy A15", slug: "samsung-galaxy-a15", category: "samsung", price: 3200, wholesale_price: 2650, compare_at_price: 3800, specs: "Entry-level", description: "Galaxy A15", badge: "", rating: 4.1, reviews_count: 4, stock_quantity: 35, image_url: "", image: "/images/products/iphone-13.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-024", name: "MacBook Pro M3 Max", slug: "macbook-pro-m3-max", category: "laptops", price: 28500, wholesale_price: 23800, compare_at_price: 31000, specs: "M3 Max, 16-inch", description: "MacBook Pro M3 Max", badge: "HOT", rating: 4.9, reviews_count: 3, stock_quantity: 3, image_url: "", image: "/images/products/iphone-17-pro-max.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-025", name: "MacBook Pro M3 Pro", slug: "macbook-pro-m3-pro", category: "laptops", price: 24500, wholesale_price: 20500, compare_at_price: 26800, specs: "M3 Pro, 14-inch", description: "MacBook Pro M3 Pro", badge: "BESTSELLER", rating: 4.8, reviews_count: 5, stock_quantity: 6, image_url: "", image: "/images/products/iphone-17-pro-max.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-026", name: "MacBook Pro M3 Base", slug: "macbook-pro-m3-base", category: "laptops", price: 20500, wholesale_price: 17200, compare_at_price: 22500, specs: "M3, 14-inch", description: "MacBook Pro M3", badge: "", rating: 4.7, reviews_count: 7, stock_quantity: 8, image_url: "", image: "/images/products/iphone-17-pro-max.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-027", name: "MacBook Air M3", slug: "macbook-air-m3", category: "laptops", price: 16800, wholesale_price: 14000, compare_at_price: 18500, specs: "M3 Chip, 13-inch", description: "MacBook Air M3", badge: "NEW", rating: 4.8, reviews_count: 9, stock_quantity: 12, image_url: "", image: "/images/products/iphone-17-air.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-028", name: "MacBook Air M2", slug: "macbook-air-m2", category: "laptops", price: 14200, wholesale_price: 11800, compare_at_price: 15800, specs: "M2 Chip", description: "MacBook Air M2", badge: "", rating: 4.6, reviews_count: 11, stock_quantity: 14, image_url: "", image: "/images/products/iphone-17-air.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-029", name: "HP Envy 14", slug: "hp-envy-14", category: "laptops", price: 13500, wholesale_price: 11200, compare_at_price: 15000, specs: "Intel i7, OLED", description: "HP Envy 14", badge: "DEAL", rating: 4.5, reviews_count: 6, stock_quantity: 10, image_url: "", image: "/images/products/iphone-17-pro-max.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-030", name: "Dell XPS 14", slug: "dell-xps-14", category: "laptops", price: 17800, wholesale_price: 14900, compare_at_price: 19500, specs: "Intel Ultra 7", description: "Dell XPS 14", badge: "HOT", rating: 4.7, reviews_count: 4, stock_quantity: 5, image_url: "", image: "/images/products/iphone-17-pro-max.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-031", name: "Lenovo ThinkPad X1 Carbon", slug: "lenovo-thinkpad-x1-carbon", category: "laptops", price: 16200, wholesale_price: 13500, compare_at_price: 17800, specs: "Business Ultrabook", description: "ThinkPad X1 Carbon", badge: "", rating: 4.6, reviews_count: 8, stock_quantity: 7, image_url: "", image: "/images/products/iphone-17-pro-max.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-032", name: "HP Pavilion 15", slug: "hp-pavilion-15", category: "laptops", price: 8900, wholesale_price: 7400, compare_at_price: 10000, specs: "Ryzen 7", description: "HP Pavilion 15", badge: "DEAL", rating: 4.3, reviews_count: 10, stock_quantity: 19, image_url: "", image: "/images/products/iphone-17-pro-max.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-033", name: "Asus ROG Strix", slug: "asus-rog-strix", category: "laptops", price: 19500, wholesale_price: 16300, compare_at_price: 21500, specs: "Gaming Laptop", description: "Asus ROG Strix", badge: "HOT", rating: 4.8, reviews_count: 5, stock_quantity: 4, image_url: "", image: "/images/products/iphone-17-pro-max.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-034", name: "Surface Laptop 7", slug: "surface-laptop-7", category: "laptops", price: 15200, wholesale_price: 12700, compare_at_price: 16800, specs: "Snapdragon X Elite", description: "Surface Laptop 7", badge: "NEW", rating: 4.7, reviews_count: 6, stock_quantity: 8, image_url: "", image: "/images/products/iphone-17-air.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-035", name: "Lenovo Yoga 9i", slug: "lenovo-yoga-9i", category: "laptops", price: 12800, wholesale_price: 10700, compare_at_price: 14200, specs: "2-in-1 Convertible", description: "Lenovo Yoga 9i", badge: "", rating: 4.5, reviews_count: 7, stock_quantity: 11, image_url: "", image: "/images/products/iphone-17-air.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-036", name: "AirPods Pro", slug: "airpods-pro", category: "audio", price: 3200, wholesale_price: 2550, compare_at_price: 3800, specs: "Active Noise Cancellation", description: "AirPods Pro", badge: "DEAL", rating: 4.7, reviews_count: 15, stock_quantity: 25, image_url: "", image: "/images/products/airpods-pro-3.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-037", name: "AirPods 3rd Gen", slug: "airpods-3rd-gen", category: "audio", price: 2450, wholesale_price: 1950, compare_at_price: 2900, specs: "Spatial Audio", description: "AirPods 3rd Gen", badge: "", rating: 4.5, reviews_count: 12, stock_quantity: 30, image_url: "", image: "/images/products/airpods-4.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-038", name: "AirPods Max", slug: "airpods-max", category: "audio", price: 7800, wholesale_price: 6500, compare_at_price: 8800, specs: "Over-ear ANC", description: "AirPods Max", badge: "HOT", rating: 4.8, reviews_count: 4, stock_quantity: 6, image_url: "", image: "/images/products/airpods-pro-3.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-039", name: "Galaxy Buds2 Pro", slug: "galaxy-buds2-pro", category: "audio", price: 2800, wholesale_price: 2250, compare_at_price: 3300, specs: "ANC, 360 Audio", description: "Galaxy Buds2 Pro", badge: "", rating: 4.4, reviews_count: 8, stock_quantity: 18, image_url: "", image: "/images/products/airpods-4.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-040", name: "Sony WH-1000XM5", slug: "sony-wh-1000xm5", category: "audio", price: 6500, wholesale_price: 5400, compare_at_price: 7500, specs: "Premium ANC Headphones", description: "Sony WH-1000XM5", badge: "BESTSELLER", rating: 4.9, reviews_count: 7, stock_quantity: 9, image_url: "", image: "/images/products/airpods-pro-3.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-041", name: "Sony WF-1000XM5", slug: "sony-wf-1000xm5", category: "audio", price: 4200, wholesale_price: 3500, compare_at_price: 4900, specs: "Premium Earbuds", description: "Sony WF-1000XM5", badge: "", rating: 4.6, reviews_count: 6, stock_quantity: 14, image_url: "", image: "/images/products/airpods-pro-3.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-042", name: "JBL Tune Beam", slug: "jbl-tune-beam", category: "audio", price: 1850, wholesale_price: 1480, compare_at_price: 2200, specs: "True Wireless", description: "JBL Tune Beam", badge: "DEAL", rating: 4.3, reviews_count: 9, stock_quantity: 22, image_url: "", image: "/images/products/airpods-pro-3.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-043", name: "JBL Charge 5", slug: "jbl-charge-5", category: "audio", price: 3200, wholesale_price: 2600, compare_at_price: 3800, specs: "Portable Speaker", description: "JBL Charge 5", badge: "", rating: 4.5, reviews_count: 10, stock_quantity: 16, image_url: "", image: "/images/products/airpods-4.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-044", name: "JBL Flip 6", slug: "jbl-flip-6", category: "audio", price: 2450, wholesale_price: 1950, compare_at_price: 2900, specs: "Waterproof Speaker", description: "JBL Flip 6", badge: "", rating: 4.4, reviews_count: 8, stock_quantity: 20, image_url: "", image: "/images/products/airpods-4.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-045", name: "Beats Studio Buds", slug: "beats-studio-buds", category: "audio", price: 2950, wholesale_price: 2350, compare_at_price: 3500, specs: "ANC Earbuds", description: "Beats Studio Buds", badge: "HOT", rating: 4.5, reviews_count: 7, stock_quantity: 13, image_url: "", image: "/images/products/airpods-pro-3.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-046", name: "Beats Fit Pro", slug: "beats-fit-pro", category: "audio", price: 2650, wholesale_price: 2120, compare_at_price: 3100, specs: "Wingtip Fit", description: "Beats Fit Pro", badge: "", rating: 4.4, reviews_count: 5, stock_quantity: 15, image_url: "", image: "/images/products/airpods-pro-3.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-047", name: "JBL Tour Pro 2", slug: "jbl-tour-pro-2", category: "audio", price: 3800, wholesale_price: 3050, compare_at_price: 4400, specs: "Premium ANC", description: "JBL Tour Pro 2", badge: "NEW", rating: 4.6, reviews_count: 4, stock_quantity: 8, image_url: "", image: "/images/products/airpods-pro-3.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-048", name: "Anker 20,000mAh 65W Power Bank", slug: "anker-20k-65w-power-bank", category: "power", price: 1250, wholesale_price: 960, compare_at_price: 1500, specs: "65W Fast Charge", description: "Anker Power Bank", badge: "HOT", rating: 4.8, reviews_count: 12, stock_quantity: 25, image_url: "", image: "/images/products/airpods-4.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-049", name: "Anker 10,000mAh Power Bank", slug: "anker-10k-power-bank", category: "power", price: 850, wholesale_price: 680, compare_at_price: 1000, specs: "Compact Fast Charge", description: "Anker 10K", badge: "", rating: 4.6, reviews_count: 15, stock_quantity: 32, image_url: "", image: "/images/products/airpods-4.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-050", name: "Belkin 20K Wireless Power Bank", slug: "belkin-20k-wireless", category: "power", price: 1650, wholesale_price: 1320, compare_at_price: 1900, specs: "Wireless Charging", description: "Belkin Wireless", badge: "DEAL", rating: 4.5, reviews_count: 8, stock_quantity: 18, image_url: "", image: "/images/products/airpods-4.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-051", name: "Baseus 30,000mAh Power Bank", slug: "baseus-30k-power-bank", category: "power", price: 1850, wholesale_price: 1480, compare_at_price: 2150, specs: "High Capacity", description: "Baseus 30K", badge: "", rating: 4.4, reviews_count: 6, stock_quantity: 14, image_url: "", image: "/images/products/airpods-4.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-052", name: "Xiaomi 20K 65W Power Bank", slug: "xiaomi-20k-65w", category: "power", price: 980, wholesale_price: 780, compare_at_price: 1150, specs: "Fast Charge", description: "Xiaomi Power Bank", badge: "DEAL", rating: 4.3, reviews_count: 9, stock_quantity: 27, image_url: "", image: "/images/products/airpods-4.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-053", name: "UGREEN 20K GaN Charger", slug: "ugreen-20k-gan", category: "power", price: 1450, wholesale_price: 1150, compare_at_price: 1700, specs: "GaN Fast Charger", description: "UGREEN GaN", badge: "", rating: 4.7, reviews_count: 5, stock_quantity: 11, image_url: "", image: "/images/products/airpods-4.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-054", name: "Samsung 25W Wireless Charger", slug: "samsung-25w-wireless", category: "power", price: 1250, wholesale_price: 980, compare_at_price: 1500, specs: "Wireless Pad", description: "Samsung Wireless", badge: "", rating: 4.5, reviews_count: 7, stock_quantity: 16, image_url: "", image: "/images/products/airpods-4.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-055", name: "Apple 20W USB-C Charger", slug: "apple-20w-usbc", category: "power", price: 680, wholesale_price: 540, compare_at_price: 800, specs: "Official Charger", description: "Apple 20W", badge: "HOT", rating: 4.8, reviews_count: 18, stock_quantity: 40, image_url: "", image: "/images/products/airpods-4.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-056", name: "Anker 65W GaN Charger", slug: "anker-65w-gan", category: "power", price: 1350, wholesale_price: 1080, compare_at_price: 1600, specs: "Compact GaN", description: "Anker 65W GaN", badge: "", rating: 4.6, reviews_count: 10, stock_quantity: 22, image_url: "", image: "/images/products/airpods-4.jpg", images: [], colors: [], storage_options: [], is_active: true },
+  { id: "vmp-057", name: "Baseus 65W GaN Charger", slug: "baseus-65w-gan", category: "power", price: 1150, wholesale_price: 920, compare_at_price: 1350, specs: "Fast GaN Charger", description: "Baseus 65W", badge: "DEAL", rating: 4.4, reviews_count: 8, stock_quantity: 19, image_url: "", image: "/images/products/airpods-4.jpg", images: [], colors: [], storage_options: [], is_active: true }
 ];
 
 const DEFAULT_REVIEWS_SEED = [
@@ -493,7 +406,7 @@ function renderStorefrontGrid() {
             </svg>
           </button>
 
-          <img src="${p.image_url || 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=800'}" alt="${p.name} product photo" loading="lazy" />
+          <div class="product-card-image"><img src="${p.image || p.image_url || '/images/products/iphone-13.jpg'}" alt="${p.name}" loading="lazy"></div>
         </div>
 
         <div class="product-body">

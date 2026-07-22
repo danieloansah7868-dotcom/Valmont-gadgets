@@ -283,6 +283,25 @@ body {
   max-height: 100%;
   object-fit: contain;
 }
+
+.product-card-image {
+  background: linear-gradient(145deg,#f8f9fa,#e9ecef);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  height:220px;
+}
+.product-card-image img {
+  max-width:90%;
+  max-height:90%;
+  object-fit:contain;
+  filter:drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+}
+
+#cart-count:empty,#wishlist-count:empty,.nav-badge:empty,.nav-badge[data-count="0"] {
+  display:none!important;
+}
 .product-badge {
   position: absolute;
   top: 10px;
