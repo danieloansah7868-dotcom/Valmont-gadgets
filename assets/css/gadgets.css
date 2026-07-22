@@ -575,3 +575,227 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .hero-product-card, .flip-card { transition-duration: .01ms; }
 }
+
+/* ============================================================
+   IMPROVED SPACING, TYPOGRAPHY, AND REDUCED VISUAL CLUTTER
+   Added breathing room throughout site, fixed typography hierarchy
+   ============================================================ */
+
+/* Global spacing */
+body {
+  line-height: 1.6;
+}
+
+section {
+  padding: 80px 0 !important;
+}
+
+.wrap, .container {
+  max-width: 1200px !important;
+  padding: 0 32px !important;
+}
+
+/* More space between sections */
+.catalog-section, .faq-section, .order-system-section, .pricing-section {
+  margin-bottom: 40px;
+}
+
+/* Category filters - more space */
+.catalog-filters {
+  gap: 12px !important;
+  margin-bottom: 32px !important;
+}
+
+.catalog-filter-btn {
+  padding: 10px 24px !important;
+  font-size: 13px !important;
+}
+
+/* Search bar - cleaner */
+.catalog-search-container {
+  margin-bottom: 32px !important;
+  max-width: 700px;
+}
+
+.catalog-search-container input {
+  padding: 14px 20px !important;
+  font-size: 15px !important;
+}
+
+.catalog-search-container button {
+  padding: 14px 32px !important;
+  font-size: 14px !important;
+}
+
+/* Product grid - more space */
+.product-grid {
+  gap: 24px !important;
+}
+
+.product-card {
+  margin-bottom: 8px;
+}
+
+/* Hero section - less cramped */
+.deals-hero {
+  padding: 60px 0 !important;
+}
+
+.deals-heading {
+  font-size: clamp(32px, 5vw, 48px) !important;
+  margin-bottom: 16px !important;
+  letter-spacing: -0.02em !important;
+}
+
+.deals-sub {
+  font-size: 16px !important;
+  max-width: 600px;
+  margin: 0 auto 32px !important;
+  line-height: 1.6 !important;
+}
+
+/* Trust badges - more breathing room */
+.trust-badges-row {
+  gap: 32px !important;
+  margin-top: 48px !important;
+}
+
+.trust-badge {
+  padding: 24px !important;
+}
+
+/* FAQ - more space between items */
+.faq-list {
+  gap: 12px !important;
+}
+
+.faq-item {
+  padding: 4px 0;
+}
+
+.faq-header {
+  padding: 20px 24px !important;
+}
+
+.faq-header h4 {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+}
+
+.faq-body p {
+  padding: 0 24px 20px !important;
+  font-size: 14px !important;
+  line-height: 1.7 !important;
+}
+
+/* Typography improvements */
+h2.t, .section-title {
+  font-size: clamp(28px, 4vw, 36px) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em !important;
+  margin-bottom: 16px !important;
+}
+
+.lead, .section-subtitle {
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+  max-width: 640px;
+  margin: 0 auto 48px !important;
+}
+
+/* Navigation - cleaner */
+.navbar {
+  padding: 16px 0 !important;
+}
+
+.navlinks a {
+  font-size: 13px !important;
+  padding: 8px 16px !important;
+}
+
+/* Footer - more space */
+footer {
+  padding: 48px 0 !important;
+  margin-top: 80px !important;
+}
+
+/* Flash sales strip - less aggressive */
+.flash-sales-strip {
+  padding: 16px 24px !important;
+  margin-bottom: 32px !important;
+}
+
+.flash-sales-label {
+  font-size: 11px !important;
+  padding: 6px 16px !important;
+}
+
+/* Verified stock counter - subtler */
+.verified-stock-row {
+  margin-bottom: 32px !important;
+  padding-bottom: 20px !important;
+}
+
+.verified-stock-title {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+/* Cart drawer - more padding */
+.cart-panel {
+  padding: 32px !important;
+}
+
+.cart-items .cart-item {
+  padding: 16px 0 !important;
+}
+
+/* Modal spacing */
+.overlay-modal-body {
+  padding: 32px !important;
+}
+
+.overlay-modal-header {
+  padding: 20px 32px !important;
+}
+
+/* Buttons - more breathing room */
+.btn {
+  padding: 14px 32px !important;
+  font-size: 14px !important;
+}
+
+.btn-gold, .btn-primary {
+  letter-spacing: 0.02em !important;
+}
+
+/* Remove unnecessary elements that add clutter */
+.catalog-note, .board-foot {
+  font-size: 12px !important;
+  opacity: 0.7;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better focus states */
+input:focus, button:focus, select:focus {
+  outline: 2px solid #f58c14;
+  outline-offset: 2px;
+}
+
+/* Mobile improvements */
+@media (max-width: 768px) {
+  section { padding: 48px 0 !important; }
+  .wrap, .container { padding: 0 20px !important; }
+  .product-grid { gap: 16px !important; }
+  .trust-badges-row { gap: 16px !important; }
+  .deals-heading { font-size: 28px !important; }
+}
+
+@media (max-width: 480px) {
+  section { padding: 40px 0 !important; }
+  .product-grid { gap: 12px !important; }
+}
