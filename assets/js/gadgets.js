@@ -360,6 +360,8 @@ const productGrid = document.getElementById("productGrid");
 const flashProductsRow = document.getElementById("flashProductsRow");
 const searchInput = document.getElementById("searchInput");
 const searchBtn = document.getElementById("searchBtn");
+const mobileSearchInput = document.getElementById("mobileSearchInput");
+const mobileSearchBtn = document.getElementById("mobileSearchBtn");
 const cartBadgeCount = document.getElementById("cartBadgeCount");
 const wishlistCountBadge = document.getElementById("wishlistCountBadge");
 const topNoticeBanner = document.getElementById("topNoticeBanner");
@@ -402,10 +404,13 @@ function renderStorefrontGrid() {
     
     // Search match
     const cleanSearch = activeSearch.toLowerCase().trim();
+    const productName = (p.name || "").toLowerCase();
+    const productSpecs = (p.specs || "").toLowerCase();
+    const productCategory = (p.category || "").toLowerCase();
     const searchMatch = !cleanSearch || 
-                        p.name.toLowerCase().includes(cleanSearch) || 
-                        p.specs.toLowerCase().includes(cleanSearch) ||
-                        p.category.toLowerCase().includes(cleanSearch);
+                        productName.includes(cleanSearch) ||
+                        productSpecs.includes(cleanSearch) ||
+                        productCategory.includes(cleanSearch);
     
     // Price match
     let priceMatch = true;
@@ -448,74 +453,65 @@ function renderStorefrontGrid() {
     let discBadge = "";
     if (p.compare_at_price && p.compare_at_price > p.price) {
       const discPercent = Math.round(((p.compare_at_price - p.price) / p.compare_at_price) * 100);
-      discBadge = `<span class="bg-gold text-slate-900 text-xs font-black px-2 py-0.5 rounded-sm">-${discPercent}%</span>`;
+      discBadge = `<span class="discount-badge">-${discPercent}%</span>`;
     }
 
     // Badge styling
     let badgeMarkup = "";
     if (p.badge && p.badge !== "none" && p.badge !== "") {
-      let badgeClass = "badge-hot";
-      if (p.badge === "SEALED") badgeClass = "badge-sealed";
-      if (p.badge === "DEAL") badgeClass = "badge-deal";
-      if (p.badge === "BESTSELLER") badgeClass = "badge-bestseller";
-      badgeMarkup = `<span class="text-[10px] font-black tracking-widest px-2 py-0.5 rounded uppercase ${badgeClass}">${p.badge}</span>`;
+      badgeMarkup = `<span class="product-badge">${p.badge}</span>`;
     }
 
     // Wishlist status
     const isWishlisted = wishlist.includes(p.id);
-    const wishClass = isWishlisted ? "text-red-500 fill-red-500" : "text-slate-400 hover:text-red-500";
+    const wishlistLabel = isWishlisted ? `Remove ${p.name} from wishlist` : `Add ${p.name} to wishlist`;
 
     // Stock element
-    let stockMarkup = `<span class="text-xs text-green-500 font-bold">In Stock</span>`;
+    let stockClass = "stock-in";
+    let stockLabel = "In Stock";
     if (p.stock_quantity === 0) {
-      stockMarkup = `<span class="text-xs text-red-500 font-bold">Sold Out</span>`;
+      stockClass = "stock-out";
+      stockLabel = "Sold Out";
     } else if (p.stock_quantity < 10) {
-      stockMarkup = `<span class="text-xs text-amber-500 font-bold">${p.stock_quantity} units left</span>`;
+      stockClass = "stock-low";
+      stockLabel = `${p.stock_quantity} units left`;
     }
 
+    const compareMarkup = p.compare_at_price
+      ? `<span class="product-compare-price">GH₵ ${p.compare_at_price.toLocaleString()}</span>`
+      : "";
+
     return `
-      <div class="bg-slate-panel rounded-lg overflow-hidden border border-slate-700/50 hover:border-gold/50 transition-all duration-300 flex flex-col justify-between relative group" onclick="openProductQuickView('${p.id}')">
-        <!-- Badge row -->
-        <div class="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1.5 items-start">
+      <div class="product-card group" onclick="openProductQuickView('${p.id}')">
+        <div class="product-image-container">
           ${badgeMarkup}
           ${discBadge}
+
+          <button onclick="event.stopPropagation(); toggleWishlist('${p.id}')" class="wishlist-heart${isWishlisted ? " active" : ""}" type="button" aria-label="${wishlistLabel}">
+            <svg class="w-4 h-4" fill="${isWishlisted ? "currentColor" : "none"}" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+            </svg>
+          </button>
+
+          <img src="${p.image_url || 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=800'}" alt="${p.name} product photo" loading="lazy" />
         </div>
 
-        <!-- Wishlist toggle -->
-        <button onclick="event.stopPropagation(); toggleWishlist('${p.id}')" class="absolute top-2.5 right-2.5 h-8 w-8 rounded-full bg-slate-900/80 hover:bg-slate-900 flex items-center justify-center z-10 transition-colors">
-          <svg class="w-4 h-4 ${wishClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-          </svg>
-        </button>
+        <div class="product-body">
+          <span class="product-category">${p.category}</span>
+          <h3 class="product-name">${p.name}</h3>
+          <p class="product-specs">${p.specs || ""}</p>
 
-        <!-- Product Image -->
-        <div class="p-3">
-          <div class="h-44 w-full flex items-center justify-center rounded bg-slate-900/50 overflow-hidden mb-3 relative">
-            <img src="${p.image_url || 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=800'}" alt="${p.name}" class="max-h-full max-w-full object-contain transform group-hover:scale-105 transition-transform duration-300" />
+          <div class="product-price-row">
+            <span class="product-price">GH₵ ${p.price.toLocaleString()}</span>
+            ${compareMarkup}
           </div>
-          
-          <span class="text-[10px] text-gold uppercase tracking-wider font-extrabold block mb-1">${p.category}</span>
-          <h3 class="text-sm font-bold text-white line-clamp-2 min-h-[40px] leading-tight group-hover:text-gold transition-colors">${p.name}</h3>
-          <p class="text-xs text-slate-400 line-clamp-1 mt-1 font-medium">${p.specs || ""}</p>
-          
-          <div class="flex items-baseline gap-2 mt-3 mb-1">
-            <span class="text-base font-black text-white">GH₵ ${p.price.toLocaleString()}</span>
-            ${p.compare_at_price ? `<span class="text-xs text-slate-500 line-through">GH₵ ${p.compare_at_price.toLocaleString()}</span>` : ""}
-          </div>
-          
-          <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-800">
-            ${stockMarkup}
-            <div class="flex items-center gap-1">
-              <svg class="w-3.5 h-3.5 text-gold fill-current" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-              </svg>
-              <span class="text-[11px] text-slate-300 font-bold">${p.rating || "4.8"} (${p.reviews_count || "0"})</span>
-            </div>
-          </div>
-        </div>
 
-        <div class="p-3 pt-0 mt-2">
-          <button onclick="event.stopPropagation(); quickAddProduct('${p.id}')" ${p.stock_quantity === 0 ? 'disabled' : ''} class="w-full bg-gold hover:bg-gold/90 disabled:bg-slate-800 disabled:text-slate-500 text-slate-900 font-black text-xs py-2.5 rounded uppercase tracking-wider transition-all shadow-sm">
+          <div class="product-stock-row">
+            <span class="${stockClass}">${stockLabel}</span>
+            <div class="product-rating"><span class="star">★</span> ${p.rating || "4.8"} (${p.reviews_count || "0"})</div>
+          </div>
+
+          <button onclick="event.stopPropagation(); quickAddProduct('${p.id}')" ${p.stock_quantity === 0 ? 'disabled' : ''} class="add-to-bag-btn" type="button">
             ${p.stock_quantity === 0 ? 'Sold Out' : 'Add to Bag'}
           </button>
         </div>
@@ -542,7 +538,7 @@ function renderFlashSale() {
       <div class="bg-slate-900/60 rounded-lg p-2 border border-slate-800 shrink-0 w-36 hover:border-gold/40 transition-colors relative cursor-pointer" onclick="openProductQuickView('${p.id}')">
         <span class="absolute top-1 left-1 bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm">-${discPercent}%</span>
         <div class="h-24 w-full flex items-center justify-center overflow-hidden mb-2 bg-slate-950/50 rounded p-1">
-          <img src="${p.image_url}" alt="${p.name}" class="max-h-full max-w-full object-contain" />
+          <img src="${p.image_url}" alt="${p.name} product photo" loading="lazy" class="max-h-full max-w-full object-contain" />
         </div>
         <h4 class="text-[11px] text-slate-200 font-bold truncate leading-tight">${p.name}</h4>
         <div class="mt-1 leading-tight flex flex-col">
@@ -606,12 +602,12 @@ async function openProductQuickView(id) {
   const allImages = [p.image_url, ...(p.images || [])].filter(x => !!x);
   
   if (allImages.length > 0) {
-    carouselEl.innerHTML = `<img id="qvActiveImg" src="${allImages[0]}" alt="${p.name}" class="max-h-full max-w-full object-contain" />`;
+    carouselEl.innerHTML = `<img id="qvActiveImg" src="${allImages[0]}" alt="${p.name} product photo" loading="lazy" class="max-h-full max-w-full object-contain" />`;
     if (allImages.length > 1) {
       thumbnailsEl.classList.remove("hidden");
       thumbnailsEl.innerHTML = allImages.map((img, idx) => `
         <button onclick="changeQvActiveImage('${img}')" class="h-12 w-12 rounded bg-slate-900 border border-slate-700 hover:border-gold p-1 flex items-center justify-center overflow-hidden shrink-0">
-          <img src="${img}" class="max-h-full max-w-full object-contain" />
+          <img src="${img}" alt="${p.name} product view ${idx + 1}" loading="lazy" class="max-h-full max-w-full object-contain" />
         </button>
       `).join("");
     } else {
@@ -772,7 +768,7 @@ function renderRelatedProducts(product) {
   relatedGrid.innerHTML = related.map(p => `
     <div onclick="openProductQuickView('${p.id}')" class="bg-slate-900 border border-slate-800 hover:border-gold/40 rounded-lg p-2.5 text-left transition-colors cursor-pointer flex flex-col justify-between">
       <div class="h-20 w-full flex items-center justify-center bg-slate-950/40 rounded p-1 overflow-hidden mb-2">
-        <img src="${p.image_url}" class="max-h-full max-w-full object-contain" />
+        <img src="${p.image_url}" alt="${p.name} product photo" loading="lazy" class="max-h-full max-w-full object-contain" />
       </div>
       <h5 class="text-xs font-bold text-white truncate">${p.name}</h5>
       <span class="text-xs font-black text-gold mt-1">GH₵ ${p.price.toLocaleString()}</span>
@@ -918,7 +914,7 @@ function renderWishlistItems() {
   container.innerHTML = savedProducts.map(p => `
     <div class="flex items-center gap-3 border-b border-slate-800 pb-3">
       <div class="h-14 w-14 bg-slate-900 border border-slate-800 rounded flex items-center justify-center p-1 shrink-0 overflow-hidden">
-        <img src="${p.image_url}" alt="${p.name}" class="max-h-full max-w-full object-contain" />
+        <img src="${p.image_url}" alt="${p.name} product photo" loading="lazy" class="max-h-full max-w-full object-contain" />
       </div>
       <div class="flex-1 min-w-0">
         <h5 class="text-xs font-bold text-white truncate leading-tight">${p.name}</h5>
@@ -1005,7 +1001,7 @@ function renderRecentlyViewedGrid() {
   container.innerHTML = items.map(p => `
     <div onclick="openProductQuickView('${p.id}')" class="bg-slate-panel rounded-lg p-2 border border-slate-800 shrink-0 w-32 hover:border-gold/30 transition-all cursor-pointer">
       <div class="h-20 w-full flex items-center justify-center bg-slate-900/60 rounded p-1 overflow-hidden mb-2">
-        <img src="${p.image_url}" alt="${p.name}" class="max-h-full max-w-full object-contain" />
+        <img src="${p.image_url}" alt="${p.name} product photo" loading="lazy" class="max-h-full max-w-full object-contain" />
       </div>
       <h5 class="text-[11px] font-bold text-white truncate leading-tight">${p.name}</h5>
       <span class="text-xs font-black text-gold mt-1 block">GH₵ ${p.price.toLocaleString()}</span>
@@ -1194,7 +1190,7 @@ function renderCartSummaryTab() {
     return `
       <div class="flex items-center gap-3 border-b border-slate-800 pb-3">
         <div class="h-14 w-14 bg-slate-900 border border-slate-800 rounded flex items-center justify-center p-1 shrink-0 overflow-hidden">
-          <img src="${item.image_url}" alt="${item.name}" class="max-h-full max-w-full object-contain" />
+          <img src="${item.image_url}" alt="${item.name} product photo" loading="lazy" class="max-h-full max-w-full object-contain" />
         </div>
         <div class="flex-1 min-w-0">
           <h5 class="text-xs font-bold text-white truncate leading-tight">${item.name}</h5>
@@ -1605,20 +1601,27 @@ function initUIEventListeners() {
     });
   }
 
-  // Search input and trigger button
-  if (searchBtn && searchInput) {
+  // Search input and trigger buttons
+  const bindSearchInput = (inputEl, buttonEl) => {
+    if (!inputEl || !buttonEl) return;
+
     const handleSearch = () => {
-      activeSearch = searchInput.value;
+      activeSearch = inputEl.value;
+      if (searchInput && searchInput !== inputEl) searchInput.value = activeSearch;
+      if (mobileSearchInput && mobileSearchInput !== inputEl) mobileSearchInput.value = activeSearch;
       renderStorefrontGrid();
       // Scroll to grid
       document.getElementById("store-feed").scrollIntoView({ behavior: "smooth" });
     };
 
-    searchBtn.addEventListener("click", handleSearch);
-    searchInput.addEventListener("keydown", (e) => {
+    buttonEl.addEventListener("click", handleSearch);
+    inputEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter") handleSearch();
     });
-  }
+  };
+
+  bindSearchInput(searchInput, searchBtn);
+  bindSearchInput(mobileSearchInput, mobileSearchBtn);
 
   // FAQ Accordion click
   document.querySelectorAll(".faq-header").forEach(hdr => {
