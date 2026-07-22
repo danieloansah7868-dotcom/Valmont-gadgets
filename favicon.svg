@@ -1,4 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <polygon points="32 3 57 17.5 57 46.5 32 61 7 46.5 7 17.5" fill="#0b1a38" stroke="#0b1a38" stroke-width="4" stroke-linejoin="round"/>
-  <path d="M16 16 L32 52 L48 16" fill="none" stroke="#f58c14" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Navy Hexagon Background -->
+  <polygon points="50,3 90,26 90,74 50,97 10,74 10,26" fill="#1a2744" stroke="#0f1b33" stroke-width="2"/>
+
+  <!-- Left Device (Phone) -->
+  <rect x="25" y="18" width="22" height="64" rx="3" fill="none" stroke="#ffffff" stroke-width="3"/>
+  <rect x="28" y="24" width="16" height="48" rx="1" fill="#ffffff" opacity="0.15"/>
+  <circle cx="36" cy="76" r="2.5" fill="#f58c14"/>
+
+  <!-- Right Device (Laptop/Tablet) -->
+  <rect x="53" y="28" width="28" height="40" rx="2" fill="none" stroke="#ffffff" stroke-width="3"/>
+  <rect x="57" y="32" width="20" height="30" rx="1" fill="#ffffff" opacity="0.15"/>
+  <rect x="49" y="70" width="36" height="5" rx="1" fill="#f58c14"/>
 </svg>

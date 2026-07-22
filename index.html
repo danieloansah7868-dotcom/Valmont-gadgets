@@ -142,22 +142,22 @@
         </nav>
       </aside>
 
-      <!-- Center Promo Banner -->
-      <section class="col-span-1 lg:col-span-2 bg-gradient-to-br from-navy-light to-slate-panel border border-slate-800 rounded-xl overflow-hidden min-h-[220px] flex flex-col justify-center p-6 md:p-8 shadow-lg relative">
-        <div class="relative z-10 max-w-[380px] space-y-3">
-          <span class="bg-gold text-slate-950 text-[10px] font-black tracking-widest uppercase px-3 py-1 rounded">
-            Flash Sale Live
-          </span>
-          <h2 class="font-black text-2xl md:text-3xl tracking-tight leading-none text-white uppercase">
-            Executive Midweek Deals
-          </h2>
-          <p class="text-xs text-slate-300 font-medium leading-relaxed">
-            Genuine iPhones, professional MacBooks, flagships with official 12-month warranties.
-          </p>
-          <a href="#store-feed" class="inline-block bg-gold hover:bg-gold/90 text-slate-900 font-black text-xs tracking-widest px-6 py-3 rounded-full transition shadow uppercase">
-            Shop Catalog
-          </a>
+      <!-- Executive Midweek Deals: rotating 3D product cards -->
+      <section class="hero-deals col-span-1 lg:col-span-2 bg-navy-deep border border-slate-800 rounded-xl overflow-hidden min-h-[420px] p-5 md:p-7 shadow-lg relative">
+        <div class="relative z-10 flex items-center justify-between gap-3 mb-4">
+          <div>
+            <span class="bg-gold text-slate-950 text-[10px] font-black tracking-widest uppercase px-3 py-1 rounded">Flash Sale Live</span>
+            <h2 class="font-black text-2xl md:text-3xl tracking-tight leading-none text-white uppercase mt-3">Executive Midweek Deals</h2>
+          </div>
+          <span class="hidden sm:block text-[10px] font-bold tracking-widest uppercase text-slate-400">Verified electronics</span>
         </div>
+
+        <div class="hero-carousel" id="heroCarousel" aria-label="Executive Midweek Deals product carousel">
+          <div class="hero-carousel__stage" id="heroCarouselStage"></div>
+          <button class="hero-carousel__arrow hero-carousel__arrow--prev" id="heroPrev" type="button" aria-label="Previous product">&#8592;</button>
+          <button class="hero-carousel__arrow hero-carousel__arrow--next" id="heroNext" type="button" aria-label="Next product">&#8594;</button>
+        </div>
+        <div class="hero-carousel__dots" id="heroDots" aria-label="Choose a product"></div>
       </section>
 
       <!-- Right 3 Trust Badges info cards -->
@@ -858,6 +858,38 @@
 
   <!-- JavaScript Storefront Controller -->
   <script src="assets/js/gadgets.js"></script>
+
+  <script>
+    (() => {
+      const heroProducts = [
+        { id: "vmp-001", name: "iPhone 15 Pro Max", tagline: "Flagship. Sealed. Verified.", price: 16500, image: "https://images.unsplash.com/photo-1696446703255-020d67fa2f3b?q=80&w=800&auto=format&fit=crop" },
+        { id: "vmp-003", name: "MacBook Pro M3", tagline: "Executive computing. 12-month warranty.", price: 22500, image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=800&auto=format&fit=crop" },
+        { id: "vmp-002", name: "Samsung Galaxy S24 Ultra", tagline: "Android flagship. Genuine.", price: 15200, image: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=800&auto=format&fit=crop" },
+        { id: "vmp-004", name: "AirPods Pro 2", tagline: "Premium audio. Original packaging.", price: 3200, image: "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?q=80&w=800&auto=format&fit=crop" },
+        { id: "vmp-005", name: "Anker Power Bank", tagline: "Power anywhere. Fast charge.", price: 1250, image: "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop" }
+      ];
+      const stage = document.getElementById("heroCarouselStage");
+      const dots = document.getElementById("heroDots");
+      let current = 0;
+      let timer;
+      function render(index) {
+        current = (index + heroProducts.length) % heroProducts.length;
+        const product = heroProducts[current];
+        stage.innerHTML = `<article class="hero-product-card" aria-live="polite"><div class="hero-product-card__face hero-product-card__front"><img class="hero-product-card__image" src="${product.image}" alt="${product.name} product image placeholder"><div class="hero-product-card__copy"><span class="hero-product-card__eyebrow">Executive deal ${current + 1} of ${heroProducts.length}</span><h3 class="hero-product-card__name">${product.name}</h3><p class="hero-product-card__tagline">${product.tagline}</p></div></div><div class="hero-product-card__face hero-product-card__back"><span class="hero-product-card__eyebrow">Verified and ready to ship</span><h3 class="hero-product-card__name">${product.name}</h3><p class="hero-product-card__price">GH₵ ${product.price.toLocaleString()}</p><button class="hero-product-card__button hero-product-card__button--bag" type="button" onclick="quickAddProduct('${product.id}')">Add to Bag</button><a class="hero-product-card__button hero-product-card__button--whatsapp" href="https://wa.me/233542451578?text=${encodeURIComponent("I would like to order " + product.name)}" target="_blank" rel="noopener">WhatsApp to order</a></div></article>`;
+        dots.querySelectorAll("button").forEach((dot, i) => dot.classList.toggle("is-active", i === current));
+      }
+      function advance(direction) {
+        const card = stage.querySelector(".hero-product-card");
+        if (card) { card.classList.add("is-flipped"); setTimeout(() => render(current + direction), 1000); } else render(current + direction);
+        clearTimeout(timer); timer = setTimeout(() => advance(1), 4000);
+      }
+      heroProducts.forEach((product, i) => { const dot = document.createElement("button"); dot.type = "button"; dot.className = "hero-carousel__dot"; dot.setAttribute("aria-label", `Show ${product.name}`); dot.onclick = () => { render(i); clearTimeout(timer); timer = setTimeout(() => advance(1), 4000); }; dots.appendChild(dot); });
+      document.getElementById("heroPrev").onclick = () => advance(-1);
+      document.getElementById("heroNext").onclick = () => advance(1);
+      render(0);
+      timer = setTimeout(() => advance(1), 4000);
+    })();
+  </script>
 
   <!-- Shared code segment linking local calculator & orders sheet -->
   <script>
