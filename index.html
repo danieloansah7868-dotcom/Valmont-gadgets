@@ -158,8 +158,8 @@
   </div>
 
   <!-- 2. JUMIA-STYLE MAIN HEADER -->
-  <header class="bg-white shadow-sm sticky top-0 z-40 border-b border-gray-100">
-    <div class="max-w-[1200px] mx-auto px-3 py-2.5 flex items-center justify-between gap-3">
+  <header class="bg-white sticky top-0 z-40 border-b border-gray-100 shadow-[0_4px_10px_0_rgba(0,0,0,0.03)] py-2.5 md:py-3.5 transition-all">
+    <div class="max-w-[1184px] mx-auto px-4 flex items-center justify-between gap-2.5 md:gap-5 lg:gap-8">
       
       <!-- Hamburger Menu & Brand Logo -->
       <div class="flex items-center gap-2 shrink-0">
@@ -169,19 +169,19 @@
         </button>
         
         <a href="/" class="flex items-center">
-          <img src="logo.svg" alt="Valmont Gadgets Logo" class="h-11 md:h-14 w-auto" />
+          <img src="logo.svg" alt="Valmont Gadgets Logo" class="h-10 md:h-12 w-auto" />
         </a>
       </div>
 
       <!-- Jumia Centered Search Bar -->
-      <div class="flex-1 max-w-[500px] flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white focus-within:border-[#f68b1e] transition-all">
-        <div class="pl-2.5 text-gray-400">
+      <div class="flex-1 max-w-[620px] flex items-center border border-gray-300 rounded-[4px] overflow-hidden bg-white focus-within:border-[#f68b1e] focus-within:shadow-[0_0_0_1px_rgba(246,139,30,0.15)] transition-all">
+        <div class="pl-2 md:pl-3.5 text-gray-400">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.637 10.637Z" />
           </svg>
         </div>
-        <input id="searchInput" type="text" placeholder="Search genuine iPhones, laptops, Samsung Galaxy..." class="w-full px-2 py-2 text-[13px] outline-none bg-white font-medium" />
-        <button id="searchBtn" class="jumia-orange text-white px-4 md:px-7 py-2 font-bold text-[12px] tracking-wider jumia-orange-hover transition flex items-center justify-center shrink-0">
+        <input id="searchInput" type="text" placeholder="Search products, brands and categories..." class="w-full px-1.5 md:px-3 py-1.5 md:py-2.5 text-[11.5px] md:text-[13px] outline-none bg-white font-medium text-gray-800 placeholder-gray-400" />
+        <button id="searchBtn" class="bg-[#f68b1e] text-white px-3 md:px-8 py-1.5 md:py-2.5 font-bold text-[11.5px] md:text-[13px] tracking-wide hover:bg-orange-600 transition flex items-center justify-center shrink-0">
           <span class="hidden md:inline">SEARCH</span>
           <svg class="w-4 h-4 md:hidden" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.637 10.637Z" />
@@ -190,47 +190,71 @@
       </div>
 
       <!-- Right Header Actions (Desktop and Mobile) -->
-      <div class="flex items-center gap-3 shrink-0">
+      <div class="flex items-center gap-2 md:gap-5 lg:gap-8 shrink-0">
         
         <!-- Mobile Profile Button (Account top instead of bottom!) -->
-        <button onclick="openLoginModal();" class="flex items-center text-gray-700 hover:text-[#f68b1e] md:hidden p-1">
+        <button onclick="openLoginModal();" class="flex items-center text-gray-700 hover:text-[#f68b1e] md:hidden p-1.5 shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5.5 h-5.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
         </button>
 
         <!-- Desktop Account Dropdown -->
         <div class="relative group hidden md:block">
-          <button id="accountBtn" class="flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] py-1">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5.5 h-5.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
-            <span id="accountLabel">Sign In</span>
+          <button id="accountBtn" class="flex items-center gap-1.5 font-semibold text-[14px] text-gray-700 hover:text-[#f68b1e] py-1 transition duration-150">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5.5 h-5.5 text-gray-700"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+            <span id="accountLabel" class="tracking-wide">Account</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-gray-400 transition-transform group-hover:rotate-180 duration-150"><path fill-rule="evenodd" d="M12.53 16.28a.75.75 0 0 1-1.06 0l-7.5-7.5a.75.75 0 0 1 1.06-1.06L12 14.69l6.97-6.97a.75.75 0 1 1 1.06 1.06l-7.5 7.5Z" clip-rule="evenodd" /></svg>
           </button>
-          <div class="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-lg shadow-lg py-2 hidden group-hover:block z-50">
-            <button onclick="openLoginModal();" class="w-full text-left px-4 py-2 text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2">👤 Profile / Login</button>
-            <button onclick="openWishlistModal();" class="w-full text-left px-4 py-2 text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2">❤️ Saved Items</button>
-            <button id="logoutBtn" onclick="handleLogout();" class="w-full text-left px-4 py-2 text-[12px] text-red-500 hover:bg-gray-50 flex items-center gap-2 border-t hidden">Logout</button>
+          
+          <!-- Premium Jumia Dropdown Menu -->
+          <div class="absolute right-0 top-full mt-1.5 w-56 bg-white border border-gray-100 rounded-[4px] shadow-[0_8px_24px_rgba(0,0,0,0.1)] py-3 hidden group-hover:block z-50">
+            <div class="px-4 pb-3 border-b border-gray-100" id="dropdownSignInContainer">
+              <button onclick="openLoginModal();" class="w-full text-center bg-[#f68b1e] hover:bg-orange-600 text-white font-bold py-2.5 rounded-[4px] text-[13px] tracking-wide transition uppercase">
+                Sign In
+              </button>
+            </div>
+            <div class="py-1">
+              <button onclick="openLoginModal();" class="w-full text-left px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+                My Profile / Login
+              </button>
+              <button onclick="openWishlistModal();" class="w-full text-left px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" /></svg>
+                Saved Items (Wishlist)
+              </button>
+              <button onclick="openDealerModal();" class="w-full text-left px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5 text-[#f68b1e]"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5m-3-12h13.5m-13.5 6h13.5m-13.5 6h13.5" /></svg>
+                Dealer Dashboard
+              </button>
+              <button id="logoutBtn" onclick="handleLogout();" class="w-full text-left px-4 py-2.5 text-[13px] text-red-500 hover:bg-red-50 flex items-center gap-3 transition border-t border-gray-100 mt-1 hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3-3H18M3.75 12l3-3m-3 3 3 3" /></svg>
+                Logout
+              </button>
+            </div>
           </div>
         </div>
 
         <!-- Desktop Wishlist Button -->
-        <button onclick="openWishlistModal();" class="relative flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] py-1 border-l border-gray-200 pl-3 hidden md:flex">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5">
+        <button onclick="openWishlistModal();" class="relative flex items-center gap-1.5 font-semibold text-[14px] text-gray-700 hover:text-[#f68b1e] py-1 transition hidden md:flex">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-6 h-6 text-gray-700">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
           </svg>
-          <span id="wishlistCountBadge" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-black rounded-full h-4 w-4 flex items-center justify-center hidden">0</span>
+          <span class="tracking-wide">Saved</span>
+          <span id="wishlistCountBadge" class="absolute -top-1.5 -right-2 bg-red-500 text-white text-[9px] font-black rounded-full h-4 w-4 flex items-center justify-center hidden">0</span>
         </button>
 
         <!-- Desktop Dealer Portal Link -->
-        <button id="btnToggleDealer" onclick="openDealerModal();" class="flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] border-l border-gray-200 pl-3 py-1 hidden md:flex">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5 text-[#f68b1e]">
+        <button id="btnToggleDealer" onclick="openDealerModal();" class="flex items-center gap-1.5 font-semibold text-[14px] text-gray-700 hover:text-[#f68b1e] py-1 transition hidden md:flex">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-6 h-6 text-[#f68b1e]">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5m-3-12h13.5m-13.5 6h13.5m-13.5 6h13.5" />
           </svg>
-          <span id="dealerBtnLabel">Dealer Portal</span>
+          <span id="dealerBtnLabel" class="tracking-wide">Dealer Portal</span>
         </button>
 
         <!-- Desktop Bag Trigger Button -->
-        <button id="cartBtn" class="relative flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] py-1 border-l border-gray-200 pl-3">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
-          <span class="hidden md:inline">Bag</span>
-          <span id="cartBadgeCount" class="absolute -top-1.5 -right-1.5 jumia-orange text-white text-[9px] font-black rounded-full h-4.5 w-4.5 flex items-center justify-center hidden">0</span>
+        <button id="cartBtn" class="relative flex items-center gap-1.5 font-semibold text-[14px] text-gray-700 hover:text-[#f68b1e] py-1 transition hidden md:flex">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-6 h-6 text-gray-700"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
+          <span class="tracking-wide">Bag</span>
+          <span id="cartBadgeCount" class="absolute -top-1.5 -right-2 bg-[#f68b1e] text-white text-[9px] font-black rounded-full h-4.5 w-4.5 flex items-center justify-center hidden">0</span>
         </button>
 
       </div>
@@ -238,67 +262,69 @@
   </header>
 
   <!-- 3. JUMIA HOME CONTAINER LAYOUT -->
-  <main class="max-w-[1200px] mx-auto px-4 py-4">
+  <main class="max-w-[1200px] mx-auto px-4 py-6 md:py-8 pb-20 md:pb-8">
     
     <!-- CUSTOMER SHOP VIEW (DEFAULT) -->
     <div id="customer-store-view">
       
       <!-- Jumia Hero Row (Sidebar + Slider + Promos) -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-6">
         
         <!-- Left Category Sidebar (hidden on mobile) -->
-        <aside class="hidden md:block col-span-1 bg-white rounded-lg p-3 card-shadow border border-gray-100">
-          <h3 class="font-extrabold text-[12px] uppercase text-[#f68b1e] tracking-widest border-b pb-2.5 mb-2.5">
-            Categories
-          </h3>
-                    <nav class="space-y-1">
-            <button data-cat-filter="all" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-semibold rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-800 font-extrabold jumia-orange-text bg-orange-50">
-              All Products
-            </button>
-            <button data-cat-filter="iphones" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
-              iPhones & Apple
-            </button>
-            <button data-cat-filter="samsung" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
-              Samsung Galaxy
-            </button>
-            <button data-cat-filter="android" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
-              Android Flagship Phones
-            </button>
-            <button data-cat-filter="tablets" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
-              Tablets & iPads
-            </button>
-            <button data-cat-filter="smartwatches" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
-              Smartwatches & Wearables
-            </button>
-            <button data-cat-filter="laptops" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
-              Executive Laptops
-            </button>
-            <button data-cat-filter="laptop_acc" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
-              Laptop Accessories
-            </button>
-            <button data-cat-filter="audio" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
-              Smart Audio
-            </button>
-            <button data-cat-filter="gaming" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
-              Gaming & Consoles
-            </button>
-            <button data-cat-filter="phone_acc" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
-              Phone Cases & Accessories
-            </button>
-            <button data-cat-filter="phone_parts" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
-              Phone Parts & Spares
-            </button>
-            <button data-cat-filter="travel_acc" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
-              Smart Travel & Accessories
-            </button>
-            <button data-cat-filter="chargers" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
-              Power & Chargers
-            </button>
-          </nav>
+        <aside class="hidden md:block md:col-span-3 lg:col-span-2.5 bg-white rounded-[4px] p-3 shadow-sm border border-gray-100 flex flex-col justify-between">
+          <div>
+            <h3 class="font-extrabold text-[12px] uppercase text-[#f68b1e] tracking-widest border-b pb-2.5 mb-2.5">
+              Categories
+            </h3>
+            <nav class="space-y-0.5">
+              <button data-cat-filter="all" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-bold rounded-[4px] transition flex items-center gap-2 text-[#f68b1e] bg-orange-50/50">
+                All Products
+              </button>
+              <button data-cat-filter="iphones" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#f68b1e]">
+                iPhones & Apple
+              </button>
+              <button data-cat-filter="samsung" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#f68b1e]">
+                Samsung Galaxy
+              </button>
+              <button data-cat-filter="android" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#f68b1e]">
+                Android Flagships
+              </button>
+              <button data-cat-filter="tablets" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#f68b1e]">
+                Tablets & iPads
+              </button>
+              <button data-cat-filter="smartwatches" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#f68b1e]">
+                Smartwatches
+              </button>
+              <button data-cat-filter="laptops" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#f68b1e]">
+                Executive Laptops
+              </button>
+              <button data-cat-filter="laptop_acc" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#f68b1e]">
+                Laptop Accessories
+              </button>
+              <button data-cat-filter="audio" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#f68b1e]">
+                Smart Audio
+              </button>
+              <button data-cat-filter="gaming" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#f68b1e]">
+                Gaming & Consoles
+              </button>
+              <button data-cat-filter="phone_acc" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#f68b1e]">
+                Phone Accessories
+              </button>
+              <button data-cat-filter="phone_parts" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#f68b1e]">
+                Phone Parts & Spares
+              </button>
+              <button data-cat-filter="travel_acc" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#f68b1e]">
+                Travel & Gadgets
+              </button>
+              <button data-cat-filter="chargers" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#f68b1e]">
+                Power & Chargers
+              </button>
+            </nav>
+          </div>
         </aside>
 
         <!-- Central Banner Promo Slider -->
-        <section class="col-span-1 md:col-span-2 relative bg-white text-gray-800 rounded-lg overflow-hidden h-[240px] md:h-auto flex flex-col justify-center p-6 md:p-8 card-shadow border border-gray-200">
+        <section class="col-span-1 md:col-span-6 lg:col-span-7 relative bg-white text-gray-800 rounded-[4px] overflow-hidden min-h-[300px] flex flex-col justify-center p-6 md:p-8 shadow-sm border border-gray-100">
           <div class="absolute inset-0 opacity-10 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=800');"></div>
           <div class="grid grid-cols-1 md:grid-cols-2 items-center gap-6 relative z-10 w-full">
             <div>
@@ -311,7 +337,7 @@
               <p class="text-[13px] text-gray-500 font-semibold mb-4 leading-snug">
                 Genuine phones, laptops & accessories with 12-month warranty & sealed packaging.
               </p>
-              <a href="#store-feed" class="inline-block jumia-orange hover:bg-orange-600 text-white font-extrabold text-[12px] tracking-widest px-6 py-2.5 rounded-full transition shadow-sm uppercase">
+              <a href="#store-feed" class="inline-block bg-[#f68b1e] hover:bg-orange-600 text-white font-extrabold text-[12px] tracking-widest px-6 py-2.5 rounded-[4px] transition shadow-sm uppercase">
                 Shop Now
               </a>
             </div>
@@ -323,9 +349,9 @@
         </section>
 
         <!-- Right Quick Promo Cards -->
-        <div class="col-span-1 bg-white rounded-lg p-4 card-shadow flex flex-col justify-between border border-gray-100 gap-3">
+        <div class="col-span-1 md:col-span-3 lg:col-span-2.5 bg-white rounded-[4px] p-4 shadow-sm flex flex-col justify-between border border-gray-100 gap-4">
           <div class="flex items-center gap-3">
-            <div class="bg-amber-100 text-amber-700 rounded-lg h-9 w-9 flex items-center justify-center shadow-sm">
+            <div class="bg-amber-100 text-amber-700 rounded-[4px] h-9 w-9 flex items-center justify-center shadow-sm">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" /></svg>
             </div>
             <div>
@@ -334,7 +360,7 @@
             </div>
           </div>
           <div class="flex items-center gap-3">
-            <div class="bg-orange-100 text-[#f68b1e] rounded-lg h-9 w-9 flex items-center justify-center shadow-sm">
+            <div class="bg-orange-100 text-[#f68b1e] rounded-[4px] h-9 w-9 flex items-center justify-center shadow-sm">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0ZM19.5 18.75a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0ZM2.25 10.5h11.25V18a2.25 2.25 0 0 1-2.25 2.25h-6.75A2.25 2.25 0 0 1 2.25 18v-7.5Zm11.25 0h4.142c.868 0 1.636.564 1.83 1.408l1.411 6.136A2.25 2.25 0 0 1 18.784 20.25H16.5V10.5Z" /></svg>
             </div>
             <div>
@@ -343,7 +369,7 @@
             </div>
           </div>
           <div class="flex items-center gap-3">
-            <div class="bg-blue-100 text-blue-700 rounded-lg h-9 w-9 flex items-center justify-center shadow-sm">
+            <div class="bg-blue-100 text-blue-700 rounded-[4px] h-9 w-9 flex items-center justify-center shadow-sm">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" /></svg>
             </div>
             <div>
@@ -357,24 +383,24 @@
 
             <!-- Mobile Category Chips (hidden on desktop) -->
       <div class="md:hidden flex gap-2 overflow-x-auto pb-3 mb-4 no-scrollbar">
-        <button data-cat-filter="all" class="cat-pill bg-[#f68b1e] text-white text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">All Products</button>
-        <button data-cat-filter="iphones" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">iPhones</button>
-        <button data-cat-filter="samsung" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Samsung</button>
-        <button data-cat-filter="android" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Androids</button>
-        <button data-cat-filter="tablets" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Tablets</button>
-        <button data-cat-filter="smartwatches" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Watches</button>
-        <button data-cat-filter="laptops" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Laptops</button>
-        <button data-cat-filter="laptop_acc" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Laptop Acc</button>
-        <button data-cat-filter="audio" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Audio</button>
-        <button data-cat-filter="gaming" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Gaming</button>
-        <button data-cat-filter="phone_acc" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Cases</button>
-        <button data-cat-filter="phone_parts" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Parts</button>
-        <button data-cat-filter="travel_acc" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Travel</button>
-        <button data-cat-filter="chargers" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Power</button>
+        <button data-cat-filter="all" class="cat-pill mobile-chip bg-[#f68b1e] text-white text-[12px] font-bold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">All Products</button>
+        <button data-cat-filter="iphones" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">iPhones</button>
+        <button data-cat-filter="samsung" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Samsung</button>
+        <button data-cat-filter="android" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Androids</button>
+        <button data-cat-filter="tablets" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Tablets</button>
+        <button data-cat-filter="smartwatches" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Watches</button>
+        <button data-cat-filter="laptops" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Laptops</button>
+        <button data-cat-filter="laptop_acc" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Laptop Acc</button>
+        <button data-cat-filter="audio" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Audio</button>
+        <button data-cat-filter="gaming" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Gaming</button>
+        <button data-cat-filter="phone_acc" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Cases</button>
+        <button data-cat-filter="phone_parts" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Parts</button>
+        <button data-cat-filter="travel_acc" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Travel</button>
+        <button data-cat-filter="chargers" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Power</button>
       </div>
 
       <!-- JUMIA FLASH SALES ROW (FLASH SALE THEME) -->
-      <div class="bg-red-600 rounded-lg p-3 text-white mb-6 card-shadow">
+      <div class="bg-red-600 rounded-[4px] p-4 text-white mb-6 card-shadow">
         <div class="flex items-center justify-between border-b border-red-500 pb-2 mb-3">
           <div class="flex items-center gap-2">
             
@@ -393,7 +419,7 @@
       </div>
 
       <!-- JUMIA MAIN PRODUCT FEED SECTION -->
-      <div class="bg-white rounded-lg p-4 border border-gray-100 card-shadow mb-6" id="store-feed">
+      <div class="bg-white rounded-[4px] p-4 border border-gray-100 card-shadow mb-6" id="store-feed">
         <div class="flex items-center justify-between border-b pb-3 mb-4">
           <h3 class="font-extrabold text-[14px] uppercase tracking-wider text-gray-800" id="currentFeedTitle">
             Verified Premium Stock
@@ -403,14 +429,14 @@
           </span>
         </div>
         
-        <!-- Grid layout matching Jumia (4-col desktop, 2-col mobile) -->
-        <div id="productGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Grid layout matching Jumia (6-col desktop, 2-col mobile) -->
+        <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
           <!-- Product cards injected via JS -->
         </div>
       </div>
 
       <!-- RECENTLY VIEWED PRODUCTS ROW (JUMIA STYLE) -->
-      <div id="recentlyViewedSection" class="bg-white rounded-lg p-4 border border-gray-100 card-shadow mb-6 hidden">
+      <div id="recentlyViewedSection" class="bg-white rounded-[4px] p-4 border border-gray-100 card-shadow mb-6 hidden">
         <h3 class="font-extrabold text-[13px] uppercase tracking-wider text-gray-800 border-b pb-2 mb-3">
           Recently Viewed Products
         </h3>
@@ -452,7 +478,7 @@
         <p class="text-[12px] leading-relaxed text-gray-300 font-medium mb-4">
           Running your own Valmont Gadgets franchise business? Toggle our Dealer Portal to manage your pricing calculator, log orders, and read reseller FAQs.
         </p>
-        <button onclick="openDealerModal();" class="jumia-orange hover:bg-orange-600 text-white font-extrabold text-[11px] tracking-widest px-6 py-2.5 rounded-full uppercase transition">
+        <button onclick="openDealerModal();" class="bg-[#f68b1e] hover:bg-orange-600 text-white font-bold text-[11px] tracking-widest px-6 py-2.5 rounded-[4px] uppercase transition">
           Enter Dealer Desk
         </button>
       </div>
@@ -576,11 +602,11 @@
 
     <!-- Sticky Cart Checkout Button footer -->
     <div class="bg-gray-50 border-t p-4 shrink-0">
-      <button id="checkoutActionBtn" class="w-full jumia-orange hover:bg-orange-600 text-white font-extrabold text-[13px] tracking-widest uppercase py-3 rounded-full transition shadow flex items-center justify-center gap-2">
+      <button id="checkoutActionBtn" class="w-full bg-[#f68b1e] hover:bg-orange-600 text-white font-bold text-[13px] tracking-widest uppercase py-3 rounded-[4px] transition shadow flex items-center justify-center gap-2">
         <span>Proceed to Shipping</span>
         <span class="text-[12px]">➔</span>
       </button>
-      <button id="backActionBtn" class="w-full border border-gray-300 bg-white text-gray-700 font-bold text-[11px] tracking-wider uppercase py-2.5 rounded-full mt-2 hover:bg-gray-50 transition hidden">
+      <button id="backActionBtn" class="w-full border border-gray-300 bg-white text-gray-700 font-bold text-[11px] tracking-wider uppercase py-2.5 rounded-[4px] mt-2 hover:bg-gray-50 transition hidden">
         Go Back
       </button>
     </div>
@@ -594,7 +620,7 @@
       <span class="bg-amber-100 text-amber-800 text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded">
         OFFICIAL STORE GUARANTEE
       </span>
-      <button id="closeDetailBtn" class="text-gray-500 hover:text-black font-extrabold text-sm border px-3 py-1.5 rounded-full hover:bg-gray-50">
+      <button id="closeDetailBtn" class="text-gray-500 hover:text-black font-semibold text-sm border px-3 py-1.5 rounded-[4px] hover:bg-gray-50">
         Close Window
       </button>
     </div>
@@ -647,10 +673,10 @@
         </div>
 
         <div class="space-y-2 border-t pt-4">
-          <button id="detailAddToCart" class="w-full jumia-orange hover:bg-orange-600 text-white font-extrabold text-[12px] tracking-widest uppercase py-3 rounded-full transition shadow flex items-center justify-center gap-1.5">
+          <button id="detailAddToCart" class="w-full bg-[#f68b1e] hover:bg-orange-600 text-white font-bold text-[12px] tracking-widest uppercase py-3 rounded-[4px] transition shadow flex items-center justify-center gap-1.5">
             Add to Bag
           </button>
-          <button id="detailWhatsAppOrder" class="w-full border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 font-bold text-[11px] tracking-wider uppercase py-2.5 rounded-full transition flex items-center justify-center gap-1.5">
+          <button id="detailWhatsAppOrder" class="w-full border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 font-bold text-[11px] tracking-wider uppercase py-2.5 rounded-[4px] transition flex items-center justify-center gap-1.5">
             Quick Order on WhatsApp
           </button>
         </div>
@@ -667,13 +693,13 @@
       <h3 class="font-black text-[15px] uppercase tracking-wider text-gray-800 flex items-center gap-2">
         My Wishlist / Saved Items
       </h3>
-      <button onclick="closeWishlistModal();" class="text-gray-500 hover:text-black text-sm font-bold border px-3 py-1.5 rounded-full hover:bg-gray-50">Close</button>
+      <button onclick="closeWishlistModal();" class="text-gray-500 hover:text-black text-sm font-bold border px-3 py-1.5 rounded-[4px] hover:bg-gray-50">Close</button>
     </div>
     <div id="wishlistModalItems" class="space-y-4 mb-6">
       <!-- Injected via JS -->
     </div>
     <div class="flex justify-end gap-2 border-t pt-4">
-      <button onclick="addWishlistToCart();" id="addAllWishlistBtn" class="jumia-orange hover:bg-orange-600 text-white font-extrabold text-[12px] tracking-wider uppercase px-6 py-2.5 rounded-full transition shadow-sm">
+      <button onclick="addWishlistToCart();" id="addAllWishlistBtn" class="bg-[#f68b1e] hover:bg-orange-600 text-white font-bold text-[12px] tracking-wider uppercase px-6 py-2.5 rounded-[4px] transition shadow-sm">
         Add All To Bag
       </button>
     </div>
@@ -696,29 +722,59 @@
       <p id="profileEmail" class="text-[12px] text-gray-500 mt-1">customer@email.com</p>
       <p id="profilePhone" class="text-[12px] text-gray-500 mt-0.5">054 245 1578</p>
       
-      <button onclick="handleLogout();" class="w-full border border-red-500 text-red-500 hover:bg-red-50 font-bold text-[12px] tracking-wider uppercase py-2.5 rounded-full mt-6 transition">
+      <button onclick="handleLogout();" class="w-full border border-red-500 text-red-500 hover:bg-red-50 font-bold text-[12px] tracking-wider uppercase py-2.5 rounded-[4px] mt-6 transition">
         Logout from Profile
       </button>
     </div>
 
-    <!-- Login Form (If logged out) -->
-    <form id="loginForm" class="space-y-4">
-      <p class="text-[12px] text-gray-500 font-medium mb-2">Create a secure profile to track your recent orders and manage your saved items instantly.</p>
-      <div>
-        <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Your Full Name *</label>
-        <input id="loginNameInput" type="text" placeholder="John Mensah" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
+    <!-- Login Form (If logged out) - CLONED FROM JUMIA -->
+    <form id="loginForm" class="text-center">
+      <div class="flex justify-center mb-4">
+      <div class="h-16 w-16 bg-[#f68b1e] rounded-full flex items-center justify-center shadow-md animate-pulse">
+        <svg class="w-9 h-9 text-white fill-current" viewBox="0 0 24 24">
+          <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.4 8.168L12 18.896l-7.334 3.858 1.4-8.168L.132 9.21l8.2-1.192L12 .587z"/>
+        </svg>
       </div>
-      <div>
-        <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">WhatsApp / Phone Number *</label>
-        <input id="loginPhoneInput" type="tel" placeholder="054 245 1578" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
+    </div>
+      
+      <h4 class="font-extrabold text-[18px] text-gray-800 leading-tight mb-1">Welcome to Valmont</h4>
+      <p class="text-[11px] text-gray-500 font-medium mb-5">Use your email or phone to log in or sign up.</p>
+      
+      <!-- Primary Input -->
+      <div id="loginStepPrimary" class="space-y-4 text-left">
+        <div>
+          <input id="loginCredentialInput" type="text" placeholder="Email or Mobile Number*" class="w-full border border-gray-300 p-3.5 rounded text-[13px] outline-none font-semibold focus:border-[#f68b1e]" required />
+        </div>
       </div>
-      <div>
-        <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Email Address *</label>
-        <input id="loginEmailInput" type="email" placeholder="john@example.com" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
+
+      <!-- Secondary Fields (Revealed inside JS on Continue click if signing up) -->
+      <div id="loginStepSecondary" class="hidden text-left mt-4 space-y-4">
+        <div>
+          <label class="block text-[10px] font-black uppercase text-gray-400 mb-1">Your Full Name *</label>
+          <input id="loginNameInput" type="text" placeholder="John Mensah" class="w-full border p-3 rounded text-[13px] outline-none font-semibold focus:border-[#f68b1e]" />
+        </div>
+        <div>
+          <label class="block text-[10px] font-black uppercase text-gray-400 mb-1">Detailed Delivery Address (Accra)</label>
+          <input id="loginAddressInput" type="text" placeholder="Near East Legon Police Station" class="w-full border p-3 rounded text-[13px] outline-none font-semibold focus:border-[#f68b1e]" />
+        </div>
       </div>
-      <button type="submit" class="w-full jumia-orange hover:bg-orange-600 text-white font-extrabold text-[12px] tracking-widest uppercase py-3 rounded-full transition shadow">
-        Create / Access Profile
+      
+      <button type="submit" id="loginSubmitBtn" class="w-full bg-[#f68b1e] hover:bg-orange-600 text-white font-extrabold text-[12px] tracking-widest uppercase py-3.5 rounded mt-5 transition shadow-sm">
+        Continue
       </button>
+
+      <!-- Jumia Divider & Social Logins -->
+      <div class="relative flex py-5 items-center">
+        <div class="flex-grow border-t border-gray-200"></div>
+        <span class="flex-shrink mx-4 text-gray-400 text-[10px] font-black uppercase tracking-widest">Or log in with</span>
+        <div class="flex-grow border-t border-gray-200"></div>
+      </div>
+
+      <div class="flex justify-center gap-4">
+        <svg class="w-10 h-10 text-blue-600 hover:scale-105 transition duration-150 cursor-pointer" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/></svg>
+        <svg class="w-10 h-10 text-red-500 hover:scale-105 transition duration-150 cursor-pointer" viewBox="0 0 24 24" fill="currentColor"><path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.13-5.136 4.13A5.71 5.71 0 0 1 8.28 12.83a5.71 5.71 0 0 1 5.711-5.703c2.22 0 4.229 1.125 5.414 2.946l3.393-3.393C20.697 4.312 16.59 2.5 12.24 2.5c-5.244 0-9.5 4.256-9.5 9.5s4.256 9.5 9.5 9.5c5.006 0 9.07-3.627 9.07-9.5 0-.61-.053-1.176-.144-1.715H12.24z"/></svg>
+      </div>
+
     </form>
   </div>
 
@@ -1749,7 +1805,7 @@
           const heartColor = isWishlisted ? 'text-red-500 fill-red-500' : 'text-gray-400 hover:text-red-500';
           
           return `
-            <div class="bg-white rounded-lg overflow-hidden border border-gray-100 hover:shadow-md transition duration-200 flex flex-col justify-between group relative cursor-pointer" onclick="openProductDetail('${p.id}')">
+            <div class="bg-white rounded-[4px] overflow-hidden border border-gray-200 hover:shadow-md transition duration-200 flex flex-col justify-between group relative cursor-pointer" onclick="openProductDetail('${p.id}')">
               <!-- Wishlist heart button overlay -->
               <button onclick="event.stopPropagation(); toggleWishlist('${p.id}')" class="absolute top-2.5 right-2 h-7 w-7 rounded-full bg-white/95 shadow-sm border border-gray-50 flex items-center justify-center z-10 transition">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5 ${heartColor}" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -1762,7 +1818,7 @@
               </div>
               
               <div class="p-3">
-                <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded bg-gray-50">
+                <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="${p.image}" alt="${p.name}" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">${p.name}</h4>
@@ -1785,7 +1841,7 @@
                 </div>
               </div>
               <div class="px-3 pb-3">
-                <button onclick="event.stopPropagation(); addToCart('${p.id}')" class="w-full jumia-orange hover:bg-orange-600 text-white font-extrabold text-[11px] py-2 rounded uppercase transition tracking-widest shadow-sm">
+                <button onclick="event.stopPropagation(); addToCart('${p.id}')" class="w-full bg-[#f68b1e] hover:bg-orange-600 text-white font-bold text-[11px] py-2 rounded-[4px] uppercase transition tracking-widest shadow-sm">
                   Add To Bag
                 </button>
               </div>
@@ -1801,9 +1857,9 @@
       flashGrid.innerHTML = flashItems.map(p => {
         const discount = Math.round((1 - (p.retail / p.compareAt)) * 100);
         return `
-          <div class="bg-white rounded-lg p-2.5 border border-red-200 shrink-0 w-[145px] hover:shadow transition relative cursor-pointer" onclick="openProductDetail('${p.id}')">
+          <div class="bg-white rounded-[4px] p-2.5 border border-red-200 shrink-0 w-[145px] hover:shadow transition relative cursor-pointer" onclick="openProductDetail('${p.id}')">
             <span class="absolute top-1 left-1 bg-red-100 text-red-700 text-[9px] font-black px-1.5 py-0.5 rounded-sm">-${discount}%</span>
-            <div class="h-[100px] w-full flex items-center justify-center overflow-hidden mb-1 bg-gray-50 rounded">
+            <div class="h-[100px] w-full flex items-center justify-center overflow-hidden mb-1 bg-gray-50 rounded-[4px]">
               <img src="${p.image}" alt="${p.name}" class="max-h-full object-contain" />
             </div>
             <h5 class="text-[11px] text-gray-800 font-bold truncate">${p.name}</h5>
@@ -1934,8 +1990,8 @@
       recentlyViewedGrid.innerHTML = items.map(p => {
         const discount = Math.round((1 - (p.retail / p.compareAt)) * 100);
         return `
-          <div class="bg-white rounded-lg p-2 border border-gray-100 shrink-0 w-[130px] hover:shadow transition cursor-pointer" onclick="openProductDetail('${p.id}')">
-            <div class="h-[90px] w-full flex items-center justify-center overflow-hidden mb-1 bg-gray-50 rounded">
+          <div class="bg-white rounded-[4px] p-2 border border-gray-100 shrink-0 w-[130px] hover:shadow transition cursor-pointer" onclick="openProductDetail('${p.id}')">
+            <div class="h-[90px] w-full flex items-center justify-center overflow-hidden mb-1 bg-gray-50 rounded-[4px]">
               <img src="${p.image}" alt="${p.name}" class="max-h-full object-contain" />
             </div>
             <h5 class="text-[10px] text-gray-800 font-bold truncate leading-none">${p.name.split(' — ')[0]}</h5>
@@ -2437,25 +2493,69 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       loginModal.classList.add('hidden');
     }
 
+    // Jumia Multi-Stage login handler
+    let isSecondaryStepActive = false;
+
     loginForm.addEventListener('submit', event => {
       event.preventDefault();
-      const name = document.getElementById('loginNameInput').value.trim();
-      const phone = document.getElementById('loginPhoneInput').value.trim();
-      const email = document.getElementById('loginEmailInput').value.trim();
+      const credential = document.getElementById('loginCredentialInput').value.trim();
 
-      if (name && phone && email) {
-        currentUser = { name, phone, email };
-        localStorage.setItem('valmont_user', JSON.stringify(currentUser));
+      if (!isSecondaryStepActive) {
+        // If they enter a valid mock login credential:
+        // We reveal the secondary registration fields for them to complete signup!
+        isSecondaryStepActive = true;
+        document.getElementById('loginStepSecondary').classList.remove('hidden');
+        document.getElementById('loginSubmitBtn').textContent = "Create / Access Profile";
         
-        // Populate shipping form automatically
-        document.getElementById('shippingName').value = name;
-        document.getElementById('shippingPhone').value = phone;
+        // Auto-detect phone vs email to fill inputs
+        if (credential.includes('@')) {
+          document.getElementById('loginNameInput').focus();
+        } else {
+          document.getElementById('loginNameInput').focus();
+        }
+      } else {
+        // Final submit! Create the user profile
+        const name = document.getElementById('loginNameInput').value.trim();
+        const address = document.getElementById('loginAddressInput').value.trim();
+        const phone = credential.includes('@') ? '054 245 1578' : credential;
+        const email = credential.includes('@') ? credential : 'customer@valmontgadgets.com';
 
-        updateUserUI();
-        closeLoginModal();
-        alert(`Welcome back to Valmont Gadgets, ${name}! Your customer profile has been activated.`);
+        if (name) {
+          currentUser = { name, phone, email, address };
+          localStorage.setItem('valmont_user', JSON.stringify(currentUser));
+          
+          // Autofill standard Jumia shipping forms automatically
+          if (document.getElementById('shippingName')) document.getElementById('shippingName').value = name;
+          if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = phone;
+          if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = address;
+
+          updateUserUI();
+          closeLoginModal();
+          alert(`Welcome back to Valmont, ${name}! Your customer profile has been activated.`);
+        } else {
+          alert('Please enter your full name to proceed.');
+        }
       }
     });
+
+    // Reset step states when modal is closed
+    // Consolidated closeLoginModal override (Unified)
+    const originalCloseLoginModal = closeLoginModal;
+    closeLoginModal = function() {
+      if (typeof originalCloseLoginModal === 'function') originalCloseLoginModal();
+      
+      // Reset Mobile Nav Highlight states
+      if (typeof updateMobileNavHighlights === 'function') {
+        updateMobileNavHighlights('home');
+      }
+
+      // Reset Jumia login multi-stage form states
+      isSecondaryStepActive = false;
+      const secField = document.getElementById('loginStepSecondary');
+      if (secField) secField.classList.add('hidden');
+      const submitBtn = document.getElementById('loginSubmitBtn');
+      if (submitBtn) submitBtn.textContent = "Continue";
+    };
 
     function updateUserUI() {
       if (currentUser) {
@@ -2493,13 +2593,32 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
 
 
 
+    // Premium Category Sync Function for Spacious Layout
+    function syncCategoryPills(key) {
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        const isDesktop = btn.classList.contains('desktop-cat') || btn.closest('aside') !== null;
+        if (isDesktop) {
+          if (btn.dataset.catFilter === key) {
+            btn.className = "cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-bold rounded-[4px] transition flex items-center gap-2 text-[#f68b1e] bg-orange-50/50";
+          } else {
+            btn.className = "cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#f68b1e]";
+          }
+        } else {
+          // Mobile chip
+          if (btn.dataset.catFilter === key) {
+            btn.className = "cat-pill mobile-chip bg-[#f68b1e] text-white text-[12px] font-bold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm";
+          } else {
+            btn.className = "cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm";
+          }
+        }
+      });
+    }
+
     // CATEGORY FILTERS EVENT LISTENERS
     document.querySelectorAll('.cat-pill').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.cat-pill').forEach(item => item.className = "cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700");
-        btn.className = "cat-pill w-full text-left px-3 py-2 text-[13px] font-semibold rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-800 font-extrabold jumia-orange-text bg-orange-50";
-
         activeFilter = btn.dataset.catFilter;
+        syncCategoryPills(activeFilter);
         renderProducts();
       });
     });
@@ -3021,13 +3140,8 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     renderProducts();
     closeMobileCategoriesModal();
     
-    // Sync the active class on desktop category pills too
-    document.querySelectorAll('.cat-pill').forEach(btn => {
-      if (btn.dataset.catFilter === key) {
-        document.querySelectorAll('.cat-pill').forEach(item => item.className = "cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700");
-        btn.className = "cat-pill w-full text-left px-3 py-2 text-[13px] font-semibold rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-800 font-extrabold jumia-orange-text bg-orange-50";
-      }
-    });
+    // Sync active category pills
+    syncCategoryPills(key);
 
     // Scroll smoothly to products grid
     document.getElementById('store-feed').scrollIntoView({ behavior: 'smooth' });
@@ -3099,11 +3213,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     updateMobileNavHighlights('home');
   };
 
-  const originalCloseLoginModal = closeLoginModal;
-  closeLoginModal = function() {
-    if (typeof originalCloseLoginModal === 'function') originalCloseLoginModal();
-    updateMobileNavHighlights('home');
-  };
+
 
   // Hide badge completely if count is 0 (both for Shopping Bag and Wishlist)
   const originalUpdateCartCount = updateCartCount;
@@ -3261,7 +3371,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
         <div class="font-black text-gray-700 text-[11px]" id="dl_calc_result">Net Profit: GH₵ 450 (18.3% margin)</div>
       </div>
 
-      <button onclick="deactivateDealerMode();" class="w-full border border-red-500 text-red-500 hover:bg-red-50 font-bold text-[12px] tracking-widest uppercase py-3 rounded-full transition">
+      <button onclick="deactivateDealerMode();" class="w-full border border-red-500 text-red-500 hover:bg-red-50 font-bold text-[12px] tracking-widest uppercase py-3 rounded-[4px] transition">
         Deactivate Dealer Mode (Return to Retail)
       </button>
     </div>
@@ -3283,7 +3393,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
         <input id="dlEmailInput" type="email" placeholder="dealer@valmontgadgets.com" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
       </div>
       
-      <button type="submit" class="w-full bg-[#f68b1e] hover:bg-orange-600 text-white font-extrabold text-[12px] tracking-widest uppercase py-3.5 rounded-full transition shadow-sm">
+      <button type="submit" class="w-full bg-[#f68b1e] hover:bg-orange-600 text-white font-bold text-[12px] tracking-widest uppercase py-3.5 rounded-[4px] transition shadow-sm">
         Register & Activate Wholesale Pricing
       </button>
     </form>
