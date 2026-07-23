@@ -719,7 +719,7 @@
     <div id="profileView" class="hidden text-center py-4">
       <div class="h-16 w-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-[#0b1a38]"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg></div>
       <h4 id="profileName" class="font-black text-[16px]">Customer Name</h4>
-      <p id="profileEmail" class="text-[12px] text-gray-500 mt-1">customer@email.com</p>
+      <p id="profileEmail" class="text-[12px] text-gray-500 mt-1"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="afccdadcdbc0c2caddefcac2cec6c381ccc0c2">[email&#160;protected]</a></p>
       <p id="profilePhone" class="text-[12px] text-gray-500 mt-0.5">054 245 1578</p>
       
       <button onclick="handleLogout();" class="w-full border border-red-500 text-red-500 hover:bg-red-50 font-bold text-[12px] tracking-wider uppercase py-2.5 rounded-[4px] mt-6 transition">
@@ -780,7 +780,7 @@
 
 
   <!-- Javascript Logic containing real products and layout engines -->
-  <script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     // PRIVATE COST LEDGER
     const PRIVATE_COST_LEDGER = {};
 
@@ -1737,6 +1737,24 @@
     const searchBtn = document.getElementById('searchBtn');
     const cartCountBadge = document.getElementById('cartBadgeCount');
     
+    // Global Category Labels for spacious layout and mobile sync
+    const CATEGORY_LABELS = {
+      all: 'Verified Premium Stock',
+      iphones: 'iPhones & Apple Devices',
+      samsung: 'Samsung Galaxy Series',
+      android: 'Android Flagship Phones',
+      tablets: 'Tablets & iPads',
+      smartwatches: 'Smartwatches & Wearables',
+      laptops: 'Executive Laptops',
+      laptop_acc: 'Premium Laptop Accessories',
+      audio: 'Smart Audio & AirPods',
+      gaming: 'Gaming & Consoles',
+      phone_acc: 'Phone Cases & Accessories',
+      phone_parts: 'Phone Parts & Spares',
+      travel_acc: 'Smart Travel & Car Accessories',
+      chargers: 'Power & Chargers'
+    };
+    
     
     const customerStoreView = document.getElementById('customer-store-view');
     const resellerDeskView = document.getElementById('dealer-desk-view');
@@ -1764,6 +1782,33 @@
     // Money formatter (GH₵)
     const money = value => `GH₵ ${Math.max(0, Number(value || 0)).toLocaleString()}`;
 
+    // Highlights only the active tab in Jumia Orange and turns others gray (Global Core)
+    function updateMobileNavHighlights(activeTab) {
+      const tabs = {
+        home: document.querySelector('button[onclick*="mobileGoHome"]'),
+        categories: document.querySelector('button[onclick*="openMobileCategoriesModal"]'),
+        saved: document.querySelector('button[onclick*="openWishlistModal"]'),
+        dealer: document.querySelector('button[onclick*="openDealerModal"]'),
+        bag: document.getElementById('mobileCartBtn')
+      };
+
+      // Reset all tabs to gray
+      Object.keys(tabs).forEach(key => {
+        const btn = tabs[key];
+        if (btn) {
+          btn.classList.remove('text-[#f68b1e]', 'font-black');
+          btn.classList.add('text-gray-500', 'font-bold');
+        }
+      });
+
+      // Set selected tab to Jumia Orange
+      const activeBtn = tabs[activeTab];
+      if (activeBtn) {
+        activeBtn.classList.remove('text-gray-500', 'font-bold');
+        activeBtn.classList.add('text-[#f68b1e]', 'font-black');
+      }
+    }
+
     // RENDER PRODUCTS GRID & FLASH SALES
     function renderProducts() {
       let filtered = PRODUCTS.filter(p => {
@@ -1773,22 +1818,6 @@
       });
 
       // Update count
-      const CATEGORY_LABELS = {
-        all: 'Verified Premium Stock',
-        iphones: 'iPhones & Apple Devices',
-        samsung: 'Samsung Galaxy Series',
-        android: 'Android Flagship Phones',
-        tablets: 'Tablets & iPads',
-        smartwatches: 'Smartwatches & Wearables',
-        laptops: 'Executive Laptops',
-        laptop_acc: 'Premium Laptop Accessories',
-        audio: 'Smart Audio & AirPods',
-        gaming: 'Gaming & Consoles',
-        phone_acc: 'Phone Cases & Accessories',
-        phone_parts: 'Phone Parts & Spares',
-        travel_acc: 'Smart Travel & Car Accessories',
-        chargers: 'Power & Chargers'
-      };
       document.getElementById('itemCountDisplay').textContent = `${filtered.length} Products`;
       document.getElementById('currentFeedTitle').textContent = CATEGORY_LABELS[activeFilter] || 'Premium Gadget Stock';
 
@@ -1886,7 +1915,20 @@
     }
 
     function updateWishlistUI() {
-      wishlistCountBadge.textContent = wishlist.length;
+      const count = wishlist.length;
+      const badge = document.getElementById('wishlistCountBadge');
+      const mobBadge = document.getElementById('mobileWishlistBadge');
+
+      [badge, mobBadge].forEach(b => {
+        if (b) {
+          if (count === 0) {
+            b.classList.add('hidden');
+          } else {
+            b.classList.remove('hidden');
+            b.textContent = count;
+          }
+        }
+      });
     }
 
     const wishlistOverlay = document.getElementById('wishlistOverlay');
@@ -1898,12 +1940,14 @@
       setTimeout(() => wishlistOverlay.classList.add('opacity-100'), 10);
       wishlistModal.classList.remove('hidden');
       renderWishlistModal();
+      if (typeof updateMobileNavHighlights === 'function') updateMobileNavHighlights('saved');
     }
 
     function closeWishlistModal() {
       wishlistOverlay.classList.remove('opacity-100');
       setTimeout(() => wishlistOverlay.classList.add('hidden'), 300);
       wishlistModal.classList.add('hidden');
+      if (typeof updateMobileNavHighlights === 'function') updateMobileNavHighlights('home');
     }
 
     function renderWishlistModal() {
@@ -2016,6 +2060,7 @@
       setTimeout(() => cartOverlay.classList.add('opacity-100'), 10);
       cartDrawer.classList.remove('translate-x-full');
       renderCartUI();
+      if (typeof updateMobileNavHighlights === 'function') updateMobileNavHighlights('bag');
     }
 
     function closeCart() {
@@ -2023,6 +2068,7 @@
       setTimeout(() => cartOverlay.classList.add('hidden'), 300);
       cartDrawer.classList.add('translate-x-full');
       resetCheckoutSteps();
+      if (typeof updateMobileNavHighlights === 'function') updateMobileNavHighlights('home');
     }
 
     document.getElementById('cartBtn').addEventListener('click', openCart);
@@ -2057,7 +2103,19 @@
 
     function updateCartCount() {
       const count = cart.reduce((sum, item) => sum + item.qty, 0);
-      cartCountBadge.textContent = count;
+      const badge = document.getElementById('cartBadgeCount');
+      const mobBadge = document.getElementById('mobileCartBadge');
+
+      [badge, mobBadge].forEach(b => {
+        if (b) {
+          if (count === 0) {
+            b.classList.add('hidden');
+          } else {
+            b.classList.remove('hidden');
+            b.textContent = count;
+          }
+        }
+      });
     }
 
     function changeQty(id, delta) {
@@ -2576,19 +2634,78 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     }
 
 
-    // SWITCH BETWEEN CATALOGUE & RESELLER DESK
+    // SWITCH BETWEEN CATALOGUE & RESELLER DESK (Optimized)
     function openDealerModal() {
+      if (isDealerMode && dealerProfile) {
+        // Active dealer: toggles the private Reseller Desk View
+        if (isResellerMode) {
+          showCustomerMode();
+        } else {
+          showResellerDesk();
+        }
+      } else {
+        // Guest: opens registration popup
+        openDealerRegistrationPopup();
+      }
+    }
+
+    function showResellerDesk() {
       isResellerMode = true;
       customerStoreView.classList.add('hidden');
       resellerDeskView.classList.remove('hidden');
-      portalText.textContent = "Exit Portal (Shop)";
+      
+      const label = document.getElementById('dealerBtnLabel');
+      if (label) label.textContent = "Exit Reseller Desk";
+      
+      const mobLabel = document.getElementById('mobileDealerBtnText');
+      if (mobLabel) mobLabel.textContent = "Exit Desk";
+      
+      if (typeof updateMobileNavHighlights === 'function') updateMobileNavHighlights('dealer');
     }
 
     function showCustomerMode() {
       isResellerMode = false;
       customerStoreView.classList.remove('hidden');
       resellerDeskView.classList.add('hidden');
-      portalText.textContent = "Dealer Portal";
+      
+      const label = document.getElementById('dealerBtnLabel');
+      if (label) label.textContent = "Dealer Portal";
+      
+      const mobLabel = document.getElementById('mobileDealerBtnText');
+      if (mobLabel) mobLabel.textContent = "Dealer";
+      
+      if (typeof updateMobileNavHighlights === 'function') updateMobileNavHighlights('home');
+    }
+
+    function openDealerRegistrationPopup() {
+      const overlay = document.getElementById('dealerOverlay');
+      const modal = document.getElementById('dealerModal');
+      if (overlay && modal) {
+        overlay.classList.remove('hidden');
+        setTimeout(() => overlay.classList.add('opacity-100'), 10);
+        modal.classList.remove('hidden');
+        
+        const form = document.getElementById('dealerRegForm');
+        const activeProf = document.getElementById('dealerActiveProfile');
+        if (isDealerMode && dealerProfile) {
+          if (form) form.classList.add('hidden');
+          if (activeProf) activeProf.classList.remove('hidden');
+        } else {
+          if (form) form.classList.remove('hidden');
+          if (activeProf) activeProf.classList.add('hidden');
+        }
+      }
+    }
+
+    function closeDealerRegistrationPopup() {
+      const overlay = document.getElementById('dealerOverlay');
+      const modal = document.getElementById('dealerModal');
+      if (overlay && modal) {
+        overlay.classList.remove('opacity-100');
+        setTimeout(() => overlay.classList.add('hidden'), 300);
+        modal.classList.add('hidden');
+      }
+      if (typeof updateMobileNavHighlights === 'function') updateMobileNavHighlights('home');
     }
 
 
@@ -2628,7 +2745,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     function triggerSearch() {
       searchQuery = searchInput.value.trim();
       renderProducts();
-      document.getElementById('store-feed').scrollIntoView({ behavior: 'smooth' });
+      const feedEl = document.getElementById('store-feed'); if (feedEl && typeof feedEl.scrollIntoView === 'function') { feedEl.scrollIntoView({ behavior: 'smooth' }); }
     }
 
     searchBtn.addEventListener('click', triggerSearch);
@@ -2973,30 +3090,32 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
   isDealerMode = localStorage.getItem('valmont_is_dealer') === 'true';
   dealerProfile = JSON.parse(localStorage.getItem('valmont_dealer_profile') || 'null');
 
-  const dealerOverlay = document.getElementById('dealerOverlay');
-  const dealerModal = document.getElementById('dealerModal');
-  const dealerRegForm = document.getElementById('dealerRegForm');
-  const dealerActiveProfile = document.getElementById('dealerActiveProfile');
-  const dealerBtnLabel = document.getElementById('dealerBtnLabel');
+  let dealerOverlay = document.getElementById('dealerOverlay');
+  let dealerModal = document.getElementById('dealerModal');
+  let dealerRegForm = document.getElementById('dealerRegForm');
+  let dealerActiveProfile = document.getElementById('dealerActiveProfile');
+  let dealerBtnLabel = document.getElementById('dealerBtnLabel');
 
   function openDealerModal() {
-    dealerOverlay.classList.remove('hidden');
-    setTimeout(() => dealerOverlay.classList.add('opacity-100'), 10);
-    dealerModal.classList.remove('hidden');
+    if (dealerOverlay) {
+      dealerOverlay.classList.remove('hidden');
+      setTimeout(() => dealerOverlay.classList.add('opacity-100'), 10);
+    }
+    if (dealerModal) { dealerModal.classList.remove('hidden'); }
 
     if (isDealerMode && dealerProfile) {
-      dealerRegForm.classList.add('hidden');
-      dealerActiveProfile.classList.remove('hidden');
+      if (dealerRegForm) dealerRegForm.classList.add('hidden');
+      if (dealerActiveProfile) dealerActiveProfile.classList.remove('hidden');
       document.getElementById('dlProfileName').textContent = dealerProfile.name;
       document.getElementById('dlProfilePhone').textContent = dealerProfile.phone;
       document.getElementById('dlProfileEmail').textContent = dealerProfile.email;
     } else {
-      dealerRegForm.classList.remove('hidden');
-      dealerActiveProfile.classList.add('hidden');
+      if (dealerRegForm) dealerRegForm.classList.remove('hidden');
+      if (dealerActiveProfile) dealerActiveProfile.classList.add('hidden');
     }
   }
 
-  function closeDealerModal() {
+  function closeDealerModal() { closeDealerRegistrationPopup(); return;
     dealerOverlay.classList.remove('opacity-100');
     setTimeout(() => dealerOverlay.classList.add('hidden'), 300);
     dealerModal.classList.add('hidden');
@@ -3091,32 +3210,40 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
   }
 
     // === JUMIA-STYLE MOBILE BOTTOM NAVIGATION LOGIC ===
-  const mobileCategoriesOverlay = document.getElementById('mobileCategoriesOverlay');
-  const mobileCategoriesModal = document.getElementById('mobileCategoriesModal');
-  const mobileCategoryGrid = document.getElementById('mobileCategoryGrid');
+  let mobileCategoriesOverlay = document.getElementById('mobileCategoriesOverlay');
+  let mobileCategoriesModal = document.getElementById('mobileCategoriesModal');
+  let mobileCategoryGrid = document.getElementById('mobileCategoryGrid');
 
   function mobileGoHome() {
     activeFilter = 'all';
     renderProducts();
     // Scroll smoothly to home grid
-    document.getElementById('store-feed').scrollIntoView({ behavior: 'smooth' });
+    const feedEl = document.getElementById('store-feed'); if (feedEl && typeof feedEl.scrollIntoView === 'function') { feedEl.scrollIntoView({ behavior: 'smooth' }); }
     updateMobileNavHighlights('home');
   }
 
   function openMobileCategoriesModal() {
-    mobileCategoriesOverlay.classList.remove('hidden');
-    setTimeout(() => mobileCategoriesOverlay.classList.add('opacity-100'), 10);
-    mobileCategoriesModal.classList.remove('hidden');
-    mobileCategoriesModal.classList.remove('translate-y-full');
+    if (mobileCategoriesOverlay) {
+      mobileCategoriesOverlay.classList.remove('hidden');
+      setTimeout(() => mobileCategoriesOverlay.classList.add('opacity-100'), 10);
+    }
+    if (mobileCategoriesModal) {
+      mobileCategoriesModal.classList.remove('hidden');
+      mobileCategoriesModal.classList.remove('translate-y-full');
+    }
     renderMobileCategoriesGrid();
     updateMobileNavHighlights('categories');
   }
 
   function closeMobileCategoriesModal() {
-    mobileCategoriesOverlay.classList.remove('opacity-100');
-    setTimeout(() => mobileCategoriesOverlay.classList.add('hidden'), 300);
-    mobileCategoriesModal.classList.add('translate-y-full');
-    setTimeout(() => mobileCategoriesModal.classList.add('hidden'), 300);
+    if (mobileCategoriesOverlay) {
+      mobileCategoriesOverlay.classList.remove('opacity-100');
+      setTimeout(() => mobileCategoriesOverlay.classList.add('hidden'), 300);
+    }
+    if (mobileCategoriesModal) {
+      mobileCategoriesModal.classList.add('translate-y-full');
+      setTimeout(() => mobileCategoriesModal.classList.add('hidden'), 300);
+    }
   }
 
   function renderMobileCategoriesGrid() {
@@ -3144,128 +3271,21 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     syncCategoryPills(key);
 
     // Scroll smoothly to products grid
-    document.getElementById('store-feed').scrollIntoView({ behavior: 'smooth' });
+    const feedEl = document.getElementById('store-feed'); if (feedEl && typeof feedEl.scrollIntoView === 'function') { feedEl.scrollIntoView({ behavior: 'smooth' }); }
     updateMobileNavHighlights('categories');
   }
 
-  // Highlights only the active tab in Jumia Orange and turns others gray
-  function updateMobileNavHighlights(activeTab) {
-    const tabs = {
-      home: document.querySelector('button[onclick*="mobileGoHome"]'),
-      categories: document.querySelector('button[onclick*="openMobileCategoriesModal"]'),
-      saved: document.querySelector('button[onclick*="openWishlistModal"]'),
-      dealer: document.querySelector('button[onclick*="openDealerModal"]'),
-      bag: document.getElementById('mobileCartBtn')
-    };
-
-    // Reset all tabs to gray
-    Object.keys(tabs).forEach(key => {
-      const btn = tabs[key];
-      if (btn) {
-        btn.classList.remove('text-[#f68b1e]', 'font-black');
-        btn.classList.add('text-gray-500', 'font-bold');
-      }
-    });
-
-    // Set selected tab to Jumia Orange
-    const activeBtn = tabs[activeTab];
-    if (activeBtn) {
-      activeBtn.classList.remove('text-gray-500', 'font-bold');
-      activeBtn.classList.add('text-[#f68b1e]', 'font-black');
-    }
-  }
-
-  // Override click routing functions to handle active states dynamically
-  const originalOpenWishlistModal = openWishlistModal;
-  openWishlistModal = function() {
-    if (typeof originalOpenWishlistModal === 'function') originalOpenWishlistModal();
-    updateMobileNavHighlights('saved');
-  };
-
-  const originalOpenDealerModal = openDealerModal;
-  openDealerModal = function() {
-    if (typeof originalOpenDealerModal === 'function') originalOpenDealerModal();
-    updateMobileNavHighlights('dealer');
-  };
-
-  const originalOpenCart = openCart;
-  openCart = function() {
-    if (typeof originalOpenCart === 'function') originalOpenCart();
-    updateMobileNavHighlights('bag');
-  };
-
-  // Override closeCart and closeWishlist to return highlight to Home
-  const originalCloseCart = closeCart;
-  closeCart = function() {
-    if (typeof originalCloseCart === 'function') originalCloseCart();
-    updateMobileNavHighlights('home');
-  };
-
-  const originalCloseWishlistModal = closeWishlistModal;
-  closeWishlistModal = function() {
-    if (typeof originalCloseWishlistModal === 'function') originalCloseWishlistModal();
-    updateMobileNavHighlights('home');
-  };
-
-  const originalCloseDealerModal = closeDealerModal;
-  closeDealerModal = function() {
-    if (typeof originalCloseDealerModal === 'function') originalCloseDealerModal();
-    updateMobileNavHighlights('home');
-  };
-
-
-
-  // Hide badge completely if count is 0 (both for Shopping Bag and Wishlist)
-  const originalUpdateCartCount = updateCartCount;
-  updateCartCount = function() {
-    if (typeof originalUpdateCartCount === 'function') originalUpdateCartCount();
-    const count = cart.reduce((sum, item) => sum + item.qty, 0);
-    const badge = document.getElementById('cartBadgeCount');
-    const mobBadge = document.getElementById('mobileCartBadge');
-
-    [badge, mobBadge].forEach(b => {
-      if (b) {
-        if (count === 0) {
-          b.classList.add('hidden');
-        } else {
-          b.classList.remove('hidden');
-          b.textContent = count;
-        }
-      }
-    });
-  };
-
-  const originalUpdateWishlistUI = updateWishlistUI;
-  updateWishlistUI = function() {
-    if (typeof originalUpdateWishlistUI === 'function') originalUpdateWishlistUI();
-    const badge = document.getElementById('wishlistCountBadge');
-    const mobBadge = document.getElementById('mobileWishlistBadge');
-    const count = wishlist.length;
-
-    [badge, mobBadge].forEach(b => {
-      if (b) {
-        if (count === 0) {
-          b.classList.add('hidden');
-        } else {
-          b.classList.remove('hidden');
-          b.textContent = count;
-        }
-      }
-    });
-  };
-
-  // Ensure category filtering scrolls smoothly to product feed and sets Home/Categories highlights
+  // Run initial badge checks and set core listeners (no fragile overrides)
   document.querySelectorAll('.cat-pill').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.getElementById('store-feed').scrollIntoView({ behavior: 'smooth' });
+      const feedEl = document.getElementById('store-feed'); if (feedEl && typeof feedEl.scrollIntoView === 'function') { feedEl.scrollIntoView({ behavior: 'smooth' }); }
     });
   });
 
-  // Run initial badge checks
   setTimeout(() => {
-    updateCartCount();
-    updateWishlistUI();
-    updateMobileNavHighlights('home'); // Home is active by default
+    if (typeof updateCartCount === 'function') updateCartCount();
+    if (typeof updateWishlistUI === 'function') updateWishlistUI();
+    if (typeof updateMobileNavHighlights === 'function') updateMobileNavHighlights('home');
   }, 300);
 
 
@@ -3277,6 +3297,42 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
         openLoginModal();
       });
     }
+  // Reassign DOM elements once fully parsed to prevent null reference errors on mobile
+  document.addEventListener('DOMContentLoaded', () => {
+    dealerOverlay = document.getElementById('dealerOverlay');
+    dealerModal = document.getElementById('dealerModal');
+    dealerRegForm = document.getElementById('dealerRegForm');
+    dealerActiveProfile = document.getElementById('dealerActiveProfile');
+    dealerBtnLabel = document.getElementById('dealerBtnLabel');
+
+    mobileCategoriesOverlay = document.getElementById('mobileCategoriesOverlay');
+    mobileCategoriesModal = document.getElementById('mobileCategoriesModal');
+    mobileCategoryGrid = document.getElementById('mobileCategoryGrid');
+
+    // Re-bind submit listener since dealerRegForm is now parsed
+    if (dealerRegForm) {
+      dealerRegForm.addEventListener('submit', event => {
+        event.preventDefault();
+        const name = document.getElementById('dlNameInput').value.trim();
+        const phone = document.getElementById('dlPhoneInput').value.trim();
+        const email = document.getElementById('dlEmailInput').value.trim();
+
+        if (name && phone && email) {
+          isDealerMode = true;
+          dealerProfile = { name, phone, email };
+          localStorage.setItem('valmont_is_dealer', 'true');
+          localStorage.setItem('valmont_dealer_profile', JSON.stringify(dealerProfile));
+
+          showDealerAnnouncementBanner();
+          updateDealerUI();
+          closeDealerRegistrationPopup();
+          renderProducts();
+
+          alert("Authorized Dealer Access Activated Successfully!");
+        }
+      });
+    }
+  });
 </script>
 
   <!-- 9. SIMULATED PAYSTACK SECURE PAYMENT MODAL -->
@@ -3466,5 +3522,5 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 fill-current" viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L3 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-93.8-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 89.4-184.5 184.6-184.5 46 0 89.3 18 121.9 50.6 32.6 32.5 50.5 75.9 50.5 122.1-.1 101.8-94.9 184.5-184.6 184.5zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
   </a>
 
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1fcf97bba65033c',t:'MTc4NDgzMzcxNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
