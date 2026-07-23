@@ -162,46 +162,48 @@
       </div>
 
       <!-- Right Header Actions (Account, Saved Items, Help, Reseller, Cart) -->
-      <div class="flex items-center gap-2 md:gap-4 shrink-0">
-        
-        <!-- Jumia-Style Account Dropdown -->
-        <div class="relative group">
-          <button id="accountBtn" class="flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] py-1">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-            </svg>
-            <span id="accountLabel" class="hidden md:inline">Sign In</span>
-          </button>
-          <div class="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-lg shadow-lg py-2 hidden group-hover:block z-50">
-            <button id="navMyProfileBtn" onclick="openLoginModal();" class="w-full text-left px-4 py-2 text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2">Profile / Login</button>
-            <button onclick="openWishlistModal();" class="w-full text-left px-4 py-2 text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2">Saved Items (Wishlist)</button>
-            <button onclick="showResellerMode();" class="w-full text-left px-4 py-2 text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2">Reseller Orders</button>
-            <button id="logoutBtn" onclick="handleLogout();" class="w-full text-left px-4 py-2 text-[12px] text-red-500 hover:bg-gray-50 flex items-center gap-2 border-t hidden">Logout</button>
-          </div>
+      
+    <div class="flex items-center gap-2 md:gap-4 shrink-0">
+      
+      <!-- Jumia-Style Account Dropdown -->
+      <div class="relative group">
+        <button id="accountBtn" class="flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] py-1">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+          </svg>
+          <span id="accountLabel" class="hidden md:inline">Sign In</span>
+        </button>
+        <div class="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-lg shadow-lg py-2 hidden group-hover:block z-50">
+          <button onclick="openLoginModal();" class="w-full text-left px-4 py-2 text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2">👤 Profile / Login</button>
+          <button onclick="openWishlistModal();" class="w-full text-left px-4 py-2 text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2">❤️ Saved Items</button>
+          <button id="logoutBtn" onclick="handleLogout();" class="w-full text-left px-4 py-2 text-[12px] text-red-500 hover:bg-gray-50 flex items-center gap-2 border-t hidden">Logout</button>
         </div>
-
-        <!-- Wishlist / Saved Items Icon -->
-        <button onclick="openWishlistModal();" class="relative flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] py-1 border-l border-gray-200 pl-3">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-          </svg>
-          <span id="wishlistCountBadge" class="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black rounded-full h-4.5 w-4.5 flex items-center justify-center">0</span>
-        </button>
-
-        <!-- Reseller Portal Access -->
-        <button id="btnToggleReseller" class="flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] border-l border-gray-200 pl-3 py-1">
-          <span id="portalBtnText" class="hidden sm:inline">Reseller Portal</span>
-        </button>
-
-        <!-- Cart Trigger Button -->
-        <button id="cartBtn" class="relative flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] py-1 border-l border-gray-200 pl-3">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
-          </svg>
-          <span id="cartBadgeCount" class="absolute -top-1.5 -right-1.5 jumia-orange text-white text-[9px] font-black rounded-full h-4.5 w-4.5 flex items-center justify-center">0</span>
-        </button>
-
       </div>
+
+      <!-- Wishlist Button -->
+      <button onclick="openWishlistModal();" class="relative flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] py-1 border-l border-gray-200 pl-3">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+        </svg>
+        <span id="wishlistCountBadge" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-black rounded-full h-4 w-4 flex items-center justify-center">0</span>
+      </button>
+
+      <!-- Dealer Portal Access Link -->
+      <button id="btnToggleDealer" onclick="openDealerModal();" class="flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] border-l border-gray-200 pl-3 py-1">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5 text-[#f68b1e]">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5m-3-12h13.5m-13.5 6h13.5m-13.5 6h13.5" />
+        </svg>
+        <span id="dealerBtnLabel">Dealer Portal</span>
+      </button>
+
+      <!-- Cart/Bag Trigger Button -->
+      <button id="cartBtn" class="relative flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] py-1 border-l border-gray-200 pl-3">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
+        <span class="hidden sm:inline">Bag</span>
+        <span id="cartBadgeCount" class="absolute -top-1.5 -right-1.5 jumia-orange text-white text-[9px] font-black rounded-full h-4.5 w-4.5 flex items-center justify-center">0</span>
+      </button>
+
+    </div>
     </div>
   </header>
 
@@ -219,7 +221,7 @@
           <h3 class="font-extrabold text-[12px] uppercase text-[#f68b1e] tracking-widest border-b pb-2.5 mb-2.5">
             Categories
           </h3>
-          <nav class="space-y-1">
+                    <nav class="space-y-1">
             <button data-cat-filter="all" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-semibold rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-800 font-extrabold jumia-orange-text bg-orange-50">
               All Products
             </button>
@@ -229,11 +231,35 @@
             <button data-cat-filter="samsung" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
               Samsung Galaxy
             </button>
+            <button data-cat-filter="android" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
+              Android Flagship Phones
+            </button>
+            <button data-cat-filter="tablets" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
+              Tablets & iPads
+            </button>
+            <button data-cat-filter="smartwatches" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
+              Smartwatches & Wearables
+            </button>
             <button data-cat-filter="laptops" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
               Executive Laptops
             </button>
+            <button data-cat-filter="laptop_acc" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
+              Laptop Accessories
+            </button>
             <button data-cat-filter="audio" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
               Smart Audio
+            </button>
+            <button data-cat-filter="gaming" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
+              Gaming & Consoles
+            </button>
+            <button data-cat-filter="phone_acc" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
+              Phone Cases & Accessories
+            </button>
+            <button data-cat-filter="phone_parts" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
+              Phone Parts & Spares
+            </button>
+            <button data-cat-filter="travel_acc" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
+              Smart Travel & Accessories
             </button>
             <button data-cat-filter="chargers" class="cat-pill w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition hover:bg-gray-50 flex items-center gap-2 text-gray-700">
               Power & Chargers
@@ -242,16 +268,16 @@
         </aside>
 
         <!-- Central Banner Promo Slider -->
-        <section class="col-span-1 md:col-span-2 relative bg-[#0b1a38] text-white rounded-lg overflow-hidden h-[240px] md:h-auto flex flex-col justify-center p-6 md:p-8 card-shadow border border-gray-100">
+        <section class="col-span-1 md:col-span-2 relative bg-white text-gray-800 rounded-lg overflow-hidden h-[240px] md:h-auto flex flex-col justify-center p-6 md:p-8 card-shadow border border-gray-200">
           <div class="absolute inset-0 opacity-10 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=800');"></div>
           <div class="relative z-10 max-w-[360px]">
             <span class="bg-[#f68b1e] text-white text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-sm animate-pulse">
               Flash Sale Live
             </span>
-            <h2 class="font-black text-[24px] md:text-[28px] tracking-tight leading-tight mt-3 mb-2">
+            <h2 class="font-black text-[24px] md:text-[28px] tracking-tight leading-tight text-[#0b1a38] mt-3 mb-2">
               EXECUTIVE <br class="hidden md:inline">MIDWEEK DEALS
             </h2>
-            <p class="text-[13px] text-gray-300 font-medium mb-4 leading-snug">
+            <p class="text-[13px] text-gray-500 font-semibold mb-4 leading-snug">
               Genuine phones, laptops & accessories with 12-month warranty & sealed packaging.
             </p>
             <a href="#store-feed" class="inline-block jumia-orange hover:bg-orange-600 text-white font-extrabold text-[12px] tracking-widest px-6 py-2.5 rounded-full transition shadow-sm uppercase">
@@ -293,14 +319,22 @@
 
       </div>
 
-      <!-- Mobile Category Chips (hidden on desktop) -->
+            <!-- Mobile Category Chips (hidden on desktop) -->
       <div class="md:hidden flex gap-2 overflow-x-auto pb-3 mb-4 no-scrollbar">
         <button data-cat-filter="all" class="cat-pill bg-[#f68b1e] text-white text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">All Products</button>
-        <button data-cat-filter="iphones" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">iPhones & Apple</button>
-        <button data-cat-filter="samsung" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Samsung Galaxy</button>
-        <button data-cat-filter="laptops" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Executive Laptops</button>
-        <button data-cat-filter="audio" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Smart Audio</button>
-        <button data-cat-filter="chargers" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Power & Chargers</button>
+        <button data-cat-filter="iphones" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">iPhones</button>
+        <button data-cat-filter="samsung" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Samsung</button>
+        <button data-cat-filter="android" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Androids</button>
+        <button data-cat-filter="tablets" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Tablets</button>
+        <button data-cat-filter="smartwatches" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Watches</button>
+        <button data-cat-filter="laptops" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Laptops</button>
+        <button data-cat-filter="laptop_acc" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Laptop Acc</button>
+        <button data-cat-filter="audio" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Audio</button>
+        <button data-cat-filter="gaming" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Gaming</button>
+        <button data-cat-filter="phone_acc" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Cases</button>
+        <button data-cat-filter="phone_parts" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Parts</button>
+        <button data-cat-filter="travel_acc" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Travel</button>
+        <button data-cat-filter="chargers" class="cat-pill bg-white border text-gray-700 text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm">Power</button>
       </div>
 
       <!-- JUMIA FLASH SALES ROW (FLASH SALE THEME) -->
@@ -329,7 +363,7 @@
             Verified Premium Stock
           </h3>
           <span class="text-[11px] font-black text-gray-400 uppercase tracking-widest" id="itemCountDisplay">
-            57 Products
+            64 Products
           </span>
         </div>
         
@@ -403,7 +437,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-[#f68b1e]">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
         </svg>
-        <span class="font-extrabold text-[14px] uppercase tracking-wider">Shopping Cart</span>
+        <span class="font-extrabold text-[14px] uppercase tracking-wider">Shopping Bag</span>
       </div>
       <button id="closeCartBtn" class="text-white hover:text-red-400 text-sm font-bold">
         Close
@@ -557,6 +591,7 @@
             <span id="detailPrice" class="text-xl font-black text-gray-800">GH₵ 0</span>
             <span id="detailCompareAt" class="text-[13px] text-gray-400 line-through ml-2 font-semibold">GH₵ 0</span>
             <span id="detailDiscPercent" class="text-[10px] text-[#f68b1e] font-black bg-orange-50 px-2 py-0.5 rounded-sm ml-1">-10%</span>
+            <span id="dealerDetailLabel" class="text-[9px] text-green-600 font-extrabold bg-green-50 px-2 py-0.5 rounded ml-1 uppercase hidden">Wholesale</span>
           </div>
 
           <div class="border-t pt-3 space-y-2 text-[12px] font-semibold text-gray-600 mb-4">
@@ -622,7 +657,7 @@
     <div id="profileView" class="hidden text-center py-4">
       <div class="h-16 w-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-[#0b1a38]"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg></div>
       <h4 id="profileName" class="font-black text-[16px]">Customer Name</h4>
-      <p id="profileEmail" class="text-[12px] text-gray-500 mt-1"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="86e5f3f5f2e9ebe3f4c6e3ebe7efeaa8e5e9eb">[email&#160;protected]</a></p>
+      <p id="profileEmail" class="text-[12px] text-gray-500 mt-1"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e3809690978c8e8691a3868e828a8fcd808c8e">[email&#160;protected]</a></p>
       <p id="profilePhone" class="text-[12px] text-gray-500 mt-0.5">054 245 1578</p>
       
       <button onclick="handleLogout();" class="w-full border border-red-500 text-red-500 hover:bg-red-50 font-bold text-[12px] tracking-wider uppercase py-2.5 rounded-full mt-6 transition">
@@ -1010,6 +1045,104 @@
         paymentCost: 7
       },
       {
+        id: 'VG-AW-17AIR',
+        name: 'iPhone 17 Air 256GB — Ultra Slim (White)',
+        category: 'iphones',
+        retail: 19500,
+        compareAt: 21500,
+        badge: 'NEW',
+        specs: 'Concept Air Edition • 256GB Storage • 6.1" Ultra-Thin Titanium Frame • Sealed Box',
+        stock: 'In stock • Sealed Box • 12m Official Warranty',
+        image: 'uploads/clean_17_air.png',
+        wholesale: 16500,
+        deliveryCost: 150,
+        paymentCost: 350
+      },
+      {
+        id: 'VG-AW-16SNAP',
+        name: 'iPhone 16 128GB — White (Snapchat Banned)',
+        category: 'iphones',
+        retail: 8500,
+        compareAt: 11000,
+        badge: 'BARGAIN',
+        specs: '128GB Storage • Very Neat & Solid UK Used • Snapchat App Lock Only • falaa price!',
+        stock: 'In stock • UK Used • 6m Store Warranty',
+        image: 'uploads/clean_16_snapchat.png',
+        wholesale: 7100,
+        deliveryCost: 80,
+        paymentCost: 154
+      },
+      {
+        id: 'VG-AW-17PROMAX',
+        name: 'iPhone 17 Pro Max 256GB — Premium Titanium',
+        category: 'iphones',
+        retail: 22000,
+        compareAt: 24000,
+        badge: 'NEW',
+        specs: 'Concept Pro Max Edition • 256GB Storage • Titanium Chassis • Factory Sim Unlocked • Swapping Allowed',
+        stock: 'In stock • Pristine Boxed • 12m Official Warranty',
+        image: 'uploads/clean_17_promax.png',
+        wholesale: 18500,
+        deliveryCost: 150,
+        paymentCost: 390
+      },
+      {
+        id: 'VG-AW-13PROMAX',
+        name: 'iPhone 13 Pro Max 128GB — UK Used',
+        category: 'iphones',
+        retail: 7900,
+        compareAt: 8800,
+        badge: 'UK USED',
+        specs: 'Sierra Blue / Gold • 128GB Storage • Solid Battery Health • Clean Body • Swapping Allowed',
+        stock: 'In stock • UK Used • 6m Store Warranty',
+        image: 'uploads/clean_13_promax.png',
+        wholesale: 6700,
+        deliveryCost: 80,
+        paymentCost: 132
+      },
+      {
+        id: 'VG-AW-13',
+        name: 'iPhone 13 128GB — UK Used Multi-Colors',
+        category: 'iphones',
+        retail: 5600,
+        compareAt: 6400,
+        badge: 'UK USED',
+        specs: 'Red / Product Blue / Midnight • 128GB Storage • Excellent Condition • Swapping Allowed',
+        stock: 'In stock • UK Used • 6m Store Warranty',
+        image: 'uploads/clean_13.png',
+        wholesale: 4800,
+        deliveryCost: 60,
+        paymentCost: 95
+      },
+      {
+        id: 'VG-AW-AIRPODS4',
+        name: 'Apple AirPods 4 — Sealed Box',
+        category: 'audio',
+        retail: 2200,
+        compareAt: 2600,
+        badge: 'SEALED',
+        specs: 'Active Noise Cancellation • Personalized Spatial Audio • USB-C Charger Box • Dynamic Head Tracking',
+        stock: 'In stock • Sealed Box • 12m Official Warranty',
+        image: 'uploads/clean_airpods_4.png',
+        wholesale: 1750,
+        deliveryCost: 40,
+        paymentCost: 44
+      },
+      {
+        id: 'VG-AW-AIRPODSPRO3',
+        name: 'Apple AirPods Pro 3 — Sealed Box',
+        category: 'audio',
+        retail: 3800,
+        compareAt: 4400,
+        badge: 'SEALED',
+        specs: 'Next-Gen Active Noise Cancellation • H3 SIP Chip • Adaptive Audio • Sealed Box',
+        stock: 'In stock • Sealed Box • 12m Official Warranty',
+        image: 'uploads/clean_airpods_pro3.png',
+        wholesale: 3100,
+        deliveryCost: 50,
+        paymentCost: 76
+      },
+      {
         id: 'VG-IPX-256',
         name: 'iPhone X 256GB — Silver',
         category: 'iphones',
@@ -1262,7 +1395,7 @@
         paymentCost: 11
       },
       {
-        id: 'VG-PIX-8P',CtxName:
+        id: 'VG-PIX-8P',
         name: 'Google Pixel 8 Pro 128GB — Obsidian',
         category: 'android',
         retail: 8500,
@@ -1597,8 +1730,9 @@
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">${p.name}</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">${p.specs}</p>
                 <div class="mt-2">
-                  <span class="text-[14px] font-black text-gray-800">${money(p.retail)}</span>
-                  <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">${money(p.compareAt)}</span>
+                  <span class="text-[14px] font-black text-gray-800">${isDealerMode ? money(p.wholesale) : money(p.retail)}</span>
+                  <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">${isDealerMode ? money(p.retail) : money(p.compareAt)}</span>
+                  ${isDealerMode ? '<span class="text-[9px] text-green-600 font-extrabold ml-1 uppercase">Wholesale</span>' : ''}
                 </div>
                 <div class="flex items-center gap-0.5 text-[9px] text-amber-500 font-black mt-1">
                   
@@ -1805,11 +1939,14 @@
       const product = PRODUCTS.find(p => p.id === id);
       if (!product) return;
       
+      // Adapt price if Dealer Mode is active
+      const activePrice = isDealerMode ? product.wholesale : product.retail;
+      
       const existing = cart.find(item => item.id === id);
       if (existing) {
         existing.qty++;
       } else {
-        cart.push({ ...product, qty: 1 });
+        cart.push({ ...product, retail: activePrice, qty: 1 });
       }
       
       localStorage.setItem('valmont_cart', JSON.stringify(cart));
@@ -2026,8 +2163,15 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       document.getElementById('detailName').textContent = product.name;
       document.getElementById('detailSpecs').textContent = product.specs;
       document.getElementById('detailStock').textContent = product.stock;
-      document.getElementById('detailPrice').textContent = money(product.retail);
-      document.getElementById('detailCompareAt').textContent = money(product.compareAt);
+      if (isDealerMode) {
+        document.getElementById('detailPrice').textContent = money(product.wholesale);
+        document.getElementById('detailCompareAt').textContent = money(product.retail);
+        document.getElementById('dealerDetailLabel').classList.remove('hidden');
+      } else {
+        document.getElementById('detailPrice').textContent = money(product.retail);
+        document.getElementById('detailCompareAt').textContent = money(product.compareAt);
+        document.getElementById('dealerDetailLabel').classList.add('hidden');
+      }
       
       const discount = Math.round((1 - (product.retail / product.compareAt)) * 100);
       document.getElementById('detailDiscPercent').textContent = `-${discount}%`;
@@ -2514,7 +2658,128 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     setupResellerPortalCalculators();
     setupResellerOrdersButton();
     setupResellerFAQs();
-  </script>
+  
+  // === INTEGRATED DEALER ACCESS & WHOLESALE PRICING LOGIC ===
+  let isDealerMode = localStorage.getItem('valmont_is_dealer') === 'true';
+  let dealerProfile = JSON.parse(localStorage.getItem('valmont_dealer_profile') || 'null');
+
+  const dealerOverlay = document.getElementById('dealerOverlay');
+  const dealerModal = document.getElementById('dealerModal');
+  const dealerRegForm = document.getElementById('dealerRegForm');
+  const dealerActiveProfile = document.getElementById('dealerActiveProfile');
+  const dealerBtnLabel = document.getElementById('dealerBtnLabel');
+
+  function openDealerModal() {
+    dealerOverlay.classList.remove('hidden');
+    setTimeout(() => dealerOverlay.classList.add('opacity-100'), 10);
+    dealerModal.classList.remove('hidden');
+
+    if (isDealerMode && dealerProfile) {
+      dealerRegForm.classList.add('hidden');
+      dealerActiveProfile.classList.remove('hidden');
+      document.getElementById('dlProfileName').textContent = dealerProfile.name;
+      document.getElementById('dlProfilePhone').textContent = dealerProfile.phone;
+      document.getElementById('dlProfileEmail').textContent = dealerProfile.email;
+    } else {
+      dealerRegForm.classList.remove('hidden');
+      dealerActiveProfile.classList.add('hidden');
+    }
+  }
+
+  function closeDealerModal() {
+    dealerOverlay.classList.remove('opacity-100');
+    setTimeout(() => dealerOverlay.classList.add('hidden'), 300);
+    dealerModal.classList.add('hidden');
+  }
+
+  // Handle Dealer Registration
+  if (dealerRegForm) {
+    dealerRegForm.addEventListener('submit', event => {
+      event.preventDefault();
+      const name = document.getElementById('dlNameInput').value.trim();
+      const phone = document.getElementById('dlPhoneInput').value.trim();
+      const email = document.getElementById('dlEmailInput').value.trim();
+
+      if (name && phone && email) {
+        isDealerMode = true;
+        dealerProfile = { name, phone, email };
+        localStorage.setItem('valmont_is_dealer', 'true');
+        localStorage.setItem('valmont_dealer_profile', JSON.stringify(dealerProfile));
+
+        // Inject high-end Dealer Announcement Banner at top of page
+        showDealerAnnouncementBanner();
+        updateDealerUI();
+        renderProducts();
+        renderFlashSales();
+        closeDealerModal();
+        alert(`Congratulations ${name}! Authorized Dealer Access activated. Wholesale prices are now applied directly across our entire catalog.`);
+      }
+    });
+  }
+
+  function deactivateDealerMode() {
+    isDealerMode = false;
+    dealerProfile = null;
+    localStorage.removeItem('valmont_is_dealer');
+    localStorage.removeItem('valmont_dealer_profile');
+
+    // Remove announcement banner
+    const banner = document.getElementById('dealerBanner');
+    if (banner) banner.remove();
+
+    updateDealerUI();
+    renderProducts();
+    renderFlashSales();
+    closeDealerModal();
+    alert("Returned to standard retail shopping mode.");
+  }
+
+  function updateDealerUI() {
+    if (isDealerMode && dealerProfile) {
+      dealerBtnLabel.textContent = `Dealer: ${dealerProfile.name.split(' ')[0]}`;
+    } else {
+      dealerBtnLabel.textContent = "Dealer Portal";
+    }
+  }
+
+  function showDealerAnnouncementBanner() {
+    const existing = document.getElementById('dealerBanner');
+    if (existing) existing.remove();
+
+    const banner = document.createElement('div');
+    banner.id = 'dealerBanner';
+    banner.className = "bg-green-600 text-white text-center py-2.5 px-4 text-xs font-bold tracking-wide transition-all uppercase";
+    banner.innerHTML = `⚡ AUTHORIZED DEALER ACCESS ACTIVE — SPECIAL WHOLESALE PRICING APPLIED DIRECTLY`;
+    
+    // Insert right below the top notice banner
+    document.body.insertBefore(banner, document.body.children[1]);
+  }
+
+  // Hook local dealer calculator
+  const dlWholesale = document.getElementById('dl_wholesale');
+  const dlRetail = document.getElementById('dl_retail');
+  const dlCalcResult = document.getElementById('dl_calc_result');
+
+  function calculateDealerProfit() {
+    if (!dlWholesale || !dlRetail || !dlCalcResult) return;
+    const cost = Number(dlWholesale.value || 0);
+    const sell = Number(dlRetail.value || 0);
+    const profit = sell - cost;
+    const margin = sell ? ((profit / sell) * 100).toFixed(1) : '0.0';
+    dlCalcResult.textContent = `Net Profit: GH₵ ${profit.toLocaleString()} (${margin}% margin on sale)`;
+  }
+
+  if (dlWholesale && dlRetail) {
+    [dlWholesale, dlRetail].forEach(inp => inp.addEventListener('input', calculateDealerProfit));
+    calculateDealerProfit();
+  }
+
+  // Run on startup
+  if (isDealerMode && dealerProfile) {
+    showDealerAnnouncementBanner();
+    updateDealerUI();
+  }
+</script>
 
   <!-- 9. SIMULATED PAYSTACK SECURE PAYMENT MODAL -->
   <div id="paystackOverlay" class="fixed inset-0 bg-black/70 z-50 hidden transition-opacity"></div>
@@ -2567,5 +2832,74 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
 
   </div>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1f20d36cdbd0338',t:'MTc4NDcxOTE3OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+  <!-- 10. DEALER REGISTRATION & PORTAL MODAL -->
+  <div id="dealerOverlay" class="fixed inset-0 bg-black/60 z-50 hidden transition-opacity" onclick="closeDealerModal();"></div>
+  <div id="dealerModal" class="fixed inset-y-10 inset-x-4 md:inset-y-20 md:inset-x-32 bg-white z-50 rounded-xl shadow-2xl overflow-y-auto hidden no-scrollbar max-w-[550px] mx-auto p-5 md:p-6 border border-gray-200">
+    <div class="flex justify-between items-center border-b pb-3 mb-4">
+      <h3 class="font-black text-[14px] uppercase tracking-wider text-[#0b1a38] flex items-center gap-2">
+        🔑 Valmont Dealer Portal
+      </h3>
+      <button onclick="closeDealerModal();" class="text-gray-500 hover:text-black text-sm font-bold">✕ Close</button>
+    </div>
+
+    <!-- Dealer Profile Mode (If active) -->
+    <div id="dealerActiveProfile" class="hidden space-y-5">
+      <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+        <span class="text-3xl">🛡️</span>
+        <h4 class="font-black text-[15px] text-green-800 mt-2">Authorized Dealer Access Active</h4>
+        <p class="text-[12px] text-green-700 font-semibold mt-1">Wholesale pricing has been applied across the entire gadgets catalog.</p>
+      </div>
+      
+      <div class="border rounded-lg p-4 space-y-2 text-[13px] bg-gray-50">
+        <div class="flex justify-between border-b pb-1.5"><span class="font-bold text-gray-500">Business Name:</span> <span id="dlProfileName" class="font-black">--</span></div>
+        <div class="flex justify-between border-b pb-1.5"><span class="font-bold text-gray-500">WhatsApp:</span> <span id="dlProfilePhone" class="font-black">--</span></div>
+        <div class="flex justify-between"><span class="font-bold text-gray-500">Email:</span> <span id="dlProfileEmail" class="font-black">--</span></div>
+      </div>
+
+      <!-- Scoped pricing desk and log inside the dealer hub so they are easily accessible! -->
+      <div class="border rounded-lg p-3 bg-gray-100 text-[#0b1a38] text-[12px]">
+        <h4 class="font-bold text-[13px] text-gray-800 mb-2 border-b pb-1">📊 Dealer Profit Calculator</h4>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="block font-bold text-[10px] text-gray-500">Wholesale Price (GH₵)</label>
+            <input id="dl_wholesale" type="number" value="2000" class="w-full border p-1.5 rounded bg-white text-[12px] font-bold" />
+          </div>
+          <div>
+            <label class="block font-bold text-[10px] text-gray-500">Retail Price (GH₵)</label>
+            <input id="dl_retail" type="number" value="2450" class="w-full border p-1.5 rounded bg-white text-[12px] font-bold" />
+          </div>
+        </div>
+        <div class="font-black text-gray-700 text-[11px]" id="dl_calc_result">Net Profit: GH₵ 450 (18.3% margin)</div>
+      </div>
+
+      <button onclick="deactivateDealerMode();" class="w-full border border-red-500 text-red-500 hover:bg-red-50 font-bold text-[12px] tracking-widest uppercase py-3 rounded-full transition">
+        Deactivate Dealer Mode (Return to Retail)
+      </button>
+    </div>
+
+    <!-- Dealer Registration Form (If inactive) -->
+    <form id="dealerRegForm" class="space-y-4">
+      <p class="text-[12px] text-gray-500 font-medium">Are you a bulk buyer, retailer, or independent distributor in Ghana? Register for a free Authorized Dealer account to instantly lock in **wholesale prices** for all products across our catalog.</p>
+      
+      <div>
+        <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Business / Dealer Name *</label>
+        <input id="dlNameInput" type="text" placeholder="Valmont Retailers East" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
+      </div>
+      <div>
+        <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">WhatsApp / Phone Number *</label>
+        <input id="dlPhoneInput" type="tel" placeholder="054 245 1578" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
+      </div>
+      <div>
+        <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Email Address *</label>
+        <input id="dlEmailInput" type="email" placeholder="dealer@valmontgadgets.com" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
+      </div>
+      
+      <button type="submit" class="w-full bg-[#f68b1e] hover:bg-orange-600 text-white font-extrabold text-[12px] tracking-widest uppercase py-3.5 rounded-full transition shadow-sm">
+        Register & Activate Wholesale Pricing
+      </button>
+    </form>
+  </div>
+
+</body>
 </html>
