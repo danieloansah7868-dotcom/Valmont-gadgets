@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 80" width="100%" height="100%">
   <defs>
     <style>
       .hex-bg { fill: #1e355c; }
       .v-white { fill: none; stroke: #ffffff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
       .v-orange-fill { fill: #f68b1e; }
-      .text-valmont { font-family: 'Inter', -apple-system, sans-serif; font-weight: 800; font-size: 15px; fill: #0b1a38; letter-spacing: 5px; }
-      .text-gadgets { font-family: 'Inter', -apple-system, sans-serif; font-weight: 900; font-size: 32px; fill: #f68b1e; letter-spacing: 0.5px; }
+      .text-valmont { font-family: 'Inter', -apple-system, sans-serif; font-weight: 900; font-size: 24px; fill: #0b1a38; letter-spacing: 0.5px; }
+      .text-gadgets { font-family: 'Inter', -apple-system, sans-serif; font-weight: 900; font-size: 34px; fill: #f68b1e; letter-spacing: 0.5px; }
     </style>
   </defs>
 
@@ -18,7 +18,7 @@
     <rect class="v-orange-fill" x="40.8" y="51.7" width="19.5" height="2.5" rx="0.5" ry="0.5" />
   </g>
 
-  <!-- Larger, Bold typography for perfect readability -->
+  <!-- High-Contrast, Bold and Highly Readable Typography -->
   <text x="82" y="32" class="text-valmont">Valmont</text>
-  <text x="82" y="62" class="text-gadgets">Gadgets</text>
+  <text x="82" y="63" class="text-gadgets">Gadgets</text>
 </svg>
