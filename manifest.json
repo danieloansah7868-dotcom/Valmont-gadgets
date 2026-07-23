@@ -5,12 +5,17 @@
     {
       "src": "favicon.png",
       "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "favicon.png",
+      "type": "image/png",
       "sizes": "512x512"
     }
   ],
-  "start_url": "/index.html",
+  "start_url": "./index.html",
   "background_color": "#0b1a38",
-  "theme_color": "#f68b1e",
+  "theme_color": "#0b1a38",
   "display": "standalone",
   "orientation": "portrait"
 }

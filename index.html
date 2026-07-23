@@ -155,69 +155,81 @@
 
   <!-- 2. JUMIA-STYLE MAIN HEADER -->
   <header class="bg-white shadow-sm sticky top-0 z-40 border-b border-gray-100">
-    <div class="max-w-[1200px] mx-auto px-4 py-3 flex items-center justify-between gap-4">
+    <div class="max-w-[1200px] mx-auto px-3 py-2.5 flex items-center justify-between gap-3">
       
-      <!-- Brand Logo & Title -->
-      <a href="/" class="flex items-center shrink-0">
-        <img src="logo.svg" alt="Valmont Gadgets Logo" class="h-9 md:h-11 w-auto" />
-      </a>
+      <!-- Hamburger Menu & Brand Logo -->
+      <div class="flex items-center gap-2 shrink-0">
+        <!-- Mobile Hamburger Menu Button (opens Category Modal) -->
+        <button onclick="openMobileCategoriesModal();" class="text-gray-700 hover:text-[#f68b1e] p-1 md:hidden" aria-label="Menu">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+        </button>
+        
+        <a href="/" class="flex items-center">
+          <img src="logo.svg" alt="Valmont Gadgets Logo" class="h-11 md:h-14 w-auto" />
+        </a>
+      </div>
 
       <!-- Jumia Centered Search Bar -->
       <div class="flex-1 max-w-[500px] flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white focus-within:border-[#f68b1e] transition-all">
-        <div class="pl-3 text-gray-400">
+        <div class="pl-2.5 text-gray-400">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.637 10.637Z" />
           </svg>
         </div>
-        <input id="searchInput" type="text" placeholder="Search genuine iPhones & Apple, laptops, Samsung Galaxy..." class="w-full px-3 py-2 text-[13px] outline-none bg-white font-medium" />
-        <button id="searchBtn" class="jumia-orange text-white px-4 md:px-6 py-2 font-bold text-[12px] tracking-wider jumia-orange-hover transition">
-          SEARCH
-        </button>
-      </div>
-
-      <!-- Right Header Actions (Account, Saved Items, Help, Reseller, Cart) -->
-      
-    <div class="flex items-center gap-2 md:gap-4 shrink-0">
-      
-      <!-- Jumia-Style Account Dropdown -->
-      <div class="relative group hidden md:block">
-        <button id="accountBtn" class="flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] py-1">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+        <input id="searchInput" type="text" placeholder="Search genuine iPhones, laptops, Samsung Galaxy..." class="w-full px-2 py-2 text-[13px] outline-none bg-white font-medium" />
+        <button id="searchBtn" class="jumia-orange text-white px-4 md:px-7 py-2 font-bold text-[12px] tracking-wider jumia-orange-hover transition flex items-center justify-center shrink-0">
+          <span class="hidden md:inline">SEARCH</span>
+          <svg class="w-4 h-4 md:hidden" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.637 10.637Z" />
           </svg>
-          <span id="accountLabel" class="hidden md:inline">Sign In</span>
         </button>
-        <div class="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-lg shadow-lg py-2 hidden group-hover:block z-50">
-          <button onclick="openLoginModal();" class="w-full text-left px-4 py-2 text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2">👤 Profile / Login</button>
-          <button onclick="openWishlistModal();" class="w-full text-left px-4 py-2 text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2">❤️ Saved Items</button>
-          <button id="logoutBtn" onclick="handleLogout();" class="w-full text-left px-4 py-2 text-[12px] text-red-500 hover:bg-gray-50 flex items-center gap-2 border-t hidden">Logout</button>
-        </div>
       </div>
 
-      <!-- Wishlist Button -->
-      <button onclick="openWishlistModal();" class="relative flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] py-1 border-l border-gray-200 pl-3 hidden md:flex">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-        </svg>
-        <span id="wishlistCountBadge" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-black rounded-full h-4 w-4 flex items-center justify-center">0</span>
-      </button>
+      <!-- Right Header Actions (Desktop and Mobile) -->
+      <div class="flex items-center gap-3 shrink-0">
+        
+        <!-- Mobile Profile Button (Account top instead of bottom!) -->
+        <button onclick="openLoginModal();" class="flex items-center text-gray-700 hover:text-[#f68b1e] md:hidden p-1">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5.5 h-5.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+        </button>
 
-      <!-- Dealer Portal Access Link -->
-      <button id="btnToggleDealer" onclick="openDealerModal();" class="flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] border-l border-gray-200 pl-3 py-1 hidden md:flex">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5 text-[#f68b1e]">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5m-3-12h13.5m-13.5 6h13.5m-13.5 6h13.5" />
-        </svg>
-        <span id="dealerBtnLabel">Dealer Portal</span>
-      </button>
+        <!-- Desktop Account Dropdown -->
+        <div class="relative group hidden md:block">
+          <button id="accountBtn" class="flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] py-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5.5 h-5.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+            <span id="accountLabel">Sign In</span>
+          </button>
+          <div class="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-lg shadow-lg py-2 hidden group-hover:block z-50">
+            <button onclick="openLoginModal();" class="w-full text-left px-4 py-2 text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2">👤 Profile / Login</button>
+            <button onclick="openWishlistModal();" class="w-full text-left px-4 py-2 text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2">❤️ Saved Items</button>
+            <button id="logoutBtn" onclick="handleLogout();" class="w-full text-left px-4 py-2 text-[12px] text-red-500 hover:bg-gray-50 flex items-center gap-2 border-t hidden">Logout</button>
+          </div>
+        </div>
 
-      <!-- Cart/Bag Trigger Button -->
-      <button id="cartBtn" class="relative flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] py-1 md:border-l md:border-gray-200 md:pl-3">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
-        <span class="hidden sm:inline">Bag</span>
-        <span id="cartBadgeCount" class="absolute -top-1.5 -right-1.5 jumia-orange text-white text-[9px] font-black rounded-full h-4.5 w-4.5 flex items-center justify-center">0</span>
-      </button>
+        <!-- Desktop Wishlist Button -->
+        <button onclick="openWishlistModal();" class="relative flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] py-1 border-l border-gray-200 pl-3 hidden md:flex">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+          </svg>
+          <span id="wishlistCountBadge" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-black rounded-full h-4 w-4 flex items-center justify-center hidden">0</span>
+        </button>
 
-    </div>
+        <!-- Desktop Dealer Portal Link -->
+        <button id="btnToggleDealer" onclick="openDealerModal();" class="flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] border-l border-gray-200 pl-3 py-1 hidden md:flex">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5 text-[#f68b1e]">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5m-3-12h13.5m-13.5 6h13.5m-13.5 6h13.5" />
+          </svg>
+          <span id="dealerBtnLabel">Dealer Portal</span>
+        </button>
+
+        <!-- Desktop Bag Trigger Button -->
+        <button id="cartBtn" class="relative flex items-center gap-1 font-bold text-[13px] text-gray-700 hover:text-[#f68b1e] py-1 border-l border-gray-200 pl-3">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
+          <span class="hidden md:inline">Bag</span>
+          <span id="cartBadgeCount" class="absolute -top-1.5 -right-1.5 jumia-orange text-white text-[9px] font-black rounded-full h-4.5 w-4.5 flex items-center justify-center hidden">0</span>
+        </button>
+
+      </div>
     </div>
   </header>
 
@@ -284,19 +296,25 @@
         <!-- Central Banner Promo Slider -->
         <section class="col-span-1 md:col-span-2 relative bg-white text-gray-800 rounded-lg overflow-hidden h-[240px] md:h-auto flex flex-col justify-center p-6 md:p-8 card-shadow border border-gray-200">
           <div class="absolute inset-0 opacity-10 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=800');"></div>
-          <div class="relative z-10 max-w-[360px]">
-            <span class="bg-[#f68b1e] text-white text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-sm animate-pulse">
-              Flash Sale Live
-            </span>
-            <h2 class="font-black text-[24px] md:text-[28px] tracking-tight leading-tight text-[#0b1a38] mt-3 mb-2">
-              EXECUTIVE <br class="hidden md:inline">MIDWEEK DEALS
-            </h2>
-            <p class="text-[13px] text-gray-500 font-semibold mb-4 leading-snug">
-              Genuine phones, laptops & accessories with 12-month warranty & sealed packaging.
-            </p>
-            <a href="#store-feed" class="inline-block jumia-orange hover:bg-orange-600 text-white font-extrabold text-[12px] tracking-widest px-6 py-2.5 rounded-full transition shadow-sm uppercase">
-              Shop Now
-            </a>
+          <div class="grid grid-cols-1 md:grid-cols-2 items-center gap-6 relative z-10 w-full">
+            <div>
+              <span class="bg-[#f68b1e] text-white text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-sm animate-pulse">
+                Flash Sale Live
+              </span>
+              <h2 class="font-black text-[24px] md:text-[28px] tracking-tight leading-tight text-[#0b1a38] mt-3 mb-2">
+                EXECUTIVE <br class="hidden md:inline">MIDWEEK DEALS
+              </h2>
+              <p class="text-[13px] text-gray-500 font-semibold mb-4 leading-snug">
+                Genuine phones, laptops & accessories with 12-month warranty & sealed packaging.
+              </p>
+              <a href="#store-feed" class="inline-block jumia-orange hover:bg-orange-600 text-white font-extrabold text-[12px] tracking-widest px-6 py-2.5 rounded-full transition shadow-sm uppercase">
+                Shop Now
+              </a>
+            </div>
+            <!-- Right graphic: gorgeous floating mockup of a premium iPhone 15 Pro -->
+            <div class="hidden md:flex justify-center items-center">
+              <img src="uploads/clean_15_pro.png" alt="Featured Phone" class="max-h-[170px] w-auto object-contain drop-shadow-xl animate-bounce" style="animation-duration: 5s;" />
+            </div>
           </div>
         </section>
 
@@ -1649,6 +1667,8 @@
     let currentUser = JSON.parse(localStorage.getItem('valmont_user') || 'null');
     let isResellerMode = false;
     let selectedDetailProduct = null;
+    let isDealerMode = false;
+    let dealerProfile = null;
 
     // Elements
     const productGrid = document.getElementById('productGrid');
@@ -1656,8 +1676,8 @@
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
     const cartCountBadge = document.getElementById('cartBadgeCount');
-    const btnToggleReseller = document.getElementById('btnToggleReseller');
-    const portalText = document.getElementById('portalBtnText');
+    
+    
     const customerStoreView = document.getElementById('customer-store-view');
     const resellerDeskView = document.getElementById('dealer-desk-view');
     const wishlistCountBadge = document.getElementById('wishlistCountBadge');
@@ -2307,13 +2327,6 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       portalText.textContent = "Dealer Portal";
     }
 
-    btnToggleReseller.addEventListener('click', () => {
-      if (isResellerMode) {
-        showCustomerMode();
-      } else {
-        openDealerModal();
-      }
-    });
 
 
     // CATEGORY FILTERS EVENT LISTENERS
@@ -2674,8 +2687,8 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     setupResellerFAQs();
   
   // === INTEGRATED DEALER ACCESS & WHOLESALE PRICING LOGIC ===
-  let isDealerMode = localStorage.getItem('valmont_is_dealer') === 'true';
-  let dealerProfile = JSON.parse(localStorage.getItem('valmont_dealer_profile') || 'null');
+  isDealerMode = localStorage.getItem('valmont_is_dealer') === 'true';
+  dealerProfile = JSON.parse(localStorage.getItem('valmont_dealer_profile') || 'null');
 
   const dealerOverlay = document.getElementById('dealerOverlay');
   const dealerModal = document.getElementById('dealerModal');
@@ -2794,7 +2807,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     updateDealerUI();
   }
 
-  // === JUMIA-STYLE MOBILE BOTTOM NAVIGATION LOGIC ===
+    // === JUMIA-STYLE MOBILE BOTTOM NAVIGATION LOGIC ===
   const mobileCategoriesOverlay = document.getElementById('mobileCategoriesOverlay');
   const mobileCategoriesModal = document.getElementById('mobileCategoriesModal');
   const mobileCategoryGrid = document.getElementById('mobileCategoryGrid');
@@ -2804,6 +2817,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     renderProducts();
     // Scroll smoothly to home grid
     document.getElementById('store-feed').scrollIntoView({ behavior: 'smooth' });
+    updateMobileNavHighlights('home');
   }
 
   function openMobileCategoriesModal() {
@@ -2812,6 +2826,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     mobileCategoriesModal.classList.remove('hidden');
     mobileCategoriesModal.classList.remove('translate-y-full');
     renderMobileCategoriesGrid();
+    updateMobileNavHighlights('categories');
   }
 
   function closeMobileCategoriesModal() {
@@ -2831,7 +2846,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       const activeClass = isSelected ? 'bg-orange-50 border-[#f68b1e] text-[#f68b1e] font-bold' : 'bg-gray-50 border-gray-100 text-gray-700 font-medium';
       return `
         <button onclick="selectMobileCategory('${key}')" class="border p-3 rounded-lg text-[12px] text-center transition ${activeClass} shadow-sm truncate">
-          ${CATEGORY_LABELS[key].replace(' & ', ' &\n')}
+          ${CATEGORY_LABELS[key]}
         </button>
       `;
     }).join('');
@@ -2852,53 +2867,17 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
 
     // Scroll smoothly to products grid
     document.getElementById('store-feed').scrollIntoView({ behavior: 'smooth' });
+    updateMobileNavHighlights('categories');
   }
 
-  // Monitor wishlist size and user name for bottom nav updates
-  const originalUpdateWishlistUI = updateWishlistUI;
-  updateWishlistUI = function() {
-    if (typeof originalUpdateWishlistUI === 'function') originalUpdateWishlistUI();
-    const badge = document.getElementById('mobileWishlistBadge');
-    if (badge) badge.textContent = wishlist.length;
-  };
-
-  const originalUpdateUserUI = updateUserUI;
-  updateUserUI = function() {
-    if (typeof originalUpdateUserUI === 'function') originalUpdateUserUI();
-    const btnText = document.getElementById('mobileAccountBtnText');
-    if (btnText && currentUser) {
-      btnText.textContent = currentUser.name.split(' ')[0];
-    } else if (btnText) {
-      btnText.textContent = "Account";
-    }
-  };
-
-  const originalUpdateDealerUI = updateDealerUI;
-  updateDealerUI = function() {
-    if (typeof originalUpdateDealerUI === 'function') originalUpdateDealerUI();
-    const btnText = document.getElementById('mobileDealerBtnText');
-    if (btnText && isDealerMode && dealerProfile) {
-      btnText.textContent = dealerProfile.name.split(' ')[0];
-    } else if (btnText) {
-      btnText.textContent = "Dealer";
-    }
-  };
-
-  // Sync initial UI badges
-  setTimeout(() => {
-    updateWishlistUI();
-    updateUserUI();
-    updateDealerUI();
-  }, 100);
-
-  // === MOBILE BOTTOM NAV HIGHLIGHT & 0-BADGE HIDING ===
+  // Highlights only the active tab in Jumia Orange and turns others gray
   function updateMobileNavHighlights(activeTab) {
     const tabs = {
       home: document.querySelector('button[onclick*="mobileGoHome"]'),
       categories: document.querySelector('button[onclick*="openMobileCategoriesModal"]'),
       saved: document.querySelector('button[onclick*="openWishlistModal"]'),
       dealer: document.querySelector('button[onclick*="openDealerModal"]'),
-      account: document.querySelector('button[onclick*="openLoginModal"]')
+      bag: document.getElementById('mobileCartBtn')
     };
 
     // Reset all tabs to gray
@@ -2919,19 +2898,6 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
   }
 
   // Override click routing functions to handle active states dynamically
-  const originalMobileGoHome = mobileGoHome;
-  mobileGoHome = function() {
-    if (typeof originalMobileGoHome === 'function') originalMobileGoHome();
-    updateMobileNavHighlights('home');
-  };
-
-  const originalOpenMobileCategoriesModal = openMobileCategoriesModal;
-  openMobileCategoriesModal = function() {
-    if (typeof originalOpenMobileCategoriesModal === 'function') originalOpenMobileCategoriesModal();
-    updateMobileNavHighlights('categories');
-  };
-
-  // Override Wishlist, Dealer, and Account modals to trigger states
   const originalOpenWishlistModal = openWishlistModal;
   openWishlistModal = function() {
     if (typeof originalOpenWishlistModal === 'function') originalOpenWishlistModal();
@@ -2944,10 +2910,35 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     updateMobileNavHighlights('dealer');
   };
 
-  const originalOpenLoginModal = openLoginModal;
-  openLoginModal = function() {
-    if (typeof originalOpenLoginModal === 'function') originalOpenLoginModal();
-    updateMobileNavHighlights('account');
+  const originalOpenCart = openCart;
+  openCart = function() {
+    if (typeof originalOpenCart === 'function') originalOpenCart();
+    updateMobileNavHighlights('bag');
+  };
+
+  // Override closeCart and closeWishlist to return highlight to Home
+  const originalCloseCart = closeCart;
+  closeCart = function() {
+    if (typeof originalCloseCart === 'function') originalCloseCart();
+    updateMobileNavHighlights('home');
+  };
+
+  const originalCloseWishlistModal = closeWishlistModal;
+  closeWishlistModal = function() {
+    if (typeof originalCloseWishlistModal === 'function') originalCloseWishlistModal();
+    updateMobileNavHighlights('home');
+  };
+
+  const originalCloseDealerModal = closeDealerModal;
+  closeDealerModal = function() {
+    if (typeof originalCloseDealerModal === 'function') originalCloseDealerModal();
+    updateMobileNavHighlights('home');
+  };
+
+  const originalCloseLoginModal = closeLoginModal;
+  closeLoginModal = function() {
+    if (typeof originalCloseLoginModal === 'function') originalCloseLoginModal();
+    updateMobileNavHighlights('home');
   };
 
   // Hide badge completely if count is 0 (both for Shopping Bag and Wishlist)
@@ -2956,14 +2947,18 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     if (typeof originalUpdateCartCount === 'function') originalUpdateCartCount();
     const count = cart.reduce((sum, item) => sum + item.qty, 0);
     const badge = document.getElementById('cartBadgeCount');
-    if (badge) {
-      if (count === 0) {
-        badge.classList.add('hidden');
-      } else {
-        badge.classList.remove('hidden');
-        badge.textContent = count;
+    const mobBadge = document.getElementById('mobileCartBadge');
+
+    [badge, mobBadge].forEach(b => {
+      if (b) {
+        if (count === 0) {
+          b.classList.add('hidden');
+        } else {
+          b.classList.remove('hidden');
+          b.textContent = count;
+        }
       }
-    }
+    });
   };
 
   const originalUpdateWishlistUI = updateWishlistUI;
@@ -2985,17 +2980,29 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     });
   };
 
-  // Ensure category filtering scrolls smoothly to product feed
-  function selectCategoryWithScroll(key) {
-    selectMobileCategory(key);
-  }
+  // Ensure category filtering scrolls smoothly to product feed and sets Home/Categories highlights
+  document.querySelectorAll('.cat-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('store-feed').scrollIntoView({ behavior: 'smooth' });
+    });
+  });
 
   // Run initial badge checks
   setTimeout(() => {
     updateCartCount();
     updateWishlistUI();
     updateMobileNavHighlights('home'); // Home is active by default
-  }, 200);
+  }, 300);
+
+
+    // Bind Desktop Account Button to open login modal
+    const desktopAccountBtn = document.getElementById('accountBtn');
+    if (desktopAccountBtn) {
+      desktopAccountBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openLoginModal();
+      });
+    }
 </script>
 
   <!-- 9. SIMULATED PAYSTACK SECURE PAYMENT MODAL -->
@@ -3119,6 +3126,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
   </div>
 
 
+  
   <!-- 11. JUMIA-STYLE MOBILE BOTTOM NAVIGATION BAR -->
   <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-1 flex justify-around items-center shadow-[0_-3px_12px_rgba(0,0,0,0.08)] z-40 md:hidden">
     
@@ -3143,24 +3151,23 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
       </svg>
-      <span class="absolute -top-1.5 right-2 bg-red-500 text-white text-[8px] font-black rounded-full h-4 w-4 flex items-center justify-center" id="mobileWishlistBadge">0</span>
+      <span class="absolute -top-1.5 right-2 bg-red-500 text-white text-[8px] font-black rounded-full h-4 w-4 flex items-center justify-center hidden" id="mobileWishlistBadge">0</span>
       <span class="text-[9px] font-bold tracking-wider mt-1 uppercase">Saved</span>
     </button>
 
     <!-- Dealer Portal Button -->
-    <button onclick="openDealerModal();" class="flex flex-col items-center justify-center text-[#f68b1e] hover:text-orange-600 transition w-16">
+    <button onclick="openDealerModal();" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#f68b1e] transition w-16">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5m-3-12h13.5m-13.5 6h13.5m-13.5 6h13.5" />
       </svg>
-      <span class="text-[9px] font-black tracking-wider mt-1 uppercase" id="mobileDealerBtnText">Dealer</span>
+      <span class="text-[9px] font-bold tracking-wider mt-1 uppercase" id="mobileDealerBtnText">Dealer</span>
     </button>
 
-    <!-- Profile/Account Button -->
-    <button onclick="openLoginModal();" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#f68b1e] transition w-16">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-      </svg>
-      <span class="text-[9px] font-bold tracking-wider mt-1 uppercase" id="mobileAccountBtnText">Account</span>
+    <!-- Bag Button (Moved from top to bottom Jumia-style!) -->
+    <button id="mobileCartBtn" onclick="openCart();" class="relative flex flex-col items-center justify-center text-gray-500 hover:text-[#f68b1e] transition w-16">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
+      <span class="absolute -top-1.5 right-2 bg-[#f68b1e] text-white text-[8px] font-black rounded-full h-4 w-4 flex items-center justify-center hidden" id="mobileCartBadge">0</span>
+      <span class="text-[9px] font-bold tracking-wider mt-1 uppercase">Bag</span>
     </button>
 
   </div>
