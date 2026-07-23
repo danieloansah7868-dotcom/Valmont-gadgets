@@ -1,26 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
-  <defs>
-    <style>
-      .hex-bg { fill: #1e355c; }
-      .v-white { fill: none; stroke: #ffffff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-      .v-orange { fill: #f68b1e; }
-    </style>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Navy Hexagon Background -->
+  <polygon points="50,3 90,26 90,74 50,97 10,74 10,26" fill="#1a2744" stroke="#0f1b33" stroke-width="2"/>
 
-  <!-- Hexagon Centered at cx=50, cy=50, radius S=42 (Ratio 0.73) -->
-  <g>
-    <polygon class="hex-bg" points="50,8 80.66,29 80.66,71 50,92 19.34,71 19.34,29" />
-    
-    <!-- Left Device (Smartphone) -->
-    <rect class="v-white" x="23.37" y="21.31" width="24.99" height="44.29" rx="2" ry="2" />
-    
-    <!-- Home button dot on smartphone -->
-    <circle class="v-orange" cx="36.18" cy="59.24" r="2" />
-    
-    <!-- Right Device (Laptop Screen) -->
-    <rect class="v-white" x="51.01" y="31.56" width="19.5" height="29.41" rx="1.5" ry="1.5" />
-    
-    <!-- Orange Laptop Base -->
-    <rect class="v-orange" x="51.01" y="65.37" width="25.62" height="3.07" rx="0.5" ry="0.5" />
-  </g>
+  <!-- Left Device (Phone) -->
+  <rect x="25" y="18" width="22" height="64" rx="3" fill="none" stroke="#ffffff" stroke-width="3"/>
+  <rect x="28" y="24" width="16" height="48" rx="1" fill="#ffffff" opacity="0.15"/>
+  <circle cx="36" cy="76" r="2.5" fill="#f58c14"/>
+
+  <!-- Right Device (Laptop/Tablet) -->
+  <rect x="53" y="28" width="28" height="40" rx="2" fill="none" stroke="#ffffff" stroke-width="3"/>
+  <rect x="57" y="32" width="20" height="30" rx="1" fill="#ffffff" opacity="0.15"/>
+  <rect x="49" y="70" width="36" height="5" rx="1" fill="#f58c14"/>
 </svg>

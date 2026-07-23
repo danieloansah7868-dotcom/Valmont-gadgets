@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Account — Valmont Gadgets</title>
+  <meta name="theme-color" content="#0b1a38">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/favicon.png">
+  <link rel="manifest" href="/manifest.json">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="assets/css/gadgets.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: { deep: '#0b1a38', light: '#12234a' },
+            gold: '#f58c14',
+            slate: { panel: '#ffffff' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>body{font-family:'Inter',sans-serif;}</style>
+</head>
+<body class="bg-[#f8fafc] text-[#0b1a38] antialiased">
+  <!-- Header -->
+  <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
+    <div class="max-w-[1280px] mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2.5">
+        <span class="bg-[#0b1a38] text-white font-black text-xs tracking-widest px-3 py-2 rounded-xl">VALMONT</span>
+        <span class="hidden md:inline font-black text-xs tracking-widest">GADGETS</span>
+      </a>
+      <div class="flex items-center gap-2">
+        <a href="/" class="text-xs font-bold text-gray-500 hover:text-[#0b1a38] px-3 py-2 rounded-xl border border-gray-200 hover:border-gray-300 bg-white">Back to Store</a>
+        <button onclick="logoutCustomer()" class="text-xs font-bold bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-xl border border-red-100">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-[1280px] mx-auto px-4 py-6">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div>
+        <h1 class="text-2xl font-black tracking-tight">My Account</h1>
+        <p id="welcomeText" class="text-sm text-gray-500 mt-1">Welcome back</p>
+      </div>
+      <div class="flex gap-2 overflow-x-auto no-scrollbar">
+        <a href="#profile" class="px-4 py-2.5 text-[11px] font-black border border-gray-200 rounded-xl hover:bg-white bg-white shadow-sm uppercase tracking-wider">Profile</a>
+        <a href="#addresses" class="px-4 py-2.5 text-[11px] font-black border border-gray-200 rounded-xl hover:bg-white bg-white shadow-sm uppercase tracking-wider">Addresses</a>
+        <a href="#payments" class="px-4 py-2.5 text-[11px] font-black border border-gray-200 rounded-xl hover:bg-white bg-white shadow-sm uppercase tracking-wider">Payments</a>
+        <a href="#orders" class="px-4 py-2.5 text-[11px] font-black border border-gray-200 rounded-xl hover:bg-white bg-white shadow-sm uppercase tracking-wider">Orders</a>
+      </div>
+    </div>
+
+    <!-- PROFILE SETTINGS -->
+    <section id="profile" class="mb-8 bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
+      <h2 class="font-black text-sm uppercase tracking-wider flex items-center gap-2 mb-6"><span>Profile Settings</span><span class="text-[10px] px-2.5 py-1 bg-[#0b1a38] text-white rounded-full tracking-widest">Editable</span></h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <form id="profileForm" onsubmit="saveProfile(event)" class="space-y-5">
+            <div><label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Full Name</label><input type="text" id="profileName" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm font-semibold focus:border-[#f58c14] focus:bg-white outline-none transition" required></div>
+            <div><label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Phone Number</label><input type="tel" id="profilePhone" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm font-semibold focus:border-[#f58c14] focus:bg-white outline-none transition" required></div>
+            <div><label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Email Address</label><input type="email" id="profileEmail" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm font-semibold focus:border-[#f58c14] focus:bg-white outline-none transition" required></div>
+            <button type="submit" class="bg-[#0b1a38] hover:bg-black text-white font-black text-xs uppercase tracking-wider px-8 py-3.5 rounded-xl transition shadow-sm">Save Profile</button>
+          </form>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-6">
+          <h4 class="font-black text-sm uppercase tracking-wider mb-4">Change Password</h4>
+          <form id="passwordForm" onsubmit="changePassword(event)" class="space-y-4">
+            <div><label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Current Password</label><input type="password" id="currentPass" class="w-full bg-white border border-gray-200 px-4 py-3 rounded-xl text-sm font-medium focus:border-[#f58c14] outline-none" required></div>
+            <div><label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">New Password</label><input type="password" id="newPass" class="w-full bg-white border border-gray-200 px-4 py-3 rounded-xl text-sm font-medium focus:border-[#f58c14] outline-none" required></div>
+            <button type="submit" class="w-full bg-white hover:bg-gray-50 text-xs font-black uppercase tracking-wider px-6 py-3 rounded-xl border border-gray-200 transition">Update Password</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- SAVED ADDRESSES -->
+    <section id="addresses" class="mb-8 bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="font-black text-sm uppercase tracking-wider">Saved Addresses</h2>
+        <button onclick="showAddAddressModal()" class="bg-[#f58c14] hover:bg-[#e67f0f] text-white px-5 py-2.5 text-xs font-black rounded-xl shadow-sm">+ Add Address</button>
+      </div>
+      <div id="addressesList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      <p class="text-[11px] text-gray-500 mt-4 font-medium">Tip: Set a default address to auto-fill checkout on mobile. Your addresses are stored locally and synced at checkout.</p>
+    </section>
+
+    <!-- SAVED PAYMENT METHODS -->
+    <section id="payments" class="mb-8 bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="font-black text-sm uppercase tracking-wider">Saved Payment Methods</h2>
+          <p class="text-[11px] text-gray-500 font-medium mt-1">MoMo and card methods for faster checkout</p>
+        </div>
+        <button onclick="showAddPaymentModal()" class="bg-[#0b1a38] hover:bg-black text-white px-5 py-2.5 text-xs font-black rounded-xl shadow-sm">+ Add Method</button>
+      </div>
+      <div id="paymentsList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      <div class="mt-5 bg-[#fff7ed] border border-orange-100 rounded-xl p-4 flex gap-3">
+        <span class="text-[#f58c14] font-black text-xs">SECURE</span>
+        <p class="text-[11px] text-gray-600 leading-relaxed">We store only masked identifiers locally (e.g., last 4 digits). Full credentials are never saved in browser. Use MoMo for fastest verification in Ghana.</p>
+      </div>
+    </section>
+
+    <!-- ORDER HISTORY -->
+    <section id="orders" class="mb-8 bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
+      <h2 class="font-black text-sm uppercase tracking-wider mb-6">Order History</h2>
+      <div id="orderHistoryList" class="space-y-3"></div>
+    </section>
+
+    <!-- BROWSING HISTORY -->
+    <section class="mb-8 bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
+      <div class="flex justify-between items-center mb-6"><h2 class="font-black text-sm uppercase tracking-wider">Browsing History</h2><button onclick="clearBrowsingHistory()" class="text-xs font-bold px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl border border-red-100">Clear History</button></div>
+      <div id="browsingHistoryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4"></div>
+    </section>
+
+    <!-- WISHLIST -->
+    <section class="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
+      <h2 class="font-black text-sm uppercase tracking-wider mb-6">Wishlist</h2>
+      <div id="wishlistAccountGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4"></div>
+    </section>
+  </div>
+
+  <!-- Add/Edit Address Modal -->
+  <div id="addressModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white border border-gray-200 w-full max-w-md rounded-2xl p-6 shadow-2xl">
+      <div class="flex justify-between items-center mb-6"><h3 id="addressModalTitle" class="font-black text-base">Add New Address</h3><button onclick="closeAddressModal()" class="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50">×</button></div>
+      <form id="addressForm" onsubmit="saveAddress(event)" class="space-y-4">
+        <input type="hidden" id="addressId">
+        <div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Address Name</label><input type="text" id="addrName" placeholder="Home / Office" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white" required></div>
+        <div class="grid grid-cols-2 gap-4"><div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Recipient Name</label><input type="text" id="addrRecipient" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white" required></div><div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Phone</label><input type="tel" id="addrPhone" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white" required></div></div>
+        <div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Zone / Area</label><select id="addrZone" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white" required><option value="Accra Central">Accra Central</option><option value="East Legon, Accra">East Legon, Accra</option><option value="Airport Residential">Airport Residential</option><option value="Spintex Road">Spintex Road</option><option value="Kumasi Metropolis">Kumasi Metropolis</option><option value="Takoradi City">Takoradi City</option><option value="Other Ghana District">Other Ghana District</option></select></div>
+        <div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Street Address</label><textarea id="addrStreet" rows="2" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white" required></textarea></div>
+        <div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Landmark (Optional)</label><input type="text" id="addrLandmark" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white"></div>
+        <div class="flex items-center gap-2 pt-1"><input type="checkbox" id="addrDefault" class="accent-[#f58c14] w-4 h-4"><label for="addrDefault" class="text-xs font-bold text-gray-700">Set as default delivery address</label></div>
+        <div class="pt-4 flex gap-3"><button type="button" onclick="closeAddressModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-xs font-black py-3 rounded-xl">Cancel</button><button type="submit" class="flex-1 bg-[#0b1a38] hover:bg-black text-white text-xs font-black py-3 rounded-xl">Save Address</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add/Edit Payment Modal -->
+  <div id="paymentModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white border border-gray-200 w-full max-w-md rounded-2xl p-6 shadow-2xl">
+      <div class="flex justify-between items-center mb-6"><h3 id="paymentModalTitle" class="font-black text-base">Add Payment Method</h3><button onclick="closePaymentModal()" class="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50">×</button></div>
+      <form id="paymentForm" onsubmit="savePaymentMethod(event)" class="space-y-4">
+        <input type="hidden" id="paymentId">
+        <div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Payment Type</label><select id="payType" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white" required><option value="momo">Mobile Money (MoMo)</option><option value="card">Credit / Debit Card</option><option value="cod">Cash on Delivery (Accra)</option></select></div>
+        <div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Label / Nickname</label><input type="text" id="payLabel" placeholder="e.g. Personal MoMo, Company Card" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white" required></div>
+        <div class="grid grid-cols-2 gap-4"><div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Provider / Network</label><input type="text" id="payProvider" placeholder="MTN / Visa / Telecel" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white"></div><div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Last 4 / Number</label><input type="text" id="payLast4" placeholder="e.g. 1578 or 4582" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white"></div></div>
+        <div class="flex items-center gap-2 pt-1"><input type="checkbox" id="payDefault" class="accent-[#f58c14] w-4 h-4"><label for="payDefault" class="text-xs font-bold text-gray-700">Set as default payment method</label></div>
+        <div class="pt-4 flex gap-3"><button type="button" onclick="closePaymentModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-xs font-black py-3 rounded-xl">Cancel</button><button type="submit" class="flex-1 bg-[#f58c14] hover:bg-[#e67f0f] text-white text-xs font-black py-3 rounded-xl">Save Method</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Order Details Modal -->
+  <div id="orderDetailsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white border border-gray-200 w-full max-w-3xl rounded-2xl max-h-[90vh] overflow-y-auto shadow-2xl no-scrollbar">
+      <div class="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white rounded-t-2xl"><div><h3 class="font-black text-base">Order Details</h3><span id="orderModalRef" class="text-[#f58c14] text-sm font-black"></span></div><button onclick="closeOrderModal()" class="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50">×</button></div>
+      <div class="p-6 space-y-7">
+        <div><h4 class="font-black text-[11px] uppercase tracking-widest text-[#f58c14] mb-3">Customer & Delivery</h4><div id="orderCustomerInfo" class="bg-gray-50 border border-gray-200 p-5 rounded-xl text-sm grid grid-cols-1 md:grid-cols-2 gap-y-3"></div></div>
+        <div><h4 class="font-black text-[11px] uppercase tracking-widest text-[#f58c14] mb-3">Items Ordered</h4><div id="orderItemsList" class="space-y-3"></div></div>
+        <div class="bg-gray-50 border border-gray-200 p-5 rounded-xl"><div class="flex justify-between text-xs font-bold"><span>Subtotal</span><span id="orderModalSubtotal"></span></div><div class="flex justify-between text-xs font-bold mt-1"><span>Delivery Fee</span><span id="orderModalDelivery"></span></div><div class="flex justify-between text-sm font-black border-t border-gray-200 mt-3 pt-3"><span>Total</span><span id="orderModalTotal" class="text-[#f58c14]"></span></div></div>
+        <div><h4 class="font-black text-[11px] uppercase tracking-widest text-[#f58c14] mb-3">Order Status Timeline</h4><div id="orderTimeline" class="flex flex-col gap-2 text-xs"></div></div>
+        <div class="flex gap-3"><button onclick="reorderFromOrder()" class="flex-1 bg-[#0b1a38] hover:bg-black text-white font-black text-xs py-3.5 rounded-xl">Reorder Items</button><button onclick="closeOrderModal()" class="flex-1 bg-gray-100 text-xs font-black py-3.5 rounded-xl">Close</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastNotification" class="toast-msg"></div>
+  <script src="assets/js/account.js"></script>
+</body>
+</html>
