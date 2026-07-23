@@ -180,7 +180,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.637 10.637Z" />
           </svg>
         </div>
-        <input id="searchInput" type="text" placeholder="Search products, brands and categories..." class="w-full px-1.5 md:px-3 py-1.5 md:py-2.5 text-[11.5px] md:text-[13px] outline-none bg-white font-medium text-gray-800 placeholder-gray-400" />
+        <input id="searchInput" type="text" placeholder="Search products, brands and categories..." class="w-full px-2 md:px-3 py-1.5 md:py-2.5 text-[16px] md:text-[13px] outline-none bg-white font-medium text-gray-800 placeholder-gray-400" />
         <button id="searchBtn" class="bg-[#f68b1e] text-white px-3 md:px-8 py-1.5 md:py-2.5 font-bold text-[11.5px] md:text-[13px] tracking-wide hover:bg-orange-600 transition flex items-center justify-center shrink-0">
           <span class="hidden md:inline">SEARCH</span>
           <svg class="w-4 h-4 md:hidden" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
@@ -381,7 +381,39 @@
 
       </div>
 
-            <!-- Mobile Category Chips (hidden on desktop) -->
+            <!-- VALMONT MOBILE QUICK ACTIONS GRID (EXACTLY LIKE JUMIA'S HOME TILES!) -->
+      <div class="md:hidden grid grid-cols-4 gap-3.5 mb-5 px-1">
+        <!-- Flash Deals -->
+        <button onclick="const el = document.getElementById('store-feed'); if (el && typeof el.scrollIntoView === 'function') { el.scrollIntoView({ behavior: 'smooth' }); }" class="flex flex-col items-center gap-1.5 focus:scale-95 transition">
+          <div class="h-12 w-12 rounded-full bg-orange-100 text-[#f68b1e] flex items-center justify-center shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" class="w-5.5 h-5.5"><path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" /></svg>
+          </div>
+          <span class="text-[10px] text-gray-700 font-extrabold text-center tracking-tight leading-tight">Flash Deals</span>
+        </button>
+        <!-- Dealer Portal -->
+        <button onclick="openDealerModal();" class="flex flex-col items-center gap-1.5 focus:scale-95 transition">
+          <div class="h-12 w-12 rounded-full bg-blue-100 text-[#0b1a38] flex items-center justify-center shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" class="w-5.5 h-5.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5m-3-12h13.5m-13.5 6h13.5m-13.5 6h13.5" /></svg>
+          </div>
+          <span class="text-[10px] text-gray-700 font-extrabold text-center tracking-tight leading-tight">Join B2B</span>
+        </button>
+        <!-- Saved Items -->
+        <button onclick="openWishlistModal();" class="flex flex-col items-center gap-1.5 focus:scale-95 transition">
+          <div class="h-12 w-12 rounded-full bg-red-100 text-red-500 flex items-center justify-center shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" class="w-5.5 h-5.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" /></svg>
+          </div>
+          <span class="text-[10px] text-gray-700 font-extrabold text-center tracking-tight leading-tight">Saved Items</span>
+        </button>
+        <!-- WhatsApp Order -->
+        <a href="https://wa.me/233542451578" target="_blank" class="flex flex-col items-center gap-1.5 focus:scale-95 transition">
+          <div class="h-12 w-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 448 512" class="w-5.5 h-5.5"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L3 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-93.8-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 89.4-184.5 184.6-184.5 46 0 89.3 18 121.9 50.6 32.6 32.5 50.5 75.9 50.5 122.1-.1 101.8-94.9 184.5-184.6 184.5zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
+          </div>
+          <span class="text-[10px] text-gray-700 font-extrabold text-center tracking-tight leading-tight">WhatsApp Order</span>
+        </a>
+      </div>
+
+      <!-- Mobile Category Chips (hidden on desktop) -->
       <div class="md:hidden flex gap-2 overflow-x-auto pb-3 mb-4 no-scrollbar">
         <button data-cat-filter="all" class="cat-pill mobile-chip bg-[#f68b1e] text-white text-[12px] font-bold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">All Products</button>
         <button data-cat-filter="iphones" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">iPhones</button>
@@ -403,7 +435,7 @@
       <div class="bg-gradient-to-r from-[#0b1a38] to-[#1e355c] rounded-[4px] p-4 text-white mb-6 card-shadow border-l-4 border-[#f68b1e]">
         <div class="flex items-center justify-between border-b border-gray-700/50 pb-2 mb-3">
           <div class="flex items-center gap-2">
-            <span class="font-extrabold text-[14px] md:text-[15px] uppercase tracking-wider text-[#f68b1e]">⚡ FLASH DEALS</span>
+            <span class="font-extrabold text-[14px] md:text-[15px] uppercase tracking-wider text-[#f68b1e]"> FLASH DEALS</span>
           </div>
           <!-- Countdown Clock -->
           <div class="flex items-center gap-1.5 font-bold text-[12px]">
@@ -551,30 +583,30 @@
         <div class="space-y-4">
           <div>
             <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Customer Full Name *</label>
-            <input id="shippingName" type="text" placeholder="John Mensah" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
+            <input id="shippingName" type="text" placeholder="John Mensah" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#f68b1e]" required />
           </div>
           <div>
             <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Phone Number (MoMo / WhatsApp) *</label>
-            <input id="shippingPhone" type="tel" placeholder="054 245 1578" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
+            <input id="shippingPhone" type="tel" placeholder="054 245 1578" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#f68b1e]" required />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">City *</label>
-              <input id="shippingCity" type="text" placeholder="Accra" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
+              <input id="shippingCity" type="text" placeholder="Accra" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#f68b1e]" required />
             </div>
             <div>
               <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Town / Suburb *</label>
-              <input id="shippingTown" type="text" placeholder="East Legon" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
+              <input id="shippingTown" type="text" placeholder="East Legon" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#f68b1e]" required />
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Ghana Post GPS (Optional)</label>
-              <input id="shippingGPS" type="text" placeholder="GA-120-4567" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" />
+              <input id="shippingGPS" type="text" placeholder="GA-120-4567" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#f68b1e]" />
             </div>
             <div>
               <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Street Address & Landmark *</label>
-              <input id="shippingStreet" type="text" placeholder="Near Police Station, Blue Gate" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
+              <input id="shippingStreet" type="text" placeholder="Near Police Station, Blue Gate" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#f68b1e]" required />
             </div>
           </div>
         </div>
@@ -614,7 +646,7 @@
     <div class="bg-gray-50 border-t p-4 shrink-0">
       <button id="checkoutActionBtn" class="w-full bg-[#f68b1e] hover:bg-orange-600 text-white font-bold text-[13px] tracking-widest uppercase py-3 rounded-[4px] transition shadow flex items-center justify-center gap-2">
         <span>Proceed to Shipping</span>
-        <span class="text-[12px]">➔</span>
+        <span class="text-[12px]"></span>
       </button>
       <button id="backActionBtn" class="w-full border border-gray-300 bg-white text-gray-700 font-bold text-[11px] tracking-wider uppercase py-2.5 rounded-[4px] mt-2 hover:bg-gray-50 transition hidden">
         Go Back
@@ -645,7 +677,7 @@
       <!-- Product Right: Features -->
       <div class="flex flex-col justify-between">
         <div>
-          <span id="detailBadge" class="jumia-orange text-white text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-sm">HOT</span>
+          <span id="detailBadge" class="bg-[#f68b1e] text-white text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-sm">HOT</span>
           <h2 id="detailName" class="font-black text-[18px] md:text-[20px] text-gray-800 leading-tight mt-2 mb-1">Product Title</h2>
           <div class="flex items-center gap-1.5 text-[12px] text-amber-500 font-extrabold mb-3">
             
@@ -668,15 +700,15 @@
 
           <div class="border-t pt-3 space-y-2 text-[12px] font-semibold text-gray-600 mb-4">
             <div class="flex items-center gap-1.5">
-              <span class="text-green-600">✓</span>
+              <span class="text-green-600">Check</span>
               <span id="detailSpecs">Specification bullet points</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <span class="text-green-600">✓</span>
+              <span class="text-green-600">Check</span>
               <span id="detailStock">Stock status / warranty info</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <span class="text-green-600">✓</span>
+              <span class="text-green-600">Check</span>
               <span>Express doorstep courier shipping across Accra</span>
             </div>
           </div>
@@ -715,14 +747,14 @@
     </div>
   </div>
 
-  <!-- 8. JUMIA LOGIN/PROFILE SIMULATOR MODAL -->
+  <!-- 8. VALMONT CUSTOMER SIGN-IN / PROFILE MODAL -->
   <div id="loginOverlay" class="fixed inset-0 bg-black/60 z-50 hidden transition-opacity"></div>
   <div id="loginModal" class="fixed inset-y-16 inset-x-4 md:inset-y-28 md:inset-x-32 bg-white z-50 rounded-xl shadow-2xl overflow-y-auto hidden no-scrollbar max-w-[420px] mx-auto p-5 md:p-6 border border-gray-200">
     <div class="flex justify-between items-center border-b pb-3 mb-4">
       <h3 id="loginTitle" class="font-black text-[14px] uppercase tracking-wider text-[#0b1a38]">
         Sign In / Customer Profile
       </h3>
-      <button onclick="closeLoginModal();" class="text-gray-500 hover:text-black text-sm font-bold">✕</button>
+      <button onclick="closeLoginModal();" class="text-gray-500 hover:text-black text-sm font-bold">x</button>
     </div>
     
     <!-- Profile Info (If logged in) -->
@@ -737,55 +769,79 @@
       </button>
     </div>
 
-    <!-- Login Form (If logged out) - VALMONT SECURITY -->
-    <form id="loginForm" class="text-center">
+    <!-- Login/Signup Tabbed Forms (If logged out) - VALMONT BRANDED -->
+    <div id="loginFormContainer">
+      <!-- Centered Valmont Logo in Circle -->
       <div class="flex justify-center mb-4">
-      <div class="h-16 w-16 bg-[#0b1a38] rounded-full flex items-center justify-center shadow-md animate-pulse">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8 text-white">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-        </svg>
-      </div>
-    </div>
-      
-      <h4 class="font-extrabold text-[18px] text-gray-800 leading-tight mb-1">Welcome to Valmont</h4>
-      <p class="text-[11px] text-gray-500 font-medium mb-5">Use your email or phone to log in or sign up.</p>
-      
-      <!-- Primary Input -->
-      <div id="loginStepPrimary" class="space-y-4 text-left">
-        <div>
-          <input id="loginCredentialInput" type="text" placeholder="Email or Mobile Number*" class="w-full border border-gray-300 p-3.5 rounded text-[13px] outline-none font-semibold focus:border-[#f68b1e]" required />
+        <div class="h-16 w-16 bg-white border border-gray-100 rounded-full flex items-center justify-center shadow-md animate-pulse p-1.5">
+          <img src="logo.svg" alt="Valmont Logo" class="h-12 w-auto object-contain" />
         </div>
+      </div>
+      
+      <!-- Tab Headers -->
+      <div class="flex border-b border-gray-200 mb-5">
+        <button id="tabSignIn" onclick="setLoginTab('signin');" class="flex-1 text-center pb-2.5 text-[13px] font-black uppercase tracking-wider border-b-2 border-[#f68b1e] text-[#f68b1e] transition-all">
+          Sign In
+        </button>
+        <button id="tabSignUp" onclick="setLoginTab('signup');" class="flex-1 text-center pb-2.5 text-[13px] text-gray-400 font-bold uppercase tracking-wider hover:text-gray-700 transition-all">
+          Sign Up
+        </button>
       </div>
 
-      <!-- Secondary Fields (Revealed inside JS on Continue click if signing up) -->
-      <div id="loginStepSecondary" class="hidden text-left mt-4 space-y-4">
-        <div>
-          <label class="block text-[10px] font-black uppercase text-gray-400 mb-1">Your Full Name *</label>
-          <input id="loginNameInput" type="text" placeholder="John Mensah" class="w-full border p-3 rounded text-[13px] outline-none font-semibold focus:border-[#f68b1e]" />
+      <form id="loginForm" onsubmit="handleLoginSubmit(event);">
+        <!-- Sign In Form View -->
+        <div id="viewSignIn" class="space-y-4">
+          <div>
+            <label class="block text-[10px] font-black uppercase text-gray-500 mb-1">Email Address *</label>
+            <input id="loginEmail" type="email" placeholder="customer@valmontgadgets.com" class="w-full border border-gray-300 p-3.5 rounded-[4px] text-[16px] md:text-[13px] outline-none font-semibold focus:border-[#f68b1e]" required />
+          </div>
+          <div>
+            <label class="block text-[10px] font-black uppercase text-gray-500 mb-1">Password *</label>
+            <input id="loginPassword" type="password" placeholder="••••••••" class="w-full border border-gray-300 p-3.5 rounded-[4px] text-[16px] md:text-[13px] outline-none font-semibold focus:border-[#f68b1e]" required />
+          </div>
         </div>
-        <div>
-          <label class="block text-[10px] font-black uppercase text-gray-400 mb-1">Detailed Delivery Address (Accra)</label>
-          <input id="loginAddressInput" type="text" placeholder="Near East Legon Police Station" class="w-full border p-3 rounded text-[13px] outline-none font-semibold focus:border-[#f68b1e]" />
-        </div>
-      </div>
-      
-      <button type="submit" id="loginSubmitBtn" class="w-full bg-[#f68b1e] hover:bg-orange-600 text-white font-extrabold text-[12px] tracking-widest uppercase py-3.5 rounded mt-5 transition shadow-sm">
-        Continue
-      </button>
 
-      <!-- Jumia Divider & Social Logins -->
+        <!-- Sign Up Form View -->
+        <div id="viewSignUp" class="space-y-4 hidden">
+          <div>
+            <label class="block text-[10px] font-black uppercase text-gray-500 mb-1">Full Name *</label>
+            <input id="signUpName" type="text" placeholder="John Mensah" class="w-full border border-gray-300 p-3 rounded-[4px] text-[16px] md:text-[13px] outline-none font-semibold focus:border-[#f68b1e]" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-black uppercase text-gray-500 mb-1">Email Address *</label>
+            <input id="signUpEmail" type="email" placeholder="customer@valmontgadgets.com" class="w-full border border-gray-300 p-3 rounded-[4px] text-[16px] md:text-[13px] outline-none font-semibold focus:border-[#f68b1e]" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-black uppercase text-gray-500 mb-1">Phone / WhatsApp Number *</label>
+            <input id="signUpPhone" type="tel" placeholder="054 245 1578" class="w-full border border-gray-300 p-3 rounded-[4px] text-[16px] md:text-[13px] outline-none font-semibold focus:border-[#f68b1e]" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-black uppercase text-gray-500 mb-1">Password *</label>
+            <input id="signUpPassword" type="password" placeholder="••••••••" class="w-full border border-gray-300 p-3 rounded-[4px] text-[16px] md:text-[13px] outline-none font-semibold focus:border-[#f68b1e]" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-black uppercase text-gray-400 mb-1">Default Delivery Address</label>
+            <input id="signUpAddress" type="text" placeholder="Near East Legon Police Station, Accra" class="w-full border border-gray-300 p-3 rounded-[4px] text-[16px] md:text-[13px] outline-none font-semibold focus:border-[#f68b1e]" />
+          </div>
+        </div>
+
+        <button type="submit" id="loginSubmitBtn" class="w-full bg-[#f68b1e] hover:bg-orange-600 text-white font-extrabold text-[12px] tracking-widest uppercase py-3.5 rounded-[4px] mt-6 transition shadow-sm">
+          Sign In
+        </button>
+      </form>
+
+      <!-- Divider & Social Google Button -->
       <div class="relative flex py-5 items-center">
         <div class="flex-grow border-t border-gray-200"></div>
         <span class="flex-shrink mx-4 text-gray-400 text-[10px] font-black uppercase tracking-widest">Or log in with</span>
         <div class="flex-grow border-t border-gray-200"></div>
       </div>
 
-      <div class="flex justify-center gap-4">
-        <svg class="w-10 h-10 text-blue-600 hover:scale-105 transition duration-150 cursor-pointer" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/></svg>
-        <svg class="w-10 h-10 text-red-500 hover:scale-105 transition duration-150 cursor-pointer" viewBox="0 0 24 24" fill="currentColor"><path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.13-5.136 4.13A5.71 5.71 0 0 1 8.28 12.83a5.71 5.71 0 0 1 5.711-5.703c2.22 0 4.229 1.125 5.414 2.946l3.393-3.393C20.697 4.312 16.59 2.5 12.24 2.5c-5.244 0-9.5 4.256-9.5 9.5s4.256 9.5 9.5 9.5c5.006 0 9.07-3.627 9.07-9.5 0-.61-.053-1.176-.144-1.715H12.24z"/></svg>
-      </div>
-
-    </form>
+      <button type="button" onclick="handleGoogleSignIn();" class="w-full flex items-center justify-center gap-2.5 border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-3 rounded-[4px] text-[13px] transition shadow-sm">
+        <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.13-5.136 4.13A5.71 5.71 0 0 1 8.28 12.83a5.71 5.71 0 0 1 5.711-5.703c2.22 0 4.229 1.125 5.414 2.946l3.393-3.393C20.697 4.312 16.59 2.5 12.24 2.5c-5.244 0-9.5 4.256-9.5 9.5s4.256 9.5 9.5 9.5c5.006 0 9.07-3.627 9.07-9.5 0-.61-.053-1.176-.144-1.715H12.24z"/></svg>
+        Continue with Google
+      </button>
+    </div>
   </div>
 
 
@@ -1995,11 +2051,11 @@
               <p class="text-[11px] text-gray-500 font-black mt-0.5">${money(p.retail)}</p>
             </div>
             <div class="flex gap-2 shrink-0">
-              <button onclick="addToCart('${p.id}'); closeWishlistModal();" class="bg-[#f68b1e] hover:bg-orange-600 text-white font-extrabold text-[10px] px-3.5 py-2 rounded-full uppercase transition">
+              <button onclick="addToCart('${p.id}'); closeWishlistModal();" class="bg-[#f68b1e] hover:bg-orange-600 text-white font-bold text-[10px] px-3.5 py-2 rounded-[4px] uppercase transition">
                 Add To Bag
               </button>
               <button onclick="toggleWishlist('${p.id}'); renderWishlistModal();" class="text-gray-400 hover:text-red-500 text-sm">
-                ✕
+                x
               </button>
             </div>
           </div>
@@ -2111,7 +2167,15 @@
       
       localStorage.setItem('valmont_cart', JSON.stringify(cart));
       updateCartCount();
-      openCart();
+      
+      // Responsive Native feel: Mobile shows a floating toast, desktop opens side drawer!
+      if (window.innerWidth < 768) {
+        if (typeof showValmontToast === 'function') {
+          showValmontToast(`Added "${product.name.split(' — ')[0]}" to Bag successfully!`);
+        }
+      } else {
+        openCart();
+      }
     }
 
     function removeFromCart(id) {
@@ -2558,6 +2622,48 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     const loginForm = document.getElementById('loginForm');
     const profileView = document.getElementById('profileView');
     
+    let currentLoginTab = 'signin';
+
+    function setLoginTab(tab) {
+      currentLoginTab = tab;
+      const tabSignIn = document.getElementById('tabSignIn');
+      const tabSignUp = document.getElementById('tabSignUp');
+      const viewSignIn = document.getElementById('viewSignIn');
+      const viewSignUp = document.getElementById('viewSignUp');
+      const submitBtn = document.getElementById('loginSubmitBtn');
+      
+      if (tab === 'signin') {
+        if (tabSignIn) tabSignIn.className = "flex-1 text-center pb-2.5 text-[13px] font-black uppercase tracking-wider border-b-2 border-[#f68b1e] text-[#f68b1e] transition-all";
+        if (tabSignUp) tabSignUp.className = "flex-1 text-center pb-2.5 text-[13px] text-gray-400 font-bold uppercase tracking-wider hover:text-gray-700 transition-all";
+        if (viewSignIn) viewSignIn.classList.remove('hidden');
+        if (viewSignUp) viewSignUp.classList.add('hidden');
+        if (submitBtn) submitBtn.textContent = "Sign In";
+        
+        // Inputs validation toggle
+        if (document.getElementById('signUpName')) document.getElementById('signUpName').required = false;
+        if (document.getElementById('signUpEmail')) document.getElementById('signUpEmail').required = false;
+        if (document.getElementById('signUpPhone')) document.getElementById('signUpPhone').required = false;
+        if (document.getElementById('signUpPassword')) document.getElementById('signUpPassword').required = false;
+        
+        if (document.getElementById('loginEmail')) document.getElementById('loginEmail').required = true;
+        if (document.getElementById('loginPassword')) document.getElementById('loginPassword').required = true;
+      } else {
+        if (tabSignUp) tabSignUp.className = "flex-1 text-center pb-2.5 text-[13px] font-black uppercase tracking-wider border-b-2 border-[#f68b1e] text-[#f68b1e] transition-all";
+        if (tabSignIn) tabSignIn.className = "flex-1 text-center pb-2.5 text-[13px] text-gray-400 font-bold uppercase tracking-wider hover:text-gray-700 transition-all";
+        if (viewSignIn) viewSignIn.classList.add('hidden');
+        if (viewSignUp) viewSignUp.classList.remove('hidden');
+        if (submitBtn) submitBtn.textContent = "Register & Continue";
+        
+        if (document.getElementById('signUpName')) document.getElementById('signUpName').required = true;
+        if (document.getElementById('signUpEmail')) document.getElementById('signUpEmail').required = true;
+        if (document.getElementById('signUpPhone')) document.getElementById('signUpPhone').required = true;
+        if (document.getElementById('signUpPassword')) document.getElementById('signUpPassword').required = true;
+        
+        if (document.getElementById('loginEmail')) document.getElementById('loginEmail').required = false;
+        if (document.getElementById('loginPassword')) document.getElementById('loginPassword').required = false;
+      }
+    }
+
     function openLoginModal() {
       loginOverlay.classList.remove('hidden');
       setTimeout(() => loginOverlay.classList.add('opacity-100'), 10);
@@ -2565,15 +2671,16 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       
       if (currentUser) {
         // Show Profile Mode
-        loginForm.classList.add('hidden');
+        if (document.getElementById('loginFormContainer')) document.getElementById('loginFormContainer').classList.add('hidden');
         profileView.classList.remove('hidden');
         document.getElementById('profileName').textContent = currentUser.name;
         document.getElementById('profileEmail').textContent = currentUser.email;
         document.getElementById('profilePhone').textContent = currentUser.phone;
       } else {
         // Show Login Form Mode
-        loginForm.classList.remove('hidden');
+        if (document.getElementById('loginFormContainer')) document.getElementById('loginFormContainer').classList.remove('hidden');
         profileView.classList.add('hidden');
+        setLoginTab('signin'); // Default back to signin
       }
     }
 
@@ -2583,54 +2690,76 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       loginModal.classList.add('hidden');
     }
 
-    // Jumia Multi-Stage login handler
-    let isSecondaryStepActive = false;
-
-    loginForm.addEventListener('submit', event => {
+    function handleLoginSubmit(event) {
       event.preventDefault();
-      const credential = document.getElementById('loginCredentialInput').value.trim();
-
-      if (!isSecondaryStepActive) {
-        // If they enter a valid mock login credential:
-        // We reveal the secondary registration fields for them to complete signup!
-        isSecondaryStepActive = true;
-        document.getElementById('loginStepSecondary').classList.remove('hidden');
-        document.getElementById('loginSubmitBtn').textContent = "Create / Access Profile";
+      if (currentLoginTab === 'signin') {
+        const email = document.getElementById('loginEmail').value.trim();
+        const pass = document.getElementById('loginPassword').value.trim();
         
-        // Auto-detect phone vs email to fill inputs
-        if (credential.includes('@')) {
-          document.getElementById('loginNameInput').focus();
-        } else {
-          document.getElementById('loginNameInput').focus();
-        }
+        // Mock profile lookup based on email prefix
+        const baseName = email.split('@')[0];
+        const formattedName = baseName.charAt(0).toUpperCase() + baseName.slice(1);
+        currentUser = {
+          name: formattedName,
+          phone: '054 245 1578',
+          email: email,
+          address: 'East Legon, Accra'
+        };
+        localStorage.setItem('valmont_user', JSON.stringify(currentUser));
+        
+        // Autofill forms
+        if (document.getElementById('shippingName')) document.getElementById('shippingName').value = formattedName;
+        if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = '054 245 1578';
+        if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = 'Near East Legon Police Station';
+        if (document.getElementById('shippingCity')) document.getElementById('shippingCity').value = 'Accra';
+        if (document.getElementById('shippingTown')) document.getElementById('shippingTown').value = 'East Legon';
+
+        updateUserUI();
+        closeLoginModal();
+        alert(`Welcome back to Valmont, ${formattedName}!`);
       } else {
-        // Final submit! Create the user profile
-        const name = document.getElementById('loginNameInput').value.trim();
-        const address = document.getElementById('loginAddressInput').value.trim();
-        const phone = credential.includes('@') ? '054 245 1578' : credential;
-        const email = credential.includes('@') ? credential : 'customer@valmontgadgets.com';
+        const name = document.getElementById('signUpName').value.trim();
+        const email = document.getElementById('signUpEmail').value.trim();
+        const phone = document.getElementById('signUpPhone').value.trim();
+        const address = document.getElementById('signUpAddress').value.trim();
+        
+        currentUser = { name, phone, email, address };
+        localStorage.setItem('valmont_user', JSON.stringify(currentUser));
+        
+        // Autofill forms
+        if (document.getElementById('shippingName')) document.getElementById('shippingName').value = name;
+        if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = phone;
+        if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = address;
+        if (document.getElementById('shippingCity')) document.getElementById('shippingCity').value = 'Accra';
+        if (document.getElementById('shippingTown')) document.getElementById('shippingTown').value = address;
 
-        if (name) {
-          currentUser = { name, phone, email, address };
-          localStorage.setItem('valmont_user', JSON.stringify(currentUser));
-          
-          // Autofill standard Valmont shipping forms automatically
-          if (document.getElementById('shippingName')) document.getElementById('shippingName').value = name;
-          if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = phone;
-          if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = address;
-          if (document.getElementById('shippingCity')) document.getElementById('shippingCity').value = "Accra";
-          if (document.getElementById('shippingTown')) document.getElementById('shippingTown').value = address || "";
-
-          updateUserUI();
-          closeLoginModal();
-          alert(`Welcome back to Valmont, ${name}! Your customer profile has been activated.`);
-        } else {
-          alert('Please enter your full name to proceed.');
-        }
+        updateUserUI();
+        closeLoginModal();
+        alert(`Account Created Successfully! Welcome to Valmont, ${name}!`);
       }
-    });
+    }
 
-    // Reset step states when modal is closed
+    function handleGoogleSignIn() {
+      currentUser = {
+        name: "Daniel Kofi",
+        phone: "054 245 1578",
+        email: "daniel.kofi@gmail.com",
+        address: "Airport Residential, Accra"
+      };
+      localStorage.setItem('valmont_user', JSON.stringify(currentUser));
+      
+      // Autofill forms
+      if (document.getElementById('shippingName')) document.getElementById('shippingName').value = "Daniel Kofi";
+      if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = "054 245 1578";
+      if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = "Near Airport Residential Area";
+      if (document.getElementById('shippingCity')) document.getElementById('shippingCity').value = "Accra";
+      if (document.getElementById('shippingTown')) document.getElementById('shippingTown').value = "Airport Residential";
+
+      updateUserUI();
+      closeLoginModal();
+      alert("Signed In Successfully with Google!");
+    }
+
     // Consolidated closeLoginModal override (Unified)
     const originalCloseLoginModal = closeLoginModal;
     closeLoginModal = function() {
@@ -2640,13 +2769,6 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       if (typeof updateMobileNavHighlights === 'function') {
         updateMobileNavHighlights('home');
       }
-
-      // Reset Jumia login multi-stage form states
-      isSecondaryStepActive = false;
-      const secField = document.getElementById('loginStepSecondary');
-      if (secField) secField.classList.add('hidden');
-      const submitBtn = document.getElementById('loginSubmitBtn');
-      if (submitBtn) submitBtn.textContent = "Continue";
     };
 
     function updateUserUI() {
@@ -2765,12 +2887,19 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       });
     }
 
-    // CATEGORY FILTERS EVENT LISTENERS
+    // CATEGORY FILTERS EVENT LISTENERS (With Premium Mobile Skeleton Loading!)
     document.querySelectorAll('.cat-pill').forEach(btn => {
       btn.addEventListener('click', () => {
         activeFilter = btn.dataset.catFilter;
         syncCategoryPills(activeFilter);
-        renderProducts();
+        
+        // Show simulated product skeletons on mobile before loading for high-fidelity app feedback!
+        if (window.innerWidth < 768) {
+          showProductSkeletons();
+          setTimeout(renderProducts, 350);
+        } else {
+          renderProducts();
+        }
       });
     });
 
@@ -2839,7 +2968,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
             deferredPrompt = null;
             dismissPwaBanner();
           } else {
-            alert("To install Valmont Gadgets: Tap the share button in Safari (at the bottom) and choose 'Add to Home Screen', or use Chrome's install menu.");
+            openPwaInstructionsModal();
           }
         });
       }
@@ -3010,7 +3139,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
               <div class="k">Keep the Business Organized</div>
               <h2 class="t" style="text-align:left;">One Order Sheet.<br>Every Sale Visible.</h2>
               <p class="lead">Do not rely on memory or WhatsApp chats alone. Use this structured order log to manage delivery statuses, wholesale settlements, and business profits.</p>
-              <button id="new-order" class="jumia-orange hover:bg-orange-600 text-white font-extrabold text-[11px] tracking-widest px-6 py-3 rounded-full uppercase transition shadow">
+              <button id="new-order" class="bg-[#f68b1e] hover:bg-orange-600 text-white font-bold text-[11px] tracking-widest px-6 py-3 rounded-[4px] uppercase transition shadow">
                 + Add Example Order
               </button>
             </div>
@@ -3322,7 +3451,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     const banner = document.createElement('div');
     banner.id = 'dealerBanner';
     banner.className = "bg-green-600 text-white text-center py-2.5 px-4 text-xs font-bold tracking-wide transition-all uppercase";
-    banner.innerHTML = `⚡ AUTHORIZED DEALER ACCESS ACTIVE — SPECIAL WHOLESALE PRICING APPLIED DIRECTLY`;
+    banner.innerHTML = ` AUTHORIZED DEALER ACCESS ACTIVE — SPECIAL WHOLESALE PRICING APPLIED DIRECTLY`;
     
     // Insert right below the top notice banner
     document.body.insertBefore(banner, document.body.children[1]);
@@ -3353,8 +3482,45 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     updateDealerUI();
   }
 
+  // === VALMONT PREMIUM MOBILE NATIVE-UX UPGRADES ===
+  function showProductSkeletons() {
+    const skeletonHTML = Array.from({ length: 6 }).map(() => `
+      <div class="bg-white rounded-[4px] border border-gray-150 p-3 flex flex-col justify-between animate-pulse">
+        <div class="h-[140px] w-full bg-gray-100 rounded-[4px] mb-3"></div>
+        <div class="h-3.5 bg-gray-200 rounded w-5/6 mb-2"></div>
+        <div class="h-3 bg-gray-100 rounded w-1/2 mb-3"></div>
+        <div class="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+        <div class="h-3.5 bg-gray-100 rounded w-1/4"></div>
+      </div>
+    `).join('');
+    document.getElementById('productGrid').innerHTML = skeletonHTML;
+  }
+
+  function showValmontToast(message) {
+    const toast = document.getElementById('valmontToast');
+    const toastText = document.getElementById('valmontToastText');
+    if (toast && toastText) {
+      toastText.textContent = message;
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-20');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      
+      // Auto-hide after 3 seconds
+      setTimeout(hideValmontToast, 3000);
+    }
+  }
+
+  function hideValmontToast() {
+    const toast = document.getElementById('valmontToast');
+    if (toast) {
+      toast.classList.remove('opacity-100', 'translate-y-0');
+      toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-20');
+    }
+  }
+
     // === JUMIA-STYLE MOBILE BOTTOM NAVIGATION LOGIC ===
   let mobileCategoriesOverlay = document.getElementById('mobileCategoriesOverlay');
+  let pwaInstructionsOverlay = document.getElementById('pwaInstructionsOverlay');
+  let pwaInstructionsModal = document.getElementById('pwaInstructionsModal');
   let mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
   let mobileMenuModal = document.getElementById('mobileMenuModal');
   let mobileCategoriesModal = document.getElementById('mobileCategoriesModal');
@@ -3443,6 +3609,26 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
         openLoginModal();
       });
     }
+  // === CUSTOM PWA DETAILED INSTRUCTIONS MODAL SYSTEM ===
+
+  function openPwaInstructionsModal() {
+    if (pwaInstructionsOverlay && pwaInstructionsModal) {
+      pwaInstructionsOverlay.classList.remove('hidden');
+      setTimeout(() => pwaInstructionsOverlay.classList.add('opacity-100'), 10);
+      pwaInstructionsModal.classList.remove('hidden');
+      pwaInstructionsModal.classList.remove('translate-y-full');
+    }
+  }
+
+  function closePwaInstructionsModal() {
+    if (pwaInstructionsOverlay && pwaInstructionsModal) {
+      pwaInstructionsOverlay.classList.remove('opacity-100');
+      setTimeout(() => pwaInstructionsOverlay.classList.add('hidden'), 300);
+      pwaInstructionsModal.classList.add('translate-y-full');
+      setTimeout(() => pwaInstructionsModal.classList.add('hidden'), 300);
+    }
+  }
+
   // === MOBILE LEFT SETTINGS DRAWER NAVIGATION LOGIC ===
 
   function openMobileMenuModal() {
@@ -3470,6 +3656,8 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     dealerBtnLabel = document.getElementById('dealerBtnLabel');
 
     mobileCategoriesOverlay = document.getElementById('mobileCategoriesOverlay');
+    pwaInstructionsOverlay = document.getElementById('pwaInstructionsOverlay');
+    pwaInstructionsModal = document.getElementById('pwaInstructionsModal');
     pwaBannerOverlay = document.getElementById('pwaInstallBanner');
     mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
     mobileMenuModal = document.getElementById('mobileMenuModal');
@@ -3512,7 +3700,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
         <div class="h-2.5 w-2.5 rounded-full bg-[#3bb75e] animate-ping"></div>
         <span class="font-bold text-[11px] text-[#3bb75e] uppercase tracking-wider">Paystack Secured Checkout</span>
       </div>
-      <button onclick="closePaystackModal();" class="text-gray-400 hover:text-black text-xs font-bold">✕ Cancel</button>
+      <button onclick="closePaystackModal();" class="text-gray-400 hover:text-black text-xs font-bold">x Cancel</button>
     </div>
 
     <!-- Paystack Main Body -->
@@ -3538,7 +3726,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
 
       <!-- Success state (hidden by default) -->
       <div id="paystackSuccess" class="hidden flex-col items-center justify-center py-6 text-center">
-        <div class="h-14 w-14 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-3xl mb-4 font-bold shadow-sm">✓</div>
+        <div class="h-14 w-14 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-3xl mb-4 font-bold shadow-sm">Check</div>
         <h4 class="font-black text-[15px] text-gray-900">Payment Successful!</h4>
         <p class="text-[11px] text-gray-500 font-medium mt-1">Generating order receipt code and opening WhatsApp support desk...</p>
       </div>
@@ -3547,7 +3735,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     <!-- Paystack Button footer -->
     <div class="bg-gray-50 border-t p-3 mt-5 shrink-0 rounded-b-xl" id="paystackFooter">
       <button id="paystackPayBtn" onclick="processSimulatedPayment();" class="w-full bg-[#3bb75e] hover:bg-[#2fa34f] text-white font-extrabold text-[12px] tracking-widest uppercase py-3 rounded-lg transition shadow flex items-center justify-center gap-1.5">
-        🔒 Pay Securely via Paystack
+         Pay Securely via Paystack
       </button>
     </div>
 
@@ -3559,15 +3747,15 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
   <div id="dealerModal" class="fixed inset-y-10 inset-x-4 md:inset-y-20 md:inset-x-32 bg-white z-50 rounded-xl shadow-2xl overflow-y-auto hidden no-scrollbar max-w-[550px] mx-auto p-5 md:p-6 border border-gray-200">
     <div class="flex justify-between items-center border-b pb-3 mb-4">
       <h3 class="font-black text-[14px] uppercase tracking-wider text-[#0b1a38] flex items-center gap-2">
-        🔑 Valmont Dealer Portal
+         Valmont Dealer Portal
       </h3>
-      <button onclick="closeDealerModal();" class="text-gray-500 hover:text-black text-sm font-bold">✕ Close</button>
+      <button onclick="closeDealerModal();" class="text-gray-500 hover:text-black text-sm font-bold">x Close</button>
     </div>
 
     <!-- Dealer Profile Mode (If active) -->
     <div id="dealerActiveProfile" class="hidden space-y-5">
       <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-        <span class="text-3xl">🛡️</span>
+        <span class="text-3xl"></span>
         <h4 class="font-black text-[15px] text-green-800 mt-2">Authorized Dealer Access Active</h4>
         <p class="text-[12px] text-green-700 font-semibold mt-1">Wholesale pricing has been applied across the entire gadgets catalog.</p>
       </div>
@@ -3580,7 +3768,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
 
       <!-- Scoped pricing desk and log inside the dealer hub so they are easily accessible! -->
       <div class="border rounded-lg p-3 bg-gray-100 text-[#0b1a38] text-[12px]">
-        <h4 class="font-bold text-[13px] text-gray-800 mb-2 border-b pb-1">📊 Dealer Profit Calculator</h4>
+        <h4 class="font-bold text-[13px] text-gray-800 mb-2 border-b pb-1"> Dealer Profit Calculator</h4>
         <div class="grid grid-cols-2 gap-3 mb-3">
           <div>
             <label class="block font-bold text-[10px] text-gray-500">Wholesale Price (GH₵)</label>
@@ -3605,15 +3793,15 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       
       <div>
         <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Business / Dealer Name *</label>
-        <input id="dlNameInput" type="text" placeholder="Valmont Retailers East" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
+        <input id="dlNameInput" type="text" placeholder="Valmont Retailers East" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#f68b1e]" required />
       </div>
       <div>
         <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">WhatsApp / Phone Number *</label>
-        <input id="dlPhoneInput" type="tel" placeholder="054 245 1578" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
+        <input id="dlPhoneInput" type="tel" placeholder="054 245 1578" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#f68b1e]" required />
       </div>
       <div>
         <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Email Address *</label>
-        <input id="dlEmailInput" type="email" placeholder="dealer@valmontgadgets.com" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
+        <input id="dlEmailInput" type="email" placeholder="dealer@valmontgadgets.com" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#f68b1e]" required />
       </div>
       
       <button type="submit" class="w-full bg-[#f68b1e] hover:bg-orange-600 text-white font-bold text-[12px] tracking-widest uppercase py-3.5 rounded-[4px] transition shadow-sm">
@@ -3676,7 +3864,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       <h3 class="font-black text-[13px] uppercase tracking-wider text-[#0b1a38]">
         Browse Categories
       </h3>
-      <button onclick="closeMobileCategoriesModal();" class="text-gray-500 hover:text-black text-sm font-bold border px-3 py-1 rounded-full hover:bg-gray-50">✕ Close</button>
+      <button onclick="closeMobileCategoriesModal();" class="text-gray-500 hover:text-black text-sm font-bold border px-3 py-1 rounded-[4px] hover:bg-gray-50">x Close</button>
     </div>
     <div class="grid grid-cols-2 gap-3 pb-6" id="mobileCategoryGrid">
       <!-- Injected via JS dynamically -->
@@ -3692,34 +3880,34 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       <div class="flex items-center gap-2">
         <img src="logo.svg" alt="Logo" class="h-8 w-auto brightness-200" />
       </div>
-      <button onclick="closeMobileMenuModal();" class="text-gray-400 hover:text-white text-lg font-bold">✕</button>
+      <button onclick="closeMobileMenuModal();" class="text-gray-400 hover:text-white text-lg font-bold">x</button>
     </div>
     
     <!-- Menu Links -->
     <div class="flex-1 overflow-y-auto py-4 px-3 space-y-2 text-[14px]">
       <div class="text-[10px] uppercase text-gray-500 font-extrabold tracking-widest px-3 mb-2">My Account</div>
       <button onclick="closeMobileMenuModal(); openLoginModal();" class="w-full text-left px-3 py-3 hover:bg-gray-800 rounded-[4px] flex items-center gap-3 transition">
-        👤 Profile / Login
+         Profile / Login
       </button>
       <button onclick="closeMobileMenuModal(); openWishlistModal();" class="w-full text-left px-3 py-3 hover:bg-gray-800 rounded-[4px] flex items-center gap-3 transition">
-        ❤️ Saved Items (Wishlist)
+         Saved Items (Wishlist)
       </button>
       <button onclick="closeMobileMenuModal(); openDealerModal();" class="w-full text-left px-3 py-3 hover:bg-gray-800 rounded-[4px] flex items-center gap-3 transition">
-        💼 Dealer Dashboard / Portal
+         Dealer Dashboard / Portal
       </button>
       
       <div class="text-[10px] uppercase text-gray-500 font-extrabold tracking-widest px-3 pt-4 mb-2">Help & Policies</div>
       <a href="https://wa.me/233542451578" target="_blank" class="block px-3 py-3 hover:bg-gray-800 rounded-[4px] flex items-center gap-3 transition">
-        💬 Contact Support (WhatsApp)
+        Contact Support (WhatsApp)
       </a>
       <button onclick="closeMobileMenuModal(); alert('Our 12-Month Official Warranty policy applies to all genuine smartphones, laptops, and tablets purchased directly from Valmont Gadgets.');" class="w-full text-left px-3 py-3 hover:bg-gray-800 rounded-[4px] flex items-center gap-3 transition">
-        🛡️ 12-Month Warranty Info
+         12-Month Warranty Info
       </button>
       <button onclick="closeMobileMenuModal(); alert('We offer express courier delivery across Accra on the same-day for orders placed before 3:00 PM.');" class="w-full text-left px-3 py-3 hover:bg-gray-800 rounded-[4px] flex items-center gap-3 transition">
-        🚚 Delivery Information
+         Delivery Information
       </button>
       <button onclick="closeMobileMenuModal(); alert('We allow returns and replacements within 7 days of delivery for any sealed items or items with manufacturer defects.');" class="w-full text-left px-3 py-3 hover:bg-gray-800 rounded-[4px] flex items-center gap-3 transition">
-        🔄 Returns & Replacements
+         Returns & Replacements
       </button>
       
       <div class="text-[10px] uppercase text-gray-500 font-extrabold tracking-widest px-3 pt-4 mb-2">Get the app</div>
@@ -3764,5 +3952,42 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 fill-current" viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L3 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-93.8-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 89.4-184.5 184.6-184.5 46 0 89.3 18 121.9 50.6 32.6 32.5 50.5 75.9 50.5 122.1-.1 101.8-94.9 184.5-184.6 184.5zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
   </a>
 
+  <!-- VALMONT CUSTOM PWA INSTRUCTIONS MODAL (REPLACES PLAIN BROWSER ALERT) -->
+  <div id="pwaInstructionsOverlay" class="fixed inset-0 bg-black/60 z-50 hidden transition-opacity" onclick="closePwaInstructionsModal();"></div>
+  <div id="pwaInstructionsModal" class="fixed inset-y-auto inset-x-4 max-w-[360px] mx-auto bg-white rounded-xl shadow-2xl p-5 border border-gray-200 z-50 hidden transition-all duration-300 translate-y-full">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="h-10 w-10 bg-orange-100 rounded flex items-center justify-center text-[#f68b1e] shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+        </svg>
+      </div>
+      <div>
+        <h4 class="font-extrabold text-[14px] text-gray-800 uppercase tracking-wide">How to Install App</h4>
+      </div>
+    </div>
+    <div class="space-y-4 text-[13px] text-gray-600 font-medium leading-relaxed">
+      <div class="flex gap-3">
+        <span class="flex h-5 w-5 bg-orange-50 text-[#f68b1e] text-[11px] font-black rounded-full items-center justify-center shrink-0">1</span>
+        <p>Tap the <span class="font-bold text-gray-800">Share button</span> at the bottom of Safari (or Chrome's menu button in the top right).</p>
+      </div>
+      <div class="flex gap-3">
+        <span class="flex h-5 w-5 bg-orange-50 text-[#f68b1e] text-[11px] font-black rounded-full items-center justify-center shrink-0">2</span>
+        <p>Scroll down the list and choose <span class="font-bold text-gray-800">"Add to Home Screen"</span>.</p>
+      </div>
+      <div class="flex gap-3">
+        <span class="flex h-5 w-5 bg-orange-50 text-[#f68b1e] text-[11px] font-black rounded-full items-center justify-center shrink-0">3</span>
+        <p>Confirm the name and tap <span class="font-bold text-gray-800">"Add"</span> on the top right to install your native app!</p>
+      </div>
+    </div>
+    <button onclick="closePwaInstructionsModal();" class="w-full bg-[#0b1a38] hover:bg-[#1e355c] text-white font-bold text-[12px] uppercase py-2.5 rounded-[4px] mt-6 transition tracking-wider">
+      Got It
+    </button>
+  </div>
+  <!-- VALMONT APP-STYLE FLOATING TOAST SYSTEM -->
+  <div id="valmontToast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#0b1a38] text-white py-3 px-5 rounded-[4px] shadow-2xl z-50 text-[12px] font-bold tracking-wide flex items-center gap-3 transition-all duration-300 translate-y-20 opacity-0 pointer-events-none w-[90%] max-w-[340px] border border-gray-850">
+    <div class="h-2.5 w-2.5 rounded-full bg-[#f68b1e] animate-ping shrink-0"></div>
+    <span id="valmontToastText" class="flex-1 min-w-0 truncate">Item added to your bag!</span>
+    <button onclick="openCart(); hideValmontToast();" class="text-[#f68b1e] font-black uppercase text-[11px] hover:underline shrink-0">View Bag</button>
+  </div>
 </body>
 </html>
