@@ -1,0 +1,29 @@
+{
+  "name": "Valmont Gadgets — Genuine Phones & Electronics",
+  "short_name": "Valmont",
+  "description": "Genuine iPhones, Samsung Galaxy, executive laptops, power and audio in Ghana. 12-month warranty, Accra delivery.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0b1a38",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    }
+  ]
+}
