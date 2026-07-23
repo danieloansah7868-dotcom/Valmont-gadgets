@@ -1,1333 +1,1495 @@
-// Valmont Gadgets Admin Panel JS
-// BRAND: Deep navy #0b1a38, Gold-orange #f58c14, Slate panels #12234a
-// ZERO EMOJIS anywhere in UI.
+// Valmont Gadgets complete admin panel
+// Password gate, Supabase CRUD, localStorage fallback, image uploads and responsive UI.
 
 const SUPABASE_URL = "https://yrrqrvbkdziuyosedfx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_H3PK7UqMZcO2rsusl1_qQw_MypxJljs";
+const DEFAULT_ADMIN_PASSWORD = "valmont2026";
+const PRODUCT_IMAGE_BUCKET = "product-images";
 
-// ============================================================
-// Database Manager — Supabase with LocalStorage fallback
-// ============================================================
+const DEFAULT_CATEGORIES = [
+  { id: "iphones", name: "iPhones and Apple", slug: "iphones", sort_order: 1 },
+  { id: "samsung", name: "Samsung Galaxy", slug: "samsung", sort_order: 2 },
+  { id: "laptops", name: "Executive Laptops", slug: "laptops", sort_order: 3 },
+  { id: "audio", name: "Smart Audio", slug: "audio", sort_order: 4 },
+  { id: "power", name: "Power and Chargers", slug: "power", sort_order: 5 }
+];
+
+const DEFAULT_SETTINGS = {
+  store_name: "Valmont Gadgets",
+  admin_email: "admin@valmontgadgets.com",
+  hero_headline: "Executive Midweek Deals",
+  hero_subtitle: "Genuine phones, laptops and electronics with warranty support in Ghana.",
+  hero_cta: "Shop Deals",
+  announcement: "GENUINE PHONES & LAPTOPS WITH 12-MONTH WARRANTY • FREE ACCRA DELIVERY ABOVE GH₵ 5,000!",
+  store_hours: "Open Mon-Sat 9AM-7PM",
+  address: "East Legon, Accra",
+  whatsapp: "233542451578",
+  free_delivery_threshold: 5000,
+  logo_url: "",
+  shipping_zones: [
+    { name: "Accra Central", delivery_fee: 0, estimated_days: "Same day" },
+    { name: "Greater Accra", delivery_fee: 50, estimated_days: "1-2 days" },
+    { name: "Outside Accra", delivery_fee: 100, estimated_days: "2-4 days" }
+  ],
+  payment_methods: { momo: true, card: true, cod: true },
+  faq: [
+    { question: "Are your devices genuine?", answer: "Yes. Every product is inspected and sold with original packaging where stated." },
+    { question: "Do you offer delivery?", answer: "Yes. Delivery fees depend on the zone and may be free above the configured threshold." }
+  ]
+};
+
+const storageKeys = {
+  products: "valmont_products",
+  categories: "valmont_categories",
+  orders: "valmont_orders",
+  customers: "valmont_customers",
+  reviews: "valmont_reviews",
+  settings: "valmont_site_settings"
+};
+
+const state = {
+  activeSection: "dashboard",
+  products: [],
+  categories: [],
+  orders: [],
+  customers: [],
+  reviews: [],
+  settings: { ...DEFAULT_SETTINGS },
+  productImages: [],
+  editingProductId: null,
+  draggingImageIndex: null,
+  draggingCategoryId: null,
+  realtimeChannels: []
+};
+
 class ValmontAdminDatabase {
   constructor() {
+    this.client = null;
     this.useSupabase = false;
-    this.supabaseClient = null;
-
     if (typeof supabase !== "undefined" && SUPABASE_URL && SUPABASE_KEY) {
       try {
-        this.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        this.client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         this.useSupabase = true;
-        console.log("Admin Supabase initialized");
-      } catch (err) {
-        console.warn("Supabase init failed, using LocalStorage:", err);
+      } catch (error) {
+        console.warn("Supabase could not initialize. Using localStorage fallback.", error);
       }
+    }
+    this.ensureLocalSeeds();
+  }
+
+  ensureLocalSeeds() {
+    if (!localStorage.getItem(storageKeys.categories)) {
+      localStorage.setItem(storageKeys.categories, JSON.stringify(DEFAULT_CATEGORIES));
+    }
+    if (!localStorage.getItem(storageKeys.settings)) {
+      localStorage.setItem(storageKeys.settings, JSON.stringify(DEFAULT_SETTINGS));
+    }
+    if (!localStorage.getItem(storageKeys.products)) {
+      localStorage.setItem(storageKeys.products, JSON.stringify([]));
+    }
+    if (!localStorage.getItem(storageKeys.orders)) {
+      localStorage.setItem(storageKeys.orders, JSON.stringify([]));
+    }
+    if (!localStorage.getItem(storageKeys.customers)) {
+      localStorage.setItem(storageKeys.customers, JSON.stringify([]));
+    }
+    if (!localStorage.getItem(storageKeys.reviews)) {
+      localStorage.setItem(storageKeys.reviews, JSON.stringify([]));
     }
   }
 
-  // --- PRODUCTS ---
+  readLocal(key, fallback = []) {
+    try {
+      return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+    } catch (_) {
+      return fallback;
+    }
+  }
+
+  writeLocal(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+
   async getProducts() {
     if (this.useSupabase) {
       try {
-        const { data, error } = await this.supabaseClient
-          .from("products")
-          .select("*")
-          .order("created_at", { ascending: false });
+        const { data, error } = await this.client.from("products").select("*").order("name", { ascending: true });
         if (error) throw error;
-        if (data && data.length > 0) {
-          localStorage.setItem("valmont_products", JSON.stringify(data));
-          return data;
+        if (Array.isArray(data)) {
+          const normalized = data.map(normalizeProduct);
+          this.writeLocal(storageKeys.products, normalized.map(toStorefrontProduct));
+          return normalized;
         }
-      } catch (err) {
-        console.error("Supabase getProducts error:", err);
+      } catch (error) {
+        console.warn("Supabase products unavailable; using localStorage.", error);
       }
     }
-    return JSON.parse(localStorage.getItem("valmont_products") || "[]");
+    return this.readLocal(storageKeys.products, []).map(normalizeProduct);
   }
 
-  async getProductById(id) {
-    if (this.useSupabase) {
-      try {
-        const { data, error } = await this.supabaseClient
-          .from("products")
-          .select("*")
-          .eq("id", id)
-          .single();
-        if (error) throw error;
-        if (data) return data;
-      } catch (err) {
-        console.error("Supabase getProductById error:", err);
-      }
-    }
-    const products = JSON.parse(localStorage.getItem("valmont_products") || "[]");
-    return products.find(p => p.id === id);
-  }
-
-  async createProduct(product) {
-    const newProduct = {
-      id: crypto.randomUUID(),
-      name: product.name,
-      slug: product.slug,
-      category: product.category,
-      price: parseFloat(product.price) || 0,
-      wholesale_price: parseFloat(product.wholesale_price || 0),
-      compare_at_price: parseFloat(product.compare_at_price || 0),
-      specs: product.specs || "",
-      description: product.description || "",
-      badge: product.badge || "none",
-      rating: 4.8,
-      reviews_count: 0,
-      stock_quantity: parseInt(product.stock_quantity || 0),
-      image_url: product.image_url || "",
-      images: product.images || [],
-      colors: product.colors || [],
-      storage_options: product.storage_options || [],
-      is_active: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+  async saveProduct(product) {
+    const normalized = normalizeProduct(product);
+    const requestedPayload = {
+      id: normalized.id,
+      name: normalized.name,
+      slug: normalized.slug,
+      category_id: normalized.category_id,
+      price: normalized.price,
+      compare_at_price: normalized.compare_at_price,
+      wholesale_price: normalized.wholesale_price,
+      specs: normalized.specs,
+      description: normalized.description,
+      badge: normalized.badge,
+      stock: normalized.stock,
+      image_url: normalized.image_url,
+      images: normalized.images,
+      colors: normalized.colors,
+      storage_options: normalized.storage_options,
+      is_active: normalized.is_active
+    };
+    const legacyPayload = {
+      id: normalized.id,
+      name: normalized.name,
+      slug: normalized.slug,
+      category: normalized.category_id,
+      price: normalized.price,
+      compare_at_price: normalized.compare_at_price,
+      wholesale_price: normalized.wholesale_price,
+      specs: normalized.specs,
+      description: normalized.description,
+      badge: normalized.badge,
+      stock_quantity: normalized.stock,
+      image_url: normalized.image_url,
+      images: normalized.images,
+      colors: normalized.colors,
+      storage_options: normalized.storage_options,
+      is_active: normalized.is_active,
+      rating: normalized.rating || 4.8,
+      reviews_count: normalized.reviews_count || 0
     };
 
     if (this.useSupabase) {
       try {
-        const { error } = await this.supabaseClient
-          .from("products")
-          .insert([newProduct]);
+        const { error } = await this.client.from("products").upsert(requestedPayload, { onConflict: "id" });
         if (error) throw error;
-        return true;
-      } catch (err) {
-        console.error("Supabase createProduct error:", err);
+      } catch (requestedError) {
+        try {
+          const { error } = await this.client.from("products").upsert(legacyPayload, { onConflict: "id" });
+          if (error) throw error;
+        } catch (legacyError) {
+          console.warn("Supabase product save failed; saving local copy only.", { requestedError, legacyError });
+        }
       }
     }
 
-    const products = JSON.parse(localStorage.getItem("valmont_products") || "[]");
-    products.unshift(newProduct);
-    localStorage.setItem("valmont_products", JSON.stringify(products));
-    return true;
-  }
-
-  async updateProduct(id, product) {
-    const updatedFields = {
-      name: product.name,
-      slug: product.slug,
-      category: product.category,
-      price: parseFloat(product.price) || 0,
-      wholesale_price: parseFloat(product.wholesale_price || 0),
-      compare_at_price: parseFloat(product.compare_at_price || 0),
-      specs: product.specs || "",
-      description: product.description || "",
-      badge: product.badge || "none",
-      stock_quantity: parseInt(product.stock_quantity || 0),
-      image_url: product.image_url,
-      images: product.images,
-      colors: product.colors,
-      storage_options: product.storage_options,
-      updated_at: new Date().toISOString()
-    };
-
-    if (this.useSupabase) {
-      try {
-        const { error } = await this.supabaseClient
-          .from("products")
-          .update(updatedFields)
-          .eq("id", id);
-        if (error) throw error;
-        return true;
-      } catch (err) {
-        console.error("Supabase updateProduct error:", err);
-      }
-    }
-
-    const products = JSON.parse(localStorage.getItem("valmont_products") || "[]");
-    const idx = products.findIndex(p => p.id === id);
-    if (idx !== -1) {
-      products[idx] = { ...products[idx], ...updatedFields };
-      localStorage.setItem("valmont_products", JSON.stringify(products));
-      return true;
-    }
-    return false;
+    const products = this.readLocal(storageKeys.products, []).map(normalizeProduct);
+    const index = products.findIndex(item => String(item.id) === String(normalized.id));
+    if (index >= 0) products[index] = normalized;
+    else products.unshift(normalized);
+    this.writeLocal(storageKeys.products, products.map(toStorefrontProduct));
+    return normalized;
   }
 
   async deleteProduct(id) {
     if (this.useSupabase) {
       try {
-        const { error } = await this.supabaseClient
-          .from("products")
-          .delete()
-          .eq("id", id);
+        const { error } = await this.client.from("products").delete().eq("id", id);
         if (error) throw error;
-        return true;
-      } catch (err) {
-        console.error("Supabase deleteProduct error:", err);
+      } catch (error) {
+        console.warn("Supabase product delete failed; deleting local copy only.", error);
       }
     }
-
-    const products = JSON.parse(localStorage.getItem("valmont_products") || "[]");
-    const filtered = products.filter(p => p.id !== id);
-    localStorage.setItem("valmont_products", JSON.stringify(filtered));
-    return true;
+    const products = this.readLocal(storageKeys.products, []).filter(item => String(item.id) !== String(id));
+    this.writeLocal(storageKeys.products, products);
   }
 
-  // --- REVIEWS ---
+  async getCategories() {
+    if (this.useSupabase) {
+      try {
+        const { data, error } = await this.client.from("categories").select("*").order("sort_order", { ascending: true });
+        if (error) throw error;
+        if (Array.isArray(data) && data.length) {
+          const normalized = data.map(normalizeCategory);
+          this.writeLocal(storageKeys.categories, normalized);
+          return normalized;
+        }
+      } catch (error) {
+        console.warn("Supabase categories unavailable; using localStorage.", error);
+      }
+    }
+    const local = this.readLocal(storageKeys.categories, DEFAULT_CATEGORIES).map(normalizeCategory);
+    return local.length ? local : DEFAULT_CATEGORIES;
+  }
+
+  async saveCategory(category) {
+    const normalized = normalizeCategory(category);
+    if (this.useSupabase) {
+      try {
+        const { error } = await this.client.from("categories").upsert(normalized, { onConflict: "id" });
+        if (error) throw error;
+      } catch (error) {
+        console.warn("Supabase category save failed; saving local copy only.", error);
+      }
+    }
+    const categories = this.readLocal(storageKeys.categories, DEFAULT_CATEGORIES).map(normalizeCategory);
+    const index = categories.findIndex(item => String(item.id) === String(normalized.id));
+    if (index >= 0) categories[index] = normalized;
+    else categories.push(normalized);
+    categories.sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
+    this.writeLocal(storageKeys.categories, categories);
+    return normalized;
+  }
+
+  async deleteCategory(id) {
+    if (this.useSupabase) {
+      try {
+        const { error } = await this.client.from("categories").delete().eq("id", id);
+        if (error) throw error;
+      } catch (error) {
+        console.warn("Supabase category delete failed; deleting local copy only.", error);
+      }
+    }
+    this.writeLocal(storageKeys.categories, this.readLocal(storageKeys.categories, DEFAULT_CATEGORIES).filter(item => String(item.id) !== String(id)));
+  }
+
+  async saveCategoryOrder(categories) {
+    const normalized = categories.map((category, index) => ({ ...normalizeCategory(category), sort_order: index + 1 }));
+    this.writeLocal(storageKeys.categories, normalized);
+    if (this.useSupabase) {
+      await Promise.all(normalized.map(category => this.saveCategory(category)));
+    }
+  }
+
+  async getOrders() {
+    let orders = [];
+    if (this.useSupabase) {
+      try {
+        const { data, error } = await this.client.from("orders").select("*").order("created_at", { ascending: false });
+        if (error) throw error;
+        orders = Array.isArray(data) ? data : [];
+        const ordersNeedingItems = orders.filter(order => !Array.isArray(parseJsonMaybe(order.items, [])) || parseJsonMaybe(order.items, []).length === 0);
+        if (ordersNeedingItems.length) {
+          try {
+            const { data: itemsData, error: itemsError } = await this.client.from("order_items").select("*");
+            if (!itemsError && Array.isArray(itemsData)) {
+              orders = orders.map(order => ({
+                ...order,
+                items: parseJsonMaybe(order.items, []).length ? parseJsonMaybe(order.items, []) : itemsData.filter(item => String(item.order_id) === String(order.id))
+              }));
+            }
+          } catch (_) {}
+        }
+        const normalized = orders.map(normalizeOrder);
+        this.writeLocal(storageKeys.orders, normalized);
+        return normalized;
+      } catch (error) {
+        console.warn("Supabase orders unavailable; using localStorage.", error);
+      }
+    }
+    return this.readLocal(storageKeys.orders, []).map(normalizeOrder);
+  }
+
+  async updateOrder(id, updates) {
+    const normalizedUpdates = {
+      status: updates.status,
+      admin_notes: updates.admin_notes || ""
+    };
+    if (this.useSupabase) {
+      try {
+        const { error } = await this.client.from("orders").update(normalizedUpdates).eq("id", id);
+        if (error) throw error;
+      } catch (requestedError) {
+        try {
+          const { error } = await this.client.from("orders").update({ order_status: updates.status, admin_notes: updates.admin_notes || "" }).eq("id", id);
+          if (error) throw error;
+        } catch (legacyError) {
+          console.warn("Supabase order update failed; saving local copy only.", { requestedError, legacyError });
+        }
+      }
+    }
+    const orders = this.readLocal(storageKeys.orders, []).map(normalizeOrder).map(order => String(order.id) === String(id) ? { ...order, ...normalizedUpdates } : order);
+    this.writeLocal(storageKeys.orders, orders);
+  }
+
+  async getCustomers() {
+    let customers = [];
+    if (this.useSupabase) {
+      try {
+        const { data, error } = await this.client.from("customers").select("*").order("name", { ascending: true });
+        if (error) throw error;
+        customers = Array.isArray(data) ? data : [];
+        try {
+          const { data: addresses, error: addressError } = await this.client.from("customer_addresses").select("*");
+          if (!addressError && Array.isArray(addresses)) {
+            customers = customers.map(customer => ({ ...customer, addresses: addresses.filter(address => String(address.customer_id) === String(customer.id)) }));
+          }
+        } catch (_) {}
+        const normalized = customers.map(normalizeCustomer);
+        this.writeLocal(storageKeys.customers, normalized);
+        return normalized;
+      } catch (error) {
+        console.warn("Supabase customers unavailable; using localStorage.", error);
+      }
+    }
+    return this.readLocal(storageKeys.customers, []).map(normalizeCustomer);
+  }
+
   async getReviews() {
     if (this.useSupabase) {
       try {
-        const { data, error } = await this.supabaseClient
-          .from("reviews")
-          .select("*")
-          .order("created_at", { ascending: false });
+        const { data, error } = await this.client.from("reviews").select("*").order("created_at", { ascending: false });
         if (error) throw error;
-        if (data) {
-          localStorage.setItem("valmont_reviews", JSON.stringify(data));
-          return data;
+        if (Array.isArray(data)) {
+          const normalized = data.map(normalizeReview);
+          this.writeLocal(storageKeys.reviews, normalized);
+          return normalized;
         }
-      } catch (err) {
-        console.error("Supabase getReviews error:", err);
+      } catch (error) {
+        console.warn("Supabase reviews unavailable; using localStorage.", error);
       }
     }
-    return JSON.parse(localStorage.getItem("valmont_reviews") || "[]");
+    return this.readLocal(storageKeys.reviews, []).map(normalizeReview);
   }
 
-  async approveReview(id) {
+  async updateReview(id, isApproved) {
     if (this.useSupabase) {
       try {
-        const { error } = await this.supabaseClient
-          .from("reviews")
-          .update({ is_approved: true })
-          .eq("id", id);
+        const { error } = await this.client.from("reviews").update({ is_approved: isApproved }).eq("id", id);
         if (error) throw error;
-        return true;
-      } catch (err) {
-        console.error("Supabase approveReview error:", err);
+      } catch (error) {
+        console.warn("Supabase review update failed; saving local copy only.", error);
       }
     }
-
-    const reviews = JSON.parse(localStorage.getItem("valmont_reviews") || "[]");
-    const idx = reviews.findIndex(r => r.id === id);
-    if (idx !== -1) {
-      reviews[idx].is_approved = true;
-      localStorage.setItem("valmont_reviews", JSON.stringify(reviews));
-      return true;
-    }
-    return false;
-  }
-
-  async rejectReview(id) {
-    if (this.useSupabase) {
-      try {
-        const { error } = await this.supabaseClient
-          .from("reviews")
-          .update({ is_approved: false })
-          .eq("id", id);
-        if (error) throw error;
-        return true;
-      } catch (err) {
-        console.error("Supabase rejectReview error:", err);
-      }
-    }
-
-    const reviews = JSON.parse(localStorage.getItem("valmont_reviews") || "[]");
-    const idx = reviews.findIndex(r => r.id === id);
-    if (idx !== -1) {
-      reviews[idx].is_approved = false;
-      localStorage.setItem("valmont_reviews", JSON.stringify(reviews));
-      return true;
-    }
-    return false;
+    const reviews = this.readLocal(storageKeys.reviews, []).map(review => String(review.id) === String(id) ? { ...review, is_approved: isApproved } : review);
+    this.writeLocal(storageKeys.reviews, reviews);
   }
 
   async deleteReview(id) {
     if (this.useSupabase) {
       try {
-        const { error } = await this.supabaseClient
-          .from("reviews")
-          .delete()
-          .eq("id", id);
+        const { error } = await this.client.from("reviews").delete().eq("id", id);
         if (error) throw error;
-        return true;
-      } catch (err) {
-        console.error("Supabase deleteReview error:", err);
+      } catch (error) {
+        console.warn("Supabase review delete failed; deleting local copy only.", error);
       }
     }
-
-    const reviews = JSON.parse(localStorage.getItem("valmont_reviews") || "[]");
-    const filtered = reviews.filter(r => r.id !== id);
-    localStorage.setItem("valmont_reviews", JSON.stringify(filtered));
-    return true;
+    this.writeLocal(storageKeys.reviews, this.readLocal(storageKeys.reviews, []).filter(review => String(review.id) !== String(id)));
   }
 
-  // --- ORDERS ---
-  async getOrders() {
+  async getSettings() {
     if (this.useSupabase) {
       try {
-        const { data, error } = await this.supabaseClient
-          .from("orders")
-          .select("*")
-          .order("created_at", { ascending: false });
+        const { data, error } = await this.client.from("site_settings").select("key,value");
         if (error) throw error;
-        if (data) {
-          localStorage.setItem("valmont_orders", JSON.stringify(data));
-          return data;
+        if (Array.isArray(data) && data.length) {
+          const remote = { ...DEFAULT_SETTINGS };
+          data.forEach(row => {
+            remote[row.key] = parseJsonMaybe(row.value, row.value);
+          });
+          this.writeLocal(storageKeys.settings, remote);
+          return remote;
         }
-      } catch (err) {
-        console.error("Supabase getOrders error:", err);
+      } catch (error) {
+        console.warn("Supabase site_settings unavailable; using localStorage.", error);
       }
     }
-    return JSON.parse(localStorage.getItem("valmont_orders") || "[]");
+    return { ...DEFAULT_SETTINGS, ...this.readLocal(storageKeys.settings, DEFAULT_SETTINGS) };
   }
 
-  async updateOrderStatus(id, status) {
+  async saveSettings(settings) {
+    const merged = { ...DEFAULT_SETTINGS, ...settings };
+    this.writeLocal(storageKeys.settings, merged);
     if (this.useSupabase) {
-      try {
-        const { error } = await this.supabaseClient
-          .from("orders")
-          .update({ status: status })
-          .eq("id", id);
-        if (error) throw error;
-        return true;
-      } catch (err) {
-        console.error("Supabase updateOrderStatus error:", err);
-      }
-    }
-
-    const orders = JSON.parse(localStorage.getItem("valmont_orders") || "[]");
-    const idx = orders.findIndex(o => o.id === id || o.reference_code === id);
-    if (idx !== -1) {
-      orders[idx].status = status;
-      localStorage.setItem("valmont_orders", JSON.stringify(orders));
-      return true;
-    }
-    return false;
-  }
-
-  // --- IMAGE UPLOAD ---
-  async uploadProductImage(file, onProgress) {
-    if (this.useSupabase) {
-      try {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-        const filePath = `product-images/${fileName}`;
-
-        onProgress(20);
-
-        const { error } = await this.supabaseClient.storage
-          .from("product-images")
-          .upload(filePath, file, { cacheControl: "3600", upsert: true });
-
-        if (error) throw error;
-        onProgress(80);
-
-        const { data: { publicUrl } } = this.supabaseClient.storage
-          .from("product-images")
-          .getPublicUrl(filePath);
-
-        onProgress(100);
-        return publicUrl;
-      } catch (err) {
-        console.error("Supabase image upload failed, falling back to Base64:", err);
-      }
-    }
-
-    // LocalStorage fallback — read as Base64 data URL
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += 25;
-        onProgress(progress);
-        if (progress >= 100) {
-          clearInterval(interval);
+      const entries = Object.entries(merged);
+      for (const [key, value] of entries) {
+        try {
+          const { error } = await this.client.from("site_settings").upsert({ key, value }, { onConflict: "key" });
+          if (error) throw error;
+        } catch (jsonError) {
+          try {
+            const { error } = await this.client.from("site_settings").upsert({ key, value: JSON.stringify(value) }, { onConflict: "key" });
+            if (error) throw error;
+          } catch (textError) {
+            console.warn(`Could not save site setting ${key} to Supabase.`, { jsonError, textError });
+          }
         }
-      }, 100);
+      }
+    }
+    return merged;
+  }
 
-      reader.onloadend = () => {
-        resolve(reader.result);
-      };
-      reader.readAsDataURL(file);
+  async uploadImage(file, folder = "products") {
+    const safeName = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
+    const path = `${folder}/${Date.now()}-${crypto.randomUUID()}-${safeName}`;
+    if (this.useSupabase) {
+      try {
+        const { error } = await this.client.storage.from(PRODUCT_IMAGE_BUCKET).upload(path, file, { cacheControl: "3600", upsert: false });
+        if (error) throw error;
+        const { data } = this.client.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(path);
+        if (data && data.publicUrl) return data.publicUrl;
+      } catch (error) {
+        console.warn("Supabase image upload failed; using local preview URL.", error);
+      }
+    }
+    return readFileAsDataUrl(file);
+  }
+
+  subscribeToRealtime(onChange) {
+    if (!this.useSupabase || !this.client.channel) return;
+    ["products", "orders", "customers", "reviews", "categories", "site_settings"].forEach(table => {
+      try {
+        const channel = this.client
+          .channel(`valmont-admin-${table}`)
+          .on("postgres_changes", { event: "*", schema: "public", table }, () => onChange(table))
+          .subscribe();
+        state.realtimeChannels.push(channel);
+      } catch (error) {
+        console.warn(`Realtime subscription failed for ${table}.`, error);
+      }
     });
   }
 }
 
-// Instantiate Database
 const db = new ValmontAdminDatabase();
 
-// ============================================================
-// STATE MANAGEMENT
-// ============================================================
-let allProducts = [];
-let allOrders = [];
-let allReviews = [];
+window.addEventListener("DOMContentLoaded", initAdminPanel);
 
-let editingProductId = null;
+async function initAdminPanel() {
+  bindAuthEvents();
+  bindNavigationEvents();
+  bindFormEvents();
+  bindProductModalEvents();
+  bindOrderEvents();
+  bindResponsiveShell();
 
-// Form state
-let uploadedImages = [];
-let productColors = [];
-let productStorageOptions = [];
-
-// ============================================================
-// PAGE INITIALIZATION
-// ============================================================
-window.addEventListener("DOMContentLoaded", () => {
-  checkAdminAuth();
-});
-
-function checkAdminAuth() {
-  const isLoggedIn = sessionStorage.getItem("valmont_admin_logged_in") === "true";
-
-  if (!isLoggedIn) {
-    document.getElementById("authGateOverlay").classList.remove("hidden");
-    document.getElementById("adminMainContent").classList.add("hidden");
-  } else {
-    document.getElementById("authGateOverlay").classList.add("hidden");
-    document.getElementById("adminMainContent").classList.remove("hidden");
-    initializeDashboard();
+  if (localStorage.getItem("valmont_admin_authenticated") === "true") {
+    showAdminApp();
+    await loadAllData();
   }
 }
 
-function handleAuthSubmit(event) {
-  event.preventDefault();
-  const pass = document.getElementById("authPasswordInput").value.trim();
+function bindAuthEvents() {
+  document.getElementById("adminLoginForm").addEventListener("submit", event => {
+    event.preventDefault();
+    const input = document.getElementById("adminPasswordInput");
+    const password = input.value.trim();
+    if (password === getAdminPassword()) {
+      localStorage.setItem("valmont_admin_authenticated", "true");
+      localStorage.setItem("valmont_admin_saved_password", password);
+      document.getElementById("loginError").classList.add("hidden");
+      showAdminApp();
+      loadAllData();
+    } else {
+      document.getElementById("loginError").classList.remove("hidden");
+      input.select();
+    }
+  });
+  document.getElementById("topLogoutBtn").addEventListener("click", logoutAdmin);
+  document.getElementById("sidebarLogoutBtn").addEventListener("click", logoutAdmin);
+}
 
-  if (pass === "valmont2026") {
-    sessionStorage.setItem("valmont_admin_logged_in", "true");
-    checkAdminAuth();
-    showAdminToast("Access granted. Welcome to Admin Panel.");
-  } else {
-    document.getElementById("authErrorMessage").classList.remove("hidden");
-    document.getElementById("authPasswordInput").value = "";
+function getAdminPassword() {
+  return localStorage.getItem("valmont_admin_password") || DEFAULT_ADMIN_PASSWORD;
+}
+
+function logoutAdmin() {
+  localStorage.removeItem("valmont_admin_authenticated");
+  localStorage.removeItem("valmont_admin_saved_password");
+  document.getElementById("adminApp").classList.add("hidden");
+  document.getElementById("authGate").classList.remove("hidden");
+  document.getElementById("adminPasswordInput").value = "";
+}
+
+function showAdminApp() {
+  document.getElementById("authGate").classList.add("hidden");
+  document.getElementById("adminApp").classList.remove("hidden");
+}
+
+async function loadAllData() {
+  try {
+    const [settings, categories, products, orders, customers, reviews] = await Promise.all([
+      db.getSettings(),
+      db.getCategories(),
+      db.getProducts(),
+      db.getOrders(),
+      db.getCustomers(),
+      db.getReviews()
+    ]);
+    state.settings = { ...DEFAULT_SETTINGS, ...settings };
+    state.categories = categories.length ? categories : DEFAULT_CATEGORIES;
+    state.products = products;
+    state.orders = attachCustomersToOrders(orders, customers);
+    state.customers = mergeCustomersWithOrders(customers, state.orders);
+    state.reviews = reviews;
+    renderEverything();
+    db.subscribeToRealtime(async () => {
+      await refreshDataSilently();
+    });
+  } catch (error) {
+    console.error(error);
+    showToast("Admin data loaded with local fallback.");
+    renderEverything();
   }
 }
 
-function handleAdminLogout() {
-  sessionStorage.removeItem("valmont_admin_logged_in");
-  checkAdminAuth();
-  showAdminToast("Logged out successfully.");
+async function refreshDataSilently() {
+  const [settings, categories, products, orders, customers, reviews] = await Promise.all([
+    db.getSettings(), db.getCategories(), db.getProducts(), db.getOrders(), db.getCustomers(), db.getReviews()
+  ]);
+  state.settings = { ...DEFAULT_SETTINGS, ...settings };
+  state.categories = categories.length ? categories : DEFAULT_CATEGORIES;
+  state.products = products;
+  state.orders = attachCustomersToOrders(orders, customers);
+  state.customers = mergeCustomersWithOrders(customers, state.orders);
+  state.reviews = reviews;
+  renderEverything();
 }
 
-async function initializeDashboard() {
-  // Fetch all data
-  allProducts = await db.getProducts();
-  allOrders = await db.getOrders();
-  allReviews = await db.getReviews();
-
-  // Render dashboard stats
-  renderStats();
-
-  // Render tables
+function renderEverything() {
+  renderTopBar();
+  renderDashboard();
   renderProductsTable();
   renderOrdersTable();
+  renderCustomersTable();
   renderReviewsTable();
-
-  // Populate bulk upload dropdown
-  populateBulkProductsDropdown();
-
-  // Initialize image uploader
-  initImageUploaderListeners();
-
-  // Render new tabs
-  renderResellers();
-  renderActivityLog();
+  renderCategories();
+  renderSiteContentForm();
+  renderSettingsForm();
+  populateCategorySelect();
 }
 
-// ============================================================
-// STATS RENDERING
-// ============================================================
-function renderStats() {
-  // Product count
-  document.getElementById("statTotalProducts").textContent = allProducts.length;
+function bindNavigationEvents() {
+  document.querySelectorAll(".nav-btn").forEach(button => {
+    button.addEventListener("click", () => switchSection(button.dataset.section));
+  });
+  document.querySelectorAll("[data-open-product]").forEach(button => {
+    button.addEventListener("click", () => openProductModal());
+  });
+  document.getElementById("productSearch").addEventListener("input", renderProductsTable);
+}
 
-  // Order count
-  document.getElementById("statTotalOrders").textContent = allOrders.length;
+function bindResponsiveShell() {
+  const sidebar = document.getElementById("adminSidebar");
+  const backdrop = document.getElementById("sidebarBackdrop");
+  document.getElementById("openSidebarBtn").addEventListener("click", () => {
+    sidebar.classList.add("open");
+    backdrop.classList.remove("hidden");
+  });
+  const close = () => {
+    sidebar.classList.remove("open");
+    backdrop.classList.add("hidden");
+  };
+  document.getElementById("closeSidebarBtn").addEventListener("click", close);
+  backdrop.addEventListener("click", close);
+}
 
-  // Revenue (exclude cancelled)
-  const revenue = allOrders
-    .filter(o => o.status !== "Cancelled")
-    .reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0);
-  document.getElementById("statRevenue").textContent = `GH₵ ${revenue.toLocaleString()}`;
+function switchSection(section) {
+  state.activeSection = section;
+  document.querySelectorAll(".nav-btn").forEach(button => button.classList.toggle("active", button.dataset.section === section));
+  document.querySelectorAll(".section-panel").forEach(panel => panel.classList.toggle("active", panel.id === `section-${section}`));
+  document.getElementById("adminSidebar").classList.remove("open");
+  document.getElementById("sidebarBackdrop").classList.add("hidden");
+}
 
-  // Net Profit calculation
-  let totalProfit = 0;
-  allOrders.filter(o => o.status !== "Cancelled").forEach(order => {
-    (order.items || []).forEach(item => {
-      const match = allProducts.find(p => p.id === item.id);
-      if (match) {
-        const itemWholesale = match.wholesale_price || 0;
-        const profitPerItem = item.price - itemWholesale - (order.total_amount >= 5000 ? 0 : 25);
-        totalProfit += profitPerItem * item.qty;
-      }
+function renderTopBar() {
+  document.getElementById("topStoreName").textContent = state.settings.store_name || DEFAULT_SETTINGS.store_name;
+  document.getElementById("topAdminEmail").textContent = state.settings.admin_email || DEFAULT_SETTINGS.admin_email;
+}
+
+function renderDashboard() {
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  const nonCancelled = state.orders.filter(order => normalizeStatus(order.status) !== "Cancelled");
+  const todayRevenue = nonCancelled.filter(order => String(order.created_at || "").slice(0, 10) === todayKey).reduce((sum, order) => sum + Number(order.total || 0), 0);
+  const weekRevenue = nonCancelled.filter(order => new Date(order.created_at || Date.now()) >= weekAgo).reduce((sum, order) => sum + Number(order.total || 0), 0);
+  document.getElementById("statTodayRevenue").textContent = formatCurrency(todayRevenue);
+  document.getElementById("statWeekRevenue").textContent = formatCurrency(weekRevenue);
+  document.getElementById("statTotalOrders").textContent = String(state.orders.length);
+  document.getElementById("statTotalProducts").textContent = String(state.products.length);
+  document.getElementById("statTotalCustomers").textContent = String(state.customers.length);
+
+  const lowStock = state.products.filter(product => Number(product.stock) < 5).sort((a, b) => Number(a.stock) - Number(b.stock)).slice(0, 8);
+  document.getElementById("lowStockList").innerHTML = lowStock.length ? lowStock.map(product => `
+    <div class="flex items-center justify-between gap-4 rounded-xl border border-slate-800 bg-[#071126] p-3">
+      <div class="min-w-0"><p class="truncate text-sm font-black text-white">${escapeHtml(product.name)}</p><p class="text-xs font-semibold text-slate-500">${escapeHtml(getCategoryName(product.category_id))}</p></div>
+      <span class="badge ${Number(product.stock) === 0 ? "badge-red" : "badge-amber"}">${Number(product.stock)} left</span>
+    </div>
+  `).join("") : emptyState("No low-stock products.");
+
+  const best = getBestSellingProducts();
+  document.getElementById("bestSellingList").innerHTML = best.length ? best.map((item, index) => `
+    <div class="flex items-center justify-between gap-4 rounded-xl border border-slate-800 bg-[#071126] p-3">
+      <div class="flex items-center gap-3 min-w-0"><span class="flex h-8 w-8 items-center justify-center rounded-full bg-gold text-xs font-black text-[#071126]">${index + 1}</span><div class="min-w-0"><p class="truncate text-sm font-black text-white">${escapeHtml(item.name)}</p><p class="text-xs font-semibold text-slate-500">${item.quantity} units sold</p></div></div>
+      <span class="text-sm font-black text-gold">${formatCurrency(item.revenue)}</span>
+    </div>
+  `).join("") : emptyState("No sales data yet.");
+}
+
+function renderProductsTable() {
+  const query = (document.getElementById("productSearch")?.value || "").toLowerCase().trim();
+  const products = state.products.filter(product => !query || [product.name, product.specs, getCategoryName(product.category_id)].join(" ").toLowerCase().includes(query));
+  document.getElementById("productsTableBody").innerHTML = products.length ? products.map(product => `
+    <tr>
+      <td><img src="${escapeAttr(product.image_url || product.images[0] || "/logo.svg")}" alt="${escapeAttr(product.name)}" class="h-12 w-12 rounded-lg border border-slate-800 bg-[#071126] object-cover" /></td>
+      <td><p class="font-black text-white">${escapeHtml(product.name)}</p><p class="text-xs font-semibold text-slate-500">${escapeHtml(product.specs || product.slug)}</p></td>
+      <td>${escapeHtml(getCategoryName(product.category_id))}</td>
+      <td><span class="font-black text-gold">${formatCurrency(product.price)}</span>${Number(product.compare_at_price) > Number(product.price) ? `<br><span class="text-xs text-slate-500 line-through">${formatCurrency(product.compare_at_price)}</span>` : ""}</td>
+      <td><span class="badge ${Number(product.stock) < 5 ? "badge-amber" : ""}">${Number(product.stock)}</span></td>
+      <td><span class="badge ${product.is_active ? "badge-green" : "badge-red"}">${product.is_active ? "Active" : "Inactive"}</span></td>
+      <td class="text-right"><div class="flex justify-end gap-2"><button class="btn-muted" data-edit-product="${escapeAttr(product.id)}">Edit</button><button class="btn-danger" data-delete-product="${escapeAttr(product.id)}">Delete</button></div></td>
+    </tr>
+  `).join("") : `<tr><td colspan="7">${emptyState("No products found.")}</td></tr>`;
+
+  document.querySelectorAll("[data-edit-product]").forEach(button => button.addEventListener("click", () => openProductModal(button.dataset.editProduct)));
+  document.querySelectorAll("[data-delete-product]").forEach(button => button.addEventListener("click", () => confirmDeleteProduct(button.dataset.deleteProduct)));
+}
+
+function renderOrdersTable() {
+  const statusFilter = document.getElementById("orderFilterStatus")?.value || "all";
+  const from = document.getElementById("orderFilterFrom")?.value || "";
+  const to = document.getElementById("orderFilterTo")?.value || "";
+  const orders = state.orders.filter(order => {
+    const orderStatus = normalizeStatus(order.status);
+    const date = String(order.created_at || "").slice(0, 10);
+    return (statusFilter === "all" || orderStatus === statusFilter) && (!from || date >= from) && (!to || date <= to);
+  });
+  document.getElementById("ordersTableBody").innerHTML = orders.length ? orders.map(order => `
+    <tr class="cursor-pointer hover:bg-[#071126]/50" data-open-order="${escapeAttr(order.id)}">
+      <td class="font-black text-white">${escapeHtml(order.order_number)}</td>
+      <td>${formatDate(order.created_at)}</td>
+      <td><p class="font-bold text-white">${escapeHtml(order.customer.name)}</p><p class="text-xs text-slate-500">${escapeHtml(order.customer.phone || order.customer.email || "")}</p></td>
+      <td>${order.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)} items</td>
+      <td class="font-black text-gold">${formatCurrency(order.total)}</td>
+      <td><span class="badge ${statusClass(order.status)}">${escapeHtml(normalizeStatus(order.status))}</span></td>
+      <td><button class="btn-muted" type="button">View</button></td>
+    </tr>
+  `).join("") : `<tr><td colspan="7">${emptyState("No orders match the current filters.")}</td></tr>`;
+
+  document.querySelectorAll("[data-open-order]").forEach(row => row.addEventListener("click", () => openOrderModal(row.dataset.openOrder)));
+}
+
+function bindOrderEvents() {
+  ["orderFilterStatus", "orderFilterFrom", "orderFilterTo"].forEach(id => document.getElementById(id).addEventListener("input", renderOrdersTable));
+  document.getElementById("clearOrderFilters").addEventListener("click", () => {
+    document.getElementById("orderFilterStatus").value = "all";
+    document.getElementById("orderFilterFrom").value = "";
+    document.getElementById("orderFilterTo").value = "";
+    renderOrdersTable();
+  });
+  document.getElementById("closeOrderModal").addEventListener("click", closeOrderModal);
+}
+
+function openOrderModal(id) {
+  const order = state.orders.find(item => String(item.id) === String(id));
+  if (!order) return;
+  document.getElementById("orderModalTitle").textContent = `Order ${order.order_number}`;
+  const itemsMarkup = order.items.length ? order.items.map(item => `
+    <div class="grid gap-3 rounded-xl border border-slate-800 bg-[#071126] p-3 sm:grid-cols-[56px_1fr_auto] sm:items-center">
+      <img src="${escapeAttr(item.image || "/logo.svg")}" alt="${escapeAttr(item.name)}" class="h-14 w-14 rounded-lg object-cover" />
+      <div><p class="font-black text-white">${escapeHtml(item.name)}</p><p class="text-xs font-semibold text-slate-500">${escapeHtml([item.selected_color, item.selected_storage].filter(Boolean).join(" / ") || "Standard")}</p><p class="text-xs text-slate-500">Qty ${Number(item.quantity || 0)} × ${formatCurrency(item.unit_price)}</p></div>
+      <p class="font-black text-gold">${formatCurrency(item.line_total)}</p>
+    </div>
+  `).join("") : emptyState("No item details were recorded for this order.");
+
+  document.getElementById("orderDetailContent").innerHTML = `
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="rounded-xl border border-slate-800 bg-[#071126] p-4"><h3 class="mb-3 text-xs font-black uppercase tracking-widest text-gold">Customer Info</h3><p class="font-black text-white">${escapeHtml(order.customer.name)}</p><p class="text-sm font-semibold text-slate-300">${escapeHtml(order.customer.phone || "No phone")}</p><p class="text-sm font-semibold text-slate-300">${escapeHtml(order.customer.email || "No email")}</p><p class="mt-3 text-sm font-semibold text-slate-400">${escapeHtml(order.customer.address || "No delivery address")}</p></div>
+      <div class="rounded-xl border border-slate-800 bg-[#071126] p-4"><h3 class="mb-3 text-xs font-black uppercase tracking-widest text-gold">Payment & Totals</h3><div class="space-y-2 text-sm font-bold text-slate-300"><div class="flex justify-between"><span>Subtotal</span><span>${formatCurrency(order.subtotal)}</span></div><div class="flex justify-between"><span>Delivery fee</span><span>${formatCurrency(order.delivery_fee)}</span></div><div class="flex justify-between border-t border-slate-800 pt-2 text-base text-gold"><span>Total</span><span>${formatCurrency(order.total)}</span></div><div class="flex justify-between"><span>Payment method</span><span>${escapeHtml(order.payment_method || "Not set")}</span></div></div></div>
+    </div>
+    <div><h3 class="mb-3 text-xs font-black uppercase tracking-widest text-gold">Items</h3><div class="space-y-3">${itemsMarkup}</div></div>
+    <div class="grid gap-4 md:grid-cols-2">
+      <div><label class="admin-label">Status</label><select id="orderStatusInput" class="admin-input">${["Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"].map(status => `<option ${normalizeStatus(order.status) === status ? "selected" : ""}>${status}</option>`).join("")}</select></div>
+      <div><label class="admin-label">Admin Notes</label><textarea id="orderNotesInput" rows="4" class="admin-input" placeholder="Internal notes only">${escapeHtml(order.admin_notes || "")}</textarea></div>
+    </div>
+    <div class="flex justify-end"><button id="saveOrderDetails" class="btn-gold" type="button">Save Order</button></div>
+  `;
+  document.getElementById("saveOrderDetails").addEventListener("click", async () => {
+    await db.updateOrder(order.id, { status: document.getElementById("orderStatusInput").value, admin_notes: document.getElementById("orderNotesInput").value });
+    const refreshedCustomers = await db.getCustomers();
+    state.orders = attachCustomersToOrders(await db.getOrders(), refreshedCustomers);
+    state.customers = mergeCustomersWithOrders(refreshedCustomers, state.orders);
+    renderDashboard();
+    renderOrdersTable();
+    renderCustomersTable();
+    closeOrderModal();
+    showToast("Order updated.");
+  });
+  document.body.classList.add("modal-open");
+  document.getElementById("orderModal").classList.remove("hidden");
+}
+
+function closeOrderModal() {
+  document.getElementById("orderModal").classList.add("hidden");
+  document.body.classList.remove("modal-open");
+}
+
+function renderCustomersTable() {
+  document.getElementById("customersTableBody").innerHTML = state.customers.length ? state.customers.map(customer => `
+    <tr>
+      <td class="font-black text-white">${escapeHtml(customer.name)}</td>
+      <td>${escapeHtml(customer.phone || "")}</td>
+      <td>${escapeHtml(customer.email || "")}</td>
+      <td>${customer.orders.length}</td>
+      <td class="font-black text-gold">${formatCurrency(customer.total_spent)}</td>
+      <td><button class="btn-muted" data-view-customer="${escapeAttr(customer.id)}">View</button></td>
+    </tr>
+  `).join("") : `<tr><td colspan="6">${emptyState("No customers yet.")}</td></tr>`;
+  document.querySelectorAll("[data-view-customer]").forEach(button => button.addEventListener("click", () => renderCustomerDetail(button.dataset.viewCustomer)));
+}
+
+function renderCustomerDetail(id) {
+  const customer = state.customers.find(item => String(item.id) === String(id));
+  if (!customer) return;
+  const addresses = customer.addresses.length ? customer.addresses.map(address => `<li class="rounded-lg border border-slate-800 bg-[#071126] p-3 text-sm font-semibold text-slate-300">${escapeHtml(formatAddress(address))}</li>`).join("") : `<li class="text-sm font-semibold text-slate-500">No saved addresses.</li>`;
+  const orders = customer.orders.length ? customer.orders.map(order => `<tr><td>${escapeHtml(order.order_number)}</td><td>${formatDate(order.created_at)}</td><td>${order.items.length}</td><td>${formatCurrency(order.total)}</td><td><span class="badge ${statusClass(order.status)}">${escapeHtml(normalizeStatus(order.status))}</span></td></tr>`).join("") : `<tr><td colspan="5">No orders.</td></tr>`;
+  document.getElementById("customerDetailPanel").innerHTML = `
+    <div class="space-y-5">
+      <div><p class="admin-label">Profile Info</p><h2 class="text-xl font-black text-white">${escapeHtml(customer.name)}</h2><p class="text-sm font-semibold text-slate-300">${escapeHtml(customer.phone || "")}</p><p class="text-sm font-semibold text-slate-300">${escapeHtml(customer.email || "")}</p><p class="mt-3 text-lg font-black text-gold">${formatCurrency(customer.total_spent)} total spent</p></div>
+      <div><p class="admin-label">Saved Addresses</p><ul class="space-y-2">${addresses}</ul></div>
+      <div><p class="admin-label">Complete Order History</p><div class="table-wrap"><table class="admin-table"><thead><tr><th>Order</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th></tr></thead><tbody>${orders}</tbody></table></div></div>
+    </div>
+  `;
+}
+
+function renderReviewsTable() {
+  document.getElementById("reviewsTableBody").innerHTML = state.reviews.length ? state.reviews.map(review => `
+    <tr>
+      <td>${escapeHtml(getProductName(review.product_id))}</td>
+      <td class="font-bold text-white">${escapeHtml(review.customer_name)}</td>
+      <td class="text-gold">${"★".repeat(Number(review.rating || 0))}${"☆".repeat(5 - Number(review.rating || 0))}</td>
+      <td class="max-w-sm"><p class="line-clamp-2">${escapeHtml(review.comment || "")}</p></td>
+      <td>${formatDate(review.created_at)}</td>
+      <td><span class="badge ${review.is_approved ? "badge-green" : "badge-amber"}">${review.is_approved ? "Approved" : "Pending"}</span></td>
+      <td><div class="flex flex-wrap gap-2"><button class="btn-muted" data-approve-review="${escapeAttr(review.id)}">Approve</button><button class="btn-muted" data-reject-review="${escapeAttr(review.id)}">Reject</button><button class="btn-danger" data-delete-review="${escapeAttr(review.id)}">Delete</button></div></td>
+    </tr>
+  `).join("") : `<tr><td colspan="7">${emptyState("No reviews yet.")}</td></tr>`;
+  document.querySelectorAll("[data-approve-review]").forEach(button => button.addEventListener("click", () => updateReview(button.dataset.approveReview, true)));
+  document.querySelectorAll("[data-reject-review]").forEach(button => button.addEventListener("click", () => updateReview(button.dataset.rejectReview, false)));
+  document.querySelectorAll("[data-delete-review]").forEach(button => button.addEventListener("click", () => deleteReview(button.dataset.deleteReview)));
+}
+
+async function updateReview(id, approved) {
+  await db.updateReview(id, approved);
+  state.reviews = await db.getReviews();
+  renderReviewsTable();
+  showToast(approved ? "Review approved." : "Review rejected.");
+}
+
+async function deleteReview(id) {
+  if (!confirm("Delete this review permanently?")) return;
+  await db.deleteReview(id);
+  state.reviews = await db.getReviews();
+  renderReviewsTable();
+  showToast("Review deleted.");
+}
+
+function renderCategories() {
+  const counts = state.products.reduce((map, product) => {
+    map[product.category_id] = (map[product.category_id] || 0) + 1;
+    return map;
+  }, {});
+  document.getElementById("categoriesList").innerHTML = state.categories.length ? state.categories.map(category => `
+    <div class="category-row flex flex-col gap-3 rounded-xl border border-slate-800 bg-[#071126] p-4 sm:flex-row sm:items-center sm:justify-between" draggable="true" data-category-id="${escapeAttr(category.id)}">
+      <div class="min-w-0"><p class="font-black text-white">${escapeHtml(category.name)}</p><p class="text-xs font-semibold text-slate-500">${escapeHtml(category.slug)} • ${counts[category.id] || counts[category.slug] || 0} products</p></div>
+      <div class="flex gap-2"><button class="btn-muted" data-edit-category="${escapeAttr(category.id)}">Edit</button><button class="btn-danger" data-delete-category="${escapeAttr(category.id)}">Delete</button></div>
+    </div>
+  `).join("") : emptyState("No categories configured.");
+
+  document.querySelectorAll("[data-edit-category]").forEach(button => button.addEventListener("click", () => editCategory(button.dataset.editCategory)));
+  document.querySelectorAll("[data-delete-category]").forEach(button => button.addEventListener("click", () => deleteCategory(button.dataset.deleteCategory)));
+  bindCategoryDragEvents();
+}
+
+function bindCategoryDragEvents() {
+  document.querySelectorAll(".category-row").forEach(row => {
+    row.addEventListener("dragstart", () => { state.draggingCategoryId = row.dataset.categoryId; row.classList.add("opacity-50"); });
+    row.addEventListener("dragend", () => { row.classList.remove("opacity-50"); state.draggingCategoryId = null; });
+    row.addEventListener("dragover", event => event.preventDefault());
+    row.addEventListener("drop", async event => {
+      event.preventDefault();
+      const targetId = row.dataset.categoryId;
+      const sourceId = state.draggingCategoryId;
+      if (!sourceId || sourceId === targetId) return;
+      const categories = [...state.categories];
+      const from = categories.findIndex(category => String(category.id) === String(sourceId));
+      const to = categories.findIndex(category => String(category.id) === String(targetId));
+      if (from < 0 || to < 0) return;
+      const [moved] = categories.splice(from, 1);
+      categories.splice(to, 0, moved);
+      state.categories = categories.map((category, index) => ({ ...category, sort_order: index + 1 }));
+      await db.saveCategoryOrder(state.categories);
+      renderCategories();
+      populateCategorySelect();
+      showToast("Category order saved.");
     });
   });
-
-  document.getElementById("statProfit").textContent = `GH₵ ${Math.max(0, Math.round(totalProfit)).toLocaleString()}`;
 }
 
-// ============================================================
-// TAB ROUTING
-// ============================================================
-function switchTab(tabId) {
-  // Hide all sections
-  document.querySelectorAll(".admin-tab-section").forEach(sec => sec.classList.add("hidden"));
-  // Reset nav buttons
-  document.querySelectorAll("[data-tab-nav]").forEach(btn => {
-    btn.classList.remove("border-gold", "text-gold");
-    btn.classList.add("border-transparent", "text-slate-400");
+function bindFormEvents() {
+  document.getElementById("categoryForm").addEventListener("submit", saveCategoryFromForm);
+  document.getElementById("resetCategoryForm").addEventListener("click", resetCategoryForm);
+  document.getElementById("categoryName").addEventListener("input", () => {
+    if (!document.getElementById("categorySlug").value.trim()) document.getElementById("categorySlug").placeholder = slugify(document.getElementById("categoryName").value);
   });
-
-  // Show selected section
-  document.getElementById(`section-${tabId}`).classList.remove("hidden");
-
-  // Highlight active nav
-  const activeBtn = document.querySelector(`[data-tab-nav="${tabId}"]`);
-  if (activeBtn) {
-    activeBtn.classList.remove("border-transparent", "text-slate-400");
-    activeBtn.classList.add("border-gold", "text-gold");
-  }
-
-  // Refresh data when switching to dashboard
-  if (tabId === "dashboard") {
-    initializeDashboard();
-  }
+  document.getElementById("siteContentForm").addEventListener("submit", saveSiteContentForm);
+  document.getElementById("addFaqBtn").addEventListener("click", () => { state.settings.faq.push({ question: "", answer: "" }); renderSiteContentForm(); });
+  document.getElementById("settingsForm").addEventListener("submit", saveSettingsForm);
+  document.getElementById("addShippingZoneBtn").addEventListener("click", () => { state.settings.shipping_zones.push({ name: "", delivery_fee: 0, estimated_days: "" }); renderSettingsForm(); });
+  document.getElementById("changePasswordBtn").addEventListener("click", changeAdminPassword);
+  document.getElementById("settingLogoUpload").addEventListener("change", handleLogoUpload);
 }
 
-// ============================================================
-// PRODUCTS MANAGEMENT
-// ============================================================
-function renderProductsTable() {
-  const tbody = document.getElementById("productsTableBody");
-  if (!tbody) return;
+async function saveCategoryFromForm(event) {
+  event.preventDefault();
+  const idInput = document.getElementById("categoryId");
+  const name = document.getElementById("categoryName").value.trim();
+  const slug = slugify(document.getElementById("categorySlug").value.trim() || name);
+  const category = { id: idInput.value || slug, name, slug, sort_order: idInput.value ? (state.categories.find(item => String(item.id) === String(idInput.value))?.sort_order || state.categories.length + 1) : state.categories.length + 1 };
+  await db.saveCategory(category);
+  state.categories = await db.getCategories();
+  resetCategoryForm();
+  renderCategories();
+  populateCategorySelect();
+  showToast("Category saved.");
+}
 
-  if (allProducts.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="7" class="px-6 py-8 text-center text-slate-500 font-semibold text-xs">
-          No products found. Click "Add Product" to populate your inventory.
-        </td>
-      </tr>
-    `;
+function editCategory(id) {
+  const category = state.categories.find(item => String(item.id) === String(id));
+  if (!category) return;
+  document.getElementById("categoryId").value = category.id;
+  document.getElementById("categoryName").value = category.name;
+  document.getElementById("categorySlug").value = category.slug;
+}
+
+async function deleteCategory(id) {
+  const count = state.products.filter(product => String(product.category_id) === String(id)).length;
+  if (!confirm(`Delete this category? ${count} products currently reference it.`)) return;
+  await db.deleteCategory(id);
+  state.categories = await db.getCategories();
+  renderCategories();
+  populateCategorySelect();
+  showToast("Category deleted.");
+}
+
+function resetCategoryForm() {
+  document.getElementById("categoryForm").reset();
+  document.getElementById("categoryId").value = "";
+}
+
+function renderSiteContentForm() {
+  document.getElementById("settingHeroHeadline").value = state.settings.hero_headline || "";
+  document.getElementById("settingHeroSubtitle").value = state.settings.hero_subtitle || "";
+  document.getElementById("settingHeroCta").value = state.settings.hero_cta || "";
+  document.getElementById("settingAnnouncement").value = state.settings.announcement || "";
+  document.getElementById("settingStoreHours").value = state.settings.store_hours || "";
+  document.getElementById("settingAddress").value = state.settings.address || "";
+  document.getElementById("settingWhatsApp").value = state.settings.whatsapp || "";
+  renderFaqRows();
+}
+
+function renderFaqRows() {
+  const faq = Array.isArray(state.settings.faq) ? state.settings.faq : [];
+  document.getElementById("faqList").innerHTML = faq.length ? faq.map((item, index) => `
+    <div class="grid gap-3 rounded-xl border border-slate-800 bg-[#071126] p-3 md:grid-cols-[1fr_1fr_auto]">
+      <input class="admin-input" data-faq-question="${index}" value="${escapeAttr(item.question || "")}" placeholder="Question" />
+      <input class="admin-input" data-faq-answer="${index}" value="${escapeAttr(item.answer || "")}" placeholder="Answer" />
+      <button type="button" class="btn-danger" data-remove-faq="${index}">Delete</button>
+    </div>
+  `).join("") : emptyState("No FAQs yet.");
+  document.querySelectorAll("[data-remove-faq]").forEach(button => button.addEventListener("click", () => { state.settings.faq.splice(Number(button.dataset.removeFaq), 1); renderFaqRows(); }));
+}
+
+async function saveSiteContentForm(event) {
+  event.preventDefault();
+  document.querySelectorAll("[data-faq-question]").forEach(input => {
+    const index = Number(input.dataset.faqQuestion);
+    if (!state.settings.faq[index]) state.settings.faq[index] = { question: "", answer: "" };
+    state.settings.faq[index].question = input.value.trim();
+  });
+  document.querySelectorAll("[data-faq-answer]").forEach(input => {
+    const index = Number(input.dataset.faqAnswer);
+    if (!state.settings.faq[index]) state.settings.faq[index] = { question: "", answer: "" };
+    state.settings.faq[index].answer = input.value.trim();
+  });
+  state.settings = await db.saveSettings({
+    ...state.settings,
+    hero_headline: document.getElementById("settingHeroHeadline").value.trim(),
+    hero_subtitle: document.getElementById("settingHeroSubtitle").value.trim(),
+    hero_cta: document.getElementById("settingHeroCta").value.trim(),
+    announcement: document.getElementById("settingAnnouncement").value.trim(),
+    store_hours: document.getElementById("settingStoreHours").value.trim(),
+    address: document.getElementById("settingAddress").value.trim(),
+    whatsapp: document.getElementById("settingWhatsApp").value.trim(),
+    faq: state.settings.faq.filter(item => item.question || item.answer)
+  });
+  renderTopBar();
+  showToast("Site content saved.");
+}
+
+function renderSettingsForm() {
+  document.getElementById("settingStoreName").value = state.settings.store_name || "";
+  document.getElementById("settingAdminEmail").value = state.settings.admin_email || "";
+  document.getElementById("settingFreeDelivery").value = state.settings.free_delivery_threshold || 0;
+  document.getElementById("payMomo").checked = Boolean(state.settings.payment_methods?.momo);
+  document.getElementById("payCard").checked = Boolean(state.settings.payment_methods?.card);
+  document.getElementById("payCod").checked = Boolean(state.settings.payment_methods?.cod);
+  document.getElementById("logoPreview").innerHTML = state.settings.logo_url ? `<img src="${escapeAttr(state.settings.logo_url)}" alt="Store logo" class="max-h-16 rounded-lg bg-white/5 object-contain" />` : "No logo uploaded.";
+  renderShippingZoneRows();
+}
+
+function renderShippingZoneRows() {
+  const zones = Array.isArray(state.settings.shipping_zones) ? state.settings.shipping_zones : [];
+  document.getElementById("shippingZonesList").innerHTML = zones.length ? zones.map((zone, index) => `
+    <div class="grid gap-3 rounded-xl border border-slate-800 bg-[#071126] p-3 md:grid-cols-[1fr_160px_1fr_auto]">
+      <input class="admin-input" data-zone-name="${index}" value="${escapeAttr(zone.name || "")}" placeholder="Zone name" />
+      <input class="admin-input" data-zone-fee="${index}" type="number" value="${Number(zone.delivery_fee || 0)}" placeholder="Delivery fee" />
+      <input class="admin-input" data-zone-days="${index}" value="${escapeAttr(zone.estimated_days || "")}" placeholder="Estimated days" />
+      <button type="button" class="btn-danger" data-remove-zone="${index}">Delete</button>
+    </div>
+  `).join("") : emptyState("No shipping zones yet.");
+  document.querySelectorAll("[data-remove-zone]").forEach(button => button.addEventListener("click", () => { state.settings.shipping_zones.splice(Number(button.dataset.removeZone), 1); renderShippingZoneRows(); }));
+}
+
+async function saveSettingsForm(event) {
+  event.preventDefault();
+  document.querySelectorAll("[data-zone-name]").forEach(input => {
+    const index = Number(input.dataset.zoneName);
+    if (!state.settings.shipping_zones[index]) state.settings.shipping_zones[index] = {};
+    state.settings.shipping_zones[index].name = input.value.trim();
+  });
+  document.querySelectorAll("[data-zone-fee]").forEach(input => {
+    const index = Number(input.dataset.zoneFee);
+    if (!state.settings.shipping_zones[index]) state.settings.shipping_zones[index] = {};
+    state.settings.shipping_zones[index].delivery_fee = Number(input.value || 0);
+  });
+  document.querySelectorAll("[data-zone-days]").forEach(input => {
+    const index = Number(input.dataset.zoneDays);
+    if (!state.settings.shipping_zones[index]) state.settings.shipping_zones[index] = {};
+    state.settings.shipping_zones[index].estimated_days = input.value.trim();
+  });
+  state.settings = await db.saveSettings({
+    ...state.settings,
+    store_name: document.getElementById("settingStoreName").value.trim(),
+    admin_email: document.getElementById("settingAdminEmail").value.trim(),
+    free_delivery_threshold: Number(document.getElementById("settingFreeDelivery").value || 0),
+    payment_methods: {
+      momo: document.getElementById("payMomo").checked,
+      card: document.getElementById("payCard").checked,
+      cod: document.getElementById("payCod").checked
+    },
+    shipping_zones: state.settings.shipping_zones.filter(zone => zone.name)
+  });
+  renderTopBar();
+  showToast("Settings saved.");
+}
+
+async function handleLogoUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  showToast("Uploading logo...");
+  const url = await db.uploadImage(file, "logos");
+  state.settings.logo_url = url;
+  await db.saveSettings(state.settings);
+  renderSettingsForm();
+  showToast("Logo uploaded.");
+}
+
+function changeAdminPassword() {
+  const current = document.getElementById("currentAdminPassword").value;
+  const next = document.getElementById("newAdminPassword").value.trim();
+  if (current !== getAdminPassword()) {
+    showToast("Current password is incorrect.");
     return;
   }
-
-  const categoryLabels = {
-    iphones: "iPhones & Apple",
-    samsung: "Samsung Galaxy",
-    laptops: "Executive Laptops",
-    audio: "Smart Audio",
-    power: "Power & Chargers"
-  };
-
-  tbody.innerHTML = allProducts.map(p => {
-    const imgSrc = p.image_url || (p.images && p.images[0]) || "https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=800";
-    const statusClass = p.is_active ? "bg-green-950 text-green-400" : "bg-slate-950 text-slate-500";
-    const statusText = p.is_active ? "Active" : "Draft";
-
-    return `
-      <tr class="border-b border-slate-800 hover:bg-slate-900/40">
-        <td class="px-6 py-4 whitespace-nowrap">
-          <div class="h-10 w-10 rounded bg-slate-900 border border-slate-800 p-1 flex items-center justify-center overflow-hidden">
-            <img src="${imgSrc}" class="max-h-full max-w-full object-contain" alt="${p.name}" />
-          </div>
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap">
-          <div class="text-xs font-bold text-white">${p.name}</div>
-          <div class="text-[10px] text-slate-500 font-mono">${p.slug}</div>
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-xs text-slate-300 font-semibold">
-          ${categoryLabels[p.category] || p.category}
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap leading-tight">
-          <div class="text-xs font-extrabold text-white">GH₵ ${(p.price || 0).toLocaleString()}</div>
-          <div class="text-[10px] text-slate-400 font-bold">Wholesale: GH₵ ${(p.wholesale_price || 0).toLocaleString()}</div>
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-xs font-bold ${p.stock_quantity === 0 ? 'text-red-500' : 'text-slate-300'}">
-          ${p.stock_quantity || 0}
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap">
-          <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase ${statusClass}">
-            ${statusText}
-          </span>
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-right text-xs font-medium">
-          <div class="flex items-center justify-end gap-3">
-            <button onclick="openEditProductForm('${p.id}')" class="text-gold hover:text-white transition-colors" title="Edit">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-              </svg>
-            </button>
-            <button onclick="triggerDeleteProduct('${p.id}', '${p.name.replace(/'/g, "\\'")}')" class="text-red-500 hover:text-white transition-colors" title="Delete">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-              </svg>
-            </button>
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join("");
+  if (next.length < 6) {
+    showToast("New password must be at least 6 characters.");
+    return;
+  }
+  localStorage.setItem("valmont_admin_password", next);
+  localStorage.setItem("valmont_admin_saved_password", next);
+  document.getElementById("currentAdminPassword").value = "";
+  document.getElementById("newAdminPassword").value = "";
+  showToast("Admin password changed on this device.");
 }
 
-// Auto-generate slug from product name
-function autoFillSlug() {
-  const name = document.getElementById("prodName").value;
-  const slugInput = document.getElementById("prodSlug");
-  const slug = name
+function bindProductModalEvents() {
+  document.getElementById("closeProductModal").addEventListener("click", closeProductModal);
+  document.getElementById("cancelProductForm").addEventListener("click", closeProductModal);
+  document.getElementById("productForm").addEventListener("submit", saveProductFromForm);
+  document.getElementById("deleteProductFromModal").addEventListener("click", () => confirmDeleteProduct(state.editingProductId));
+  document.getElementById("addColorBtn").addEventListener("click", () => addColorRow());
+  document.getElementById("addStorageBtn").addEventListener("click", () => addStorageRow());
+  const dropZone = document.getElementById("imageDropZone");
+  const input = document.getElementById("productImageInput");
+  dropZone.addEventListener("click", () => input.click());
+  input.addEventListener("change", event => handleImageFiles(event.target.files));
+  dropZone.addEventListener("dragover", event => { event.preventDefault(); dropZone.classList.add("border-gold"); });
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("border-gold"));
+  dropZone.addEventListener("drop", event => {
+    event.preventDefault();
+    dropZone.classList.remove("border-gold");
+    handleImageFiles(event.dataTransfer.files);
+  });
+}
+
+function populateCategorySelect() {
+  const select = document.getElementById("productCategory");
+  select.innerHTML = state.categories.map(category => `<option value="${escapeAttr(category.id)}">${escapeHtml(category.name)}</option>`).join("");
+}
+
+function openProductModal(id = null) {
+  state.editingProductId = id;
+  const product = id ? state.products.find(item => String(item.id) === String(id)) : null;
+  document.getElementById("productModalTitle").textContent = product ? "Edit Product" : "Add Product";
+  document.getElementById("deleteProductFromModal").classList.toggle("hidden", !product);
+  document.getElementById("productForm").reset();
+  populateCategorySelect();
+  if (product) {
+    document.getElementById("productId").value = product.id;
+    document.getElementById("productName").value = product.name || "";
+    document.getElementById("productCategory").value = product.category_id || state.categories[0]?.id || "";
+    document.getElementById("productBadge").value = product.badge || "";
+    document.getElementById("productPrice").value = product.price || 0;
+    document.getElementById("productComparePrice").value = product.compare_at_price || "";
+    document.getElementById("productWholesalePrice").value = product.wholesale_price || "";
+    document.getElementById("productStock").value = product.stock || 0;
+    document.getElementById("productSpecs").value = product.specs || "";
+    document.getElementById("productActive").value = String(product.is_active !== false);
+    document.getElementById("productDescription").value = product.description || "";
+    state.productImages = [...new Set([product.image_url, ...(product.images || [])].filter(Boolean))].slice(0, 5);
+    renderColorRows(product.colors || []);
+    renderStorageRows(product.storage_options || []);
+  } else {
+    document.getElementById("productId").value = "";
+    document.getElementById("productCategory").value = state.categories[0]?.id || "";
+    document.getElementById("productActive").value = "true";
+    state.productImages = [];
+    renderColorRows([]);
+    renderStorageRows([]);
+  }
+  renderImagePreviews();
+  document.body.classList.add("modal-open");
+  document.getElementById("productModal").classList.remove("hidden");
+}
+
+function closeProductModal() {
+  document.getElementById("productModal").classList.add("hidden");
+  document.body.classList.remove("modal-open");
+  state.editingProductId = null;
+}
+
+async function handleImageFiles(files) {
+  const selected = Array.from(files || []).filter(file => file.type.startsWith("image/"));
+  if (!selected.length) return;
+  const available = 5 - state.productImages.length;
+  if (available <= 0) {
+    showToast("Maximum 5 images allowed.");
+    return;
+  }
+  const toUpload = selected.slice(0, available);
+  showToast("Uploading product images...");
+  for (const file of toUpload) {
+    const url = await db.uploadImage(file, "products");
+    state.productImages.push(url);
+    renderImagePreviews();
+  }
+  document.getElementById("productImageInput").value = "";
+  showToast("Image upload complete.");
+}
+
+function renderImagePreviews() {
+  const list = document.getElementById("imagePreviewList");
+  list.innerHTML = state.productImages.length ? state.productImages.map((url, index) => `
+    <div class="image-tile relative rounded-xl border border-slate-800 bg-[#071126] p-2" draggable="true" data-image-index="${index}">
+      <img src="${escapeAttr(url)}" alt="Product image ${index + 1}" class="h-24 w-full rounded-lg object-cover" />
+      <div class="mt-2 flex items-center justify-between"><span class="text-[10px] font-black uppercase text-slate-500">${index === 0 ? "Main" : `Image ${index + 1}`}</span><button type="button" class="text-xs font-black text-red-400" data-remove-image="${index}">Delete</button></div>
+    </div>
+  `).join("") : `<div class="col-span-full text-sm font-semibold text-slate-500">No images uploaded.</div>`;
+  document.querySelectorAll("[data-remove-image]").forEach(button => button.addEventListener("click", () => { state.productImages.splice(Number(button.dataset.removeImage), 1); renderImagePreviews(); }));
+  document.querySelectorAll(".image-tile").forEach(tile => {
+    tile.addEventListener("dragstart", () => { state.draggingImageIndex = Number(tile.dataset.imageIndex); tile.classList.add("dragging"); });
+    tile.addEventListener("dragend", () => tile.classList.remove("dragging"));
+    tile.addEventListener("dragover", event => event.preventDefault());
+    tile.addEventListener("drop", event => {
+      event.preventDefault();
+      const from = state.draggingImageIndex;
+      const to = Number(tile.dataset.imageIndex);
+      if (Number.isNaN(from) || from === to) return;
+      const [moved] = state.productImages.splice(from, 1);
+      state.productImages.splice(to, 0, moved);
+      renderImagePreviews();
+    });
+  });
+}
+
+function renderColorRows(colors) {
+  const list = document.getElementById("colorsList");
+  list.innerHTML = colors.map((color, index) => colorRowMarkup(color, index)).join("");
+  bindVariantRemoveButtons();
+}
+
+function addColorRow(color = { name: "", hex: "#000000", available: true }) {
+  const list = document.getElementById("colorsList");
+  const index = list.querySelectorAll("[data-color-row]").length;
+  list.insertAdjacentHTML("beforeend", colorRowMarkup(color, index));
+  bindVariantRemoveButtons();
+}
+
+function colorRowMarkup(color, index) {
+  return `
+    <div data-color-row class="grid gap-3 rounded-xl border border-slate-800 bg-[#071126] p-3 sm:grid-cols-[1fr_90px_120px_auto]">
+      <input class="admin-input" data-color-name value="${escapeAttr(color.name || "")}" placeholder="Color name" />
+      <input class="admin-input h-full" data-color-hex type="color" value="${escapeAttr(color.hex || "#000000")}" />
+      <label class="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-300"><input data-color-available type="checkbox" class="accent-gold" ${color.available !== false ? "checked" : ""} /> Available</label>
+      <button type="button" class="btn-danger" data-remove-variant>Delete</button>
+    </div>
+  `;
+}
+
+function renderStorageRows(options) {
+  const list = document.getElementById("storageList");
+  list.innerHTML = options.map((option, index) => storageRowMarkup(option, index)).join("");
+  bindVariantRemoveButtons();
+}
+
+function addStorageRow(option = { size: "128GB", price_adjustment: 0 }) {
+  const list = document.getElementById("storageList");
+  const index = list.querySelectorAll("[data-storage-row]").length;
+  list.insertAdjacentHTML("beforeend", storageRowMarkup(option, index));
+  bindVariantRemoveButtons();
+}
+
+function storageRowMarkup(option, index) {
+  return `
+    <div data-storage-row class="grid gap-3 rounded-xl border border-slate-800 bg-[#071126] p-3 sm:grid-cols-[1fr_1fr_auto]">
+      <input class="admin-input" data-storage-size list="storageSizeOptions" value="${escapeAttr(option.size || "")}" placeholder="128GB / 256GB / 512GB / 1TB" />
+      <input class="admin-input" data-storage-adjustment type="number" step="0.01" value="${Number(option.price_adjustment || 0)}" placeholder="Price adjustment" />
+      <button type="button" class="btn-danger" data-remove-variant>Delete</button>
+    </div>
+  `;
+}
+
+function bindVariantRemoveButtons() {
+  document.querySelectorAll("[data-remove-variant]").forEach(button => {
+    button.onclick = () => button.closest("[data-color-row], [data-storage-row]").remove();
+  });
+}
+
+async function saveProductFromForm(event) {
+  event.preventDefault();
+  const name = document.getElementById("productName").value.trim();
+  const id = document.getElementById("productId").value || crypto.randomUUID();
+  const product = {
+    id,
+    name,
+    slug: slugify(name),
+    category_id: document.getElementById("productCategory").value,
+    category: document.getElementById("productCategory").value,
+    price: Number(document.getElementById("productPrice").value || 0),
+    compare_at_price: Number(document.getElementById("productComparePrice").value || 0),
+    wholesale_price: Number(document.getElementById("productWholesalePrice").value || 0),
+    specs: document.getElementById("productSpecs").value.trim(),
+    description: document.getElementById("productDescription").value.trim(),
+    badge: document.getElementById("productBadge").value,
+    stock: Number(document.getElementById("productStock").value || 0),
+    stock_quantity: Number(document.getElementById("productStock").value || 0),
+    image_url: state.productImages[0] || "",
+    image: state.productImages[0] || "",
+    images: state.productImages.slice(1),
+    colors: collectColorRows(),
+    storage_options: collectStorageRows(),
+    is_active: document.getElementById("productActive").value === "true"
+  };
+  const saved = await db.saveProduct(product);
+  state.products = await db.getProducts();
+  renderDashboard();
+  renderProductsTable();
+  renderCategories();
+  closeProductModal();
+  showToast(`${saved.name} saved.`);
+}
+
+function collectColorRows() {
+  return Array.from(document.querySelectorAll("[data-color-row]")).map(row => ({
+    name: row.querySelector("[data-color-name]").value.trim(),
+    hex: row.querySelector("[data-color-hex]").value || "#000000",
+    available: row.querySelector("[data-color-available]").checked
+  })).filter(color => color.name);
+}
+
+function collectStorageRows() {
+  return Array.from(document.querySelectorAll("[data-storage-row]")).map(row => ({
+    size: row.querySelector("[data-storage-size]").value.trim(),
+    price_adjustment: Number(row.querySelector("[data-storage-adjustment]").value || 0)
+  })).filter(option => option.size);
+}
+
+async function confirmDeleteProduct(id) {
+  if (!id) return;
+  const product = state.products.find(item => String(item.id) === String(id));
+  if (!confirm(`Delete ${product?.name || "this product"}? This cannot be undone.`)) return;
+  await db.deleteProduct(id);
+  state.products = await db.getProducts();
+  renderDashboard();
+  renderProductsTable();
+  renderCategories();
+  closeProductModal();
+  showToast("Product deleted.");
+}
+
+function normalizeProduct(product) {
+  const parsedImages = parseJsonMaybe(product.images, []);
+  const parsedColors = parseJsonMaybe(product.colors, []);
+  const parsedStorage = parseJsonMaybe(product.storage_options, []);
+  const categoryId = product.category_id || product.category || product.category_slug || "uncategorized";
+  const stock = Number(product.stock ?? product.stock_quantity ?? product.quantity ?? 0);
+  const imageUrl = product.image_url || product.image || parsedImages[0] || "";
+  return {
+    ...product,
+    id: product.id || crypto.randomUUID(),
+    name: product.name || "Untitled Product",
+    slug: product.slug || slugify(product.name || "product"),
+    category_id: categoryId,
+    category: categoryId,
+    price: Number(product.price || 0),
+    compare_at_price: Number(product.compare_at_price || 0),
+    wholesale_price: Number(product.wholesale_price || 0),
+    specs: product.specs || "",
+    description: product.description || "",
+    badge: product.badge || "",
+    stock,
+    stock_quantity: stock,
+    image_url: imageUrl,
+    image: imageUrl,
+    images: parsedImages.filter(url => url && url !== imageUrl),
+    colors: parsedColors,
+    storage_options: parsedStorage,
+    is_active: product.is_active !== false,
+    rating: Number(product.rating || 4.8),
+    reviews_count: Number(product.reviews_count || 0)
+  };
+}
+
+function toStorefrontProduct(product) {
+  const normalized = normalizeProduct(product);
+  return {
+    ...normalized,
+    category: normalized.category_id,
+    stock_quantity: normalized.stock,
+    image: normalized.image_url
+  };
+}
+
+function normalizeCategory(category) {
+  const slug = slugify(category.slug || category.name || category.id || "category");
+  return {
+    id: category.id || slug,
+    name: category.name || titleCase(slug.replace(/-/g, " ")),
+    slug,
+    sort_order: Number(category.sort_order || 999)
+  };
+}
+
+function normalizeOrder(order) {
+  const rawItems = parseJsonMaybe(order.items, []);
+  const items = rawItems.map(item => ({
+    product_id: item.product_id || item.id || "",
+    name: item.product_name || item.name || item.title || "Product",
+    image: item.product_image || item.image || item.image_url || "",
+    selected_color: item.selected_color || item.color || "",
+    selected_storage: item.selected_storage || item.storage || "",
+    quantity: Number(item.quantity || item.qty || 1),
+    unit_price: Number(item.unit_price || item.price || 0),
+    line_total: Number(item.line_total || item.total || (Number(item.quantity || 1) * Number(item.unit_price || item.price || 0)))
+  }));
+  const subtotal = Number(order.subtotal ?? items.reduce((sum, item) => sum + Number(item.line_total || 0), 0));
+  const deliveryFee = Number(order.delivery_fee || 0);
+  return {
+    ...order,
+    id: order.id || order.order_number || order.reference_code || crypto.randomUUID(),
+    order_number: order.order_number || order.reference_code || `VM-${String(order.id || Date.now()).slice(0, 8).toUpperCase()}`,
+    customer_id: order.customer_id || "",
+    customer: {
+      id: order.customer_id || order.customer_phone || order.customer_email || order.id,
+      name: order.customer_name || order.name || "Customer",
+      phone: order.customer_phone || order.phone || "",
+      email: order.customer_email || order.email || "",
+      address: order.delivery_address || [order.customer_area, order.customer_street].filter(Boolean).join(", ") || order.address || ""
+    },
+    items,
+    subtotal,
+    delivery_fee: deliveryFee,
+    total: Number(order.total ?? order.total_amount ?? subtotal + deliveryFee),
+    payment_method: order.payment_method || "",
+    status: normalizeStatus(order.status || order.order_status || "Pending"),
+    admin_notes: order.admin_notes || "",
+    created_at: order.created_at || new Date().toISOString()
+  };
+}
+
+function normalizeCustomer(customer) {
+  return {
+    ...customer,
+    id: customer.id || customer.phone || customer.email || crypto.randomUUID(),
+    name: customer.name || customer.customer_name || "Customer",
+    phone: customer.phone || customer.customer_phone || "",
+    email: customer.email || customer.customer_email || "",
+    addresses: parseJsonMaybe(customer.addresses, []),
+    orders: [],
+    total_spent: 0
+  };
+}
+
+function normalizeReview(review) {
+  return {
+    ...review,
+    id: review.id || crypto.randomUUID(),
+    product_id: review.product_id || "",
+    customer_name: review.customer_name || review.name || "Customer",
+    rating: Math.max(1, Math.min(5, Number(review.rating || 5))),
+    comment: review.comment || "",
+    is_approved: review.is_approved === true,
+    created_at: review.created_at || new Date().toISOString()
+  };
+}
+
+function attachCustomersToOrders(orders, customers) {
+  const customerMap = new Map(customers.map(customer => [String(customer.id), normalizeCustomer(customer)]));
+  return orders.map(order => {
+    const normalizedOrder = normalizeOrder(order);
+    const customer = customerMap.get(String(normalizedOrder.customer_id));
+    if (!customer) return normalizedOrder;
+    return {
+      ...normalizedOrder,
+      customer: {
+        id: customer.id,
+        name: customer.name || normalizedOrder.customer.name,
+        phone: customer.phone || normalizedOrder.customer.phone,
+        email: customer.email || normalizedOrder.customer.email,
+        address: formatAddress(customer.addresses?.[0]) || normalizedOrder.customer.address
+      }
+    };
+  });
+}
+
+function mergeCustomersWithOrders(customers, orders) {
+  const map = new Map();
+  customers.map(normalizeCustomer).forEach(customer => map.set(customerKey(customer), customer));
+  orders.map(normalizeOrder).forEach(order => {
+    const base = normalizeCustomer({ id: order.customer.id, name: order.customer.name, phone: order.customer.phone, email: order.customer.email, addresses: order.customer.address ? [{ street: order.customer.address }] : [] });
+    const key = customerKey(base);
+    const existing = map.get(key) || base;
+    existing.orders = existing.orders || [];
+    existing.orders.push(order);
+    existing.total_spent = (existing.total_spent || 0) + (normalizeStatus(order.status) === "Cancelled" ? 0 : Number(order.total || 0));
+    const addressText = order.customer.address;
+    if (addressText && !existing.addresses.some(address => formatAddress(address) === addressText)) existing.addresses.push({ street: addressText });
+    map.set(key, existing);
+  });
+  return Array.from(map.values()).sort((a, b) => (b.total_spent || 0) - (a.total_spent || 0));
+}
+
+function customerKey(customer) {
+  return String(customer.id || customer.phone || customer.email || customer.name).toLowerCase();
+}
+
+function getBestSellingProducts() {
+  const map = new Map();
+  state.orders.filter(order => normalizeStatus(order.status) !== "Cancelled").forEach(order => {
+    order.items.forEach(item => {
+      const key = item.product_id || item.name;
+      const existing = map.get(key) || { name: item.name, quantity: 0, revenue: 0 };
+      existing.quantity += Number(item.quantity || 0);
+      existing.revenue += Number(item.line_total || 0);
+      map.set(key, existing);
+    });
+  });
+  return Array.from(map.values()).sort((a, b) => b.quantity - a.quantity).slice(0, 5);
+}
+
+function getCategoryName(id) {
+  const category = state.categories.find(item => String(item.id) === String(id) || String(item.slug) === String(id));
+  return category ? category.name : titleCase(String(id || "Uncategorized").replace(/[-_]/g, " "));
+}
+
+function getProductName(id) {
+  const product = state.products.find(item => String(item.id) === String(id));
+  return product ? product.name : "Unknown product";
+}
+
+function normalizeStatus(status) {
+  const value = titleCase(String(status || "Pending").replace(/[-_]/g, " ").trim());
+  const allowed = ["Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"];
+  return allowed.includes(value) ? value : "Pending";
+}
+
+function statusClass(status) {
+  const normalized = normalizeStatus(status);
+  if (normalized === "Delivered" || normalized === "Confirmed") return "badge-green";
+  if (normalized === "Cancelled") return "badge-red";
+  return "badge-amber";
+}
+
+function parseJsonMaybe(value, fallback) {
+  if (value == null || value === "") return fallback;
+  if (Array.isArray(value) || typeof value === "object") return value;
+  try { return JSON.parse(value); } catch (_) { return fallback; }
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function slugify(value) {
+  return String(value || "")
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  slugInput.value = slug;
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "item";
 }
 
-// Open edit mode
-async function openEditProductForm(id) {
-  const p = await db.getProductById(id);
-  if (!p) return;
-
-  editingProductId = p.id;
-  document.getElementById("formTitleText").textContent = "Edit Product";
-
-  // Pre-fill form fields
-  document.getElementById("prodName").value = p.name || "";
-  document.getElementById("prodSlug").value = p.slug || "";
-  document.getElementById("prodCategory").value = p.category || "iphones";
-  document.getElementById("prodPrice").value = p.price || "";
-  document.getElementById("prodComparePrice").value = p.compare_at_price || "";
-  document.getElementById("prodWholesalePrice").value = p.wholesale_price || "";
-  document.getElementById("prodSpecs").value = p.specs || "";
-  document.getElementById("prodDescription").value = p.description || "";
-  document.getElementById("prodBadge").value = p.badge || "none";
-  document.getElementById("prodStock").value = p.stock_quantity || 0;
-
-  // Restore arrays
-  uploadedImages = [p.image_url, ...(p.images || [])].filter(x => !!x);
-  productColors = p.colors || [];
-  productStorageOptions = p.storage_options || [];
-
-  // Update UI
-  renderUploadedThumbnails();
-  renderColorsList();
-  renderStorageList();
-
-  // Switch to form tab
-  switchTab("product-form");
+function titleCase(value) {
+  return String(value || "").replace(/\w\S*/g, text => text.charAt(0).toUpperCase() + text.slice(1).toLowerCase());
 }
 
-// Reset form to blank state
-function resetProductForm() {
-  editingProductId = null;
-  document.getElementById("formTitleText").textContent = "Add New Product";
-  document.getElementById("productCrudForm").reset();
-
-  uploadedImages = [];
-  productColors = [];
-  productStorageOptions = [];
-
-  renderUploadedThumbnails();
-  renderColorsList();
-  renderStorageList();
+function formatCurrency(value) {
+  return `GH₵ ${Number(value || 0).toLocaleString("en-GH", { maximumFractionDigits: 2 })}`;
 }
 
-// Handle form submit (create or update)
-async function handleProductFormSubmit(event) {
-  event.preventDefault();
-  logActivity("Product saved", document.getElementById("prodName").value.trim());
-
-  const name = document.getElementById("prodName").value.trim();
-  const slug = document.getElementById("prodSlug").value.trim();
-  const category = document.getElementById("prodCategory").value;
-  const price = document.getElementById("prodPrice").value;
-  const comparePrice = document.getElementById("prodComparePrice").value || 0;
-  const wholesalePrice = document.getElementById("prodWholesalePrice").value || 0;
-  const specs = document.getElementById("prodSpecs").value.trim();
-  const description = document.getElementById("prodDescription").value.trim();
-  const badge = document.getElementById("prodBadge").value;
-  const stock = document.getElementById("prodStock").value || 0;
-
-  if (!name || !slug || !price) {
-    showAdminToast("Please fill in Name, Slug, and Price.");
-    return;
-  }
-
-  // Prepare image data
-  const mainImage = uploadedImages.length > 0 ? uploadedImages[0] : "";
-  const additionalImages = uploadedImages.length > 1 ? uploadedImages.slice(1) : [];
-
-  const productData = {
-    name: name,
-    slug: slug,
-    category: category,
-    price: price,
-    compare_at_price: comparePrice,
-    wholesale_price: wholesalePrice,
-    specs: specs,
-    description: description,
-    badge: badge,
-    stock_quantity: stock,
-    image_url: mainImage,
-    images: additionalImages,
-    colors: productColors,
-    storage_options: productStorageOptions
-  };
-
-  let success = false;
-  if (editingProductId) {
-    success = await db.updateProduct(editingProductId, productData);
-    if (success) showAdminToast("Product updated successfully.");
-  } else {
-    success = await db.createProduct(productData);
-    if (success) showAdminToast("Product created successfully.");
-  }
-
-  if (success) {
-    resetProductForm();
-    switchTab("dashboard");
-  } else {
-    showAdminToast("Failed to save product. Please try again.");
-  }
+function formatDate(value) {
+  if (!value) return "";
+  return new Date(value).toLocaleDateString("en-GH", { year: "numeric", month: "short", day: "numeric" });
 }
 
-// Delete product with confirmation
-async function triggerDeleteProduct(id, name) {
-  const confirmDel = confirm(`Are you sure you want to permanently delete: ${name}?`);
-  if (!confirmDel) return;
-
-  const success = await db.deleteProduct(id);
-  if (success) {
-    logActivity("Product deleted", name);
-    showAdminToast("Product deleted successfully.");
-    initializeDashboard();
-  } else {
-    showAdminToast("Could not delete product.");
-  }
+function formatAddress(address) {
+  if (!address) return "";
+  if (typeof address === "string") return address;
+  return [address.name, address.zone, address.street, address.landmark].filter(Boolean).join(", ") || address.address || "";
 }
 
-// ============================================================
-// IMAGE UPLOADER — Drag & Drop + Click
-// ============================================================
-function initImageUploaderListeners() {
-  const zone = document.getElementById("imageDragZone");
-  const input = document.getElementById("imageFileInput");
-
-  if (!zone || !input) return;
-
-  zone.addEventListener("click", () => input.click());
-
-  zone.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    zone.classList.add("dragover");
-  });
-
-  zone.addEventListener("dragleave", () => {
-    zone.classList.remove("dragover");
-  });
-
-  zone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    zone.classList.remove("dragover");
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleImageFilesUpload(e.dataTransfer.files);
-    }
-  });
-
-  input.addEventListener("change", () => {
-    if (input.files && input.files.length > 0) {
-      handleImageFilesUpload(input.files);
-      input.value = "";
-    }
-  });
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>'"]/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]));
 }
 
-async function handleImageFilesUpload(files) {
-  if (uploadedImages.length >= 5) {
-    showAdminToast("Maximum 5 images per product reached.");
-    return;
-  }
-
-  const progressBar = document.getElementById("uploaderProgressBar");
-  const progressContainer = document.getElementById("uploaderProgressContainer");
-
-  progressContainer.classList.remove("hidden");
-
-  // Filter valid image files
-  const validFiles = Array.from(files).filter(f =>
-    ["image/jpeg", "image/png", "image/webp"].includes(f.type)
-  );
-
-  if (validFiles.length === 0) {
-    showAdminToast("Please provide JPG, PNG, or WebP images only.");
-    progressContainer.classList.add("hidden");
-    return;
-  }
-
-  for (const file of validFiles) {
-    if (uploadedImages.length >= 5) break;
-
-    try {
-      const publicUrl = await db.uploadProductImage(file, (progress) => {
-        progressBar.style.width = `${progress}%`;
-      });
-
-      if (publicUrl) {
-        uploadedImages.push(publicUrl);
-        renderUploadedThumbnails();
-      }
-    } catch (err) {
-      console.error("Upload error:", err);
-      showAdminToast("Image upload failed.");
-    }
-  }
-
-  setTimeout(() => {
-    progressContainer.classList.add("hidden");
-    progressBar.style.width = "0%";
-  }, 1000);
+function escapeAttr(value) {
+  return escapeHtml(value).replace(/`/g, "&#96;");
 }
 
-function deleteUploadedImage(index) {
-  uploadedImages.splice(index, 1);
-  renderUploadedThumbnails();
+function emptyState(message) {
+  return `<div class="rounded-xl border border-dashed border-slate-700 bg-[#071126] p-5 text-center text-sm font-bold text-slate-500">${escapeHtml(message)}</div>`;
 }
 
-function moveImageOrder(index, direction) {
-  if (direction === "left" && index > 0) {
-    const temp = uploadedImages[index];
-    uploadedImages[index] = uploadedImages[index - 1];
-    uploadedImages[index - 1] = temp;
-  } else if (direction === "right" && index < uploadedImages.length - 1) {
-    const temp = uploadedImages[index];
-    uploadedImages[index] = uploadedImages[index + 1];
-    uploadedImages[index + 1] = temp;
-  }
-  renderUploadedThumbnails();
-}
-
-function renderUploadedThumbnails() {
-  const container = document.getElementById("uploaderPreviewContainer");
-  if (!container) return;
-
-  if (uploadedImages.length === 0) {
-    container.innerHTML = `
-      <div class="col-span-full py-4 text-center text-slate-500 font-semibold text-xs uppercase tracking-wide">
-        No images uploaded yet.
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = uploadedImages.map((img, idx) => {
-    const isMain = idx === 0
-      ? `<span class="absolute bottom-1 left-1 bg-gold text-slate-900 text-[8px] font-black uppercase px-1.5 py-0.5 rounded">Main</span>`
-      : "";
-    return `
-      <div class="preview-thumbnail">
-        <img src="${img}" class="object-contain" alt="Product image ${idx + 1}" />
-        ${isMain}
-        <button onclick="deleteUploadedImage(${idx})" type="button" class="preview-thumbnail-delete">X</button>
-        <div class="absolute bottom-1 right-1 flex gap-0.5 bg-slate-950/80 px-1 py-0.5 rounded">
-          <button onclick="moveImageOrder(${idx}, 'left')" type="button" class="text-white hover:text-gold text-[9px] font-bold px-0.5" ${idx === 0 ? 'disabled' : ''}>&lt;</button>
-          <button onclick="moveImageOrder(${idx}, 'right')" type="button" class="text-white hover:text-gold text-[9px] font-bold px-0.5" ${idx === uploadedImages.length - 1 ? 'disabled' : ''}>&gt;</button>
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-
-// ============================================================
-// COLOR VARIANTS MANAGEMENT
-// ============================================================
-function addColorOption() {
-  const nameInput = document.getElementById("colorNameInput");
-  const hexInput = document.getElementById("colorHexInput");
-
-  const name = nameInput.value.trim();
-  const hex = hexInput.value;
-
-  if (!name) {
-    showAdminToast("Please enter a color name.");
-    return;
-  }
-
-  // Check for duplicates
-  if (productColors.some(c => c.name.toLowerCase() === name.toLowerCase())) {
-    showAdminToast("Color already added.");
-    return;
-  }
-
-  productColors.push({
-    name: name,
-    hex: hex,
-    available: true
-  });
-
-  nameInput.value = "";
-  renderColorsList();
-}
-
-function toggleColorAvailability(idx) {
-  productColors[idx].available = !productColors[idx].available;
-  renderColorsList();
-}
-
-function deleteColorOption(idx) {
-  productColors.splice(idx, 1);
-  renderColorsList();
-}
-
-function renderColorsList() {
-  const container = document.getElementById("formColorsList");
-  if (!container) return;
-
-  if (productColors.length === 0) {
-    container.innerHTML = `<span class="text-slate-500 font-semibold text-xs">No color variants added yet.</span>`;
-    return;
-  }
-
-  container.innerHTML = productColors.map((c, idx) => `
-    <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded p-2 text-xs">
-      <div class="flex items-center gap-2">
-        <span class="h-5 w-5 rounded-full border border-slate-700 shrink-0" style="background-color: ${c.hex};"></span>
-        <span class="text-white font-bold">${c.name}</span>
-        <span class="text-[9px] text-slate-500 font-mono">${c.hex}</span>
-      </div>
-      <div class="flex items-center gap-2.5">
-        <label class="flex items-center gap-1 cursor-pointer select-none">
-          <input type="checkbox" onchange="toggleColorAvailability(${idx})" ${c.available ? 'checked' : ''} class="accent-gold h-3.5 w-3.5" />
-          <span class="text-[10px] text-slate-400 font-bold uppercase">Available</span>
-        </label>
-        <button onclick="deleteColorOption(${idx})" type="button" class="text-red-500 hover:text-red-400 font-bold text-sm">
-          X
-        </button>
-      </div>
-    </div>
-  `).join("");
-}
-
-// ============================================================
-// STORAGE OPTIONS MANAGEMENT
-// ============================================================
-function addStorageOption() {
-  const sizeInput = document.getElementById("storageSizeInput");
-  const priceAdjInput = document.getElementById("storagePriceAdjustmentInput");
-
-  const size = sizeInput.value.trim();
-  const adj = parseFloat(priceAdjInput.value || 0);
-
-  if (!size) {
-    showAdminToast("Please provide a storage size (e.g. 128GB).");
-    return;
-  }
-
-  // Check for duplicates
-  if (productStorageOptions.some(s => s.size.toLowerCase() === size.toLowerCase())) {
-    showAdminToast("Storage size already added.");
-    return;
-  }
-
-  productStorageOptions.push({
-    size: size,
-    price_adjustment: adj
-  });
-
-  sizeInput.value = "";
-  priceAdjInput.value = "";
-  renderStorageList();
-}
-
-function deleteStorageOption(idx) {
-  productStorageOptions.splice(idx, 1);
-  renderStorageList();
-}
-
-function renderStorageList() {
-  const container = document.getElementById("formStorageList");
-  if (!container) return;
-
-  if (productStorageOptions.length === 0) {
-    container.innerHTML = `<span class="text-slate-500 font-semibold text-xs">No storage options added yet.</span>`;
-    return;
-  }
-
-  container.innerHTML = productStorageOptions.map((s, idx) => `
-    <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded p-2 text-xs">
-      <span class="text-white font-extrabold">${s.size}</span>
-      <div class="flex items-center gap-3">
-        <span class="text-gold font-bold">
-          ${s.price_adjustment > 0 ? `+GH₵ ${s.price_adjustment}` : s.price_adjustment < 0 ? `-GH₵ ${Math.abs(s.price_adjustment)}` : 'No adjustment'}
-        </span>
-        <button onclick="deleteStorageOption(${idx})" type="button" class="text-red-500 hover:text-red-400 font-bold text-sm">
-          X
-        </button>
-      </div>
-    </div>
-  `).join("");
-}
-
-// ============================================================
-// BULK IMAGE UPLOAD
-// ============================================================
-function populateBulkProductsDropdown() {
-  const select = document.getElementById("bulkProductSelect");
-  if (!select) return;
-
-  select.innerHTML = `<option value="">-- Select Product --</option>` +
-    allProducts.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
-}
-
-async function triggerBulkImageUpload(files) {
-  const pId = document.getElementById("bulkProductSelect").value;
-  if (!pId) {
-    showAdminToast("Please select a target product first.");
-    return;
-  }
-
-  const p = allProducts.find(x => x.id === pId);
-  if (!p) return;
-
-  const validFiles = Array.from(files).filter(f =>
-    ["image/jpeg", "image/png", "image/webp"].includes(f.type)
-  );
-  if (validFiles.length === 0) {
-    showAdminToast("No valid JPG, PNG, or WebP images found.");
-    return;
-  }
-
-  // Current images count
-  const curImages = [p.image_url, ...(p.images || [])].filter(Boolean);
-  if (curImages.length + validFiles.length > 5) {
-    showAdminToast("Product can only hold a maximum of 5 images total.");
-    return;
-  }
-
-  const listContainer = document.getElementById("bulkUploadResultsList");
-  listContainer.innerHTML = `<span class="text-xs font-bold text-slate-400">Uploading ${validFiles.length} images...</span>`;
-
-  let uploadedCount = 0;
-  for (const file of validFiles) {
-    try {
-      const publicUrl = await db.uploadProductImage(file, () => {});
-      if (publicUrl) {
-        curImages.push(publicUrl);
-        uploadedCount++;
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  // Save changes
-  if (uploadedCount > 0) {
-    const updated = {
-      ...p,
-      image_url: curImages[0],
-      images: curImages.slice(1)
-    };
-    await db.updateProduct(p.id, updated);
-    showAdminToast(`Successfully uploaded ${uploadedCount} images to ${p.name}.`);
-    listContainer.innerHTML = `<span class="text-xs font-bold text-green-500">Successfully added ${uploadedCount} images to ${p.name}!</span>`;
-    initializeDashboard();
-  } else {
-    listContainer.innerHTML = `<span class="text-xs font-bold text-red-500">Upload failed. Please try again.</span>`;
-  }
-}
-
-// ============================================================
-// ORDERS MANAGEMENT
-// ============================================================
-function renderOrdersTable() {
-  const tbody = document.getElementById("ordersTableBody");
-  if (!tbody) return;
-
-  if (allOrders.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="6" class="px-6 py-8 text-center text-slate-500 font-semibold text-xs">
-          No customer orders recorded yet.
-        </td>
-      </tr>
-    `;
-    return;
-  }
-
-  tbody.innerHTML = allOrders.map(o => {
-    const formattedDate = new Date(o.created_at).toLocaleDateString("en-GH", {
-      year: "numeric", month: "short", day: "numeric"
-    });
-
-    const itemsDescription = (o.items || []).map(i => {
-      const colorStorage = [i.selected_color, i.selected_storage].filter(Boolean).join("/");
-      return `${i.name} ${colorStorage ? `(${colorStorage})` : ""} x${i.qty}`;
-    }).join(", ");
-
-    const statusColors = {
-      Pending: "bg-yellow-950 text-yellow-400",
-      Processing: "bg-blue-950 text-blue-400",
-      Dispatched: "bg-purple-950 text-purple-400",
-      Delivered: "bg-green-950 text-green-400",
-      Cancelled: "bg-red-950 text-red-400"
-    };
-
-    return `
-      <tr class="border-b border-slate-800 hover:bg-slate-900/40">
-        <td class="px-6 py-4 whitespace-nowrap text-xs font-black text-gold">
-          #${o.reference_code}
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-xs text-white">
-          <div class="font-extrabold">${o.customer_name}</div>
-          <div class="text-[10px] text-slate-500 font-bold">${o.customer_phone}</div>
-          <div class="text-[9px] text-slate-500 truncate max-w-[150px]">${o.customer_area || ""}</div>
-        </td>
-        <td class="px-6 py-4 text-xs text-slate-300 font-medium max-w-[200px] truncate" title="${itemsDescription}">
-          ${itemsDescription}
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-xs font-black text-white">
-          GH₵ ${parseFloat(o.total_amount || 0).toLocaleString()}
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap">
-          <select onchange="changeOrderStatus('${o.id}', this.value)" class="bg-slate-900 border border-slate-800 rounded p-1.5 text-[11px] font-black text-white outline-none focus:border-gold">
-            <option value="Pending" ${o.status === "Pending" ? "selected" : ""}>Pending</option>
-            <option value="Processing" ${o.status === "Processing" ? "selected" : ""}>Processing</option>
-            <option value="Dispatched" ${o.status === "Dispatched" ? "selected" : ""}>Dispatched</option>
-            <option value="Delivered" ${o.status === "Delivered" ? "selected" : ""}>Delivered</option>
-            <option value="Cancelled" ${o.status === "Cancelled" ? "selected" : ""}>Cancelled</option>
-          </select>
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-xs text-slate-500 font-semibold">
-          ${formattedDate}
-        </td>
-      </tr>
-    `;
-  }).join("");
-}
-
-async function changeOrderStatus(id, newStatus) {
-  const success = await db.updateOrderStatus(id, newStatus);
-  if (success) {
-    showAdminToast(`Order status updated to: ${newStatus}`);
-    allOrders = await db.getOrders();
-    renderStats();
-  } else {
-    showAdminToast("Failed to update order status.");
-  }
-}
-
-// ============================================================
-// REVIEWS MANAGEMENT
-// ============================================================
-function renderReviewsTable() {
-  const tbody = document.getElementById("reviewsTableBody");
-  if (!tbody) return;
-
-  if (allReviews.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="6" class="px-6 py-8 text-center text-slate-500 font-semibold text-xs">
-          No reviews submitted yet.
-        </td>
-      </tr>
-    `;
-    return;
-  }
-
-  tbody.innerHTML = allReviews.map(r => {
-    const prod = allProducts.find(p => p.id === r.product_id);
-    const prodName = prod ? prod.name : "Unknown Product";
-    const dateStr = new Date(r.created_at).toLocaleDateString("en-GH", {
-      year: "numeric", month: "short", day: "numeric"
-    });
-
-    const stars = Array(5).fill("").map((_, i) => `
-      <svg class="w-3 h-3 ${i < r.rating ? 'text-gold fill-current' : 'text-slate-700'}" viewBox="0 0 20 20">
-        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-      </svg>
-    `).join("");
-
-    let statusBadge = "";
-    let actionButtons = "";
-
-    if (r.is_approved) {
-      statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-green-950 text-green-400">Approved</span>`;
-      actionButtons = `
-        <button onclick="triggerRejectReview('${r.id}')" class="bg-yellow-950/40 hover:bg-yellow-900/60 text-yellow-400 font-extrabold text-[10px] px-2.5 py-1 rounded uppercase tracking-wider transition-colors border border-yellow-900/30">Reject</button>
-        <button onclick="triggerDeleteReview('${r.id}')" class="text-red-500 hover:text-white transition-colors ml-2" title="Delete">
-          <svg class="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-          </svg>
-        </button>
-      `;
-    } else {
-      statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-yellow-950 text-yellow-400">Pending</span>`;
-      actionButtons = `
-        <button onclick="triggerApproveReview('${r.id}')" class="bg-gold hover:bg-gold/90 text-slate-900 font-extrabold text-[10px] px-2.5 py-1 rounded uppercase tracking-wider transition-colors">Approve</button>
-        <button onclick="triggerDeleteReview('${r.id}')" class="text-red-500 hover:text-white transition-colors ml-2" title="Delete">
-          <svg class="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-          </svg>
-        </button>
-      `;
-    }
-
-    return `
-      <tr class="border-b border-slate-800 hover:bg-slate-900/40">
-        <td class="px-6 py-4 whitespace-nowrap text-xs font-bold text-white">
-          ${r.customer_name}
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-xs text-slate-400 font-medium max-w-[150px] truncate" title="${prodName}">
-          ${prodName}
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap">
-          <div class="flex gap-0.5">${stars}</div>
-        </td>
-        <td class="px-6 py-4 text-xs text-slate-300 font-medium max-w-[200px] truncate" title="${r.comment || ''}">
-          ${r.comment || ""}
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap">
-          ${statusBadge}
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-right">
-          ${actionButtons}
-        </td>
-      </tr>
-    `;
-  }).join("");
-}
-
-async function triggerApproveReview(id) {
-  logActivity("Review approved", id);
-  const success = await db.approveReview(id);
-  if (success) {
-    showAdminToast("Review approved and now visible on storefront.");
-    allReviews = await db.getReviews();
-    renderReviewsTable();
-  } else {
-    showAdminToast("Could not approve review.");
-  }
-}
-
-async function triggerRejectReview(id) {
-  const success = await db.rejectReview(id);
-  if (success) {
-    showAdminToast("Review rejected and hidden from storefront.");
-    allReviews = await db.getReviews();
-    renderReviewsTable();
-  } else {
-    showAdminToast("Could not reject review.");
-  }
-}
-
-async function triggerDeleteReview(id) {
-  const confirmDel = confirm("Are you sure you want to permanently delete this customer review?");
-  if (!confirmDel) return;
-
-  const success = await db.deleteReview(id);
-  if (success) {
-    showAdminToast("Review deleted successfully.");
-    allReviews = await db.getReviews();
-    renderReviewsTable();
-  } else {
-    showAdminToast("Failed to delete review.");
-  }
-}
-
-function toggleHeaderMenu() {
-  const menu = document.getElementById("headerDropdown");
-  menu.classList.toggle("hidden");
-}
-
-// Close dropdown when clicking outside
-window.addEventListener("click", (e) => {
-  const menuContainer = document.getElementById("adminHeaderMenu");
-  if (menuContainer && !menuContainer.contains(e.target)) {
-    document.getElementById("headerDropdown").classList.add("hidden");
-  }
-});
-
-// ============================================================
-// RESELLERS
-// ============================================================
-let resellers = JSON.parse(localStorage.getItem("valmont_resellers") || "[]");
-
-function openResellerForm() {
-  const name = prompt("Reseller full name:");
-  if (!name) return;
-  const phone = prompt("Reseller phone:");
-  const newReseller = {
-    id: crypto.randomUUID(),
-    name: name,
-    phone: phone || "",
-    status: "active",
-    registered_at: new Date().toISOString()
-  };
-  resellers.push(newReseller);
-  localStorage.setItem("valmont_resellers", JSON.stringify(resellers));
-  renderResellers();
-  showAdminToast("Reseller registered.");
-}
-
-function renderResellers() {
-  const tbody = document.getElementById("resellersTableBody");
-  if (!tbody) return;
-  tbody.innerHTML = resellers.map(r => `
-    <tr class="border-b border-slate-800 hover:bg-slate-900/40">
-      <td class="px-4 py-3 text-xs font-bold text-white">${r.name}</td>
-      <td class="px-4 py-3 text-xs text-slate-300">${r.phone}</td>
-      <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-black uppercase ${r.status === 'active' ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-400'}">${r.status}</span></td>
-      <td class="px-4 py-3 text-xs text-slate-500">${new Date(r.registered_at).toLocaleDateString("en-GH")}</td>
-      <td class="px-4 py-3 text-right">
-        <button onclick="toggleResellerStatus('${r.id}')" class="text-gold hover:text-white text-xs font-black">Toggle</button>
-        <button onclick="deleteReseller('${r.id}')" class="text-red-500 hover:text-white text-xs font-black ml-3">Delete</button>
-      </td>
-    </tr>
-  `).join("");
-}
-
-function toggleResellerStatus(id) {
-  const r = resellers.find(x => x.id === id);
-  if (r) { r.status = r.status === "active" ? "inactive" : "active"; localStorage.setItem("valmont_resellers", JSON.stringify(resellers)); renderResellers(); showAdminToast("Reseller status updated."); }
-}
-
-function deleteReseller(id) {
-  if (!confirm("Delete reseller?")) return;
-  resellers = resellers.filter(x => x.id !== id);
-  localStorage.setItem("valmont_resellers", JSON.stringify(resellers));
-  renderResellers();
-  showAdminToast("Reseller deleted.");
-}
-
-// ============================================================
-// ACTIVITY LOG
-// ============================================================
-function logActivity(action, target) {
-  const log = JSON.parse(localStorage.getItem("valmont_activity") || "[]");
-  log.unshift({ action, target, time: new Date().toISOString() });
-  if (log.length > 50) log.pop();
-  localStorage.setItem("valmont_activity", JSON.stringify(log));
-  renderActivityLog();
-}
-
-function renderActivityLog() {
-  const tbody = document.getElementById("activityLogBody");
-  if (!tbody) return;
-  const log = JSON.parse(localStorage.getItem("valmont_activity") || "[]");
-  tbody.innerHTML = log.map(l => `
-    <tr class="border-b border-slate-800 hover:bg-slate-900/40">
-      <td class="px-6 py-3 text-xs font-bold text-white">${l.action}</td>
-      <td class="px-6 py-3 text-xs text-slate-300 truncate max-w-[200px]">${l.target}</td>
-      <td class="px-6 py-3 text-xs text-slate-500">${new Date(l.time).toLocaleString("en-GH")}</td>
-    </tr>
-  `).join("");
-}
-
-// ============================================================
-// TOAST NOTIFICATIONS
-// ============================================================
-function showAdminToast(msg) {
+function showToast(message) {
   const toast = document.getElementById("adminToast");
-  if (!toast) return;
-
-  toast.textContent = msg;
-  toast.classList.add("show");
-
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, 4000);
+  toast.textContent = message;
+  toast.classList.remove("hidden");
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => toast.classList.add("hidden"), 2600);
 }

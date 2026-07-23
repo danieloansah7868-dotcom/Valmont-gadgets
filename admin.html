@@ -1,601 +1,332 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Valmont Gadgets — Executive Admin Panel</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-
-  <!-- Tailwind CSS -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Valmont Gadgets — Admin Panel</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-  <!-- Supabase CDN Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- Custom Assets Styles -->
-  <link rel="stylesheet" href="assets/css/gadgets.css">
-
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <script>
     tailwind.config = {
       theme: {
         extend: {
+          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'] },
           colors: {
-            navy: {
-              deep: '#0b1a38',
-              light: '#1e2d4d',
-            },
-            gold: '#f58c14',
-            slate: {
-              panel: '#12234a',
-            }
+            navy: { deep: '#0b1a38', ink: '#071126', light: '#10214a' },
+            panel: '#12234a',
+            gold: '#f58c14'
           }
         }
       }
-    }
+    };
   </script>
+  <style>
+    * { scrollbar-width: thin; scrollbar-color: #334155 #071126; }
+    body { background: #071126; }
+    .admin-card { background: rgba(18, 35, 74, .94); border: 1px solid rgba(51,65,85,.8); border-radius: 1rem; box-shadow: 0 18px 50px rgba(0,0,0,.22); }
+    .admin-input { width: 100%; background: #071126; border: 1px solid #334155; border-radius: .75rem; color: white; padding: .78rem .9rem; font-size: .875rem; outline: none; }
+    .admin-input:focus { border-color: #f58c14; box-shadow: 0 0 0 3px rgba(245, 140, 20, .13); }
+    .admin-label { display: block; color: #94a3b8; font-size: .68rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; margin-bottom: .45rem; }
+    .btn-gold { background: #f58c14; color: #071126; font-weight: 900; border-radius: .75rem; padding: .75rem 1rem; text-transform: uppercase; letter-spacing: .09em; font-size: .72rem; transition: .18s ease; }
+    .btn-gold:hover { filter: brightness(.95); transform: translateY(-1px); }
+    .btn-muted { background: #0b1a38; color: #cbd5e1; border: 1px solid #334155; font-weight: 800; border-radius: .75rem; padding: .7rem .95rem; text-transform: uppercase; letter-spacing: .08em; font-size: .7rem; transition: .18s ease; }
+    .btn-muted:hover { border-color: #f58c14; color: #fff; }
+    .btn-danger { background: rgba(127, 29, 29, .4); color: #fca5a5; border: 1px solid rgba(127, 29, 29, .75); font-weight: 900; border-radius: .75rem; padding: .7rem .95rem; text-transform: uppercase; letter-spacing: .08em; font-size: .7rem; }
+    .nav-btn { display: flex; align-items: center; gap: .7rem; width: 100%; color: #94a3b8; border: 1px solid transparent; border-radius: .9rem; padding: .78rem .9rem; font-size: .78rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; transition: .16s ease; }
+    .nav-btn:hover { color: #fff; background: rgba(15, 23, 42, .55); border-color: rgba(51,65,85,.6); }
+    .nav-btn.active { color: #071126; background: #f58c14; border-color: #f58c14; box-shadow: 0 14px 28px rgba(245,140,20,.18); }
+    .section-panel { display: none; }
+    .section-panel.active { display: block; }
+    .table-wrap { overflow-x: auto; border-radius: .9rem; border: 1px solid rgba(51,65,85,.75); }
+    .admin-table { min-width: 100%; border-collapse: collapse; }
+    .admin-table th { background: #071126; color: #94a3b8; font-size: .65rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; padding: .85rem 1rem; text-align: left; white-space: nowrap; }
+    .admin-table td { padding: .95rem 1rem; border-top: 1px solid rgba(51,65,85,.55); color: #cbd5e1; font-size: .84rem; vertical-align: middle; }
+    .badge { display: inline-flex; align-items: center; border-radius: 999px; border: 1px solid rgba(51,65,85,.7); background: #071126; padding: .26rem .55rem; font-size: .64rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+    .badge-green { color: #86efac; border-color: rgba(22,101,52,.65); background: rgba(20,83,45,.25); }
+    .badge-red { color: #fca5a5; border-color: rgba(153,27,27,.7); background: rgba(127,29,29,.25); }
+    .badge-amber { color: #fcd34d; border-color: rgba(180,83,9,.7); background: rgba(120,53,15,.25); }
+    .modal-open { overflow: hidden; }
+    .image-tile[draggable="true"] { cursor: grab; }
+    .image-tile.dragging { opacity: .45; transform: scale(.98); }
+    @media (max-width: 1023px) {
+      #adminSidebar { transform: translateX(-105%); }
+      #adminSidebar.open { transform: translateX(0); }
+    }
+  </style>
 </head>
-<body class="bg-[#0b1a38] text-[#f1f5f9] font-sans antialiased">
-
-  <!-- ================= AUTH GATE OVERLAY ================= -->
-  <div id="authGateOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-navy-deep px-4">
-    <div class="w-full max-w-md bg-slate-panel border border-slate-700 p-8 rounded-xl shadow-2xl">
-      <div class="text-center mb-6">
-        <span class="text-gold font-black text-2xl tracking-widest uppercase bg-navy-deep px-4 py-2 rounded border border-slate-700 inline-block">VALMONT</span>
-        <h2 class="text-lg font-black text-white tracking-wide uppercase mt-4">Executive Admin Portal</h2>
-        <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1.5">Secure Access Validation</p>
+<body class="font-sans text-slate-100 antialiased">
+  <div id="authGate" class="fixed inset-0 z-[80] flex items-center justify-center bg-[#071126] px-4">
+    <div class="admin-card w-full max-w-md p-7 sm:p-8">
+      <div class="text-center">
+        <div class="mx-auto mb-5 inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-navy-deep px-4 py-2">
+          <span class="text-xl font-black tracking-[.22em] text-gold">VALMONT</span>
+          <span class="text-xs font-black tracking-widest text-slate-400">ADMIN</span>
+        </div>
+        <h1 class="text-2xl font-black tracking-tight text-white">Secure Admin Login</h1>
+        <p class="mt-2 text-sm font-semibold text-slate-400">Enter the admin password to control the storefront.</p>
       </div>
-
-      <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
+      <form id="adminLoginForm" class="mt-7 space-y-4">
         <div>
-          <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2">Admin Password</label>
-          <div class="relative">
-            <input type="password" id="authPasswordInput" placeholder="Enter admin password" required class="w-full bg-navy-deep border border-slate-700 text-white text-sm px-4 py-3 rounded-lg outline-none focus:border-gold font-mono" />
+          <label class="admin-label" for="adminPasswordInput">Password</label>
+          <input id="adminPasswordInput" type="password" class="admin-input" placeholder="Enter admin password" autocomplete="current-password" required />
+          <p id="loginError" class="mt-2 hidden text-xs font-bold text-red-400">Incorrect password. Please try again.</p>
+        </div>
+        <button class="btn-gold w-full" type="submit">Unlock Admin Panel</button>
+      </form>
+      <p class="mt-5 text-center text-[11px] font-semibold leading-relaxed text-slate-500">Client-side password gate for Valmont operators. Do not share access on public devices.</p>
+    </div>
+  </div>
+
+  <div id="adminApp" class="hidden min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(245,140,20,.12),transparent_26%),#071126]">
+    <div id="sidebarBackdrop" class="fixed inset-0 z-30 hidden bg-black/60 lg:hidden"></div>
+    <aside id="adminSidebar" class="fixed bottom-0 left-0 top-0 z-40 flex w-72 flex-col border-r border-slate-800 bg-[#0b1a38]/98 p-4 transition-transform duration-300 lg:translate-x-0">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <a href="/" class="flex items-center gap-3">
+          <span class="rounded-lg border border-slate-700 bg-[#071126] px-3 py-1.5 text-sm font-black tracking-[.18em] text-gold">VALMONT</span>
+          <span class="text-[10px] font-black uppercase tracking-widest text-slate-500">Control</span>
+        </a>
+        <button id="closeSidebarBtn" class="rounded-lg border border-slate-700 px-2 py-1 text-slate-400 lg:hidden">×</button>
+      </div>
+      <nav class="mt-5 flex-1 space-y-1.5 overflow-y-auto pr-1">
+        <button class="nav-btn active" data-section="dashboard"><span>Dashboard</span></button>
+        <button class="nav-btn" data-section="products"><span>Products</span></button>
+        <button class="nav-btn" data-section="orders"><span>Orders</span></button>
+        <button class="nav-btn" data-section="customers"><span>Customers</span></button>
+        <button class="nav-btn" data-section="reviews"><span>Reviews</span></button>
+        <button class="nav-btn" data-section="categories"><span>Categories</span></button>
+        <button class="nav-btn" data-section="content"><span>Site Content</span></button>
+        <button class="nav-btn" data-section="settings"><span>Settings</span></button>
+      </nav>
+      <div class="mt-5 space-y-3 border-t border-slate-800 pt-4">
+        <a href="/" target="_blank" class="btn-muted block text-center">View Storefront</a>
+        <button id="sidebarLogoutBtn" class="btn-danger w-full">Logout</button>
+      </div>
+    </aside>
+
+    <div class="min-h-screen lg:pl-72">
+      <header class="sticky top-0 z-20 border-b border-slate-800 bg-[#071126]/92 backdrop-blur-xl">
+        <div class="flex flex-col gap-4 px-4 py-4 sm:px-6 xl:px-8 md:flex-row md:items-center md:justify-between">
+          <div class="flex items-center gap-3">
+            <button id="openSidebarBtn" class="btn-muted px-3 py-2 lg:hidden" type="button">Menu</button>
+            <div>
+              <p class="text-[10px] font-black uppercase tracking-[.18em] text-gold">Store Admin</p>
+              <h2 id="topStoreName" class="text-lg font-black text-white sm:text-xl">Valmont Gadgets</h2>
+            </div>
           </div>
-          <p id="authErrorMessage" class="text-xs text-red-500 font-bold mt-2 hidden">Invalid credentials. Access Denied.</p>
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="rounded-xl border border-slate-800 bg-navy-deep px-4 py-2">
+              <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">Admin Email</p>
+              <p id="topAdminEmail" class="text-xs font-bold text-slate-200">admin@valmontgadgets.com</p>
+            </div>
+            <button id="topLogoutBtn" class="btn-danger">Logout</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="px-4 py-6 sm:px-6 xl:px-8">
+        <section id="section-dashboard" class="section-panel active space-y-6">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 class="text-2xl font-black text-white">Dashboard</h1>
+              <p class="mt-1 text-sm font-semibold text-slate-400">Revenue, stock and product performance at a glance.</p>
+            </div>
+            <button class="btn-gold" data-open-product>Add Product</button>
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <div class="admin-card p-5"><p class="admin-label">Today's Revenue</p><h3 id="statTodayRevenue" class="text-2xl font-black text-gold">GH₵ 0</h3></div>
+            <div class="admin-card p-5"><p class="admin-label">This Week</p><h3 id="statWeekRevenue" class="text-2xl font-black text-gold">GH₵ 0</h3></div>
+            <div class="admin-card p-5"><p class="admin-label">Total Orders</p><h3 id="statTotalOrders" class="text-2xl font-black text-white">0</h3></div>
+            <div class="admin-card p-5"><p class="admin-label">Products</p><h3 id="statTotalProducts" class="text-2xl font-black text-white">0</h3></div>
+            <div class="admin-card p-5"><p class="admin-label">Customers</p><h3 id="statTotalCustomers" class="text-2xl font-black text-white">0</h3></div>
+          </div>
+          <div class="grid gap-6 xl:grid-cols-2">
+            <div class="admin-card p-5">
+              <div class="mb-4 flex items-center justify-between"><h2 class="text-sm font-black uppercase tracking-widest text-white">Low Stock Alerts</h2><span class="badge badge-amber">Stock &lt; 5</span></div>
+              <div id="lowStockList" class="space-y-3"></div>
+            </div>
+            <div class="admin-card p-5">
+              <div class="mb-4 flex items-center justify-between"><h2 class="text-sm font-black uppercase tracking-widest text-white">Best-selling Products</h2><span class="badge">Top 5</span></div>
+              <div id="bestSellingList" class="space-y-3"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="section-products" class="section-panel space-y-6">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div><h1 class="text-2xl font-black text-white">Products</h1><p class="mt-1 text-sm font-semibold text-slate-400">Create, update and publish storefront inventory.</p></div>
+            <div class="flex flex-col gap-3 sm:flex-row">
+              <input id="productSearch" class="admin-input sm:w-72" placeholder="Search products..." />
+              <button class="btn-gold" data-open-product>Add Product</button>
+            </div>
+          </div>
+          <div class="admin-card p-4">
+            <div class="table-wrap"><table class="admin-table"><thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th class="text-right">Actions</th></tr></thead><tbody id="productsTableBody"></tbody></table></div>
+          </div>
+        </section>
+
+        <section id="section-orders" class="section-panel space-y-6">
+          <div><h1 class="text-2xl font-black text-white">Orders</h1><p class="mt-1 text-sm font-semibold text-slate-400">Review customer orders, fulfilment status and internal notes.</p></div>
+          <div class="admin-card p-4">
+            <div class="grid gap-3 md:grid-cols-4">
+              <div><label class="admin-label">From</label><input id="orderFilterFrom" type="date" class="admin-input" /></div>
+              <div><label class="admin-label">To</label><input id="orderFilterTo" type="date" class="admin-input" /></div>
+              <div><label class="admin-label">Status</label><select id="orderFilterStatus" class="admin-input"><option value="all">All statuses</option><option>Pending</option><option>Confirmed</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option></select></div>
+              <div class="flex items-end"><button id="clearOrderFilters" class="btn-muted w-full">Clear Filters</button></div>
+            </div>
+          </div>
+          <div class="admin-card p-4">
+            <div class="table-wrap"><table class="admin-table"><thead><tr><th>Order #</th><th>Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody id="ordersTableBody"></tbody></table></div>
+          </div>
+        </section>
+
+        <section id="section-customers" class="section-panel space-y-6">
+          <div><h1 class="text-2xl font-black text-white">Customers</h1><p class="mt-1 text-sm font-semibold text-slate-400">Customers are consolidated from customer records and placed orders.</p></div>
+          <div class="grid gap-6 xl:grid-cols-[1.1fr_.9fr]">
+            <div class="admin-card p-4"><div class="table-wrap"><table class="admin-table"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Orders</th><th>Total Spent</th><th>Actions</th></tr></thead><tbody id="customersTableBody"></tbody></table></div></div>
+            <div id="customerDetailPanel" class="admin-card p-5"><p class="text-sm font-bold text-slate-400">Select a customer to view profile, saved addresses, order history and total spent.</p></div>
+          </div>
+        </section>
+
+        <section id="section-reviews" class="section-panel space-y-6">
+          <div><h1 class="text-2xl font-black text-white">Reviews</h1><p class="mt-1 text-sm font-semibold text-slate-400">Approve reviews before they appear on the storefront.</p></div>
+          <div class="admin-card p-4"><div class="table-wrap"><table class="admin-table"><thead><tr><th>Product</th><th>Customer</th><th>Rating</th><th>Comment</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="reviewsTableBody"></tbody></table></div></div>
+        </section>
+
+        <section id="section-categories" class="section-panel space-y-6">
+          <div><h1 class="text-2xl font-black text-white">Categories</h1><p class="mt-1 text-sm font-semibold text-slate-400">Add, edit, delete and drag categories to control sorting.</p></div>
+          <div class="grid gap-6 xl:grid-cols-[.85fr_1.15fr]">
+            <form id="categoryForm" class="admin-card space-y-4 p-5">
+              <input id="categoryId" type="hidden" />
+              <div><label class="admin-label">Category Name</label><input id="categoryName" class="admin-input" required placeholder="e.g. iPhones and Apple" /></div>
+              <div><label class="admin-label">Slug</label><input id="categorySlug" class="admin-input" placeholder="auto-generated if blank" /></div>
+              <div class="flex gap-3"><button class="btn-gold flex-1" type="submit">Save Category</button><button id="resetCategoryForm" class="btn-muted" type="button">Reset</button></div>
+            </form>
+            <div class="admin-card p-5"><div id="categoriesList" class="space-y-3"></div></div>
+          </div>
+        </section>
+
+        <section id="section-content" class="section-panel space-y-6">
+          <div><h1 class="text-2xl font-black text-white">Site Content</h1><p class="mt-1 text-sm font-semibold text-slate-400">Hero copy, announcement bar, location details and FAQs.</p></div>
+          <form id="siteContentForm" class="admin-card space-y-6 p-5">
+            <div class="grid gap-4 md:grid-cols-3">
+              <div><label class="admin-label">Hero Headline</label><input id="settingHeroHeadline" class="admin-input" /></div>
+              <div><label class="admin-label">Hero Subtitle</label><input id="settingHeroSubtitle" class="admin-input" /></div>
+              <div><label class="admin-label">CTA Button Text</label><input id="settingHeroCta" class="admin-input" /></div>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2">
+              <div><label class="admin-label">Announcement Bar</label><input id="settingAnnouncement" class="admin-input" /></div>
+              <div><label class="admin-label">Store Hours</label><input id="settingStoreHours" class="admin-input" /></div>
+              <div><label class="admin-label">Location / Address</label><input id="settingAddress" class="admin-input" /></div>
+              <div><label class="admin-label">WhatsApp Number</label><input id="settingWhatsApp" class="admin-input" /></div>
+            </div>
+            <div class="border-t border-slate-800 pt-5">
+              <div class="mb-4 flex items-center justify-between gap-3"><h2 class="text-sm font-black uppercase tracking-widest text-white">FAQ Section</h2><button id="addFaqBtn" type="button" class="btn-muted">Add FAQ</button></div>
+              <div id="faqList" class="space-y-3"></div>
+            </div>
+            <button class="btn-gold" type="submit">Save Site Content</button>
+          </form>
+        </section>
+
+        <section id="section-settings" class="section-panel space-y-6">
+          <div><h1 class="text-2xl font-black text-white">Settings</h1><p class="mt-1 text-sm font-semibold text-slate-400">Store profile, shipping, payments and admin password.</p></div>
+          <form id="settingsForm" class="admin-card space-y-6 p-5">
+            <div class="grid gap-4 md:grid-cols-3">
+              <div><label class="admin-label">Store Name</label><input id="settingStoreName" class="admin-input" /></div>
+              <div><label class="admin-label">Admin Email</label><input id="settingAdminEmail" type="email" class="admin-input" /></div>
+              <div><label class="admin-label">Free Delivery Threshold</label><input id="settingFreeDelivery" type="number" class="admin-input" /></div>
+            </div>
+            <div class="grid gap-4 md:grid-cols-[1fr_2fr]">
+              <div><label class="admin-label">Logo Upload</label><input id="settingLogoUpload" type="file" accept="image/*" class="admin-input" /></div>
+              <div id="logoPreview" class="flex min-h-20 items-center rounded-xl border border-slate-800 bg-[#071126] p-3 text-sm font-bold text-slate-500">No logo uploaded.</div>
+            </div>
+            <div class="border-t border-slate-800 pt-5">
+              <div class="mb-4 flex items-center justify-between"><h2 class="text-sm font-black uppercase tracking-widest text-white">Shipping Zones</h2><button id="addShippingZoneBtn" type="button" class="btn-muted">Add Zone</button></div>
+              <div id="shippingZonesList" class="space-y-3"></div>
+            </div>
+            <div class="border-t border-slate-800 pt-5">
+              <h2 class="mb-4 text-sm font-black uppercase tracking-widest text-white">Payment Methods</h2>
+              <div class="grid gap-3 md:grid-cols-3">
+                <label class="flex items-center gap-3 rounded-xl border border-slate-800 bg-[#071126] p-4 text-sm font-bold text-slate-200"><input id="payMomo" type="checkbox" class="h-4 w-4 accent-gold" /> MoMo</label>
+                <label class="flex items-center gap-3 rounded-xl border border-slate-800 bg-[#071126] p-4 text-sm font-bold text-slate-200"><input id="payCard" type="checkbox" class="h-4 w-4 accent-gold" /> Card</label>
+                <label class="flex items-center gap-3 rounded-xl border border-slate-800 bg-[#071126] p-4 text-sm font-bold text-slate-200"><input id="payCod" type="checkbox" class="h-4 w-4 accent-gold" /> Cash on Delivery</label>
+              </div>
+            </div>
+            <div class="border-t border-slate-800 pt-5">
+              <h2 class="mb-4 text-sm font-black uppercase tracking-widest text-white">Admin Password Change</h2>
+              <div class="grid gap-4 md:grid-cols-3">
+                <input id="currentAdminPassword" type="password" class="admin-input" placeholder="Current password" />
+                <input id="newAdminPassword" type="password" class="admin-input" placeholder="New password" />
+                <button id="changePasswordBtn" type="button" class="btn-muted">Change Password</button>
+              </div>
+            </div>
+            <button class="btn-gold" type="submit">Save Settings</button>
+          </form>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="productModal" class="fixed inset-0 z-[70] hidden overflow-y-auto bg-black/75 p-4">
+    <div class="mx-auto my-6 max-w-5xl admin-card">
+      <div class="sticky top-0 z-10 flex items-center justify-between border-b border-slate-800 bg-panel p-5">
+        <div><h2 id="productModalTitle" class="text-lg font-black text-white">Add Product</h2><p class="text-xs font-semibold text-slate-400">Products publish to the storefront after saving.</p></div>
+        <button id="closeProductModal" class="btn-muted" type="button">Close</button>
+      </div>
+      <form id="productForm" class="space-y-6 p-5">
+        <input id="productId" type="hidden" />
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div class="xl:col-span-2"><label class="admin-label">Product Name</label><input id="productName" class="admin-input" required /></div>
+          <div><label class="admin-label">Category</label><select id="productCategory" class="admin-input" required></select></div>
+          <div><label class="admin-label">Badge</label><select id="productBadge" class="admin-input"><option value="">None</option><option>HOT</option><option>SEALED</option><option>DEAL</option><option>BESTSELLER</option></select></div>
+          <div><label class="admin-label">Retail Price</label><input id="productPrice" type="number" step="0.01" class="admin-input" required /></div>
+          <div><label class="admin-label">Compare-at Price</label><input id="productComparePrice" type="number" step="0.01" class="admin-input" /></div>
+          <div><label class="admin-label">Wholesale Price</label><input id="productWholesalePrice" type="number" step="0.01" class="admin-input" /></div>
+          <div><label class="admin-label">Stock Quantity</label><input id="productStock" type="number" class="admin-input" required /></div>
+          <div class="md:col-span-2"><label class="admin-label">Specs / Short Description</label><input id="productSpecs" class="admin-input" /></div>
+          <div><label class="admin-label">Status</label><select id="productActive" class="admin-input"><option value="true">Active</option><option value="false">Inactive</option></select></div>
+          <div class="md:col-span-2 xl:col-span-4"><label class="admin-label">Full Description</label><textarea id="productDescription" rows="4" class="admin-input"></textarea></div>
         </div>
 
-        <button type="submit" class="w-full bg-gold hover:bg-gold/90 text-navy-deep font-black text-xs uppercase py-3.5 rounded-lg tracking-widest transition-all">
-          Authorize Session
-        </button>
+        <div class="grid gap-6 xl:grid-cols-[1fr_1fr]">
+          <div class="space-y-4">
+            <div>
+              <label class="admin-label">Product Images (max 5)</label>
+              <div id="imageDropZone" class="rounded-2xl border-2 border-dashed border-slate-700 bg-[#071126] p-6 text-center transition hover:border-gold">
+                <p class="text-sm font-black text-white">Drag & drop images here</p>
+                <p class="mt-1 text-xs font-semibold text-slate-500">or click to upload. Images upload to Supabase Storage bucket "product-images".</p>
+                <input id="productImageInput" type="file" accept="image/*" multiple class="hidden" />
+              </div>
+              <div id="imagePreviewList" class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5"></div>
+            </div>
+          </div>
+          <div class="space-y-6">
+            <div>
+              <div class="mb-3 flex items-center justify-between"><label class="admin-label mb-0">Color Variants</label><button id="addColorBtn" type="button" class="btn-muted">Add Color</button></div>
+              <div id="colorsList" class="space-y-3"></div>
+            </div>
+            <div>
+              <div class="mb-3 flex items-center justify-between"><label class="admin-label mb-0">Storage Options</label><button id="addStorageBtn" type="button" class="btn-muted">Add Storage</button></div>
+              <div id="storageList" class="space-y-3"></div>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-col-reverse gap-3 border-t border-slate-800 pt-5 sm:flex-row sm:justify-end"><button id="deleteProductFromModal" type="button" class="btn-danger hidden">Delete Product</button><button type="button" id="cancelProductForm" class="btn-muted">Cancel</button><button type="submit" class="btn-gold">Save Product</button></div>
       </form>
     </div>
   </div>
 
-  <!-- ================= MAIN ADMIN WRAPPER ================= -->
-  <div id="adminMainContent" class="min-h-screen flex flex-col hidden">
-
-    <!-- Top Header -->
-    <header class="bg-slate-panel border-b border-slate-800 py-4 px-6 shrink-0">
-      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-          <span class="text-gold font-black text-sm tracking-widest uppercase bg-navy-deep px-3 py-1 rounded border border-slate-700">VALMONT</span>
-          <div>
-            <h1 class="text-base font-black text-white tracking-wide">Gadgets Admin Workspace</h1>
-            <p class="text-[10px] text-slate-400 font-bold tracking-widest uppercase">Verified Corporate Channel</p>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-4 relative" id="adminHeaderMenu">
-          <div class="relative">
-            <button onclick="toggleHeaderMenu()" class="flex items-center gap-3 bg-slate-900 border border-slate-800 hover:border-gold rounded-lg px-3 py-2 transition-colors">
-              <div class="h-8 w-8 rounded-full bg-gradient-to-br from-gold to-amber-700 flex items-center justify-center text-navy-deep font-black text-xs shadow-md">VA</div>
-              <span class="text-xs font-extrabold text-white hidden sm:inline">Admin</span>
-            </button>
-            <div id="headerDropdown" class="hidden absolute right-0 mt-2 w-48 bg-slate-panel border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-40">
-              <a href="#" onclick="switchTab('profile'); toggleHeaderMenu();" class="block px-4 py-2.5 text-xs font-bold text-slate-300 hover:text-gold hover:bg-navy-deep transition">Profile</a>
-              <a href="#" onclick="switchTab('settings'); toggleHeaderMenu();" class="block px-4 py-2.5 text-xs font-bold text-slate-300 hover:text-gold hover:bg-navy-deep transition">Settings</a>
-              <a href="#" onclick="switchTab('resellers'); toggleHeaderMenu();" class="block px-4 py-2.5 text-xs font-bold text-slate-300 hover:text-gold hover:bg-navy-deep transition">Resellers</a>
-              <a href="#" onclick="switchTab('activity'); toggleHeaderMenu();" class="block px-4 py-2.5 text-xs font-bold text-slate-300 hover:text-gold hover:bg-navy-deep transition">Activity Log</a>
-              <div class="border-t border-slate-800"></div>
-              <a href="#" onclick="handleAdminLogout(); toggleHeaderMenu();" class="block px-4 py-2.5 text-xs font-extrabold text-red-400 hover:text-red-300 hover:bg-red-950 transition">Sign Out</a>
-            </div>
-          </div>
-          <a href="/" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-extrabold text-[10px] uppercase tracking-wider px-4 py-2 rounded-lg border border-slate-700 transition">
-            View Storefront
-          </a>
-          <button onclick="handleAdminLogout()" class="bg-red-950/40 hover:bg-red-900/60 text-red-400 font-extrabold text-[10px] uppercase tracking-wider px-4 py-2 rounded-lg border border-red-900/30 transition hidden sm:inline-block">
-            Disconnect
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <!-- Sub Navigation Tabs -->
-    <nav class="bg-navy-deep border-b border-slate-800/80 px-6 overflow-x-auto no-scrollbar">
-      <div class="max-w-7xl mx-auto flex gap-4 md:gap-8">
-        <button onclick="switchTab('dashboard')" data-tab-nav="dashboard" class="py-4 border-b-2 border-gold text-gold font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
-          Dashboard
-        </button>
-        <button onclick="switchTab('product-form'); resetProductForm();" data-tab-nav="product-form" class="py-4 border-b-2 border-transparent text-slate-400 hover:text-white font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
-          Add Product
-        </button>
-        <button onclick="switchTab('bulk-upload')" data-tab-nav="bulk-upload" class="py-4 border-b-2 border-transparent text-slate-400 hover:text-white font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
-          Bulk Upload
-        </button>
-        <button onclick="switchTab('orders')" data-tab-nav="orders" class="py-4 border-b-2 border-transparent text-slate-400 hover:text-white font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
-          Orders
-        </button>
-        <button onclick="switchTab('reviews')" data-tab-nav="reviews" class="py-4 border-b-2 border-transparent text-slate-400 hover:text-white font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
-          Reviews
-        </button>
-        <button onclick="switchTab('resellers')" data-tab-nav="resellers" class="py-4 border-b-2 border-transparent text-slate-400 hover:text-white font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
-          Resellers
-        </button>
-        <button onclick="switchTab('profile')" data-tab-nav="profile" class="py-4 border-b-2 border-transparent text-slate-400 hover:text-white font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
-          Profile
-        </button>
-        <button onclick="switchTab('settings')" data-tab-nav="settings" class="py-4 border-b-2 border-transparent text-slate-400 hover:text-white font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
-          Settings
-        </button>
-        <button onclick="switchTab('activity')" data-tab-nav="activity" class="py-4 border-b-2 border-transparent text-slate-400 hover:text-white font-extrabold text-xs uppercase tracking-widest whitespace-nowrap">
-          Activity Log
-        </button>
-      </div>
-    </nav>
-
-    <!-- Content Sections container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
-
-      <!-- ================= TAB: DASHBOARD ================= -->
-      <section id="section-dashboard" class="admin-tab-section space-y-6">
-
-        <!-- Stat Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <!-- Total Products -->
-          <div class="stat-flip-card" title="Hover to flip">
-            <div class="stat-flip-inner">
-              <div class="stat-flip-front bg-slate-panel border border-slate-800 p-5 rounded-lg flex items-center justify-between">
-                <div>
-                  <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Total Products</span>
-                  <h3 class="text-2xl font-black text-white mt-1" id="statTotalProducts">0</h3>
-                </div>
-                <div class="text-gold bg-navy-deep p-3 rounded-lg border border-slate-800">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                  </svg>
-                </div>
-              </div>
-              <div class="stat-flip-back bg-slate-panel border border-slate-800 rounded-lg flex flex-col items-center justify-center text-center px-4">
-                <span class="text-[10px] text-gold font-extrabold uppercase tracking-widest">Catalog</span>
-                <p class="text-xs text-slate-300 font-semibold mt-1.5 leading-snug">Live count of every verified device currently listed for sale.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Total Orders -->
-          <div class="stat-flip-card" title="Hover to flip">
-            <div class="stat-flip-inner">
-              <div class="stat-flip-front bg-slate-panel border border-slate-800 p-5 rounded-lg flex items-center justify-between">
-                <div>
-                  <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Total Orders</span>
-                  <h3 class="text-2xl font-black text-white mt-1" id="statTotalOrders">0</h3>
-                </div>
-                <div class="text-gold bg-navy-deep p-3 rounded-lg border border-slate-800">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                  </svg>
-                </div>
-              </div>
-              <div class="stat-flip-back bg-slate-panel border border-slate-800 rounded-lg flex flex-col items-center justify-center text-center px-4">
-                <span class="text-[10px] text-gold font-extrabold uppercase tracking-widest">Fulfilment</span>
-                <p class="text-xs text-slate-300 font-semibold mt-1.5 leading-snug">Every customer order received, from pending through delivered.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Total Revenue -->
-          <div class="stat-flip-card" title="Hover to flip">
-            <div class="stat-flip-inner">
-              <div class="stat-flip-front bg-slate-panel border border-slate-800 p-5 rounded-lg flex items-center justify-between">
-                <div>
-                  <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Gross Revenue</span>
-                  <h3 class="text-2xl font-black text-white mt-1" id="statRevenue">GH₵ 0</h3>
-                </div>
-                <div class="text-gold bg-navy-deep p-3 rounded-lg border border-slate-800">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </div>
-              </div>
-              <div class="stat-flip-back bg-slate-panel border border-slate-800 rounded-lg flex flex-col items-center justify-center text-center px-4">
-                <span class="text-[10px] text-gold font-extrabold uppercase tracking-widest">Sales</span>
-                <p class="text-xs text-slate-300 font-semibold mt-1.5 leading-snug">Total amount paid across all non-cancelled orders.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Net Profit -->
-          <div class="stat-flip-card" title="Calculated as selling price minus supplier cost, delivery, and payment fees. Visible only on admin dashboard. Hover to flip">
-            <div class="stat-flip-inner">
-              <div class="stat-flip-front bg-slate-panel border border-slate-800 p-5 rounded-lg flex items-center justify-between">
-                <div>
-                  <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Net Profit</span>
-                  <h3 class="text-2xl font-black text-gold mt-1" id="statProfit">GH₵ 0</h3>
-                </div>
-                <div class="text-gold bg-navy-deep p-3 rounded-lg border border-slate-800">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                  </svg>
-                </div>
-              </div>
-              <div class="stat-flip-back bg-slate-panel border border-slate-800 rounded-lg flex flex-col items-center justify-center text-center px-4">
-                <span class="text-[10px] text-gold font-extrabold uppercase tracking-widest">Margin</span>
-                <p class="text-xs text-slate-300 font-semibold mt-1.5 leading-snug">Revenue minus supplier cost, delivery, and payment fees.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Product Inventory Table -->
-        <div class="bg-slate-panel border border-slate-800 rounded-lg overflow-hidden">
-          <div class="p-5 border-b border-slate-800 flex items-center justify-between">
-            <div>
-              <h3 class="text-sm font-black text-white uppercase tracking-wider">Product Inventory</h3>
-              <p class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Manage stock, pricing, and status</p>
-            </div>
-            <button onclick="switchTab('product-form'); resetProductForm();" class="bg-gold hover:bg-gold/90 text-navy-deep font-extrabold text-xs uppercase px-5 py-2.5 rounded-lg tracking-wider transition-colors flex items-center gap-1.5">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-              </svg>
-              Add Product
-            </button>
-          </div>
-
-          <div class="overflow-x-auto no-scrollbar">
-            <table class="min-w-full divide-y divide-slate-800 text-left">
-              <thead class="bg-navy-deep text-[10px] font-black uppercase tracking-widest text-slate-400">
-                <tr>
-                  <th class="px-6 py-3">Image</th>
-                  <th class="px-6 py-3">Product Name</th>
-                  <th class="px-6 py-3">Category</th>
-                  <th class="px-6 py-3">Price</th>
-                  <th class="px-6 py-3">Stock</th>
-                  <th class="px-6 py-3">Status</th>
-                  <th class="px-6 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="productsTableBody" class="divide-y divide-slate-800">
-                <!-- Injected dynamically -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </section>
-
-      <!-- ================= TAB: ADD / EDIT PRODUCT ================= -->
-      <section id="section-product-form" class="admin-tab-section hidden">
-        <div class="bg-slate-panel border border-slate-800 rounded-lg p-6">
-          <h3 class="text-sm font-black text-white uppercase tracking-wider border-b border-slate-800 pb-3 mb-6" id="formTitleText">Add New Product</h3>
-
-          <form id="productCrudForm" onsubmit="handleProductFormSubmit(event)" class="space-y-6">
-
-            <!-- Basic Info -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div class="md:col-span-2">
-                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Product Name *</label>
-                <input type="text" id="prodName" oninput="autoFillSlug()" required placeholder="e.g. iPhone 15 Pro Max" class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-semibold" />
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Category *</label>
-                <select id="prodCategory" required class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-semibold">
-                  <option value="iphones">iPhones & Apple</option>
-                  <option value="samsung">Samsung Galaxy</option>
-                  <option value="laptops">Executive Laptops</option>
-                  <option value="audio">Smart Audio</option>
-                  <option value="power">Power & Chargers</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Slug -->
-            <div>
-              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Product Slug (Auto-generated) *</label>
-              <input type="text" id="prodSlug" required placeholder="e.g. iphone-15-pro-max" class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-mono" />
-            </div>
-
-            <!-- Pricing -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Retail Price (GH₵) *</label>
-                <input type="number" id="prodPrice" required placeholder="e.g. 16500" class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-bold text-gold" />
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Compare-At Price (GH₵)</label>
-                <input type="number" id="prodComparePrice" placeholder="e.g. 18000" class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-bold" />
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Wholesale Cost (GH₵)</label>
-                <input type="number" id="prodWholesalePrice" placeholder="e.g. 13900" class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-bold" />
-                <p class="text-[9px] text-slate-500 font-bold uppercase mt-1">Private — never shown publicly</p>
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Badge</label>
-                <select id="prodBadge" class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-semibold">
-                  <option value="none">None</option>
-                  <option value="HOT">HOT</option>
-                  <option value="SEALED">SEALED</option>
-                  <option value="DEAL">DEAL</option>
-                  <option value="BESTSELLER">BESTSELLER</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Specs & Description -->
-            <div class="grid grid-cols-1 gap-6">
-              <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Short Specifications</label>
-                <input type="text" id="prodSpecs" placeholder="e.g. Titanium, A17 Pro, Sealed, eSIM + Physical SIM" class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-semibold" />
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Full Description</label>
-                <textarea id="prodDescription" rows="4" placeholder="Detailed product description..." class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-medium leading-relaxed"></textarea>
-              </div>
-            </div>
-
-            <!-- Image Uploader -->
-            <div class="border-t border-slate-800 pt-6">
-              <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-3">Product Images (Max 5)</label>
-
-              <div id="imageDragZone" class="drag-drop-zone rounded-xl p-8 text-center cursor-pointer mb-4">
-                <svg class="w-8 h-8 text-slate-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                <p class="text-xs text-slate-300 font-bold uppercase tracking-wider">Drag & drop images here, or click to browse</p>
-                <p class="text-[9px] text-slate-500 uppercase tracking-widest mt-1">Accepts JPG, PNG, WebP</p>
-                <input type="file" id="imageFileInput" class="hidden" multiple accept="image/*" />
-              </div>
-
-              <!-- Upload Progress -->
-              <div id="uploaderProgressContainer" class="bg-navy-deep rounded-full h-2 w-full overflow-hidden relative mb-4 hidden">
-                <div id="uploaderProgressBar" class="bg-gold h-full w-0 transition-all duration-300"></div>
-              </div>
-
-              <!-- Image Previews -->
-              <div id="uploaderPreviewContainer" class="preview-thumbnail-container mt-3">
-                <!-- Dynamically rendered -->
-              </div>
-            </div>
-
-            <!-- Color Variants & Storage Options -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-slate-800 pt-6">
-
-              <!-- Color Variants -->
-              <div class="space-y-4">
-                <h4 class="text-xs font-black uppercase tracking-wider text-slate-300">Color Variants</h4>
-                <div class="flex items-center gap-3">
-                  <input type="text" id="colorNameInput" placeholder="Color Name (e.g. Midnight Black)" class="flex-1 bg-navy-deep border border-slate-700 rounded-lg p-2.5 text-xs text-white outline-none focus:border-gold font-semibold" />
-                  <input type="color" id="colorHexInput" value="#000000" class="h-10 w-10 bg-transparent border-0 cursor-pointer rounded overflow-hidden" />
-                  <button onclick="addColorOption()" type="button" class="bg-gold hover:bg-gold/90 text-navy-deep font-black text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-lg transition-colors">
-                    Add
-                  </button>
-                </div>
-                <div id="formColorsList" class="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  <!-- Color list rendered here -->
-                </div>
-              </div>
-
-              <!-- Storage Options -->
-              <div class="space-y-4">
-                <h4 class="text-xs font-black uppercase tracking-wider text-slate-300">Storage Size Options</h4>
-                <div class="flex gap-2">
-                  <input type="text" id="storageSizeInput" placeholder="Size (e.g. 256GB)" class="w-1/3 bg-navy-deep border border-slate-700 rounded-lg p-2.5 text-xs text-white outline-none focus:border-gold font-semibold" />
-                  <input type="number" id="storagePriceAdjustmentInput" placeholder="Price ± (e.g. 1200 or -500)" class="flex-1 bg-navy-deep border border-slate-700 rounded-lg p-2.5 text-xs text-white outline-none focus:border-gold font-bold text-gold" />
-                  <button onclick="addStorageOption()" type="button" class="bg-gold hover:bg-gold/90 text-navy-deep font-black text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-lg transition-colors">
-                    Add
-                  </button>
-                </div>
-                <div id="formStorageList" class="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  <!-- Storage list rendered here -->
-                </div>
-              </div>
-
-            </div>
-
-            <!-- Stock & Form Actions -->
-            <div class="border-t border-slate-800 pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Stock Quantity *</label>
-                <input type="number" id="prodStock" required value="0" min="0" class="bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-bold w-32" />
-              </div>
-
-              <div class="flex gap-4">
-                <button onclick="resetProductForm(); switchTab('dashboard');" type="button" class="bg-slate-900 hover:bg-slate-800 text-slate-400 font-extrabold text-xs uppercase px-6 py-3 rounded-lg tracking-wider border border-slate-700 transition">
-                  Cancel
-                </button>
-                <button type="submit" class="bg-gold hover:bg-gold/90 text-navy-deep font-black text-xs uppercase px-8 py-3 rounded-lg tracking-widest transition-all">
-                  Save Product
-                </button>
-              </div>
-            </div>
-
-          </form>
-        </div>
-      </section>
-
-      <!-- ================= TAB: BULK IMAGE UPLOAD ================= -->
-      <section id="section-bulk-upload" class="admin-tab-section hidden">
-        <div class="bg-slate-panel border border-slate-800 rounded-lg p-6 max-w-xl mx-auto">
-          <h3 class="text-sm font-black text-white uppercase tracking-wider border-b border-slate-800 pb-3 mb-6">Bulk Image Upload</h3>
-
-          <div class="space-y-4">
-            <div>
-              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Select Target Product</label>
-              <select id="bulkProductSelect" class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold font-semibold">
-                <!-- Populated dynamically -->
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Choose Images</label>
-              <div class="border-2 border-dashed border-slate-700 rounded-xl p-8 text-center cursor-pointer bg-navy-deep hover:border-gold transition-colors" onclick="document.getElementById('bulkFileInput').click()">
-                <svg class="w-8 h-8 text-slate-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                <p class="text-xs text-slate-300 font-bold uppercase tracking-wider">Click to select multiple images</p>
-                <input type="file" id="bulkFileInput" class="hidden" multiple accept="image/*" onchange="triggerBulkImageUpload(this.files); this.value=''" />
-              </div>
-            </div>
-
-            <div id="bulkUploadResultsList" class="py-2">
-              <!-- Upload results printed here -->
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ================= TAB: ORDERS ================= -->
-      <section id="section-orders" class="admin-tab-section hidden">
-        <div class="bg-slate-panel border border-slate-800 rounded-lg overflow-hidden">
-          <div class="p-5 border-b border-slate-800">
-            <h3 class="text-sm font-black text-white uppercase tracking-wider">Customer Orders</h3>
-            <p class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">View and update order status</p>
-          </div>
-
-          <div class="overflow-x-auto no-scrollbar">
-            <table class="min-w-full divide-y divide-slate-800 text-left">
-              <thead class="bg-navy-deep text-[10px] font-black uppercase tracking-widest text-slate-400">
-                <tr>
-                  <th class="px-6 py-3">Ref Code</th>
-                  <th class="px-6 py-3">Customer</th>
-                  <th class="px-6 py-3">Items</th>
-                  <th class="px-6 py-3">Total</th>
-                  <th class="px-6 py-3">Status</th>
-                  <th class="px-6 py-3">Date</th>
-                </tr>
-              </thead>
-              <tbody id="ordersTableBody" class="divide-y divide-slate-800">
-                <!-- Injected dynamically -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- ================= TAB: REVIEWS ================= -->
-      <section id="section-reviews" class="admin-tab-section hidden">
-        <div class="bg-slate-panel border border-slate-800 rounded-lg overflow-hidden">
-          <div class="p-5 border-b border-slate-800">
-            <h3 class="text-sm font-black text-white uppercase tracking-wider">Review Moderation</h3>
-            <p class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Approve or reject customer reviews</p>
-          </div>
-
-          <div class="overflow-x-auto no-scrollbar">
-            <table class="min-w-full divide-y divide-slate-800 text-left">
-              <thead class="bg-navy-deep text-[10px] font-black uppercase tracking-widest text-slate-400">
-                <tr>
-                  <th class="px-6 py-3">Customer</th>
-                  <th class="px-6 py-3">Product</th>
-                  <th class="px-6 py-3">Rating</th>
-                  <th class="px-6 py-3">Comment</th>
-                  <th class="px-6 py-3">Status</th>
-                  <th class="px-6 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="reviewsTableBody" class="divide-y divide-slate-800">
-                <!-- Injected dynamically -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-    </main>
-
-      <!-- ================= TAB: RESELLERS ================= -->
-      <section id="section-resellers" class="admin-tab-section hidden">
-        <div class="bg-slate-panel border border-slate-800 rounded-lg overflow-hidden">
-          <div class="p-5 border-b border-slate-800 flex items-center justify-between">
-            <div>
-              <h3 class="text-sm font-black text-white uppercase tracking-wider">Reseller Network</h3>
-              <p class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Register and manage reseller accounts</p>
-            </div>
-            <button onclick="openResellerForm()" class="bg-gold hover:bg-gold/90 text-navy-deep font-extrabold text-xs uppercase px-5 py-2 rounded-lg tracking-wider">Register Reseller</button>
-          </div>
-          <div class="p-6">
-            <div id="resellerTable" class="overflow-x-auto">
-              <table class="min-w-full divide-y divide-slate-800 text-left">
-                <thead class="bg-navy-deep text-[10px] font-black uppercase tracking-widest text-slate-400"><tr><th class="px-4 py-3">Name</th><th class="px-4 py-3">Phone</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Registered</th><th class="px-4 py-3 text-right">Actions</th></tr></thead>
-                <tbody id="resellersTableBody" class="divide-y divide-slate-800"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ================= TAB: PROFILE ================= -->
-      <section id="section-profile" class="admin-tab-section hidden">
-        <div class="bg-slate-panel border border-slate-800 rounded-lg p-6 max-w-xl mx-auto">
-          <h3 class="text-sm font-black text-white uppercase tracking-wider border-b border-slate-800 pb-3 mb-6">Admin Profile</h3>
-          <div class="flex items-center gap-4 mb-6">
-            <div class="h-16 w-16 rounded-full bg-gradient-to-br from-gold to-amber-700 flex items-center justify-center text-navy-deep font-black text-xl shadow-lg border-2 border-gold">VA</div>
-            <div>
-              <h4 class="text-white font-black text-lg">Valmont Admin</h4>
-              <p class="text-xs text-slate-400 font-bold uppercase">Executive Level Access</p>
-            </div>
-          </div>
-          <form onsubmit="event.preventDefault(); showAdminToast('Profile updated.');" class="space-y-4">
-            <div>
-              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Display Name</label>
-              <input type="text" value="Valmont Admin" class="w-full bg-navy-deep border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-gold" />
-            </div>
-            <button type="submit" class="bg-gold hover:bg-gold/90 text-navy-deep font-black text-xs uppercase px-6 py-3 rounded-lg tracking-widest">Save Changes</button>
-          </form>
-        </div>
-      </section>
-
-      <!-- ================= TAB: SETTINGS ================= -->
-      <section id="section-settings" class="admin-tab-section hidden">
-        <div class="bg-slate-panel border border-slate-800 rounded-lg p-6 max-w-xl mx-auto">
-          <h3 class="text-sm font-black text-white uppercase tracking-wider border-b border-slate-800 pb-3 mb-6">Panel Settings</h3>
-          <form onsubmit="event.preventDefault(); showAdminToast('Settings saved.');" class="space-y-4">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-300">Enable Email Notifications</span>
-              <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" checked class="sr-only peer"><div class="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-gold rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:h-5 after:w-5 after:rounded-full peer-checked:bg-gold transition-all"></div></label>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-300">Auto-Approve Reviews</span>
-              <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="sr-only peer"><div class="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-gold rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:h-5 after:w-5 after:rounded-full peer-checked:bg-gold transition-all"></div></label>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-300">Public Activity Log</span>
-              <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="sr-only peer"><div class="w-11 h-6 bg-slate-700 peer-focus:ring-2 peer-focus:ring-gold rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:h-5 after:w-5 after:rounded-full peer-checked:bg-gold transition-all"></div></label>
-            </div>
-            <button type="submit" class="bg-gold hover:bg-gold/90 text-navy-deep font-black text-xs uppercase px-6 py-3 rounded-lg tracking-widest">Save Settings</button>
-          </form>
-        </div>
-      </section>
-
-      <!-- ================= TAB: ACTIVITY LOG ================= -->
-      <section id="section-activity" class="admin-tab-section hidden">
-        <div class="bg-slate-panel border border-slate-800 rounded-lg overflow-hidden">
-          <div class="p-5 border-b border-slate-800">
-            <h3 class="text-sm font-black text-white uppercase tracking-wider">Admin Activity Log</h3>
-            <p class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">All actions taken in this session</p>
-          </div>
-          <div class="overflow-x-auto no-scrollbar">
-            <table class="min-w-full divide-y divide-slate-800 text-left">
-              <thead class="bg-navy-deep text-[10px] font-black uppercase tracking-widest text-slate-400"><tr><th class="px-6 py-3">Action</th><th class="px-6 py-3">Target</th><th class="px-6 py-3">Time</th></tr></thead>
-              <tbody id="activityLogBody" class="divide-y divide-slate-800"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-
-
+  <div id="orderModal" class="fixed inset-0 z-[70] hidden overflow-y-auto bg-black/75 p-4">
+    <div class="mx-auto my-6 max-w-4xl admin-card">
+      <div class="flex items-center justify-between border-b border-slate-800 p-5"><div><h2 id="orderModalTitle" class="text-lg font-black text-white">Order Details</h2><p class="text-xs font-semibold text-slate-400">Update status and internal notes.</p></div><button id="closeOrderModal" class="btn-muted" type="button">Close</button></div>
+      <div id="orderDetailContent" class="space-y-5 p-5"></div>
+    </div>
   </div>
 
-  <!-- Admin Toast Container -->
-  <div id="adminToast" class="toast-msg"></div>
-
-  <!-- Admin JS Script -->
+  <div id="adminToast" class="fixed bottom-5 right-5 z-[90] hidden max-w-sm rounded-xl border border-slate-700 bg-[#12234a] px-4 py-3 text-sm font-bold text-white shadow-2xl"></div>
   <script src="assets/js/admin.js"></script>
-
 </body>
 </html>
