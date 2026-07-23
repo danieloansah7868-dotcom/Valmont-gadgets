@@ -151,7 +151,7 @@
 <body class="bg-[#f1f1f2] text-[#333333] pb-16 md:pb-0">
 
   <!-- 1. TOP NOTICE BANNER -->
-  <div class="bg-[#0b1a38] text-white py-2 px-4 text-center">
+  <div class="bg-[#0b1a38] text-white py-2 px-4 text-center hidden md:block">
     <p class="text-[10px] md:text-[11px] font-extrabold tracking-[0.12em] uppercase">
       GENUINE PHONES & LAPTOPS WITH 12-MONTH WARRANTY • FREE ACCRA DELIVERY ABOVE GH₵ 5,000!
     </p>
@@ -462,6 +462,15 @@
           Ghana's trusted marketplace for certified smartphones, high-performance executive laptops, premium audio accessories, and genuine chargers.
         </p>
         <p class="text-[11px] text-[#f68b1e] font-bold">Accra, Ghana</p>
+        
+        <!-- Get the App Footer block (exactly like your screenshot!) -->
+        <div class="mt-6">
+          <h5 class="text-[11px] font-extrabold uppercase text-gray-400 tracking-wider mb-2">Get the app</h5>
+          <button id="footerInstallBtn" class="bg-[#128c7e] hover:bg-[#0b665c] text-white text-[11px] font-bold py-2 px-4 rounded-[4px] flex items-center gap-1.5 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+            <span id="footerInstallBtnText">Install App</span>
+          </button>
+        </div>
       </div>
       <div>
         <h4 class="font-extrabold text-[12px] uppercase text-gray-400 tracking-widest mb-4">Support Pages</h4>
@@ -548,23 +557,25 @@
             <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Phone Number (MoMo / WhatsApp) *</label>
             <input id="shippingPhone" type="tel" placeholder="054 245 1578" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
           </div>
-          <div>
-            <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Delivery Region / Major Neighborhood *</label>
-            <select id="shippingArea" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e] bg-white font-medium">
-              <option value="East Legon, Accra">East Legon (Accra)</option>
-              <option value="Airport Residential, Accra">Airport Residential (Accra)</option>
-              <option value="Cantonments, Accra">Cantonments (Accra)</option>
-              <option value="Osu, Accra">Osu (Accra)</option>
-              <option value="Spintex, Accra">Spintex Road (Accra)</option>
-              <option value="Dzorwulu, Accra">Dzorwulu (Accra)</option>
-              <option value="Tema, Greater Accra">Tema (Greater Accra)</option>
-              <option value="Kumasi, Ashanti Region">Kumasi (Ashanti Region)</option>
-              <option value="Other Ghana City">Other Ghana City (Courier Partner)</option>
-            </select>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">City *</label>
+              <input id="shippingCity" type="text" placeholder="Accra" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Town / Suburb *</label>
+              <input id="shippingTown" type="text" placeholder="East Legon" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
+            </div>
           </div>
-          <div>
-            <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Detailed Street Address / Landmark (Optional)</label>
-            <textarea id="shippingStreet" rows="2" placeholder="Near East Legon police station, blue gate" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]"></textarea>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Ghana Post GPS (Optional)</label>
+              <input id="shippingGPS" type="text" placeholder="GA-120-4567" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Street Address & Landmark *</label>
+              <input id="shippingStreet" type="text" placeholder="Near Police Station, Blue Gate" class="w-full border p-2.5 rounded-lg text-[13px] outline-none focus:border-[#f68b1e]" required />
+            </div>
           </div>
         </div>
       </div>
@@ -726,12 +737,12 @@
       </button>
     </div>
 
-    <!-- Login Form (If logged out) - CLONED FROM JUMIA -->
+    <!-- Login Form (If logged out) - VALMONT SECURITY -->
     <form id="loginForm" class="text-center">
       <div class="flex justify-center mb-4">
-      <div class="h-16 w-16 bg-[#f68b1e] rounded-full flex items-center justify-center shadow-md animate-pulse">
-        <svg class="w-9 h-9 text-white fill-current" viewBox="0 0 24 24">
-          <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.4 8.168L12 18.896l-7.334 3.858 1.4-8.168L.132 9.21l8.2-1.192L12 .587z"/>
+      <div class="h-16 w-16 bg-[#0b1a38] rounded-full flex items-center justify-center shadow-md animate-pulse">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8 text-white">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
         </svg>
       </div>
     </div>
@@ -2218,8 +2229,13 @@
       } else if (checkoutStep === 2) {
         const name = document.getElementById('shippingName').value.trim();
         const phone = document.getElementById('shippingPhone').value.trim();
-        if (!name || !phone) {
-          alert("Please fill out your Name and Phone Number to continue.");
+        const city = document.getElementById('shippingCity').value.trim();
+        const town = document.getElementById('shippingTown').value.trim();
+        const gps = document.getElementById('shippingGPS').value.trim();
+        const street = document.getElementById('shippingStreet').value.trim();
+        
+        if (!name || !phone || !city || !town || !street) {
+          alert("Please fill out your Name, Phone, City, Town, and Street Address to continue.");
           return;
         }
         
@@ -2266,8 +2282,11 @@
     function triggerWhatsAppOrder() {
       const name = document.getElementById('shippingName').value.trim();
       const phone = document.getElementById('shippingPhone').value.trim();
-      const area = document.getElementById('shippingArea').value;
+      const city = document.getElementById('shippingCity').value.trim();
+      const town = document.getElementById('shippingTown').value.trim();
+      const gps = document.getElementById('shippingGPS').value.trim();
       const street = document.getElementById('shippingStreet').value.trim();
+      const fullAddress = `${street}, ${town}, ${city} ${gps ? '(' + gps + ')' : ''}`;
       const paymentOpt = document.querySelector('input[name="paymentOption"]:checked').value;
 
       const subtotal = cart.reduce((sum, item) => sum + (item.retail * item.qty), 0);
@@ -2414,8 +2433,11 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
 
     async function finalizeCheckout() {
       const subtotal = cart.reduce((sum, item) => sum + (item.retail * item.qty), 0);
+      const city = document.getElementById('shippingCity').value.trim();
+      const town = document.getElementById('shippingTown').value.trim();
+      const gps = document.getElementById('shippingGPS').value.trim();
       const street = document.getElementById('shippingStreet').value.trim();
-      const area = document.getElementById('shippingArea').value;
+      const fullAddress = `${street}, ${town}, ${city} ${gps ? '(' + gps + ')' : ''}`;
       const phone = document.getElementById('shippingPhone').value.trim();
 
       // 1. Dual-Database Pipeline: Try writing to live Supabase DB first if configured
@@ -2426,7 +2448,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
             order_number: paystackSavedRef,
             customer_name: paystackSavedName,
             customer_phone: phone,
-            delivery_address: street || null,
+            delivery_address: fullAddress,
             delivery_zone: area || null,
             total_amount: subtotal,
             payment_method: paystackSavedPayment
@@ -2592,10 +2614,12 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
           currentUser = { name, phone, email, address };
           localStorage.setItem('valmont_user', JSON.stringify(currentUser));
           
-          // Autofill standard Jumia shipping forms automatically
+          // Autofill standard Valmont shipping forms automatically
           if (document.getElementById('shippingName')) document.getElementById('shippingName').value = name;
           if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = phone;
           if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = address;
+          if (document.getElementById('shippingCity')) document.getElementById('shippingCity').value = "Accra";
+          if (document.getElementById('shippingTown')) document.getElementById('shippingTown').value = address || "";
 
           updateUserUI();
           closeLoginModal();
@@ -2786,6 +2810,92 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
         renderProducts();
       });
     }
+
+  // === DYNAMIC PWA DUAL-INSTALLATION STATE CONTROLLER ===
+  let deferredPrompt;
+  let pwaBannerOverlay = document.getElementById('pwaInstallBanner');
+  
+  // Stash DOM elements for re-binding
+  document.addEventListener('DOMContentLoaded', () => {
+    pwaBannerOverlay = document.getElementById('pwaInstallBanner');
+    
+    // Bind all PWA install buttons dynamically
+    const installButtons = [
+      document.getElementById('pwaInstallBtn'),
+      document.getElementById('footerInstallBtn'),
+      document.getElementById('drawerInstallBtn')
+    ];
+
+    installButtons.forEach(btn => {
+      if (btn) {
+        btn.addEventListener('click', async () => {
+          // If already marked as installed, do nothing
+          if (btn.classList.contains('pwa-installed-badge')) return;
+
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`PWA Install Prompt outcome: ${outcome}`);
+            deferredPrompt = null;
+            dismissPwaBanner();
+          } else {
+            alert("To install Valmont Gadgets: Tap the share button in Safari (at the bottom) and choose 'Add to Home Screen', or use Chrome's install menu.");
+          }
+        });
+      }
+    });
+
+    // Run standalone check on start
+    checkStandalonePWAStatus();
+  });
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    // Only show if they haven't explicitly dismissed it in this session
+    if (localStorage.getItem('valmont_pwa_dismissed') !== 'true') {
+      if (pwaBannerOverlay) {
+        pwaBannerOverlay.classList.remove('hidden');
+      }
+    }
+  });
+
+  window.addEventListener('appinstalled', (evt) => {
+    console.log('App was installed successfully!');
+    markPwaAsInstalledUI();
+    dismissPwaBanner();
+  });
+
+  function dismissPwaBanner() {
+    if (pwaBannerOverlay) {
+      pwaBannerOverlay.classList.add('hidden');
+    }
+    localStorage.setItem('valmont_pwa_dismissed', 'true');
+  }
+
+  function checkStandalonePWAStatus() {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    if (isStandalone) {
+      markPwaAsInstalledUI();
+    }
+  }
+
+  function markPwaAsInstalledUI() {
+    // Style buttons exactly like your screenshot (App installed in slate box with checkmark!)
+    const footerBtn = document.getElementById('footerInstallBtn');
+    const drawerBtn = document.getElementById('drawerInstallBtn');
+    const footerText = document.getElementById('footerInstallBtnText');
+    const drawerText = document.getElementById('drawerInstallBtnText');
+
+    [footerBtn, drawerBtn].forEach(btn => {
+      if (btn) {
+        btn.className = "pwa-installed-badge bg-[#0a1f1d] border border-emerald-950 text-[#3bb75e] text-[11px] font-bold py-2 px-4 rounded-[4px] flex items-center gap-1.5 cursor-default select-none shadow-inner";
+        // Update SVGs inside to show checkmark
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg> App installed`;
+      }
+    });
+  }
 
     // INIT ALL PRODUCTS ON DOCUMENT LOAD
     startFlashTimer();
@@ -3245,6 +3355,8 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
 
     // === JUMIA-STYLE MOBILE BOTTOM NAVIGATION LOGIC ===
   let mobileCategoriesOverlay = document.getElementById('mobileCategoriesOverlay');
+  let mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+  let mobileMenuModal = document.getElementById('mobileMenuModal');
   let mobileCategoriesModal = document.getElementById('mobileCategoriesModal');
   let mobileCategoryGrid = document.getElementById('mobileCategoryGrid');
 
@@ -3331,6 +3443,24 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
         openLoginModal();
       });
     }
+  // === MOBILE LEFT SETTINGS DRAWER NAVIGATION LOGIC ===
+
+  function openMobileMenuModal() {
+    if (mobileMenuOverlay && mobileMenuModal) {
+      mobileMenuOverlay.classList.remove('hidden');
+      setTimeout(() => mobileMenuOverlay.classList.add('opacity-100'), 10);
+      mobileMenuModal.classList.remove('-translate-x-full');
+    }
+  }
+
+  function closeMobileMenuModal() {
+    if (mobileMenuOverlay && mobileMenuModal) {
+      mobileMenuOverlay.classList.remove('opacity-100');
+      setTimeout(() => mobileMenuOverlay.classList.add('hidden'), 300);
+      mobileMenuModal.classList.add('-translate-x-full');
+    }
+  }
+
   // Reassign DOM elements once fully parsed to prevent null reference errors on mobile
   document.addEventListener('DOMContentLoaded', () => {
     dealerOverlay = document.getElementById('dealerOverlay');
@@ -3340,6 +3470,9 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     dealerBtnLabel = document.getElementById('dealerBtnLabel');
 
     mobileCategoriesOverlay = document.getElementById('mobileCategoriesOverlay');
+    pwaBannerOverlay = document.getElementById('pwaInstallBanner');
+    mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+    mobileMenuModal = document.getElementById('mobileMenuModal');
     mobileCategoriesModal = document.getElementById('mobileCategoriesModal');
     mobileCategoryGrid = document.getElementById('mobileCategoryGrid');
 
@@ -3550,6 +3683,81 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     </div>
   </div>
 
+
+  <!-- MOBILE HAMBURGER MENU / SETTINGS DRAWER (Slide from left!) -->
+  <div id="mobileMenuOverlay" class="fixed inset-0 bg-black/60 z-50 hidden transition-opacity" onclick="closeMobileMenuModal();"></div>
+  <div id="mobileMenuModal" class="fixed top-0 bottom-0 left-0 w-[280px] bg-[#0b1a38] text-white z-50 shadow-2xl transition-transform duration-300 -translate-x-full flex flex-col justify-between">
+    <!-- Header -->
+    <div class="p-4 border-b border-gray-800 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <img src="logo.svg" alt="Logo" class="h-8 w-auto brightness-200" />
+      </div>
+      <button onclick="closeMobileMenuModal();" class="text-gray-400 hover:text-white text-lg font-bold">✕</button>
+    </div>
+    
+    <!-- Menu Links -->
+    <div class="flex-1 overflow-y-auto py-4 px-3 space-y-2 text-[14px]">
+      <div class="text-[10px] uppercase text-gray-500 font-extrabold tracking-widest px-3 mb-2">My Account</div>
+      <button onclick="closeMobileMenuModal(); openLoginModal();" class="w-full text-left px-3 py-3 hover:bg-gray-800 rounded-[4px] flex items-center gap-3 transition">
+        👤 Profile / Login
+      </button>
+      <button onclick="closeMobileMenuModal(); openWishlistModal();" class="w-full text-left px-3 py-3 hover:bg-gray-800 rounded-[4px] flex items-center gap-3 transition">
+        ❤️ Saved Items (Wishlist)
+      </button>
+      <button onclick="closeMobileMenuModal(); openDealerModal();" class="w-full text-left px-3 py-3 hover:bg-gray-800 rounded-[4px] flex items-center gap-3 transition">
+        💼 Dealer Dashboard / Portal
+      </button>
+      
+      <div class="text-[10px] uppercase text-gray-500 font-extrabold tracking-widest px-3 pt-4 mb-2">Help & Policies</div>
+      <a href="https://wa.me/233542451578" target="_blank" class="block px-3 py-3 hover:bg-gray-800 rounded-[4px] flex items-center gap-3 transition">
+        💬 Contact Support (WhatsApp)
+      </a>
+      <button onclick="closeMobileMenuModal(); alert('Our 12-Month Official Warranty policy applies to all genuine smartphones, laptops, and tablets purchased directly from Valmont Gadgets.');" class="w-full text-left px-3 py-3 hover:bg-gray-800 rounded-[4px] flex items-center gap-3 transition">
+        🛡️ 12-Month Warranty Info
+      </button>
+      <button onclick="closeMobileMenuModal(); alert('We offer express courier delivery across Accra on the same-day for orders placed before 3:00 PM.');" class="w-full text-left px-3 py-3 hover:bg-gray-800 rounded-[4px] flex items-center gap-3 transition">
+        🚚 Delivery Information
+      </button>
+      <button onclick="closeMobileMenuModal(); alert('We allow returns and replacements within 7 days of delivery for any sealed items or items with manufacturer defects.');" class="w-full text-left px-3 py-3 hover:bg-gray-800 rounded-[4px] flex items-center gap-3 transition">
+        🔄 Returns & Replacements
+      </button>
+      
+      <div class="text-[10px] uppercase text-gray-500 font-extrabold tracking-widest px-3 pt-4 mb-2">Get the app</div>
+      <div class="px-3">
+        <button id="drawerInstallBtn" class="w-full bg-[#128c7e] hover:bg-[#0b665c] text-white text-[12px] font-bold py-2.5 px-4 rounded-[4px] flex items-center justify-center gap-1.5 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+          <span id="drawerInstallBtnText">Install App</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="p-4 border-t border-gray-800 text-[11px] text-gray-400 text-center">
+      Valmont Gadgets • Premium Ghana Store
+    </div>
+  </div>
+
+  <!-- FLOATING PWA INSTALL PROMPT CARD (EXACTLY LIKE VALMONT ELECTRICALS STYLE!) -->
+  <div id="pwaInstallBanner" class="fixed bottom-24 md:bottom-6 left-6 bg-[#0b1a38] text-white p-4 rounded-[4px] shadow-2xl z-50 max-w-[320px] border border-gray-800 transition duration-300 hidden">
+    <div class="flex items-start gap-3">
+      <div class="h-10 w-10 bg-white/10 rounded flex items-center justify-center shrink-0">
+        <img src="favicon.png" alt="Valmont App" class="h-8 w-8" />
+      </div>
+      <div class="flex-1 min-w-0">
+        <h4 class="font-extrabold text-[13px] leading-tight uppercase text-[#f68b1e] tracking-wider">Get the App</h4>
+        <p class="text-[11px] text-gray-300 font-medium mt-0.5 leading-snug">Install Valmont Gadgets on your home screen for instant updates and offline orders!</p>
+        <div class="flex gap-2 mt-3">
+          <button id="pwaInstallBtn" class="bg-[#128c7e] hover:bg-[#0b665c] text-white text-[11px] font-black uppercase tracking-wider py-1.5 px-3 rounded-[4px] transition flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+            Install App
+          </button>
+          <button onclick="dismissPwaBanner();" class="border border-gray-700 hover:bg-white/5 text-gray-400 hover:text-white text-[10px] font-bold uppercase tracking-wider py-1.5 px-2.5 rounded-[4px] transition">
+            Later
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- 13. FLOATING WHATSAPP BUTTON (JUMIA COMPLIANT) -->
   <a href="https://wa.me/233542451578" target="_blank" class="fixed bottom-20 md:bottom-6 right-6 bg-[#25d366] text-white p-3.5 rounded-full shadow-2xl hover:bg-[#20ba5a] transition duration-200 z-50 flex items-center justify-center" aria-label="Order on WhatsApp">
