@@ -143,6 +143,10 @@
     }
   </script>
 
+
+  <!-- Real Live Paystack Inline Integration -->
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+
 </head>
 <body class="bg-[#f1f1f2] text-[#333333] pb-16 md:pb-0">
 
@@ -2128,6 +2132,13 @@
       }
     });
 
+    
+    // Global variables for paystack tracking
+    let paystackSavedReceipt = '';
+    let paystackSavedRef = '';
+    let paystackSavedName = '';
+    let paystackSavedPayment = '';
+
     function triggerWhatsAppOrder() {
       const name = document.getElementById('shippingName').value.trim();
       const phone = document.getElementById('shippingPhone').value.trim();
@@ -2137,19 +2148,22 @@
 
       const subtotal = cart.reduce((sum, item) => sum + (item.retail * item.qty), 0);
       const ref = `VG-${Date.now().toString().slice(-6)}`;
-      
       const itemsString = cart.map(item => `• ${item.name} (Qty ${item.qty} - ${money(item.retail * item.qty)})`).join('\n');
       
       const paymentNames = { momo: 'Mobile Money', cod: 'Cash on Delivery', card: 'Credit/Debit Card' };
+      paystackSavedRef = ref;
+      paystackSavedName = name;
+      paystackSavedPayment = paymentNames[paymentOpt];
 
-      const receipt = `*VALMONT GADGETS — ORDER RECEIVED*
+      // Prepare receipt text
+      paystackSavedReceipt = `*VALMONT GADGETS — ORDER RECEIVED*
 Ref Code: *#${ref}*
 
 *ITEMS:*
 ${itemsString}
 
 *TOTAL BILL:* ${money(subtotal)}
-*PAYMENT:* ${paymentNames[paymentOpt]}
+*PAYMENT:* ${paymentNames[paymentOpt]} (${paymentOpt === 'cod' ? 'Pending' : 'Paid'})
 
 *SHIPPING TO:*
 Name: ${name}
@@ -2159,19 +2173,169 @@ Street: ${street || 'To be provided'}
 
 _Stock is verified before dispatch. We will reach out on WhatsApp to finalize your delivery. Thank you for choosing Valmont Gadgets Ghana!_`;
 
-      // Save order to Local Storage for reseller desk
-      saveOrderToLog(ref, name, cart.map(i => i.name).join(', '), paymentNames[paymentOpt]);
+      if (paymentOpt === 'cod') {
+        // Cash on delivery goes straight to WhatsApp!
+        finalizeCheckout();
+      } else {
+        // Trigger Real Paystack pop-up checkout!
+        openPaystackModal(subtotal, paymentOpt, phone);
+      }
+    }
 
-      // Open WhatsApp
-      const waUrl = `https://wa.me/233542451578?text=${encodeURIComponent(receipt)}`;
+    const paystackOverlay = document.getElementById('paystackOverlay');
+    const paystackModal = document.getElementById('paystackModal');
+    const paystackForm = document.getElementById('paystackFormContainer');
+    const paystackLoader = document.getElementById('paystackLoader');
+    const paystackSuccess = document.getElementById('paystackSuccess');
+    const paystackPayBtn = document.getElementById('paystackPayBtn');
+    const paystackFooter = document.getElementById('paystackFooter');
+
+    function openPaystackModal(amount, option, phone) {
+      if (paystackOverlay) paystackOverlay.classList.remove('hidden');
+      if (paystackModal) paystackModal.classList.remove('hidden');
+      
+      const amtEl = document.getElementById('paystackAmount');
+      if (amtEl) amtEl.textContent = money(amount);
+
+      if (paystackForm) paystackForm.classList.remove('hidden');
+      if (paystackLoader) paystackLoader.classList.add('hidden');
+      if (paystackSuccess) paystackSuccess.classList.add('hidden');
+      if (paystackFooter) paystackFooter.classList.remove('hidden');
+
+      if (paystackForm) {
+        if (option === 'momo') {
+          paystackForm.innerHTML = `
+            <div>
+              <label class="block text-[11px] font-black uppercase text-gray-400 mb-1">Select Network *</label>
+              <select id="paystackNetwork" class="w-full border p-2.5 rounded-lg text-[13px] outline-none font-bold bg-white focus:border-[#3bb75e]">
+                <option value="mtn">MTN Mobile Money</option>
+                <option value="telecel">Telecel Cash</option>
+                <option value="at">AT Money</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-black uppercase text-gray-400 mb-1">Mobile Money Phone Number *</label>
+              <input id="paystackPhone" type="tel" value="${phone}" class="w-full border p-2.5 rounded-lg text-[13px] outline-none font-semibold focus:border-[#3bb75e]" required />
+            </div>
+          `;
+        } else if (option === 'card') {
+          paystackForm.innerHTML = `
+            <div>
+              <label class="block text-[11px] font-black uppercase text-gray-400 mb-1">Card Number *</label>
+              <input type="text" placeholder="4000 1234 5678 9010" class="w-full border p-2.5 rounded-lg text-[13px] outline-none font-semibold focus:border-[#3bb75e]" required />
+            </div>
+            <div class="grid grid-cols-2 gap-3 mt-3">
+              <div>
+                <label class="block text-[11px] font-black uppercase text-gray-400 mb-1">Expiry Date *</label>
+                <input type="text" placeholder="12/28" class="w-full border p-2.5 rounded-lg text-[13px] outline-none font-semibold focus:border-[#3bb75e]" required />
+              </div>
+              <div>
+                <label class="block text-[11px] font-black uppercase text-gray-400 mb-1">CVV *</label>
+                <input type="password" placeholder="123" class="w-full border p-2.5 rounded-lg text-[13px] outline-none font-semibold focus:border-[#3bb75e]" required />
+              </div>
+            </div>
+          `;
+        }
+      }
+    }
+
+    function closePaystackModal() {
+      if (paystackOverlay) paystackOverlay.classList.add('hidden');
+      if (paystackModal) paystackModal.classList.add('hidden');
+    }
+
+    function processSimulatedPayment() {
+      // Close the custom overlay since Paystack handles the pop-up iframe natively
+      closePaystackModal();
+
+      const subtotal = cart.reduce((sum, item) => sum + (item.retail * item.qty), 0);
+      const phone = document.getElementById('shippingPhone').value.trim();
+      const name = document.getElementById('shippingName').value.trim();
+      const email = document.getElementById('shippingEmail') ? document.getElementById('shippingEmail').value.trim() : '';
+      const activeEmail = email || 'sales@valmontgadgets.com';
+
+      // Initialize REAL Paystack Pop-up with your live public key!
+      let handler = PaystackPop.setup({
+        key: 'pk_live_f324d9792777c93ca3b5bef373e3dd1b982a0a54',
+        email: activeEmail,
+        amount: Math.round(subtotal * 100), // Amount in Pesewas (GH₵ * 100)
+        currency: 'GHS',
+        metadata: {
+          custom_fields: [
+            {
+              display_name: "Customer Name",
+              variable_name: "customer_name",
+              value: name
+            },
+            {
+              display_name: "Customer Phone",
+              variable_name: "customer_phone",
+              value: phone
+            }
+          ]
+        },
+        callback: function(response){
+          // Triggers on real payment success!
+          alert('Payment Successful! Reference: ' + response.reference);
+          paystackSavedPayment += ' (Paid - Ref: ' + response.reference + ')';
+          finalizeCheckout();
+        },
+        onClose: function(){
+          alert('Transaction cancelled by customer.');
+          updateMobileNavHighlights('home');
+        }
+      });
+      handler.openIframe();
+    }
+
+    async function finalizeCheckout() {
+      const subtotal = cart.reduce((sum, item) => sum + (item.retail * item.qty), 0);
+      const street = document.getElementById('shippingStreet').value.trim();
+      const area = document.getElementById('shippingArea').value;
+      const phone = document.getElementById('shippingPhone').value.trim();
+
+      // 1. Dual-Database Pipeline: Try writing to live Supabase DB first if configured
+      if (hasSupabase()) {
+        try {
+          console.log('Supabase detected! Writing order to live database...');
+          const created = await supabaseInsert('orders', {
+            order_number: paystackSavedRef,
+            customer_name: paystackSavedName,
+            customer_phone: phone,
+            delivery_address: street || null,
+            delivery_zone: area || null,
+            total_amount: subtotal,
+            payment_method: paystackSavedPayment
+          });
+
+          if (created && created.length > 0) {
+            const orderId = created[0].id;
+            await supabaseInsert('order_items', cart.map(item => ({
+              order_id: orderId,
+              product_name: item.name,
+              unit_price: item.retail,
+              quantity: item.qty
+            })));
+            console.log('Order successfully committed to Supabase!');
+          }
+        } catch (error) {
+          console.error('Supabase write error:', error);
+        }
+      }
+
+      // 2. Save order to local storage (Reseller Desk Order list)
+      saveOrderToLog(paystackSavedRef, paystackSavedName, cart.map(i => i.name).join(', '), paystackSavedPayment);
+
+      // 3. Open WhatsApp
+      const waUrl = `https://wa.me/233542451578?text=${encodeURIComponent(paystackSavedReceipt)}`;
       window.open(waUrl, '_blank');
       
-      // Clear Cart and close
+      // 4. Clear Cart and close UI
       cart = [];
       localStorage.setItem('valmont_cart', JSON.stringify(cart));
       updateCartCount();
       closeCart();
-      alert(`Order #${ref} prepared and registered! Connecting to Valmont dispatch team via WhatsApp...`);
+      alert(`Order #${paystackSavedRef} processed successfully! Connecting with Valmont dispatch rider on WhatsApp...`);
     }
 
     function saveOrderToLog(ref, name, itemNames, payment) {
