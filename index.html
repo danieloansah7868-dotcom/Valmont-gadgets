@@ -38,8 +38,8 @@
       scrollbar-width: none;
     }
     
-    /* Private Reseller Desk Styles scoped inside .reseller-desk */
-    .reseller-desk {
+    /* Private Dealer Desk Styles scoped inside .dealer-desk */
+    .dealer-desk {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     .how-it-works, .pricing-section, .order-system-section, .faq-section {
@@ -128,6 +128,20 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="apple-touch-icon" href="favicon.png">
+
+
+  <!-- PWA Manifest & Service Worker Registration -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0b1a38">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service Worker registered successfully!', reg.scope))
+          .catch(err => console.log('Service Worker registration failed:', err));
+      });
+    }
+  </script>
 
 </head>
 <body class="bg-[#f1f1f2] text-[#333333] pb-16 md:pb-0">
@@ -386,7 +400,7 @@
     </div>
 
     <!-- RESELLER PORTAL PRIVATE VIEW (HIDDEN BY DEFAULT) -->
-    <div id="reseller-desk-view" class="hidden">
+    <div id="dealer-desk-view" class="hidden">
       <!-- Scoped Reseller Dashboard HTML -->
     </div>
 
@@ -405,19 +419,19 @@
       <div>
         <h4 class="font-extrabold text-[12px] uppercase text-gray-400 tracking-widest mb-4">Support Pages</h4>
         <ul class="text-[12px] space-y-2 text-gray-300 font-medium">
-          <li><a href="#faq" onclick="showResellerMode();" class="hover:text-[#f68b1e]">12-Month Official Warranty policy</a></li>
+          <li><a href="#faq" onclick="openDealerModal();" class="hover:text-[#f68b1e]">12-Month Official Warranty policy</a></li>
           <li><a href="#" class="hover:text-[#f68b1e]">Express delivery across Greater Accra</a></li>
           <li><a href="#" class="hover:text-[#f68b1e]">Secure payments on delivery with MoMo</a></li>
           <li><a href="#" class="hover:text-[#f68b1e]">Return & replacement policy</a></li>
         </ul>
       </div>
       <div>
-        <h4 class="font-extrabold text-[12px] uppercase text-gray-400 tracking-widest mb-4">Reseller Center</h4>
+        <h4 class="font-extrabold text-[12px] uppercase text-gray-400 tracking-widest mb-4">Dealer Center</h4>
         <p class="text-[12px] leading-relaxed text-gray-300 font-medium mb-4">
-          Running your own Valmont Gadgets franchise business? Toggle our Reseller Portal to manage your pricing calculator, log orders, and read reseller FAQs.
+          Running your own Valmont Gadgets franchise business? Toggle our Dealer Portal to manage your pricing calculator, log orders, and read reseller FAQs.
         </p>
-        <button onclick="showResellerMode();" class="jumia-orange hover:bg-orange-600 text-white font-extrabold text-[11px] tracking-widest px-6 py-2.5 rounded-full uppercase transition">
-          Enter Reseller Desk
+        <button onclick="openDealerModal();" class="jumia-orange hover:bg-orange-600 text-white font-extrabold text-[11px] tracking-widest px-6 py-2.5 rounded-full uppercase transition">
+          Enter Dealer Desk
         </button>
       </div>
     </div>
@@ -657,7 +671,7 @@
     <div id="profileView" class="hidden text-center py-4">
       <div class="h-16 w-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-[#0b1a38]"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg></div>
       <h4 id="profileName" class="font-black text-[16px]">Customer Name</h4>
-      <p id="profileEmail" class="text-[12px] text-gray-500 mt-1"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d3b0a6a0a7bcbeb6a193b6beb2babffdb0bcbe">[email&#160;protected]</a></p>
+      <p id="profileEmail" class="text-[12px] text-gray-500 mt-1">customer@email.com</p>
       <p id="profilePhone" class="text-[12px] text-gray-500 mt-0.5">054 245 1578</p>
       
       <button onclick="handleLogout();" class="w-full border border-red-500 text-red-500 hover:bg-red-50 font-bold text-[12px] tracking-wider uppercase py-2.5 rounded-full mt-6 transition">
@@ -688,7 +702,7 @@
 
 
   <!-- Javascript Logic containing real products and layout engines -->
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  <script>
     // PRIVATE COST LEDGER
     const PRIVATE_COST_LEDGER = {};
 
@@ -1645,7 +1659,7 @@
     const btnToggleReseller = document.getElementById('btnToggleReseller');
     const portalText = document.getElementById('portalBtnText');
     const customerStoreView = document.getElementById('customer-store-view');
-    const resellerDeskView = document.getElementById('reseller-desk-view');
+    const resellerDeskView = document.getElementById('dealer-desk-view');
     const wishlistCountBadge = document.getElementById('wishlistCountBadge');
     
     // User Profile Elements
@@ -2279,7 +2293,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
 
 
     // SWITCH BETWEEN CATALOGUE & RESELLER DESK
-    function showResellerMode() {
+    function openDealerModal() {
       isResellerMode = true;
       customerStoreView.classList.add('hidden');
       resellerDeskView.classList.remove('hidden');
@@ -2290,14 +2304,14 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       isResellerMode = false;
       customerStoreView.classList.remove('hidden');
       resellerDeskView.classList.add('hidden');
-      portalText.textContent = "Reseller Portal";
+      portalText.textContent = "Dealer Portal";
     }
 
     btnToggleReseller.addEventListener('click', () => {
       if (isResellerMode) {
         showCustomerMode();
       } else {
-        showResellerMode();
+        openDealerModal();
       }
     });
 
@@ -2506,7 +2520,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       </section>
     `;
 
-    document.getElementById('reseller-desk-view').innerHTML = resellerDeskHTML;
+    document.getElementById('dealer-desk-view').innerHTML = resellerDeskHTML;
 
     // LOCAL ORDERS LOG DATABASE SYNC
     function renderLocalOrderTable() {
@@ -2876,6 +2890,112 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     updateUserUI();
     updateDealerUI();
   }, 100);
+
+  // === MOBILE BOTTOM NAV HIGHLIGHT & 0-BADGE HIDING ===
+  function updateMobileNavHighlights(activeTab) {
+    const tabs = {
+      home: document.querySelector('button[onclick*="mobileGoHome"]'),
+      categories: document.querySelector('button[onclick*="openMobileCategoriesModal"]'),
+      saved: document.querySelector('button[onclick*="openWishlistModal"]'),
+      dealer: document.querySelector('button[onclick*="openDealerModal"]'),
+      account: document.querySelector('button[onclick*="openLoginModal"]')
+    };
+
+    // Reset all tabs to gray
+    Object.keys(tabs).forEach(key => {
+      const btn = tabs[key];
+      if (btn) {
+        btn.classList.remove('text-[#f68b1e]', 'font-black');
+        btn.classList.add('text-gray-500', 'font-bold');
+      }
+    });
+
+    // Set selected tab to Jumia Orange
+    const activeBtn = tabs[activeTab];
+    if (activeBtn) {
+      activeBtn.classList.remove('text-gray-500', 'font-bold');
+      activeBtn.classList.add('text-[#f68b1e]', 'font-black');
+    }
+  }
+
+  // Override click routing functions to handle active states dynamically
+  const originalMobileGoHome = mobileGoHome;
+  mobileGoHome = function() {
+    if (typeof originalMobileGoHome === 'function') originalMobileGoHome();
+    updateMobileNavHighlights('home');
+  };
+
+  const originalOpenMobileCategoriesModal = openMobileCategoriesModal;
+  openMobileCategoriesModal = function() {
+    if (typeof originalOpenMobileCategoriesModal === 'function') originalOpenMobileCategoriesModal();
+    updateMobileNavHighlights('categories');
+  };
+
+  // Override Wishlist, Dealer, and Account modals to trigger states
+  const originalOpenWishlistModal = openWishlistModal;
+  openWishlistModal = function() {
+    if (typeof originalOpenWishlistModal === 'function') originalOpenWishlistModal();
+    updateMobileNavHighlights('saved');
+  };
+
+  const originalOpenDealerModal = openDealerModal;
+  openDealerModal = function() {
+    if (typeof originalOpenDealerModal === 'function') originalOpenDealerModal();
+    updateMobileNavHighlights('dealer');
+  };
+
+  const originalOpenLoginModal = openLoginModal;
+  openLoginModal = function() {
+    if (typeof originalOpenLoginModal === 'function') originalOpenLoginModal();
+    updateMobileNavHighlights('account');
+  };
+
+  // Hide badge completely if count is 0 (both for Shopping Bag and Wishlist)
+  const originalUpdateCartCount = updateCartCount;
+  updateCartCount = function() {
+    if (typeof originalUpdateCartCount === 'function') originalUpdateCartCount();
+    const count = cart.reduce((sum, item) => sum + item.qty, 0);
+    const badge = document.getElementById('cartBadgeCount');
+    if (badge) {
+      if (count === 0) {
+        badge.classList.add('hidden');
+      } else {
+        badge.classList.remove('hidden');
+        badge.textContent = count;
+      }
+    }
+  };
+
+  const originalUpdateWishlistUI = updateWishlistUI;
+  updateWishlistUI = function() {
+    if (typeof originalUpdateWishlistUI === 'function') originalUpdateWishlistUI();
+    const badge = document.getElementById('wishlistCountBadge');
+    const mobBadge = document.getElementById('mobileWishlistBadge');
+    const count = wishlist.length;
+
+    [badge, mobBadge].forEach(b => {
+      if (b) {
+        if (count === 0) {
+          b.classList.add('hidden');
+        } else {
+          b.classList.remove('hidden');
+          b.textContent = count;
+        }
+      }
+    });
+  };
+
+  // Ensure category filtering scrolls smoothly to product feed
+  function selectCategoryWithScroll(key) {
+    selectMobileCategory(key);
+  }
+
+  // Run initial badge checks
+  setTimeout(() => {
+    updateCartCount();
+    updateWishlistUI();
+    updateMobileNavHighlights('home'); // Home is active by default
+  }, 200);
 </script>
 
   <!-- 9. SIMULATED PAYSTACK SECURE PAYMENT MODAL -->
@@ -3059,5 +3179,5 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     </div>
   </div>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1f9f62e8ecc932e',t:'MTc4NDgwMjEyMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>

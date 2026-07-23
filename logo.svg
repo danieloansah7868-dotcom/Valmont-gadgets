@@ -28,6 +28,6 @@
   </g>
 
   <!-- Typography -->
-  <text x="78" y="34" class="text-valmont">VALMONT</text>
-  <text x="78" y="60" class="text-gadgets">GADGETS</text>
+  <text x="78" y="34" class="text-valmont">Valmont</text>
+  <text x="78" y="60" class="text-gadgets">Gadgets</text>
 </svg>
