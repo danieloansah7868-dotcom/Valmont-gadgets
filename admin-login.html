@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in — Valmont Gadgets Admin</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{font-family:Inter,system-ui,sans-serif;color:#f8fafc;background:#071126}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 0,#172b55 0,#071126 54%)}
+    .card{width:min(100%,420px);padding:40px;background:#0f2044;border:1px solid #263b63;border-radius:20px;box-shadow:0 24px 80px #0008}.brand{display:flex;justify-content:center;align-items:center;gap:10px;margin-bottom:28px}.brand img{width:44px;height:44px}.brand span{font-size:20px;font-weight:800;letter-spacing:.18em;color:#f58c14}.eyebrow{text-align:center;text-transform:uppercase;letter-spacing:.16em;font-size:11px;color:#94a3b8;font-weight:700}.h1{text-align:center;margin:10px 0 8px;font-size:28px}.intro{text-align:center;color:#94a3b8;font-size:14px;margin:0 0 28px;line-height:1.6}label{display:block;font-size:12px;color:#cbd5e1;font-weight:700;margin:17px 0 7px}input{width:100%;padding:14px 15px;border-radius:10px;border:1px solid #3a4d72;background:#071126;color:#fff;font:inherit;font-size:15px;outline:0}input:focus{border-color:#f58c14;box-shadow:0 0 0 3px #f58c1424}button{width:100%;margin-top:24px;padding:14px;border:0;border-radius:10px;background:#f58c14;color:#071126;font:inherit;font-weight:800;cursor:pointer}button:hover{filter:brightness(1.08)}.error{min-height:20px;margin:12px 0 0;color:#fca5a5;font-size:13px;font-weight:600}.forgot{display:block;margin-top:20px;text-align:center;color:#fbbf24;font-size:13px;text-decoration:none}.forgot:hover{text-decoration:underline}.note{text-align:center;color:#64748b;font-size:11px;margin:26px 0 0;line-height:1.5}@media(max-width:480px){.card{padding:30px 22px}.h1{font-size:24px}}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="brand"><img src="/logo.svg" alt="Valmont Gadgets"><span>VALMONT</span></div>
+    <div class="eyebrow">Store administration</div>
+    <h1 class="h1">Welcome back</h1>
+    <p class="intro">Sign in to manage products, orders and your storefront.</p>
+    <form id="loginForm" novalidate>
+      <label for="email">Email address</label>
+      <input id="email" name="email" type="email" autocomplete="username" placeholder="admin@valmontgadgets.com" required>
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+      <p id="error" class="error" role="alert" aria-live="polite"></p>
+      <button type="submit">Sign In</button>
+    </form>
+    <a class="forgot" href="mailto:admin@valmontgadgets.com?subject=Valmont%20admin%20password%20reset">Forgot password?</a>
+    <p class="note">Authorized Valmont Gadgets staff only.</p>
+  </main>
+  <script>
+    const ADMIN_EMAIL = 'admin@valmontgadgets.com';
+    const ADMIN_PASSWORD = 'valmont2026';
+    if (sessionStorage.getItem('adminLoggedIn') === 'true') window.location.replace('/admin.html');
+    document.getElementById('loginForm').addEventListener('submit', function (event) {
+      event.preventDefault();
+      const email = document.getElementById('email').value.trim().toLowerCase();
+      const password = document.getElementById('password').value;
+      const error = document.getElementById('error');
+      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+        sessionStorage.setItem('adminLoggedIn', 'true');
+        window.location.replace('/admin.html');
+      } else {
+        error.textContent = 'The email or password is incorrect. Please try again.';
+        document.getElementById('password').select();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -466,9 +466,11 @@
           <h3 class="font-extrabold text-[14px] uppercase tracking-wider text-gray-800" id="currentFeedTitle">
             Verified Premium Stock
           </h3>
-          <span class="text-[11px] font-black text-gray-400 uppercase tracking-widest" id="itemCountDisplay">
-            64 Products
-          </span>
+          <div class="flex flex-wrap items-center justify-end gap-2">
+            <select id="sortSelector" aria-label="Sort products" class="border border-gray-200 rounded px-2 py-1.5 text-[11px] font-bold text-gray-700"><option value="popular">Most popular</option><option value="newest">Newest</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option></select>
+            <select id="priceSelector" aria-label="Filter by price" class="border border-gray-200 rounded px-2 py-1.5 text-[11px] font-bold text-gray-700"><option value="all">All prices</option><option value="under-5000">Under GH₵ 5,000</option><option value="5000-15000">GH₵ 5,000–15,000</option><option value="above-15000">Over GH₵ 15,000</option></select>
+            <span class="text-[11px] font-black text-gray-400 uppercase tracking-widest" id="itemCountDisplay">64 Products</span>
+          </div>
         </div>
         
         <!-- Grid layout matching Jumia (6-col desktop, 2-col mobile) -->
@@ -649,12 +651,16 @@
             </div>
           </label>
         </div>
+        <div class="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-center">
+          <p class="text-[12px] font-bold text-green-800">After sending your payment, tap the button below so we can confirm and prepare your order.</p>
+          <button id="paymentSentBtn" type="button" class="mt-3 w-full bg-green-600 hover:bg-green-700 text-white font-black text-[13px] tracking-wide py-3 rounded-lg shadow-lg animate-pulse">I’VE SENT PAYMENT</button>
+        </div>
       </div>
 
     </div>
 
     <!-- Sticky Cart Checkout Button footer -->
-    <div class="bg-gray-50 border-t p-4 shrink-0">
+    <div class="bg-gray-50 border-t p-4 shrink-0 sticky bottom-0 z-10">
       <button id="checkoutActionBtn" class="w-full bg-[#f68b1e] hover:bg-orange-600 text-white font-bold text-[13px] tracking-widest uppercase py-3 rounded-[4px] transition shadow flex items-center justify-center gap-2">
         <span>Proceed to Shipping</span>
         <span class="text-[12px]"></span>
@@ -1807,7 +1813,11 @@
     }
 
     // APP STATE
-    let activeFilter = 'all';
+    const initialFilters = new URLSearchParams(location.search);
+    let activeFilter = initialFilters.get('category') || 'all';
+    let activePriceFilter = initialFilters.get('price') || 'all';
+    let activeSort = initialFilters.get('sort') || 'popular';
+    let currentProductPage = Math.max(1, Number(initialFilters.get('page') || 1));
     let searchQuery = '';
     let cart = JSON.parse(localStorage.getItem('valmont_cart') || '[]');
     let wishlist = JSON.parse(localStorage.getItem('valmont_wishlist') || '[]');
@@ -1903,13 +1913,34 @@
     }
 
     // RENDER PRODUCTS GRID & FLASH SALES
+    function syncFilterUrl() {
+      const params = new URLSearchParams(location.search);
+      activeFilter === 'all' ? params.delete('category') : params.set('category', activeFilter);
+      activePriceFilter === 'all' ? params.delete('price') : params.set('price', activePriceFilter);
+      activeSort === 'popular' ? params.delete('sort') : params.set('sort', activeSort);
+      currentProductPage > 1 ? params.set('page', currentProductPage) : params.delete('page');
+      const query = params.toString();
+      history.replaceState({}, '', `${location.pathname}${query ? '?' + query : ''}${location.hash}`);
+    }
+
     function renderProducts() {
+      document.querySelector('.product-pagination')?.remove();
       let filtered = PRODUCTS.filter(p => {
         const matchesCategory = activeFilter === 'all' || p.category === activeFilter;
         const matchesSearch = searchQuery === '' || p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.specs.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesCategory && matchesSearch;
+        const price = Number(p.retail || 0);
+        const matchesPrice = activePriceFilter === 'all' || (activePriceFilter === 'under-5000' && price < 5000) || (activePriceFilter === '5000-15000' && price >= 5000 && price <= 15000) || (activePriceFilter === 'above-15000' && price > 15000);
+        return matchesCategory && matchesSearch && matchesPrice;
       });
 
+      if (activeSort === 'price-asc') filtered.sort((a,b) => a.retail - b.retail);
+      if (activeSort === 'price-desc') filtered.sort((a,b) => b.retail - a.retail);
+      if (activeSort === 'popular') filtered.sort((a,b) => (b.reviews_count || 0) - (a.reviews_count || 0));
+      const pageSize = 20;
+      const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+      currentProductPage = Math.min(currentProductPage, pageCount);
+      const visibleProducts = filtered.slice((currentProductPage - 1) * pageSize, currentProductPage * pageSize);
+      syncFilterUrl();
       // Update count
       document.getElementById('itemCountDisplay').textContent = `${filtered.length} Products`;
       document.getElementById('currentFeedTitle').textContent = CATEGORY_LABELS[activeFilter] || 'Premium Gadget Stock';
@@ -1921,7 +1952,7 @@
           </div>
         `;
       } else {
-        productGrid.innerHTML = filtered.map(p => {
+        productGrid.innerHTML = visibleProducts.map(p => {
           const discount = Math.round((1 - (p.retail / p.compareAt)) * 100);
           const isWishlisted = wishlist.includes(p.id);
           const heartColor = isWishlisted ? 'text-red-500 fill-red-500' : 'text-gray-400 hover:text-red-500';
@@ -1981,6 +2012,10 @@
             </div>
           `;
         }).join('');
+        if (pageCount > 1) {
+          productGrid.insertAdjacentHTML('afterend', `<nav class="product-pagination flex justify-center gap-2 py-6" aria-label="Product pages">${Array.from({length: pageCount}, (_, i) => `<button type="button" data-page="${i + 1}" class="px-3 py-2 rounded border text-sm font-bold">${i + 1}</button>`).join('')}</nav>`);
+          document.querySelectorAll('.product-pagination [data-page]').forEach(btn => btn.addEventListener('click', () => { currentProductPage = Number(btn.dataset.page); renderProducts(); document.getElementById('store-feed')?.scrollIntoView({behavior:'smooth'}); }));
+        }
       }
     }
 
@@ -2367,13 +2402,17 @@
     });
 
     
+    document.getElementById('paymentSentBtn')?.addEventListener('click', () => {
+      triggerWhatsAppOrder(true);
+    });
+
     // Global variables for paystack tracking
     let paystackSavedReceipt = '';
     let paystackSavedRef = '';
     let paystackSavedName = '';
     let paystackSavedPayment = '';
 
-    function triggerWhatsAppOrder() {
+    function triggerWhatsAppOrder(paymentConfirmed = false) {
       const name = document.getElementById('shippingName').value.trim();
       const phone = document.getElementById('shippingPhone').value.trim();
       const city = document.getElementById('shippingCity').value.trim();
@@ -2944,6 +2983,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     document.querySelectorAll('.cat-pill').forEach(btn => {
       btn.addEventListener('click', () => {
         activeFilter = btn.dataset.catFilter;
+        currentProductPage = 1;
         syncCategoryPills(activeFilter);
         
         // Show simulated product skeletons on mobile before loading for high-fidelity app feedback!
@@ -2956,6 +2996,10 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       });
     });
 
+    const sortSelector = document.getElementById('sortSelector');
+    const priceSelector = document.getElementById('priceSelector');
+    if (sortSelector) { sortSelector.value = activeSort; sortSelector.addEventListener('change', e => { activeSort = e.target.value; currentProductPage = 1; renderProducts(); }); }
+    if (priceSelector) { priceSelector.value = activePriceFilter; priceSelector.addEventListener('change', e => { activePriceFilter = e.target.value; currentProductPage = 1; renderProducts(); }); }
 
     // SEARCH INPUT TRIGGER (Supports both Desktop and Full-Width Mobile search!)
     function triggerSearch() {

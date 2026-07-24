@@ -175,9 +175,11 @@ function escapeHTML(value) { return String(value ?? "").replace(/[&<>'"]/g, char
 
 // State
 let allProducts = [];
-let activeCategory = "all";
-let activePriceFilter = "all";
-let activeSort = "popular";
+const initialFilters = new URLSearchParams(window.location.search);
+let activeCategory = initialFilters.get("category") || "all";
+let activePriceFilter = initialFilters.get("price") || "all";
+let activeSort = initialFilters.get("sort") || "popular";
+let currentProductPage = Math.max(1, Number(initialFilters.get("page") || 1));
 let activeSearch = "";
 let cart = JSON.parse(localStorage.getItem("valmont_cart") || "[]");
 let wishlist = JSON.parse(localStorage.getItem("valmont_wishlist") || "[]");
@@ -257,8 +259,18 @@ function initStorefrontRealtime() {
   } catch (error) { console.warn(error); }
 }
 
+function syncFilterUrl() {
+  const params = new URLSearchParams(window.location.search);
+  activeCategory === "all" ? params.delete("category") : params.set("category", activeCategory);
+  activePriceFilter === "all" ? params.delete("price") : params.set("price", activePriceFilter);
+  activeSort === "popular" ? params.delete("sort") : params.set("sort", activeSort);
+  currentProductPage > 1 ? params.set("page", currentProductPage) : params.delete("page");
+  const query = params.toString();
+  window.history.replaceState({}, "", `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`);
+}
 function renderStorefrontGrid() {
   if (!productGrid) return;
+  document.querySelector(".product-pagination")?.remove();
   let filtered = allProducts.filter(p => {
     const categoryMatch = activeCategory === "all" || p.category === activeCategory;
     const cleanSearch = activeSearch.toLowerCase().trim();
@@ -277,12 +289,17 @@ function renderStorefrontGrid() {
   else if (activeSort === "price-asc") filtered.sort((a, b) => a.price - b.price);
   else if (activeSort === "price-desc") filtered.sort((a, b) => b.price - a.price);
   else if (activeSort === "rating") filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  const pageSize = 20;
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  currentProductPage = Math.min(currentProductPage, pageCount);
+  const visibleProducts = filtered.slice((currentProductPage - 1) * pageSize, currentProductPage * pageSize);
+  syncFilterUrl();
 
   if (filtered.length === 0) {
     productGrid.innerHTML = `<div class="col-span-full text-center py-16 text-gray-500 font-semibold text-sm">No premium products match your criteria. Try widening your search or filter.</div>`;
     return;
   }
-  productGrid.innerHTML = filtered.map(p => {
+  productGrid.innerHTML = visibleProducts.map(p => {
     let discPct = ""; let compareMarkup = "";
     if (p.compare_at_price && p.compare_at_price > p.price) {
       const discPercent = Math.round(((p.compare_at_price - p.price) / p.compare_at_price) * 100);
@@ -318,6 +335,10 @@ function renderStorefrontGrid() {
         </div>
       </div>`;
   }).join("");
+  if (pageCount > 1) {
+    productGrid.insertAdjacentHTML("afterend", `<nav class="product-pagination flex justify-center gap-2 py-6" aria-label="Product pages">${Array.from({length: pageCount}, (_, i) => `<button type="button" data-page="${i + 1}" class="px-3 py-2 rounded border text-sm font-bold ${i + 1 === currentProductPage ? "bg-[#0b1a38] text-white" : "bg-white text-[#0b1a38]"}">${i + 1}</button>`).join("")}</nav>`);
+    document.querySelectorAll(".product-pagination [data-page]").forEach(button => button.addEventListener("click", () => { currentProductPage = Number(button.dataset.page); renderStorefrontGrid(); document.getElementById("store-feed")?.scrollIntoView({behavior:"smooth"}); }));
+  }
 }
 
 function renderFlashSale() {
@@ -672,8 +693,8 @@ function initFloatingActions(){
 function initUIEventListeners(){
   // Category pills - white template active state
   const setActivePill = (activeBtn) => {
-    const activeCat = activeBtn?.dataset?.categoryPill || activeBtn?.getAttribute('data-category-pill');
-    document.querySelectorAll("[data-category-pill]").forEach(p => {
+    const activeCat = activeBtn?.dataset?.categoryPill || activeBtn?.dataset?.catFilter || activeBtn?.getAttribute('data-category-pill');
+    document.querySelectorAll("[data-category-pill], [data-cat-filter]").forEach(p => {
       // Reset all to inactive style
       p.classList.remove("bg-[#0b1a38]", "bg-gold", "text-white", "text-slate-900", "bg-slate-panel", "text-slate-300");
       p.classList.add("bg-white", "text-[#0b1a38]", "border", "border-gray-200");
@@ -688,10 +709,10 @@ function initUIEventListeners(){
     activeBtn.classList.remove("bg-white", "text-[#0b1a38]", "bg-slate-panel", "text-slate-300", "border", "border-gray-200");
     activeBtn.classList.add("bg-[#0b1a38]", "text-white");
   };
-  document.querySelectorAll("[data-category-pill]").forEach(btn => {
+  document.querySelectorAll("[data-category-pill], [data-cat-filter]").forEach(btn => {
     btn.addEventListener("click", () => {
       setActivePill(btn);
-      activeCategory = btn.dataset.categoryPill;
+      activeCategory = btn.dataset.categoryPill || btn.dataset.catFilter; currentProductPage = 1;
       renderStorefrontGrid();
     });
   });
@@ -703,12 +724,12 @@ function initUIEventListeners(){
         p.classList.remove("bg-[#0b1a38]", "text-white"); p.classList.add("text-gray-500");
       });
       btn.classList.remove("text-gray-500"); btn.classList.add("bg-[#0b1a38]", "text-white");
-      activePriceFilter = btn.dataset.priceFilter; renderStorefrontGrid();
+      activePriceFilter = btn.dataset.priceFilter; currentProductPage = 1; renderStorefrontGrid();
     });
   });
 
   const sortSel = document.getElementById("sortSelector");
-  if (sortSel) sortSel.addEventListener("change", (e) => { activeSort = e.target.value; renderStorefrontGrid(); });
+  if (sortSel) sortSel.addEventListener("change", (e) => { activeSort = e.target.value; currentProductPage = 1; renderStorefrontGrid(); });
 
   const bindSearchInput = (inputEl, buttonEl) => {
     if (!inputEl) return;
