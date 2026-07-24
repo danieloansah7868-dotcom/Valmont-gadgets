@@ -3,7 +3,9 @@
 
 const SUPABASE_URL = "https://yrrqrvbkdziuyosedfx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_H3PK7UqMZcO2rsusl1_qQw_MypxJljs";
-const DEFAULT_ADMIN_PASSWORD = "valmont2026";
+const ADMIN_EMAIL = "admin@valmontgadgets.com";
+const ADMIN_PASSWORD = "valmont2026";
+const DEFAULT_ADMIN_PASSWORD = ADMIN_PASSWORD;
 const PRODUCT_IMAGE_BUCKET = "product-images";
 
 const DEFAULT_CATEGORIES = [
@@ -455,6 +457,11 @@ const db = new ValmontAdminDatabase();
 window.addEventListener("DOMContentLoaded", initAdminPanel);
 
 async function initAdminPanel() {
+  // Admin pages are protected by a tab-scoped session. Keep the login route separate.
+  if (sessionStorage.getItem("adminLoggedIn") !== "true") {
+    window.location.replace("/admin-login.html");
+    return;
+  }
   bindAuthEvents();
   bindNavigationEvents();
   bindFormEvents();
@@ -462,10 +469,8 @@ async function initAdminPanel() {
   bindOrderEvents();
   bindResponsiveShell();
 
-  if (localStorage.getItem("valmont_admin_authenticated") === "true") {
-    showAdminApp();
-    await loadAllData();
-  }
+  showAdminApp();
+  await loadAllData();
 }
 
 function bindAuthEvents() {
@@ -473,9 +478,8 @@ function bindAuthEvents() {
     event.preventDefault();
     const input = document.getElementById("adminPasswordInput");
     const password = input.value.trim();
-    if (password === getAdminPassword()) {
-      localStorage.setItem("valmont_admin_authenticated", "true");
-      localStorage.setItem("valmont_admin_saved_password", password);
+    if (password === ADMIN_PASSWORD) {
+      sessionStorage.setItem("adminLoggedIn", "true");
       document.getElementById("loginError").classList.add("hidden");
       showAdminApp();
       loadAllData();
@@ -493,11 +497,8 @@ function getAdminPassword() {
 }
 
 function logoutAdmin() {
-  localStorage.removeItem("valmont_admin_authenticated");
-  localStorage.removeItem("valmont_admin_saved_password");
-  document.getElementById("adminApp").classList.add("hidden");
-  document.getElementById("authGate").classList.remove("hidden");
-  document.getElementById("adminPasswordInput").value = "";
+  sessionStorage.removeItem("adminLoggedIn");
+  window.location.replace("/admin-login.html");
 }
 
 function showAdminApp() {
