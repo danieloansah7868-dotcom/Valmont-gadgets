@@ -1,0 +1,52 @@
+/* Valmont Gadgets mobile experience fixes */
+.search-container { position: relative; }
+.category-filters { display:flex; }
+@keyframes cartPulse { 0%{transform:scale(1)} 50%{transform:scale(1.2);filter:drop-shadow(0 0 6px #f58c14)} 100%{transform:scale(1)} }
+.cart-icon.pulse { animation:cartPulse .3s ease; }
+.toast-notification { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:#fff; color:#0b1a38; padding:12px 24px; border-radius:8px; border:1px solid #f58c14; font-size:14px; font-weight:600; z-index:1001; opacity:0; transition:opacity .3s; pointer-events:none; }
+.toast-notification.show { opacity:1; }
+.card-free-delivery { font-size:10px; color:#28a745; font-weight:700; margin-top:4px; display:flex; align-items:center; gap:4px; }
+.card-free-delivery::before { content:"✓"; font-size:12px; }
+@media (max-width:768px) {
+  .search-container { position:fixed; top:60px; left:12px; right:12px; z-index:99; }
+  .search-container input { width:100%; padding:14px 18px; font-size:16px; border-radius:12px; border:1px solid var(--border,#e2e8f0); background:var(--bg-card,#fff); color:var(--text-primary,#0b1a38); }
+  .search-container button { padding:14px 24px; font-size:14px; font-weight:700; }
+  .category-filters { display:flex; overflow-x:auto; gap:8px; padding:12px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  .category-filters::-webkit-scrollbar { display:none; }
+  .category-btn { white-space:nowrap; padding:10px 18px; font-size:13px; flex-shrink:0; }
+  .product-grid { grid-template-columns:repeat(2,1fr); gap:12px; padding:12px; }
+  .product-card-image { height:160px; aspect-ratio:auto; padding:12px; }
+  .product-card-body { padding:12px; }
+  .card-title { font-size:13px; line-height:1.3; }
+  .card-price { font-size:16px; }
+  .card-add-btn { padding:10px; font-size:11px; }
+  .trust-badges-row { grid-template-columns:1fr; gap:12px; }
+  .trust-badge { display:flex; align-items:center; gap:12px; text-align:left; padding:16px; }
+  .trust-badge svg { flex-shrink:0; }
+  .deals-hero { padding:40px 0; }
+  .deals-heading { font-size:28px; line-height:1.2; }
+  .deals-sub { font-size:14px; }
+  .hero-cta-buttons { flex-direction:column; gap:8px; }
+  .hero-cta-buttons button,.hero-cta-buttons a { width:100%; text-align:center; }
+  .flash-sales-strip { flex-direction:column; align-items:flex-start; gap:8px; padding:12px; }
+  .flash-timer { font-size:14px; }
+  .flash-timer span { font-size:16px; }
+  /* Existing storefront markup equivalents */
+  #searchInput { min-height:50px; padding:14px 18px !important; }
+  #searchBtn { min-height:50px; padding:14px 24px !important; }
+  #productGrid { gap:12px !important; padding:12px !important; }
+  #productGrid > div > div:first-of-type { min-height:140px; }
+  #detailModal { inset:0 !important; max-width:none !important; border-radius:0 !important; padding:0 !important; height:100vh; }
+  #detailModal > div:first-child { padding:16px; position:sticky; top:0; z-index:2; background:#fff; }
+  #detailModal .h-\[240px\] { height:50vh !important; border-radius:0; }
+  #detailModal #closeDetailBtn { font-size:0; width:36px; height:36px; padding:0; border-radius:50%; }
+  #detailModal #closeDetailBtn::after { content:'×'; font-size:24px; line-height:1; }
+  #detailModal .grid { display:block; }
+  #detailModal .grid > div:last-child { padding:24px; }
+  #detailAddToCart,#detailWhatsAppOrder { width:100%; min-height:48px; }
+  #detailModal .sticky { position:sticky; bottom:0; background:#fff; padding:16px; border-top:1px solid #e2e8f0; }
+}
+@media (max-width:480px) { .product-grid,#productGrid { gap:8px !important; padding:8px !important; } .product-card-image { height:140px; } }
+@media (min-width:769px) { #searchInput { position:static; } }
+.quick-view-modal{position:fixed;inset:0;background:var(--bg-primary,#f8fafc);z-index:1000;overflow-y:auto;display:none}
+.quick-view-modal.active{display:block}.quick-view-image{width:100%;height:50vh;background:linear-gradient(135deg,#1e293b,#0f172a);display:flex;align-items:center;justify-content:center;padding:32px}.quick-view-image img{max-width:80%;max-height:80%;object-fit:contain}.quick-view-details{padding:24px}.quick-view-sticky{position:sticky;bottom:0;background:var(--bg-primary,#f8fafc);padding:16px;border-top:1px solid var(--border,#e2e8f0);display:flex;gap:12px}.quick-view-sticky button{flex:1;padding:14px;font-size:14px;font-weight:700}

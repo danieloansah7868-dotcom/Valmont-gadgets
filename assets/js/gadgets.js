@@ -61,7 +61,16 @@ const DEFAULT_PRODUCTS_SEED = [
   { id: "vmp-056", name: "Anker 65W GaN Charger", slug: "anker-65w-gan", category: "power", price: 1350, wholesale_price: 1080, compare_at_price: 1552, specs: "Compact GaN", description: "Anker 65W GaN", badge: "", rating: 4.6, reviews_count: 10, stock_quantity: 22, image_url: "", image: "/assets/images/products/airpods-4.jpg", images: [], colors: [], storage_options: [], is_active: true },
   { id: "vmp-057", name: "Baseus 65W GaN Charger", slug: "baseus-65w-gan", category: "power", price: 1150, wholesale_price: 920, compare_at_price: 1322, specs: "Fast GaN Charger", description: "Baseus 65W", badge: "DEAL", rating: 4.4, reviews_count: 8, stock_quantity: 19, image_url: "", image: "/assets/images/products/airpods-4.jpg", images: [], colors: [], storage_options: [], is_active: true }
 ];
-DEFAULT_PRODUCTS_SEED.forEach(p => { p.compare_at_price = Math.round(p.price * 1.15); });
+DEFAULT_PRODUCTS_SEED.forEach((p, index) => {
+  p.name = (p.name || "").replace(/Power &amp; Chargers/g, "Power").replace(/Power & Chargers/g, "Power");
+  const n = p.name.toLowerCase();
+  const popular = n.includes("iphone 15 pro max") || n.includes("s24 ultra");
+  const mid = n.includes("iphone 13") || n.includes("a55");
+  const accessory = ["power","phone_acc","phone_parts","travel_acc","laptop_acc"].includes(p.category);
+  p.reviews_count = popular ? 42 + index % 27 : mid ? 18 + index % 15 : p.badge === "NEW" ? index % 6 : accessory ? 8 + index % 8 : 12 + index % 18;
+  p.stock_quantity = popular ? 3 + index % 6 : p.category === "samsung" ? 5 + index % 8 : accessory ? 15 + index % 16 : 6 + index % 12;
+  p.compare_at_price = Math.round(p.price * 1.15);
+});
 const DEFAULT_REVIEWS_SEED = [
   { id: "rev-001", product_id: "vmp-001", customer_name: "Emmanuel Boateng", rating: 5, comment: "This is a great premium device. Excellent service and original sealed packaging.", is_approved: true, created_at: "2026-07-20T10:30:00.000Z" },
   { id: "rev-002", product_id: "vmp-001", customer_name: "Priscilla Ansah", rating: 5, comment: "Absolutely genuine iPhone. Same day delivery in East Legon as promised.", is_approved: true, created_at: "2026-07-21T14:45:00.000Z" },
@@ -303,7 +312,7 @@ function renderStorefrontGrid() {
           <span class="card-category">${(p.category || "gadgets").toUpperCase()}</span>
           <h3 class="card-title">${p.name}</h3>
           <p class="card-specs">${p.specs || ""}</p>
-          <div class="card-price-row"><span class="card-price">GH₵ ${p.price.toLocaleString()}</span>${compareMarkup}${discPct}</div>
+          <div class="card-price-row"><span class="card-price">GH₵ ${p.price.toLocaleString()}</span>${compareMarkup}${discPct}</div>${p.price > 5000 ? '<span class="card-free-delivery">Free Delivery</span>' : ""}
           <div class="card-rating">${ratingStars}</div>
           <button onclick="event.stopPropagation(); quickAddProduct('${p.id}')" ${p.stock_quantity === 0 ? 'disabled' : ''} class="card-add-btn" type="button">${p.stock_quantity === 0 ? 'SOLD OUT' : 'ADD TO BAG'}</button>
         </div>
@@ -482,13 +491,14 @@ function updateCartBadge(){
   const targets = [cartBadgeCount, document.getElementById("cart-count"), bottomCartBadge, document.getElementById("bottomCartBadge")];
   targets.forEach(el => { if(!el) return; el.textContent = total > 0 ? total : ""; el.setAttribute("data-count", total); });
 }
+function pulseCartIcon(){ document.querySelectorAll(".cart-icon, #cartBtn").forEach(el => { el.classList.remove("pulse"); void el.offsetWidth; el.classList.add("pulse"); }); }
 function quickAddProduct(id){
   const p = allProducts.find(x => x.id === id); if (!p) return; if (p.stock_quantity === 0) { showToast("This item is currently sold out."); return; }
   const selectedColor = p.colors && p.colors.length > 0 ? p.colors.find(c => c.available)?.name || "" : "";
   const selectedStorage = p.storage_options && p.storage_options.length > 0 ? p.storage_options[0].size : "";
   const existingItem = cart.find(item => item.id === id && item.selected_color === selectedColor && item.selected_storage === selectedStorage);
   if (existingItem) existingItem.qty++; else cart.push({ id: p.id, name: p.name, price: p.price, image_url: p.image_url || p.image, qty: 1, selected_color: selectedColor, selected_storage: selectedStorage, price_adjustment: 0 });
-  localStorage.setItem("valmont_cart", JSON.stringify(cart)); updateCartBadge(); openCartDrawer(); showToast("Product added to your bag.");
+  localStorage.setItem("valmont_cart", JSON.stringify(cart)); updateCartBadge(); pulseCartIcon(); openCartDrawer(); showToast("Added to bag ✓");
 }
 function addActiveProductToCart(){
   if (!activeQuickViewProduct) return; const p = activeQuickViewProduct; if (p.stock_quantity === 0) { showToast("This item is currently sold out."); return; }
