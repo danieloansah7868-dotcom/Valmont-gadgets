@@ -122,12 +122,15 @@
       background-color: #2ecc71;
       color: #ffffff;
     }
+
+    .mobile-category-groups{display:flex;gap:8px;overflow-x:auto;padding:0 0 12px;scrollbar-width:none}.mobile-category-groups::-webkit-scrollbar{display:none}.category-group-btn,.category-group-toggle{white-space:nowrap;border:1px solid #e2e8f0;background:#fff;color:#0b1a38;border-radius:999px;padding:8px 12px;font-size:11px;font-weight:800}.category-group-btn.active{background:#f68b1e;color:#fff;border-color:#f68b1e}.category-group-toggle{color:#f68b1e}
   </style>
 
   <!-- Explicit Jumia-style Favicons -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="apple-touch-icon" href="favicon.png">
+  <link rel="stylesheet" href="mobile-fixes.css">
 
 
   <!-- PWA Manifest & Service Worker Registration -->
@@ -174,7 +177,7 @@
       </div>
 
       <!-- Jumia Centered Search Bar -->
-      <div class="flex-1 max-w-[620px] flex items-center border border-gray-300 rounded-[4px] overflow-hidden bg-white focus-within:border-[#f68b1e] focus-within:shadow-[0_0_0_1px_rgba(246,139,30,0.15)] transition-all">
+      <div class="search-container flex-1 max-w-[620px] flex items-center border border-gray-300 rounded-[4px] overflow-hidden bg-white focus-within:border-[#f68b1e] focus-within:shadow-[0_0_0_1px_rgba(246,139,30,0.15)] transition-all">
         <div class="pl-2 md:pl-3.5 text-gray-400">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.637 10.637Z" />
@@ -251,7 +254,7 @@
         </button>
 
         <!-- Desktop Bag Trigger Button -->
-        <button id="cartBtn" class="relative flex items-center gap-1.5 font-semibold text-[14px] text-gray-700 hover:text-[#f68b1e] py-1 transition hidden md:flex">
+        <button id="cartBtn" class="cart-icon" class="relative flex items-center gap-1.5 font-semibold text-[14px] text-gray-700 hover:text-[#f68b1e] py-1 transition hidden md:flex">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-6 h-6 text-gray-700"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
           <span class="tracking-wide">Bag</span>
           <span id="cartBadgeCount" class="absolute -top-1.5 -right-2 bg-[#f68b1e] text-white text-[9px] font-black rounded-full h-4.5 w-4.5 flex items-center justify-center hidden">0</span>
@@ -414,7 +417,7 @@
       </div>
 
       <!-- Mobile Category Chips (hidden on desktop) -->
-      <div class="md:hidden flex gap-2 overflow-x-auto pb-3 mb-4 no-scrollbar">
+      <div class="category-filters md:hidden flex gap-2 overflow-x-auto pb-3 mb-4 no-scrollbar">
         <button data-cat-filter="all" class="cat-pill mobile-chip bg-[#f68b1e] text-white text-[12px] font-bold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">All Products</button>
         <button data-cat-filter="iphones" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">iPhones</button>
         <button data-cat-filter="samsung" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Samsung</button>
@@ -429,6 +432,14 @@
         <button data-cat-filter="phone_parts" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Parts</button>
         <button data-cat-filter="travel_acc" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Travel</button>
         <button data-cat-filter="chargers" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Power</button>
+      </div>
+      <div class="mobile-category-groups md:hidden" aria-label="Category groups">
+        <button type="button" class="category-group-btn active" data-group="all">All Categories</button>
+        <button type="button" class="category-group-btn" data-group="phones">Phones</button>
+        <button type="button" class="category-group-btn" data-group="audio">Audio</button>
+        <button type="button" class="category-group-btn" data-group="computing">Computing</button>
+        <button type="button" class="category-group-btn" data-group="accessories">Accessories</button>
+        <button type="button" class="category-group-toggle" aria-expanded="false">Show All Categories</button>
       </div>
 
       <!-- VALMONT PREMIUM FLASH SALES ROW -->
@@ -461,7 +472,7 @@
         </div>
         
         <!-- Grid layout matching Jumia (6-col desktop, 2-col mobile) -->
-        <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
+        <div id="productGrid" class="product-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
           <!-- Product cards injected via JS -->
         </div>
       </div>
@@ -657,7 +668,7 @@
 
   <!-- 6. DETAILED PRODUCT PAGE MODAL (JUMIA STYLE) -->
   <div id="detailOverlay" class="fixed inset-0 bg-black/60 z-50 hidden transition-opacity"></div>
-  <div id="detailModal" class="fixed inset-y-4 inset-x-4 md:inset-y-12 md:inset-x-24 bg-white z-50 rounded-xl shadow-2xl overflow-y-auto hidden no-scrollbar transition-all duration-300 max-w-[760px] mx-auto p-4 md:p-6 border border-gray-200">
+  <div id="detailModal" class="quick-view-modal fixed inset-y-4 inset-x-4 md:inset-y-12 md:inset-x-24 bg-white z-50 rounded-xl shadow-2xl overflow-y-auto hidden no-scrollbar transition-all duration-300 max-w-[760px] mx-auto p-4 md:p-6 border border-gray-200">
     <div class="flex justify-between items-center border-b pb-3 mb-4 shrink-0">
       <span class="bg-amber-100 text-amber-800 text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded">
         OFFICIAL STORE GUARANTEE
@@ -670,7 +681,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       
       <!-- Product Left: Photo -->
-      <div class="bg-gray-50 border rounded-xl overflow-hidden flex items-center justify-center p-4 h-[240px] md:h-auto">
+      <div class="quick-view-image bg-gray-50 border rounded-xl overflow-hidden flex items-center justify-center p-4 h-[240px] md:h-auto">
         <img id="detailImg" src="" alt="Product" class="max-h-full object-contain" />
       </div>
 
@@ -688,7 +699,7 @@
       <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
       <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
     </div>
-            <span class="text-gray-500 font-bold">(4.9 rating / 24 verified reviews)</span>
+            <span class="text-gray-500 font-bold">(4.9 rating / <span id="detailReviews">0</span> verified reviews)</span>
           </div>
           
           <div class="mb-4">
@@ -1162,12 +1173,12 @@
       },
       {
         id: 'VG-ANKER-PB-20K-65W',
-        name: 'Anker 20,000mAh 65W Power & Chargers Bank — Power & ChargersCore',
+        name: 'Anker 20,000mAh 65W Power Bank — PowerCore 24K',
         category: 'chargers',
         retail: 1250,
         compareAt: 1500,
         badge: 'SEALED',
-        specs: '65W Fast Charge • Power & ChargersCore 24K • LED Display • Sealed',
+        specs: '65W Fast Charge • PowerCore 24K • LED Display • Sealed',
         stock: 'In stock • Sealed • 12m Warranty',
         image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop',
         wholesale: 960,
@@ -1176,7 +1187,7 @@
       },
       {
         id: 'VG-APPLE-67W-CABLE',
-        name: 'Apple 67W USB-C Power & Chargers Adapter + 2M Cable',
+        name: 'Apple 67W USB-C Power Adapter + 2M Cable',
         category: 'chargers',
         retail: 850,
         compareAt: 1050,
@@ -1750,6 +1761,17 @@
       }
     ];
 
+    // Normalize merchandising data: realistic reviews and inventory by product tier.
+    PRODUCTS.forEach((p, index) => {
+      const name = p.name.toLowerCase();
+      const isPopular = name.includes('iphone 15 pro max') || name.includes('s24 ultra');
+      const isMidRange = name.includes('iphone 13') || name.includes('a55');
+      const isAccessory = ['chargers','phone_acc','phone_parts','travel_acc','laptop_acc'].includes(p.category);
+      const isNew = p.badge === 'NEW';
+      p.reviews_count = isPopular ? 42 + (index % 27) : isMidRange ? 18 + (index % 15) : isNew ? index % 6 : isAccessory ? 8 + (index % 8) : 12 + (index % 18);
+      p.stock_quantity = isPopular ? 3 + (index % 6) : p.category === 'samsung' ? 5 + (index % 8) : isAccessory ? 15 + (index % 16) : 6 + (index % 12);
+    });
+
     // Populate private costs
     PRODUCTS.forEach(p => {
       PRIVATE_COST_LEDGER[p.id] = { wholesale: p.wholesale, delivery: p.deliveryCost, payment: p.paymentCost };
@@ -1922,6 +1944,7 @@
                   <span class="text-[14px] font-black text-gray-800">${isDealerMode ? money(p.wholesale) : money(p.retail)}</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">${isDealerMode ? money(p.retail) : money(p.compareAt)}</span>
                   ${isDealerMode ? '<span class="text-[9px] text-green-600 font-extrabold ml-1 uppercase">Wholesale</span>' : ''}
+                  ${p.retail > 5000 ? '<span class="card-free-delivery">Free Delivery</span>' : ''}
                 </div>
                 <div class="flex items-center gap-0.5 text-[9px] text-amber-500 font-black mt-1">
                   
@@ -1932,16 +1955,16 @@
       <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
       <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
     </div>
-                  <span class="text-gray-400 font-bold ml-1">(24)</span>
+                  <span class="text-gray-400 font-bold ml-1">(${p.reviews_count || 0})</span>
                 </div>
 
                 <!-- Jumia-Style Dynamic Stock Depletion Progress Bar (Vibrant and Professional!) -->
                 <div class="mt-2.5">
                   <div class="flex justify-between items-center text-[10px] text-gray-500 font-bold">
-                    <span>${Math.abs(p.name.charCodeAt(0) % 20) + 5} items left</span>
+                    <span>${p.stock_quantity || 0} items left</span>
                   </div>
                   <div class="w-full bg-gray-200 h-1.5 rounded-full mt-1 overflow-hidden">
-                    <div class="bg-[#f68b1e] h-full" style="width: ${(Math.abs(p.name.charCodeAt(0) % 20) + 5) * 4}%"></div>
+                    <div class="bg-[#f68b1e] h-full" style="width: ${Math.min(100, (p.stock_quantity || 0) * 4)}%"></div>
                   </div>
                 </div>
               </div>
@@ -2167,6 +2190,8 @@
       
       localStorage.setItem('valmont_cart', JSON.stringify(cart));
       updateCartCount();
+      const cartIcon = document.getElementById('cartBtn') || document.getElementById('mobileCartBtn');
+      if (cartIcon) { cartIcon.classList.remove('pulse'); void cartIcon.offsetWidth; cartIcon.classList.add('pulse'); }
       
       // Responsive Native feel: Mobile shows a floating toast, desktop opens side drawer!
       if (window.innerWidth < 768) {
@@ -2569,6 +2594,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
 
       document.getElementById('detailImg').src = product.image;
       document.getElementById('detailName').textContent = product.name;
+      const reviewEl = document.getElementById('detailReviews'); if (reviewEl) reviewEl.textContent = product.reviews_count || 0;
       document.getElementById('detailSpecs').textContent = product.specs;
       document.getElementById('detailStock').textContent = product.stock;
       if (isDealerMode) {
@@ -2586,7 +2612,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
 
       detailOverlay.classList.remove('hidden');
       setTimeout(() => detailOverlay.classList.add('opacity-100'), 10);
-      detailModal.classList.remove('hidden');
+      detailModal.classList.remove('hidden'); detailModal.classList.add('active');
 
       // Add to recently viewed!
       addToRecentlyViewed(product.id);
@@ -2595,7 +2621,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     function closeProductDetail() {
       detailOverlay.classList.remove('opacity-100');
       setTimeout(() => detailOverlay.classList.add('hidden'), 300);
-      detailModal.classList.add('hidden');
+      detailModal.classList.add('hidden'); detailModal.classList.remove('active');
     }
 
     closeDetailBtn.addEventListener('click', closeProductDetail);
@@ -3989,5 +4015,17 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     <span id="valmontToastText" class="flex-1 min-w-0 truncate">Item added to your bag!</span>
     <button onclick="openCart(); hideValmontToast();" class="text-[#f68b1e] font-black uppercase text-[11px] hover:underline shrink-0">View Bag</button>
   </div>
+<script>
+(function(){
+  const groups={phones:['iphones','samsung','android','tablets','smartwatches'],audio:['audio','gaming'],computing:['laptops','laptop_acc','tablets','smartwatches'],accessories:['phone_acc','phone_parts','travel_acc','chargers']};
+  const chips=[...document.querySelectorAll('.category-filters [data-cat-filter]')];
+  const groupButtons=[...document.querySelectorAll('.category-group-btn')];
+  const toggle=document.querySelector('.category-group-toggle');
+  function applyGroup(group){ chips.forEach(chip=>{ const show=group==='all'||groups[group]?.includes(chip.dataset.catFilter)||chip.dataset.catFilter==='all'; chip.hidden=!show; }); groupButtons.forEach(btn=>btn.classList.toggle('active',btn.dataset.group===group)); }
+  groupButtons.forEach(btn=>btn.addEventListener('click',()=>applyGroup(btn.dataset.group)));
+  if(toggle) toggle.addEventListener('click',()=>{ const expanded=toggle.getAttribute('aria-expanded')==='true'; toggle.setAttribute('aria-expanded',String(!expanded)); toggle.textContent=expanded?'Show All Categories':'Hide Categories'; applyGroup(expanded?'all':'phones'); });
+  applyGroup('all');
+})();
+</script>
 </body>
 </html>
