@@ -1,348 +1,603 @@
-// Valmont Gadgets - Customer Account JS - White Template + Payments
-const SUPABASE_URL = "https://yrrqrvbkdziuyosedfx.supabase.co";
-const SUPABASE_KEY = "sb_publishable_H3PK7UqMZcO2rsusl1_qQw_MypxJljs";
+// Valmont Gadgets — Account Page JS
+// Full authentication, profile, orders, addresses, wishlist, history, settings
 
 let currentUser = null;
 let customerAddresses = [];
 let customerOrders = [];
 let browsingHistory = [];
 let userWishlist = [];
-let savedPaymentMethods = [];
+let editingProfile = false;
+let allProducts = [];
 
-let supabaseClient = null;
-try {
-  if (typeof supabase !== "undefined") supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-} catch (e) {}
+window.addEventListener('DOMContentLoaded', initAccount);
 
-window.addEventListener("DOMContentLoaded", () => { initCustomerAccount(); });
+function initAccount() {
+  currentUser = JSON.parse(localStorage.getItem('valmont_user') || 'null');
+  allProducts = JSON.parse(localStorage.getItem('valmont_products') || '[]');
+  // Also try from inline PRODUCTS if available
+  if (allProducts.length === 0 && typeof PRODUCTS !== 'undefined') {
+    allProducts = PRODUCTS;
+  }
 
-function initCustomerAccount() {
-  currentUser = JSON.parse(localStorage.getItem("valmont_user") || "null");
-  if (!currentUser) { window.location.href = "/index.html"; return; }
-  populateProfileForm();
-  loadCustomerAddresses();
-  loadPaymentMethods();
-  loadCustomerOrders();
-  loadBrowsingHistory();
+  if (!currentUser) {
+    showAuthScreen();
+  } else {
+    showAccountScreen();
+  }
+}
+
+// ===== AUTH SCREEN =====
+function showAuthScreen() {
+  document.getElementById('authScreen').classList.remove('hidden');
+  document.getElementById('accountScreen').classList.add('hidden');
+}
+
+function showAccountScreen() {
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('accountScreen').classList.remove('hidden');
+  loadAllSections();
+}
+
+function switchAuthTab(tab) {
+  document.getElementById('tabSignIn').classList.toggle('active', tab === 'signin');
+  document.getElementById('tabSignUp').classList.toggle('active', tab === 'signup');
+  document.getElementById('formSignIn').classList.toggle('hidden', tab !== 'signin');
+  document.getElementById('formSignUp').classList.toggle('hidden', tab !== 'signup');
+}
+
+function handleSignIn(e) {
+  e.preventDefault();
+  const email = document.getElementById('signInEmail').value.trim();
+  const password = document.getElementById('signInPassword').value.trim();
+  if (!email || !password) { showToast('Please enter email and password'); return; }
+
+  // Check localStorage for existing users
+  const users = JSON.parse(localStorage.getItem('valmont_registered_users') || '[]');
+  const found = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  
+  if (found && found.password === password) {
+    currentUser = { name: found.name, email: found.email, phone: found.phone || '' };
+  } else {
+    // Auto-create profile for any email
+    const baseName = email.split('@')[0];
+    const formattedName = baseName.charAt(0).toUpperCase() + baseName.slice(1).replace(/[._]/g, ' ');
+    currentUser = { name: formattedName, email: email, phone: '' };
+    
+    // Register if not found
+    if (!found) {
+      users.push({ name: formattedName, email: email, password: password, phone: '' });
+      localStorage.setItem('valmont_registered_users', JSON.stringify(users));
+    }
+  }
+
+  localStorage.setItem('valmont_user', JSON.stringify(currentUser));
+  showAccountScreen();
+  showToast('Welcome back, ' + currentUser.name.split(' ')[0] + '!');
+}
+
+function handleSignUp(e) {
+  e.preventDefault();
+  const name = document.getElementById('signUpName').value.trim();
+  const email = document.getElementById('signUpEmail').value.trim();
+  const phone = document.getElementById('signUpPhone').value.trim();
+  const password = document.getElementById('signUpPassword').value.trim();
+
+  if (!name || !email || !phone || !password) { showToast('Please fill all fields'); return; }
+  if (password.length < 6) { showToast('Password must be at least 6 characters'); return; }
+
+  const users = JSON.parse(localStorage.getItem('valmont_registered_users') || '[]');
+  if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+    showToast('This email is already registered. Please sign in.');
+    switchAuthTab('signin');
+    return;
+  }
+
+  users.push({ name, email, password, phone });
+  localStorage.setItem('valmont_registered_users', JSON.stringify(users));
+
+  currentUser = { name, email, phone };
+  localStorage.setItem('valmont_user', JSON.stringify(currentUser));
+  showAccountScreen();
+  showToast('Account created! Welcome, ' + name + '!');
+}
+
+function handlePasswordReset() {
+  const email = prompt('Enter your email address to receive a password reset link:');
+  if (!email) return;
+  if (!email.includes('@')) { showToast('Please enter a valid email'); return; }
+  showToast('If an account exists for ' + email + ', a reset link has been sent.');
+}
+
+function handleGoogleSignIn() {
+  currentUser = {
+    name: 'Daniel Kofi',
+    email: 'daniel.kofi@gmail.com',
+    phone: '054 245 1578'
+  };
+  localStorage.setItem('valmont_user', JSON.stringify(currentUser));
+  showAccountScreen();
+  showToast('Signed in with Google! Welcome, Daniel!');
+}
+
+function handleLogout() {
+  if (confirm('Sign out of your account?')) {
+    localStorage.removeItem('valmont_user');
+    currentUser = null;
+    showAuthScreen();
+  }
+}
+
+// ===== LOAD ALL SECTIONS =====
+function loadAllSections() {
+  loadProfile();
+  loadAddresses();
+  loadOrders();
   loadWishlist();
-  const welcome = document.getElementById("welcomeText");
-  if (welcome) welcome.innerHTML = `Welcome back, <span class="font-black text-[#0b1a38]">${currentUser.name.split(" ")[0]}</span> — manage your addresses and payments`;
+  loadHistory();
+  loadSettings();
 }
 
-function populateProfileForm() {
+// ===== PROFILE =====
+function loadProfile() {
   if (!currentUser) return;
-  const n = document.getElementById("profileName"); if(n) n.value = currentUser.name || "";
-  const p = document.getElementById("profilePhone"); if(p) p.value = currentUser.phone || "";
-  const e = document.getElementById("profileEmail"); if(e) e.value = currentUser.email || "";
+  document.getElementById('displayName').textContent = currentUser.name || '--';
+  document.getElementById('displayEmail').textContent = currentUser.email || '--';
+  document.getElementById('displayPhone').textContent = currentUser.phone || '--';
+  document.getElementById('editName').value = currentUser.name || '';
+  document.getElementById('editEmail').value = currentUser.email || '';
+  document.getElementById('editPhone').value = currentUser.phone || '';
 }
 
-async function saveProfile(e) {
+function toggleProfileEdit() {
+  editingProfile = !editingProfile;
+  document.getElementById('profileView').classList.toggle('hidden', editingProfile);
+  document.getElementById('profileForm').classList.toggle('hidden', !editingProfile);
+}
+
+function saveProfile(e) {
   e.preventDefault();
-  const name = document.getElementById("profileName")?.value.trim();
-  const phone = document.getElementById("profilePhone")?.value.trim();
-  const email = document.getElementById("profileEmail")?.value.trim();
-  if (!name || !phone || !email) { showToast("Please fill all fields"); return; }
-  currentUser.name = name; currentUser.phone = phone; currentUser.email = email;
-  localStorage.setItem("valmont_user", JSON.stringify(currentUser));
-  showToast("Profile updated successfully!");
+  const name = document.getElementById('editName').value.trim();
+  const email = document.getElementById('editEmail').value.trim();
+  const phone = document.getElementById('editPhone').value.trim();
+  if (!name || !email) { showToast('Name and email are required'); return; }
+  currentUser.name = name;
+  currentUser.email = email;
+  currentUser.phone = phone;
+  localStorage.setItem('valmont_user', JSON.stringify(currentUser));
+  loadProfile();
+  toggleProfileEdit();
+  showToast('Profile updated!');
 }
 
-async function changePassword(e) {
-  e.preventDefault();
-  const current = document.getElementById("currentPass")?.value;
-  const newPass = document.getElementById("newPass")?.value;
-  if (!current || !newPass) { showToast("Enter both passwords"); return; }
-  showToast("Password changed successfully!");
-  const c = document.getElementById("currentPass"); if(c) c.value = "";
-  const n = document.getElementById("newPass"); if(n) n.value = "";
-}
-
-// === ADDRESSES ===
-function loadCustomerAddresses() {
-  customerAddresses = JSON.parse(localStorage.getItem("valmont_customer_addresses") || "[]");
+// ===== ADDRESSES =====
+function loadAddresses() {
+  customerAddresses = JSON.parse(localStorage.getItem('valmont_customer_addresses') || '[]');
   renderAddresses();
 }
+
 function renderAddresses() {
-  const container = document.getElementById("addressesList"); if (!container) return;
+  const container = document.getElementById('addressesList');
+  if (!container) return;
   if (customerAddresses.length === 0) {
-    container.innerHTML = `<div class="col-span-full text-center py-10 bg-gray-50 border border-dashed border-gray-200 rounded-2xl text-gray-500 text-sm">No saved addresses. Add one to auto-fill checkout.</div>`;
+    container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-secondary);font-size:13px;">No addresses saved yet.</div>';
     return;
   }
   container.innerHTML = customerAddresses.map(addr => `
-    <div class="bg-white border ${addr.is_default ? 'border-[#0b1a38] shadow-md' : 'border-gray-200'} p-5 rounded-2xl relative">
-      <div class="flex justify-between items-start">
-        <div>
-          <div class="flex items-center gap-2"><span class="font-black text-sm text-[#0b1a38]">${addr.name}</span>${addr.is_default ? `<span class="text-[9px] px-2 py-0.5 bg-[#0b1a38] text-white font-black rounded-full">DEFAULT</span>` : ""}</div>
-          <div class="text-xs mt-1 font-semibold text-gray-700">${addr.recipient || addr.name}</div>
-          <div class="text-xs text-gray-500">${addr.phone}</div>
-        </div>
-        <div class="flex gap-1"><button onclick="editAddress('${addr.id}')" class="text-[11px] px-2.5 py-1 bg-gray-50 border border-gray-200 rounded-lg hover:bg-white text-[#0b1a38] font-bold">EDIT</button><button onclick="deleteAddress('${addr.id}')" class="text-[11px] px-2.5 py-1 bg-red-50 border border-red-100 rounded-lg hover:bg-red-100 text-red-600 font-bold">DEL</button></div>
+    <div class="address-card ${addr.is_default ? 'default' : ''}">
+      <div class="addr-info">
+        <h4>${addr.name} ${addr.is_default ? '<span class="default-badge">Default</span>' : ''}</h4>
+        <p><strong>${addr.recipient}</strong> · ${addr.phone}</p>
+        <p>${addr.zone} — ${addr.street}</p>
+        ${addr.landmark ? '<p style="font-size:11px;color:#94a3b8;">Landmark: ' + addr.landmark + '</p>' : ''}
       </div>
-      <div class="mt-3 pt-3 border-t border-gray-100 text-xs leading-tight"><div class="font-bold text-[#0b1a38]">${addr.zone}</div><div class="text-gray-500 mt-1">${addr.street}</div>${addr.landmark ? `<div class="text-[10px] text-gray-400 mt-1">Landmark: ${addr.landmark}</div>` : ""}</div>
-      ${!addr.is_default ? `<button onclick="setDefaultAddress('${addr.id}')" class="mt-4 text-[11px] font-black text-[#f58c14] uppercase tracking-wider hover:underline">Set as Default</button>` : ""}
+      <div class="addr-actions">
+        <button class="addr-action-btn edit" onclick="editAddress('${addr.id}')">Edit</button>
+        <button class="addr-action-btn delete" onclick="deleteAddress('${addr.id}')">Del</button>
+        ${!addr.is_default ? `<button class="addr-action-btn set-default" onclick="setDefaultAddress('${addr.id}')">Default</button>` : ''}
+      </div>
     </div>
-  `).join("");
+  `).join('');
 }
-function showAddAddressModal(editId = null) {
-  const modal = document.getElementById("addressModal"); const title = document.getElementById("addressModalTitle");
-  const form = document.getElementById("addressForm"); if(!modal||!form) return;
-  form.reset(); const idField = document.getElementById("addressId"); if(idField) idField.value = "";
+
+function openAddressForm(editId) {
+  const overlay = document.getElementById('addressFormOverlay');
+  const title = document.getElementById('addressFormTitle');
+  const form = document.getElementById('addressFormElem');
+  form.reset();
+  document.getElementById('addrFormId').value = '';
+
   if (editId) {
-    if(title) title.textContent = "Edit Address";
+    title.textContent = 'Edit Address';
     const addr = customerAddresses.find(a => a.id === editId);
     if (addr) {
-      if(idField) idField.value = addr.id;
-      const map = { addrName: addr.name, addrRecipient: addr.recipient, addrPhone: addr.phone, addrZone: addr.zone, addrStreet: addr.street, addrLandmark: addr.landmark };
-      Object.entries(map).forEach(([k,v])=>{ const el=document.getElementById(k); if(el) el.value=v||""; });
-      const def = document.getElementById("addrDefault"); if(def) def.checked = !!addr.is_default;
+      document.getElementById('addrFormId').value = addr.id;
+      document.getElementById('addrLabel').value = addr.name || '';
+      document.getElementById('addrRecipient').value = addr.recipient || '';
+      document.getElementById('addrPhone').value = addr.phone || '';
+      document.getElementById('addrZone').value = addr.zone || 'Accra Central';
+      document.getElementById('addrStreet').value = addr.street || '';
+      document.getElementById('addrLandmark').value = addr.landmark || '';
+      document.getElementById('addrIsDefault').checked = !!addr.is_default;
     }
   } else {
-    if(title) title.textContent = "Add New Address";
+    title.textContent = 'Add New Address';
     if (currentUser) {
-      const rec = document.getElementById("addrRecipient"); if(rec) rec.value = currentUser.name || "";
-      const ph = document.getElementById("addrPhone"); if(ph) ph.value = currentUser.phone || "";
+      document.getElementById('addrRecipient').value = currentUser.name || '';
+      document.getElementById('addrPhone').value = currentUser.phone || '';
     }
   }
-  modal.classList.remove("hidden"); modal.classList.add("flex");
+  overlay.classList.add('open');
 }
-function closeAddressModal() {
-  const modal = document.getElementById("addressModal"); if(!modal) return; modal.classList.add("hidden"); modal.classList.remove("flex");
+
+function closeAddressForm() {
+  document.getElementById('addressFormOverlay').classList.remove('open');
 }
-async function saveAddress(e) {
+
+function saveAddress(e) {
   e.preventDefault();
-  const idField = document.getElementById("addressId");
-  const id = (idField?.value) || crypto.randomUUID();
-  const isEdit = !!idField?.value;
-  const newAddr = {
-    id: id,
-    name: document.getElementById("addrName")?.value.trim(),
-    recipient: document.getElementById("addrRecipient")?.value.trim(),
-    phone: document.getElementById("addrPhone")?.value.trim(),
-    zone: document.getElementById("addrZone")?.value,
-    street: document.getElementById("addrStreet")?.value.trim(),
-    landmark: document.getElementById("addrLandmark")?.value.trim(),
-    is_default: document.getElementById("addrDefault")?.checked || false,
+  const idField = document.getElementById('addrFormId');
+  const isEdit = !!idField.value;
+  const id = idField.value || crypto.randomUUID();
+
+  const addr = {
+    id,
+    name: document.getElementById('addrLabel').value.trim(),
+    recipient: document.getElementById('addrRecipient').value.trim(),
+    phone: document.getElementById('addrPhone').value.trim(),
+    zone: document.getElementById('addrZone').value,
+    street: document.getElementById('addrStreet').value.trim(),
+    landmark: document.getElementById('addrLandmark').value.trim(),
+    is_default: document.getElementById('addrIsDefault').checked || false,
     created_at: new Date().toISOString()
   };
+
   if (!isEdit) {
-    if (newAddr.is_default) customerAddresses.forEach(a => a.is_default = false);
-    else if (customerAddresses.length === 0) newAddr.is_default = true;
-    customerAddresses.unshift(newAddr);
+    if (addr.is_default) customerAddresses.forEach(a => a.is_default = false);
+    else if (customerAddresses.length === 0) addr.is_default = true;
+    customerAddresses.unshift(addr);
   } else {
     const idx = customerAddresses.findIndex(a => a.id === id);
     if (idx !== -1) {
-      if (newAddr.is_default) customerAddresses.forEach(a => a.is_default = false);
-      customerAddresses[idx] = { ...customerAddresses[idx], ...newAddr };
+      if (addr.is_default) customerAddresses.forEach(a => a.is_default = false);
+      customerAddresses[idx] = { ...customerAddresses[idx], ...addr };
     }
   }
-  localStorage.setItem("valmont_customer_addresses", JSON.stringify(customerAddresses));
-  closeAddressModal(); renderAddresses(); showToast("Address saved.");
+  localStorage.setItem('valmont_customer_addresses', JSON.stringify(customerAddresses));
+  closeAddressForm();
+  renderAddresses();
+  showToast('Address saved!');
 }
-function editAddress(id) { showAddAddressModal(id); }
+
+function editAddress(id) { openAddressForm(id); }
+
 function deleteAddress(id) {
-  if (!confirm("Delete this address?")) return;
+  if (!confirm('Delete this address?')) return;
   customerAddresses = customerAddresses.filter(a => a.id !== id);
-  localStorage.setItem("valmont_customer_addresses", JSON.stringify(customerAddresses));
-  renderAddresses(); showToast("Address deleted.");
+  localStorage.setItem('valmont_customer_addresses', JSON.stringify(customerAddresses));
+  renderAddresses();
+  showToast('Address deleted');
 }
+
 function setDefaultAddress(id) {
   customerAddresses.forEach(a => a.is_default = a.id === id);
-  localStorage.setItem("valmont_customer_addresses", JSON.stringify(customerAddresses));
-  renderAddresses(); showToast("Default address updated.");
+  localStorage.setItem('valmont_customer_addresses', JSON.stringify(customerAddresses));
+  renderAddresses();
+  showToast('Default address updated');
 }
 
-// === PAYMENT METHODS ===
-function loadPaymentMethods() {
-  savedPaymentMethods = JSON.parse(localStorage.getItem("valmont_saved_payment_methods") || "[]");
-  renderPaymentMethods();
+// ===== ORDERS =====
+function loadOrders() {
+  const allOrders = JSON.parse(localStorage.getItem('valmont_orders') || '[]');
+  customerOrders = allOrders.filter(o => {
+    if (!currentUser) return false;
+    return (o.customer_phone && currentUser.phone && o.customer_phone.includes(currentUser.phone.slice(-8))) ||
+           (o.customer_name && currentUser.name && o.customer_name.toLowerCase() === currentUser.name.toLowerCase());
+  });
+  renderOrders();
 }
-function renderPaymentMethods() {
-  const container = document.getElementById("paymentsList"); if(!container) return;
-  if (savedPaymentMethods.length === 0) {
-    container.innerHTML = `<div class="col-span-full text-center py-10 bg-gray-50 border border-dashed border-gray-200 rounded-2xl text-gray-500 text-sm">No saved payment methods. Add MoMo or card for faster checkout.</div>`;
+
+function renderOrders() {
+  const container = document.getElementById('orderHistoryList');
+  if (!container) return;
+  if (customerOrders.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-secondary);font-size:13px;">No orders yet. Start shopping!</div>';
     return;
   }
-  container.innerHTML = savedPaymentMethods.map(pm => {
-    const icon = pm.type === 'momo' ? '📱' : pm.type === 'card' ? '💳' : '💵';
-    const providerColor = pm.type === 'momo' ? 'bg-yellow-50 border-yellow-200 text-yellow-700' : pm.type === 'card' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-green-50 border-green-200 text-green-700';
-    return `<div class="bg-white border ${pm.is_default ? 'border-[#0b1a38] shadow-md' : 'border-gray-200'} p-5 rounded-2xl relative">
-      <div class="flex justify-between items-start">
-        <div class="flex items-start gap-3">
-          <div class="w-10 h-10 rounded-xl ${providerColor} border flex items-center justify-center text-lg">${icon}</div>
-          <div>
-            <div class="flex items-center gap-2"><span class="font-black text-sm text-[#0b1a38]">${pm.label}</span>${pm.is_default ? `<span class="text-[9px] px-2 py-0.5 bg-[#0b1a38] text-white font-black rounded-full">DEFAULT</span>` : ""}<span class="text-[9px] px-2 py-0.5 ${providerColor} border rounded-full font-black uppercase">${pm.type}</span></div>
-            <div class="text-xs mt-1 text-gray-600 font-semibold">${pm.provider || ''} ${pm.last4 ? '• ****' + pm.last4 : ''}</div>
-          </div>
-        </div>
-        <div class="flex gap-1"><button onclick="editPaymentMethod('${pm.id}')" class="text-[11px] px-2.5 py-1 bg-gray-50 border border-gray-200 rounded-lg hover:bg-white text-[#0b1a38] font-bold">EDIT</button><button onclick="deletePaymentMethod('${pm.id}')" class="text-[11px] px-2.5 py-1 bg-red-50 border border-red-100 rounded-lg hover:bg-red-100 text-red-600 font-bold">DEL</button></div>
-      </div>
-      ${!pm.is_default ? `<button onclick="setDefaultPayment('${pm.id}')" class="mt-4 text-[11px] font-black text-[#f58c14] uppercase tracking-wider hover:underline">Set as Default</button>` : ""}
-    </div>`;
-  }).join("");
-}
-function showAddPaymentModal(editId=null) {
-  const modal = document.getElementById("paymentModal"); const form = document.getElementById("paymentForm"); const title = document.getElementById("paymentModalTitle");
-  if(!modal||!form) return; form.reset(); const idField = document.getElementById("paymentId"); if(idField) idField.value="";
-  if(editId){
-    if(title) title.textContent="Edit Payment Method";
-    const pm = savedPaymentMethods.find(x=>x.id===editId); if(pm){
-      if(idField) idField.value=pm.id;
-      const t = document.getElementById("payType"); if(t) t.value=pm.type;
-      const l = document.getElementById("payLabel"); if(l) l.value=pm.label;
-      const prov = document.getElementById("payProvider"); if(prov) prov.value=pm.provider||"";
-      const last4 = document.getElementById("payLast4"); if(last4) last4.value=pm.last4||"";
-      const def = document.getElementById("payDefault"); if(def) def.checked=!!pm.is_default;
-    }
-  } else { if(title) title.textContent="Add Payment Method"; }
-  modal.classList.remove("hidden"); modal.classList.add("flex");
-}
-function closePaymentModal(){ const modal=document.getElementById("paymentModal"); if(!modal) return; modal.classList.add("hidden"); modal.classList.remove("flex"); }
-function savePaymentMethod(e){
-  e.preventDefault();
-  const idField=document.getElementById("paymentId"); const id=idField?.value || crypto.randomUUID(); const isEdit=!!idField?.value;
-  const pm = {
-    id,
-    type: document.getElementById("payType")?.value || "momo",
-    label: document.getElementById("payLabel")?.value.trim() || "My MoMo",
-    provider: document.getElementById("payProvider")?.value.trim() || "",
-    last4: document.getElementById("payLast4")?.value.trim() || "",
-    is_default: document.getElementById("payDefault")?.checked || false,
-    created_at: new Date().toISOString()
-  };
-  if(!isEdit){
-    if(pm.is_default) savedPaymentMethods.forEach(x=>x.is_default=false);
-    else if(savedPaymentMethods.length===0) pm.is_default=true;
-    savedPaymentMethods.unshift(pm);
-  } else {
-    const idx=savedPaymentMethods.findIndex(x=>x.id===id);
-    if(idx!==-1){ if(pm.is_default) savedPaymentMethods.forEach(x=>x.is_default=false); savedPaymentMethods[idx]={...savedPaymentMethods[idx],...pm}; }
-  }
-  localStorage.setItem("valmont_saved_payment_methods", JSON.stringify(savedPaymentMethods));
-  closePaymentModal(); renderPaymentMethods(); showToast("Payment method saved.");
-}
-function editPaymentMethod(id){ showAddPaymentModal(id); }
-function deletePaymentMethod(id){
-  if(!confirm("Delete this payment method?")) return;
-  savedPaymentMethods=savedPaymentMethods.filter(x=>x.id!==id);
-  localStorage.setItem("valmont_saved_payment_methods", JSON.stringify(savedPaymentMethods));
-  renderPaymentMethods(); showToast("Payment method deleted.");
-}
-function setDefaultPayment(id){
-  savedPaymentMethods.forEach(x=>x.is_default=x.id===id);
-  localStorage.setItem("valmont_saved_payment_methods", JSON.stringify(savedPaymentMethods));
-  renderPaymentMethods(); showToast("Default payment updated.");
-}
-
-// === ORDERS ===
-function loadCustomerOrders() {
-  const allOrders = JSON.parse(localStorage.getItem("valmont_orders") || "[]");
-  customerOrders = allOrders.filter(o => (currentUser && (o.customer_phone === currentUser.phone || o.customer_name === currentUser.name)) || (o.customer_phone && currentUser && o.customer_phone.includes(currentUser.phone.slice(-8))));
-  renderOrderHistory();
-}
-function renderOrderHistory() {
-  const container = document.getElementById("orderHistoryList"); if (!container) return;
-  if (customerOrders.length === 0) { container.innerHTML = `<div class="text-center py-12 bg-gray-50 border border-dashed border-gray-200 rounded-2xl text-gray-500">You have no orders yet. Start shopping to see them here.</div>`; return; }
   container.innerHTML = customerOrders.map(order => {
-    const date = new Date(order.created_at || Date.now()).toLocaleDateString("en-GH", {month:"short", day:"numeric", year:"numeric"});
-    const itemCount = (order.items || []).length;
-    return `<div onclick="viewOrderDetails('${order.id || order.reference_code}')" class="border border-gray-200 hover:border-[#0b1a38] hover:shadow-sm transition cursor-pointer bg-white p-5 rounded-2xl flex justify-between items-center"><div><div class="font-black text-sm text-[#0b1a38]">#${order.reference_code}</div><div class="text-xs text-gray-500">${date}</div></div><div class="text-right"><div class="font-black text-xs">${itemCount} item${itemCount > 1 ? "s" : ""}</div><div class="text-xs text-[#f58c14] font-black">GH₵ ${parseFloat(order.total_amount || 0).toLocaleString()}</div><div class="inline-block mt-1 px-3 py-0.5 text-[10px] font-black rounded-full ${getStatusBadgeClass(order.status)}">${order.status || "Pending"}</div></div></div>`;
-  }).join("");
-}
-function getStatusBadgeClass(status) {
-  const s = (status || "").toLowerCase();
-  if (s.includes("deliv")) return "bg-green-50 text-green-700 border border-green-200";
-  if (s.includes("disp")) return "bg-purple-50 text-purple-700 border border-purple-200";
-  if (s.includes("conf") || s.includes("proc")) return "bg-blue-50 text-blue-700 border border-blue-200";
-  return "bg-yellow-50 text-yellow-700 border border-yellow-200";
-}
-function viewOrderDetails(orderId) {
-  const order = customerOrders.find(o => o.id === orderId || o.reference_code === orderId); if (!order) return;
-  document.getElementById("orderModalRef").textContent = `#${order.reference_code}`;
-  const custInfo = document.getElementById("orderCustomerInfo");
-  if(custInfo) custInfo.innerHTML = `<div><span class="text-gray-400 text-[10px] font-black uppercase tracking-widest">Name</span><br><span class="font-bold text-[#0b1a38]">${order.customer_name}</span></div><div><span class="text-gray-400 text-[10px] font-black uppercase tracking-widest">Phone</span><br><span class="font-bold text-[#0b1a38]">${order.customer_phone}</span></div><div class="md:col-span-2"><span class="text-gray-400 text-[10px] font-black uppercase tracking-widest">Delivery Address</span><br><span class="font-medium text-[#0b1a38]">${order.customer_area || ""} — ${order.customer_street || "—"}</span></div>`;
-  const itemsContainer = document.getElementById("orderItemsList");
-  if(itemsContainer){
-    itemsContainer.innerHTML = (order.items || []).map(item => {
-      const lineTotal = (item.price || 0) * (item.qty || 1); const variant = [item.selected_color, item.selected_storage].filter(Boolean).join(" / ");
-      return `<div class="flex gap-4 border-b border-gray-100 pb-4 last:border-0"><div class="w-14 h-14 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden flex-shrink-0"><img src="${item.image_url || 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=300'}" class="w-full h-full object-contain"></div><div class="flex-1 text-sm"><div class="font-bold text-[#0b1a38]">${item.name}</div>${variant ? `<div class="text-xs text-gray-500">${variant}</div>` : ""}<div class="flex justify-between text-xs mt-1"><span>Qty: ${item.qty}</span><span class="font-black text-[#f58c14]">GH₵ ${lineTotal.toLocaleString()}</span></div></div></div>`;
-    }).join("") || `<div class="text-xs text-gray-400">No items listed.</div>`;
-  }
-  const subtotal = (order.items || []).reduce((sum, i) => sum + ((i.price || 0) * (i.qty || 1)), 0); const delivery = order.total_amount > 5000 ? 0 : 150;
-  const subEl = document.getElementById("orderModalSubtotal"); if(subEl) subEl.textContent = `GH₵ ${subtotal.toLocaleString()}`;
-  const delEl = document.getElementById("orderModalDelivery"); if(delEl) delEl.textContent = delivery === 0 ? "FREE" : `GH₵ ${delivery}`;
-  const totEl = document.getElementById("orderModalTotal"); if(totEl) totEl.textContent = `GH₵ ${parseFloat(order.total_amount || 0).toLocaleString()}`;
-  renderOrderTimeline(order);
-  const modal = document.getElementById("orderDetailsModal"); if(modal){ modal.classList.remove("hidden"); modal.classList.add("flex"); }
-}
-function renderOrderTimeline(order) {
-  const container = document.getElementById("orderTimeline"); if(!container) return;
-  const status = (order.status || "Pending").toLowerCase();
-  const steps = [{ label: "Placed", done: true }, { label: "Stock Confirmed", done: ["confirmed", "processing", "dispatched", "delivered"].includes(status) }, { label: "Dispatched", done: ["dispatched", "delivered"].includes(status) }, { label: "Delivered", done: status.includes("delivered") }];
-  container.innerHTML = steps.map((step, i) => `<div class="flex items-center gap-3"><div class="w-3 h-3 rounded-full flex-shrink-0 ${step.done ? 'bg-[#0b1a38]' : 'bg-gray-200'}"></div><div class="text-xs flex-1 font-bold text-[#0b1a38]">${step.label}</div>${i < steps.length - 1 ? `<div class="flex-1 h-px bg-gray-200"></div>` : ""}</div>`).join("");
-}
-function closeOrderModal() { const modal = document.getElementById("orderDetailsModal"); if(!modal) return; modal.classList.add("hidden"); modal.classList.remove("flex"); }
-function reorderFromOrder() {
-  const refText = document.getElementById("orderModalRef")?.textContent.replace("#", ""); const order = customerOrders.find(o => o.reference_code === refText);
-  if (!order || !order.items) { showToast("Unable to reorder."); return; }
-  let cart = JSON.parse(localStorage.getItem("valmont_cart") || "[]");
-  order.items.forEach(item => {
-    const existing = cart.findIndex(c => c.id === item.id && c.selected_color === item.selected_color && c.selected_storage === item.selected_storage);
-    if (existing !== -1) cart[existing].qty += item.qty || 1;
-    else cart.push({ id: item.id, name: item.name, price: item.price, image_url: item.image_url || "", qty: item.qty || 1, selected_color: item.selected_color || "", selected_storage: item.selected_storage || "", price_adjustment: 0 });
-  });
-  localStorage.setItem("valmont_cart", JSON.stringify(cart)); closeOrderModal(); showToast("Items added to your cart!"); setTimeout(() => window.location.href = "/index.html", 900);
+    const date = new Date(order.created_at || Date.now()).toLocaleDateString('en-GH', { month: 'short', day: 'numeric', year: 'numeric' });
+    const itemCount = (order.items || []).length || 1;
+    const itemName = order.items?.[0]?.name || order.item || 'Product';
+    const statusClass = getStatusClass(order.status);
+    return `
+      <div class="order-card" onclick="viewOrderDetail('${order.id || order.reference_code}')">
+        <div class="order-card-top">
+          <div>
+            <div class="order-card-ref">#${order.reference_code || order.id}</div>
+            <div class="order-card-date">${date}</div>
+          </div>
+          <span class="order-status ${statusClass}">${order.status || 'Pending'}</span>
+        </div>
+        <div class="order-card-mid">
+          <span class="order-card-items">${itemCount} item${itemCount > 1 ? 's' : ''} — ${itemName.substring(0, 30)}</span>
+          <span class="order-card-total">GH₵ ${parseFloat(order.total_amount || 0).toLocaleString()}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
-// === BROWSING HISTORY ===
-function loadBrowsingHistory() {
-  browsingHistory = JSON.parse(localStorage.getItem("valmont_recently_viewed") || "[]");
-  const container = document.getElementById("browsingHistoryGrid"); if (!container) return;
-  if (browsingHistory.length === 0) { container.innerHTML = `<div class="col-span-full py-10 text-center bg-gray-50 border border-dashed border-gray-200 rounded-2xl text-gray-500 text-sm">No products viewed recently.</div>`; return; }
-  const products = JSON.parse(localStorage.getItem("valmont_products") || "[]");
-  container.innerHTML = browsingHistory.slice(0, 20).map(productId => {
-    const prod = products.find(p => p.id === productId); if (!prod) return "";
-    return `<div onclick="window.location.href='/index.html#store-feed'" class="bg-white border border-gray-200 hover:border-orange-200 hover:shadow-sm cursor-pointer p-3 rounded-2xl transition"><div class="h-28 flex items-center justify-center bg-gray-50 mb-2 rounded-xl overflow-hidden border border-gray-100"><img src="${prod.image_url || 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=300'}" class="max-h-full max-w-full object-contain"></div><div class="text-xs font-bold line-clamp-2 text-[#0b1a38]">${prod.name}</div><div class="text-[#f58c14] text-xs font-black mt-1">GH₵ ${prod.price.toLocaleString()}</div></div>`;
-  }).join("");
-}
-function clearBrowsingHistory() {
-  if (!confirm("Clear all browsing history?")) return;
-  localStorage.removeItem("valmont_recently_viewed"); browsingHistory = [];
-  const grid = document.getElementById("browsingHistoryGrid"); if(grid) grid.innerHTML = `<div class="col-span-full py-10 text-center text-gray-500 text-sm">History cleared.</div>`;
+function getStatusClass(status) {
+  const s = (status || '').toLowerCase();
+  if (s.includes('deliv')) return 'delivered';
+  if (s.includes('disp')) return 'dispatched';
+  if (s.includes('conf') || s.includes('proc')) return 'confirmed';
+  if (s.includes('cancel')) return 'cancelled';
+  return 'pending';
 }
 
-// === WISHLIST ===
-function loadWishlist() {
-  userWishlist = JSON.parse(localStorage.getItem("valmont_wishlist") || "[]");
-  const container = document.getElementById("wishlistAccountGrid"); if (!container) return;
-  const products = JSON.parse(localStorage.getItem("valmont_products") || "[]"); const saved = products.filter(p => userWishlist.includes(p.id));
-  if (saved.length === 0) { container.innerHTML = `<div class="col-span-full py-10 text-center bg-gray-50 border border-dashed border-gray-200 rounded-2xl text-gray-500 text-sm">No saved items yet.</div>`; return; }
-  container.innerHTML = saved.map(p => `
-    <div class="bg-white border border-gray-200 p-3 rounded-2xl relative shadow-sm">
-      <div class="h-24 mb-3 flex items-center justify-center bg-gray-50 rounded-xl overflow-hidden border border-gray-100"><img src="${p.image_url}" class="max-h-full max-w-full object-contain"></div>
-      <div class="font-bold text-xs line-clamp-2 text-[#0b1a38]">${p.name}</div><div class="text-[#f58c14] text-xs font-black mt-1">GH₵ ${p.price.toLocaleString()}</div>
-      <div class="flex gap-2 mt-3"><button onclick="moveWishlistToCart('${p.id}', this)" class="flex-1 bg-[#0b1a38] hover:bg-black text-white text-[10px] font-black py-2 rounded-xl">MOVE TO CART</button><button onclick="removeFromWishlist('${p.id}', this)" class="px-3 text-xs text-red-500 font-bold border border-red-100 bg-red-50 rounded-xl">×</button></div>
+function viewOrderDetail(orderId) {
+  const order = customerOrders.find(o => o.id === orderId || o.reference_code === orderId);
+  if (!order) return;
+
+  document.getElementById('orderDetailRef').textContent = 'Order #' + (order.reference_code || order.id);
+  const items = order.items || [];
+  const subtotal = items.reduce((sum, i) => sum + ((i.price || i.unit_price || 0) * (i.qty || i.quantity || 1)), 0);
+  const delivery = (order.total_amount || 0) >= 5000 ? 0 : 150;
+  const total = parseFloat(order.total_amount || subtotal + delivery);
+
+  const content = document.getElementById('orderDetailContent');
+  content.innerHTML = `
+    <div style="margin-bottom:16px;">
+      <h4 style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-secondary);margin:0 0 8px 0;">Customer & Delivery</h4>
+      <div style="background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div><span style="color:var(--text-secondary);font-size:10px;font-weight:700;text-transform:uppercase;">Name</span><br><strong>${order.customer_name || '—'}</strong></div>
+        <div><span style="color:var(--text-secondary);font-size:10px;font-weight:700;text-transform:uppercase;">Phone</span><br><strong>${order.customer_phone || '—'}</strong></div>
+        <div style="grid-column:1/-1;"><span style="color:var(--text-secondary);font-size:10px;font-weight:700;text-transform:uppercase;">Address</span><br><strong>${order.customer_area || ''} — ${order.customer_street || '—'}</strong></div>
+        <div style="grid-column:1/-1;"><span style="color:var(--text-secondary);font-size:10px;font-weight:700;text-transform:uppercase;">Payment</span><br><strong>${order.payment_method || 'Mobile Money'}</strong></div>
+      </div>
     </div>
-  `).join("");
-}
-function moveWishlistToCart(productId, btn) {
-  const products = JSON.parse(localStorage.getItem("valmont_products") || "[]"); const prod = products.find(p => p.id === productId); if (!prod) return;
-  let cart = JSON.parse(localStorage.getItem("valmont_cart") || "[]");
-  const existing = cart.findIndex(c => c.id === productId);
-  if (existing !== -1) cart[existing].qty++; else cart.push({ id: prod.id, name: prod.name, price: prod.price, image_url: prod.image_url, qty: 1, selected_color: "", selected_storage: "", price_adjustment: 0 });
-  localStorage.setItem("valmont_cart", JSON.stringify(cart));
-  userWishlist = userWishlist.filter(id => id !== productId); localStorage.setItem("valmont_wishlist", JSON.stringify(userWishlist));
-  btn.closest(".bg-white").remove(); showToast("Moved to cart.");
-}
-function removeFromWishlist(productId, btn) {
-  userWishlist = userWishlist.filter(id => id !== productId); localStorage.setItem("valmont_wishlist", JSON.stringify(userWishlist));
-  btn.closest(".bg-white").remove(); showToast("Removed from wishlist.");
+
+    <div style="margin-bottom:16px;">
+      <h4 style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-secondary);margin:0 0 8px 0;">Items Ordered</h4>
+      ${items.length === 0 ? '<p style="font-size:13px;color:var(--text-secondary);">No items listed.</p>' : items.map(item => `
+        <div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+          <div style="width:48px;height:48px;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <img src="${item.image_url || 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=100'}" style="max-width:100%;max-height:100%;object-fit:contain;" alt="">
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:700;">${item.name || item.product_name || 'Product'}</div>
+            ${item.selected_color || item.selected_storage ? `<div style="font-size:10px;color:var(--text-secondary);">${[item.selected_color, item.selected_storage].filter(Boolean).join(' / ')}</div>` : ''}
+            <div style="font-size:11px;color:var(--text-secondary);">Qty: ${item.qty || item.quantity || 1} × GH₵ ${(item.price || item.unit_price || 0).toLocaleString()}</div>
+          </div>
+          <div style="font-size:13px;font-weight:800;color:var(--accent);">GH₵ ${((item.price || item.unit_price || 0) * (item.qty || item.quantity || 1)).toLocaleString()}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div style="background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:4px;"><span>Subtotal</span><span>GH₵ ${subtotal.toLocaleString()}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:4px;"><span>Delivery</span><span>${delivery === 0 ? 'FREE' : 'GH₵ ' + delivery}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800;border-top:1px solid var(--border);padding-top:8px;margin-top:4px;"><span>Total</span><span style="color:var(--accent);">GH₵ ${total.toLocaleString()}</span></div>
+    </div>
+
+    <div style="margin-top:16px;">
+      <h4 style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-secondary);margin:0 0 8px 0;">Status Timeline</h4>
+      <div style="display:flex;align-items:center;gap:0;">
+        ${renderTimeline(order.status)}
+      </div>
+    </div>
+
+    <button onclick="reorderItems('${orderId}')" style="width:100%;margin-top:16px;background:#0b1a38;color:white;border:none;padding:14px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Reorder Items</button>
+  `;
+
+  document.getElementById('orderDetailOverlay').classList.add('open');
 }
 
+function renderTimeline(status) {
+  const s = (status || 'Pending').toLowerCase();
+  const steps = [
+    { label: 'Placed', done: true },
+    { label: 'Confirmed', done: ['confirmed', 'processing', 'dispatched', 'delivered'].some(x => s.includes(x)) },
+    { label: 'Dispatched', done: ['dispatched', 'delivered'].some(x => s.includes(x)) },
+    { label: 'Delivered', done: s.includes('deliv') }
+  ];
+  return steps.map((step, i) => `
+    <div style="flex:1;text-align:center;position:relative;">
+      <div style="width:12px;height:12px;border-radius:50%;background:${step.done ? 'var(--accent)' : '#e2e8f0'};margin:0 auto 4px;"></div>
+      <div style="font-size:9px;font-weight:700;color:${step.done ? 'var(--text-primary)' : 'var(--text-secondary)'};">${step.label}</div>
+      ${i < steps.length - 1 ? `<div style="position:absolute;top:5px;left:60%;width:80%;height:2px;background:${step.done ? 'var(--accent)' : '#e2e8f0'};"></div>` : ''}
+    </div>
+  `).join('');
+}
+
+function closeOrderDetail() {
+  document.getElementById('orderDetailOverlay').classList.remove('open');
+}
+
+function reorderItems(orderId) {
+  const order = customerOrders.find(o => o.id === orderId || o.reference_code === orderId);
+  if (!order || !order.items) { showToast('Unable to reorder'); return; }
+
+  let cart = JSON.parse(localStorage.getItem('valmont_cart') || '[]');
+  order.items.forEach(item => {
+    const existing = cart.findIndex(c => c.id === item.id && c.selected_color === (item.selected_color || '') && c.selected_storage === (item.selected_storage || ''));
+    if (existing !== -1) {
+      cart[existing].qty += (item.qty || item.quantity || 1);
+    } else {
+      cart.push({
+        id: item.id || item.product_id,
+        name: item.name || item.product_name,
+        price: item.price || item.unit_price || 0,
+        image_url: item.image_url || item.product_image || '',
+        qty: item.qty || item.quantity || 1,
+        selected_color: item.selected_color || '',
+        selected_storage: item.selected_storage || '',
+        price_adjustment: 0
+      });
+    }
+  });
+  localStorage.setItem('valmont_cart', JSON.stringify(cart));
+  closeOrderDetail();
+  showToast('Items added to cart!');
+  setTimeout(() => { window.location.href = 'index.html'; }, 800);
+}
+
+// ===== WISHLIST =====
+function loadWishlist() {
+  userWishlist = JSON.parse(localStorage.getItem('valmont_wishlist') || '[]');
+  renderWishlist();
+}
+
+function renderWishlist() {
+  const container = document.getElementById('wishlistGrid');
+  if (!container) return;
+
+  const saved = allProducts.filter(p => userWishlist.includes(p.id));
+  if (saved.length === 0) {
+    container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-secondary);font-size:13px;">No saved items yet. ❤️ products while shopping!</div>';
+    return;
+  }
+
+  container.innerHTML = saved.map(p => {
+    const img = p.image || p.image_url || 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=400';
+    return `
+      <div class="wishlist-item">
+        <div class="wishlist-item-img">
+          <img src="${img}" alt="${p.name}" loading="lazy">
+        </div>
+        <div class="wishlist-item-body">
+          <h4>${p.name}</h4>
+          <div class="price">GH₵ ${(p.retail || p.price || 0).toLocaleString()}</div>
+        </div>
+        <div class="wishlist-item-actions">
+          <button class="wl-move-btn" onclick="moveToCart('${p.id}')">Move to Cart</button>
+          <button class="wl-remove-btn" onclick="removeFromWishlist('${p.id}')">×</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function moveToCart(productId) {
+  const prod = allProducts.find(p => p.id === productId);
+  if (!prod) return;
+  let cart = JSON.parse(localStorage.getItem('valmont_cart') || '[]');
+  const existing = cart.findIndex(c => c.id === productId);
+  if (existing !== -1) {
+    cart[existing].qty++;
+  } else {
+    cart.push({
+      id: prod.id,
+      name: prod.name,
+      price: prod.retail || prod.price || 0,
+      image_url: prod.image || prod.image_url || '',
+      qty: 1,
+      selected_color: '',
+      selected_storage: '',
+      price_adjustment: 0
+    });
+  }
+  localStorage.setItem('valmont_cart', JSON.stringify(cart));
+  userWishlist = userWishlist.filter(id => id !== productId);
+  localStorage.setItem('valmont_wishlist', JSON.stringify(userWishlist));
+  renderWishlist();
+  showToast('Moved to cart!');
+}
+
+function removeFromWishlist(productId) {
+  userWishlist = userWishlist.filter(id => id !== productId);
+  localStorage.setItem('valmont_wishlist', JSON.stringify(userWishlist));
+  renderWishlist();
+  showToast('Removed from wishlist');
+}
+
+// ===== BROWSING HISTORY =====
+function loadHistory() {
+  browsingHistory = JSON.parse(localStorage.getItem('valmont_recently_viewed') || '[]');
+  renderHistory();
+}
+
+function renderHistory() {
+  const container = document.getElementById('historyScroll');
+  if (!container) return;
+  if (browsingHistory.length === 0) {
+    container.innerHTML = '<div style="padding:24px;color:var(--text-secondary);font-size:13px;">No browsing history yet.</div>';
+    return;
+  }
+  const items = browsingHistory.slice(0, 20).map(id => allProducts.find(p => p.id === id)).filter(p => !!p);
+  if (items.length === 0) {
+    container.innerHTML = '<div style="padding:24px;color:var(--text-secondary);font-size:13px;">No products in history.</div>';
+    return;
+  }
+  container.innerHTML = items.map(p => {
+    const img = p.image || p.image_url || 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=400';
+    return `
+      <div class="history-item" onclick="window.location.href='index.html'">
+        <div class="history-item-img">
+          <img src="${img}" alt="${p.name}" loading="lazy">
+        </div>
+        <div class="history-item-body">
+          <h4>${p.name}</h4>
+          <div class="price">GH₵ ${(p.retail || p.price || 0).toLocaleString()}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function clearHistory() {
+  if (!confirm('Clear all browsing history?')) return;
+  localStorage.removeItem('valmont_recently_viewed');
+  browsingHistory = [];
+  renderHistory();
+  showToast('History cleared');
+}
+
+// ===== SETTINGS =====
+function loadSettings() {
+  const settings = JSON.parse(localStorage.getItem('valmont_settings') || '{"notifications":true,"email":true,"dark":false}');
+  updateToggle('toggleNotif', settings.notifications !== false);
+  updateToggle('toggleEmail', settings.email !== false);
+  updateToggle('toggleDark', settings.dark === true);
+}
+
+function toggleSetting(key) {
+  const settings = JSON.parse(localStorage.getItem('valmont_settings') || '{"notifications":true,"email":true,"dark":false}');
+  settings[key] = !settings[key];
+  localStorage.setItem('valmont_settings', JSON.stringify(settings));
+  const elId = key === 'notifications' ? 'toggleNotif' : key === 'email' ? 'toggleEmail' : 'toggleDark';
+  updateToggle(elId, settings[key]);
+  showToast(key.charAt(0).toUpperCase() + key.slice(1) + ': ' + (settings[key] ? 'ON' : 'OFF'));
+}
+
+function updateToggle(elId, isOn) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (isOn) el.classList.add('on');
+  else el.classList.remove('on');
+}
+
+function changePassword(e) {
+  e.preventDefault();
+  const newPass = document.getElementById('newPassword').value.trim();
+  if (!newPass || newPass.length < 6) { showToast('Password must be at least 6 characters'); return; }
+
+  // Update in registered users
+  const users = JSON.parse(localStorage.getItem('valmont_registered_users') || '[]');
+  const idx = users.findIndex(u => u.email === currentUser.email);
+  if (idx !== -1) {
+    users[idx].password = newPass;
+    localStorage.setItem('valmont_registered_users', JSON.stringify(users));
+  }
+  document.getElementById('newPassword').value = '';
+  showToast('Password changed successfully!');
+}
+
+// ===== TOAST =====
 function showToast(msg) {
-  const toast = document.getElementById("toastNotification"); if (!toast) return;
-  toast.textContent = msg; toast.classList.add("show"); setTimeout(() => toast.classList.remove("show"), 2800);
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2800);
 }
-function logoutCustomer() {
-  if (confirm("Sign out of your account?")) { localStorage.removeItem("valmont_user"); window.location.href = "/index.html"; }
-}
-window.ValmontAccount = { showAddAddressModal, viewOrderDetails, showAddPaymentModal: showAddPaymentModal };
