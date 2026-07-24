@@ -3,177 +3,1028 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Account — Valmont Gadgets</title>
+  <title>My Account — Valmont Gadgets</title>
   <meta name="theme-color" content="#0b1a38">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
-  <link rel="apple-touch-icon" href="/favicon.png">
-  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="favicon.png">
+  <link rel="manifest" href="manifest.json">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="assets/css/gadgets.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            navy: { deep: '#0b1a38', light: '#12234a' },
-            gold: '#f58c14',
-            slate: { panel: '#ffffff' }
-          }
-        }
-      }
+  <link rel="stylesheet" href="mobile-fixes.css">
+  <style>
+    :root {
+      --bg-primary: #ffffff;
+      --bg-card: #ffffff;
+      --bg-main: #f8fafc;
+      --text-primary: #0b1a38;
+      --text-secondary: #64748b;
+      --accent: #f68b1e;
+      --accent-dark: #e07b16;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #22c55e;
     }
-  </script>
-  <style>body{font-family:'Inter',sans-serif;}</style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 80px;
+      margin: 0;
+    }
+
+    /* ---- Guest Auth Screen ---- */
+    .auth-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: linear-gradient(180deg, #0b1a38 0%, #12234a 100%);
+    }
+    .auth-card {
+      background: white;
+      border-radius: 20px;
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+    .auth-logo img { height: 40px; width: auto; }
+    .auth-logo span {
+      font-size: 18px;
+      font-weight: 900;
+      color: #0b1a38;
+      letter-spacing: -0.02em;
+    }
+    .auth-tabs {
+      display: flex;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 24px;
+    }
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 12px 0;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+    }
+    .auth-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .auth-form { display: flex; flex-direction: column; gap: 16px; }
+    .auth-form.hidden { display: none; }
+    .auth-field { display: flex; flex-direction: column; gap: 6px; }
+    .auth-field label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-secondary);
+    }
+    .auth-field input {
+      padding: 14px 16px;
+      font-size: 15px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+    .auth-field input:focus {
+      border-color: var(--accent);
+      background: white;
+      box-shadow: 0 0 0 4px rgba(246,139,30,0.1);
+    }
+    .auth-submit {
+      width: 100%;
+      padding: 15px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-family: inherit;
+      margin-top: 8px;
+    }
+    .auth-submit:hover { background: var(--accent-dark); }
+    .auth-submit:active { transform: scale(0.98); }
+    .auth-forgot {
+      text-align: center;
+      margin-top: 12px;
+    }
+    .auth-forgot button {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: underline;
+      font-family: inherit;
+    }
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 8px 0;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .auth-google {
+      width: 100%;
+      padding: 13px;
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--text-primary);
+      transition: background 0.2s;
+      font-family: inherit;
+    }
+    .auth-google:hover { background: #f8fafc; }
+
+    /* ---- Mobile Account Header ---- */
+    .account-header {
+      position: sticky;
+      top: 0;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 50;
+    }
+    .account-header .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .account-header .back-btn svg { width: 20px; height: 20px; }
+    .account-header h1 {
+      font-size: 16px;
+      font-weight: 800;
+      margin: 0;
+    }
+    .account-header .logout-btn {
+      background: none;
+      border: 1.5px solid var(--danger);
+      color: var(--danger);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .account-header .logout-btn:hover {
+      background: var(--danger);
+      color: white;
+    }
+
+    /* ---- Account Content ---- */
+    .account-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    .account-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .account-section h2 {
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-primary);
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .account-section h2 .section-icon {
+      font-size: 18px;
+      margin-right: 8px;
+    }
+
+    /* Profile fields */
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 480px) { .profile-grid { grid-template-columns: 1fr; } }
+    .profile-field { display: flex; flex-direction: column; gap: 4px; }
+    .profile-field label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-secondary);
+    }
+    .profile-field input {
+      padding: 12px 14px;
+      font-size: 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: #f8fafc;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+    .profile-field input:focus {
+      border-color: var(--accent);
+      background: white;
+    }
+    .profile-edit-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-family: inherit;
+    }
+    .profile-edit-btn:hover { background: var(--accent-dark); }
+
+    /* Order list */
+    .order-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .order-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .order-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .order-card-ref {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+    .order-card-date {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    .order-card-mid {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .order-card-items {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+    .order-card-total {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .order-status {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .order-status.pending { background: #fef3c7; color: #92400e; }
+    .order-status.confirmed { background: #dbeafe; color: #1e40af; }
+    .order-status.dispatched { background: #ede9fe; color: #5b21b6; }
+    .order-status.delivered { background: #d1fae5; color: #065f46; }
+    .order-status.cancelled { background: #fee2e2; color: #991b1b; }
+
+    /* Order Detail Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 60;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-sheet {
+      background: white;
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-width: 600px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 24px 20px 32px;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .modal-sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .modal-sheet-header h3 {
+      font-size: 15px;
+      font-weight: 800;
+      margin: 0;
+    }
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      background: white;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+      color: var(--text-secondary);
+    }
+    .modal-close:hover { background: #f1f5f9; }
+
+    /* Addresses */
+    .address-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .address-card.default {
+      border-color: var(--accent);
+      background: #fffbf5;
+    }
+    .address-card .addr-info h4 {
+      font-size: 13px;
+      font-weight: 800;
+      margin: 0 0 4px 0;
+    }
+    .address-card .addr-info p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin: 2px 0;
+    }
+    .address-card .addr-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .addr-action-btn {
+      background: none;
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .addr-action-btn.edit { color: var(--text-primary); }
+    .addr-action-btn.edit:hover { background: #f1f5f9; }
+    .addr-action-btn.delete { color: var(--danger); border-color: #fecaca; }
+    .addr-action-btn.delete:hover { background: #fef2f2; }
+    .addr-action-btn.set-default { color: var(--accent); border-color: #fed7aa; }
+    .addr-action-btn.set-default:hover { background: #fff7ed; }
+    .default-badge {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 800;
+      background: var(--accent);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-left: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .add-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #0b1a38;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-family: inherit;
+    }
+    .add-btn:hover { background: #12234a; }
+
+    /* Wishlist grid */
+    .wishlist-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    @media (min-width: 500px) { .wishlist-grid { grid-template-columns: repeat(3, 1fr); } }
+    .wishlist-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: white;
+    }
+    .wishlist-item-img {
+      width: 100%;
+      height: 140px;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+    .wishlist-item-img img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+    }
+    .wishlist-item-body {
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .wishlist-item-body h4 {
+      font-size: 12px;
+      font-weight: 700;
+      margin: 0;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .wishlist-item-body .price {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .wishlist-item-actions {
+      display: flex;
+      gap: 6px;
+      padding: 0 12px 10px;
+    }
+    .wishlist-item-actions button {
+      flex: 1;
+      padding: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .wl-move-btn {
+      background: #0b1a38;
+      color: white;
+      border: none;
+    }
+    .wl-move-btn:hover { background: #12234a; }
+    .wl-remove-btn {
+      background: white;
+      color: var(--danger);
+      border: 1px solid #fecaca;
+    }
+    .wl-remove-btn:hover { background: #fef2f2; }
+
+    /* Browsing history */
+    .history-scroll {
+      display: flex;
+      overflow-x: auto;
+      gap: 10px;
+      padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .history-scroll::-webkit-scrollbar { display: none; }
+    .history-item {
+      flex-shrink: 0;
+      width: 120px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .history-item:hover { border-color: var(--accent); }
+    .history-item-img {
+      width: 100%;
+      height: 100px;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+    }
+    .history-item-img img {
+      max-width: 80%;
+      max-height: 80%;
+      object-fit: contain;
+    }
+    .history-item-body {
+      padding: 8px 10px;
+    }
+    .history-item-body h4 {
+      font-size: 10px;
+      font-weight: 700;
+      margin: 0;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .history-item-body .price {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-top: 2px;
+    }
+    .clear-btn {
+      background: none;
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--danger);
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+    .clear-btn:hover { background: #fef2f2; }
+
+    /* Address form modal */
+    .form-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 70;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .form-modal.open { display: flex; }
+    .form-modal-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      max-width: 440px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .form-modal-card h3 {
+      font-size: 15px;
+      font-weight: 800;
+      margin: 0 0 16px 0;
+    }
+    .form-modal-card .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+    .form-modal-card .form-field label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+    }
+    .form-modal-card .form-field input,
+    .form-modal-card .form-field select,
+    .form-modal-card .form-field textarea {
+      padding: 12px 14px;
+      font-size: 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: #f8fafc;
+      color: var(--text-primary);
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .form-modal-card .form-field input:focus,
+    .form-modal-card .form-field select:focus,
+    .form-modal-card .form-field textarea:focus {
+      border-color: var(--accent);
+      background: white;
+    }
+    .form-modal-card .form-field textarea { resize: vertical; min-height: 60px; }
+    .form-modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .form-modal-actions button {
+      flex: 1;
+      padding: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .form-modal-actions .cancel-btn {
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+    .form-modal-actions .cancel-btn:hover { background: #e2e8f0; }
+    .form-modal-actions .save-btn {
+      background: #0b1a38;
+      border: none;
+      color: white;
+    }
+    .form-modal-actions .save-btn:hover { background: #12234a; }
+
+    /* Password reset toast */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(150%);
+      background: #0b1a38;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 80;
+      transition: transform 0.3s ease;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      border-left: 3px solid var(--accent);
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* Settings */
+    .settings-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .settings-item:last-child { border-bottom: none; }
+    .settings-item .settings-label { font-size: 13px; font-weight: 600; }
+    .settings-item .settings-desc { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+    .settings-toggle {
+      width: 48px;
+      height: 28px;
+      background: #e2e8f0;
+      border-radius: 14px;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+      border: none;
+    }
+    .settings-toggle.on { background: var(--accent); }
+    .settings-toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .settings-toggle.on::after { transform: translateX(20px); }
+  </style>
 </head>
-<body class="bg-[#f8fafc] text-[#0b1a38] antialiased">
-  <!-- Header -->
-  <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
-    <div class="max-w-[1280px] mx-auto px-4 py-3 flex items-center justify-between">
-      <a href="/" class="flex items-center gap-2.5">
-        <span class="bg-[#0b1a38] text-white font-black text-xs tracking-widest px-3 py-2 rounded-xl">VALMONT</span>
-        <span class="hidden md:inline font-black text-xs tracking-widest">GADGETS</span>
-      </a>
-      <div class="flex items-center gap-2">
-        <a href="/" class="text-xs font-bold text-gray-500 hover:text-[#0b1a38] px-3 py-2 rounded-xl border border-gray-200 hover:border-gray-300 bg-white">Back to Store</a>
-        <button onclick="logoutCustomer()" class="text-xs font-bold bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-xl border border-red-100">Sign Out</button>
-      </div>
+<body>
+
+<!-- ====== GUEST AUTH SCREEN ====== -->
+<div id="authScreen" class="auth-screen hidden">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <img src="logo.svg" alt="Valmont" />
+      <span>VALMONT GADGETS</span>
     </div>
+
+    <div class="auth-tabs">
+      <button id="tabSignIn" class="auth-tab active" onclick="switchAuthTab('signin')">Sign In</button>
+      <button id="tabSignUp" class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+    </div>
+
+    <form id="formSignIn" class="auth-form" onsubmit="handleSignIn(event)">
+      <div class="auth-field">
+        <label>Email Address</label>
+        <input type="email" id="signInEmail" placeholder="you@email.com" required>
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="signInPassword" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="auth-submit">Sign In</button>
+    </form>
+
+    <form id="formSignUp" class="auth-form hidden" onsubmit="handleSignUp(event)">
+      <div class="auth-field">
+        <label>Full Name</label>
+        <input type="text" id="signUpName" placeholder="John Mensah" required>
+      </div>
+      <div class="auth-field">
+        <label>Email Address</label>
+        <input type="email" id="signUpEmail" placeholder="you@email.com" required>
+      </div>
+      <div class="auth-field">
+        <label>Phone / WhatsApp Number</label>
+        <input type="tel" id="signUpPhone" placeholder="054 245 1578" required>
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="signUpPassword" placeholder="Min 6 characters" required minlength="6">
+      </div>
+      <button type="submit" class="auth-submit">Create Account</button>
+    </form>
+
+    <div class="auth-forgot">
+      <button onclick="handlePasswordReset()">Forgot Password?</button>
+    </div>
+
+    <div class="auth-divider">Or log in with</div>
+    <button class="auth-google" onclick="handleGoogleSignIn()">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.13-5.136 4.13A5.71 5.71 0 0 1 8.28 12.83a5.71 5.71 0 0 1 5.711-5.703c2.22 0 4.229 1.125 5.414 2.946l3.393-3.393C20.697 4.312 16.59 2.5 12.24 2.5c-5.244 0-9.5 4.256-9.5 9.5s4.256 9.5 9.5 9.5c5.006 0 9.07-3.627 9.07-9.5 0-.61-.053-1.176-.144-1.715H12.24z"/></svg>
+      Continue with Google
+    </button>
+    <div style="text-align:center;margin-top:16px;">
+      <a href="index.html" style="font-size:12px;color:var(--text-secondary);font-weight:600;text-decoration:none;">← Back to Store</a>
+    </div>
+  </div>
+</div>
+
+<!-- ====== LOGGED-IN ACCOUNT SCREEN ====== -->
+<div id="accountScreen" class="hidden">
+
+  <!-- Mobile Header -->
+  <header class="account-header">
+    <a href="index.html" class="back-btn">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+      Store
+    </a>
+    <h1>My Account</h1>
+    <button class="logout-btn" onclick="handleLogout()">Sign Out</button>
   </header>
 
-  <div class="max-w-[1280px] mx-auto px-4 py-6">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-      <div>
-        <h1 class="text-2xl font-black tracking-tight">My Account</h1>
-        <p id="welcomeText" class="text-sm text-gray-500 mt-1">Welcome back</p>
-      </div>
-      <div class="flex gap-2 overflow-x-auto no-scrollbar">
-        <a href="#profile" class="px-4 py-2.5 text-[11px] font-black border border-gray-200 rounded-xl hover:bg-white bg-white shadow-sm uppercase tracking-wider">Profile</a>
-        <a href="#addresses" class="px-4 py-2.5 text-[11px] font-black border border-gray-200 rounded-xl hover:bg-white bg-white shadow-sm uppercase tracking-wider">Addresses</a>
-        <a href="#payments" class="px-4 py-2.5 text-[11px] font-black border border-gray-200 rounded-xl hover:bg-white bg-white shadow-sm uppercase tracking-wider">Payments</a>
-        <a href="#orders" class="px-4 py-2.5 text-[11px] font-black border border-gray-200 rounded-xl hover:bg-white bg-white shadow-sm uppercase tracking-wider">Orders</a>
-      </div>
-    </div>
+  <div class="account-content">
 
-    <!-- PROFILE SETTINGS -->
-    <section id="profile" class="mb-8 bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
-      <h2 class="font-black text-sm uppercase tracking-wider flex items-center gap-2 mb-6"><span>Profile Settings</span><span class="text-[10px] px-2.5 py-1 bg-[#0b1a38] text-white rounded-full tracking-widest">Editable</span></h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <!-- Profile Section -->
+    <section id="sectionProfile" class="account-section">
+      <h2><span>👤 Profile</span> <button class="profile-edit-btn" onclick="toggleProfileEdit()">✏️ Edit</button></h2>
+      <div id="profileView">
+        <div style="font-size:15px;font-weight:800;margin-bottom:4px;" id="displayName">--</div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:2px;" id="displayEmail">--</div>
+        <div style="font-size:13px;color:var(--text-secondary);" id="displayPhone">--</div>
+      </div>
+      <form id="profileForm" class="hidden" onsubmit="saveProfile(event)">
+        <div class="profile-grid">
+          <div class="profile-field">
+            <label>Full Name</label>
+            <input type="text" id="editName" required>
+          </div>
+          <div class="profile-field">
+            <label>Email</label>
+            <input type="email" id="editEmail" required>
+          </div>
+          <div class="profile-field">
+            <label>Phone</label>
+            <input type="tel" id="editPhone" required>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button type="submit" class="profile-edit-btn">💾 Save</button>
+          <button type="button" onclick="toggleProfileEdit()" style="background:var(--border);border:none;padding:10px 16px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Cancel</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Order History -->
+    <section class="account-section">
+      <h2><span>📦 Order History</span></h2>
+      <div id="orderHistoryList">
+        <div style="text-align:center;padding:24px;color:var(--text-secondary);font-size:13px;">No orders yet.</div>
+      </div>
+    </section>
+
+    <!-- Saved Addresses -->
+    <section class="account-section">
+      <h2><span>📍 Saved Addresses</span> <button class="add-btn" onclick="openAddressForm()">+ Add</button></h2>
+      <div id="addressesList">
+        <div style="text-align:center;padding:24px;color:var(--text-secondary);font-size:13px;">No addresses saved yet.</div>
+      </div>
+    </section>
+
+    <!-- Wishlist -->
+    <section class="account-section">
+      <h2><span>❤️ Wishlist</span></h2>
+      <div class="wishlist-grid" id="wishlistGrid">
+        <div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-secondary);font-size:13px;">No saved items yet.</div>
+      </div>
+    </section>
+
+    <!-- Browsing History -->
+    <section class="account-section">
+      <h2>
+        <span>🕐 Browsing History</span>
+        <button class="clear-btn" onclick="clearHistory()">Clear All</button>
+      </h2>
+      <div class="history-scroll" id="historyScroll">
+        <div style="padding:24px;color:var(--text-secondary);font-size:13px;">No browsing history yet.</div>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section class="account-section">
+      <h2><span>⚙️ Settings</span></h2>
+      <div class="settings-item">
         <div>
-          <form id="profileForm" onsubmit="saveProfile(event)" class="space-y-5">
-            <div><label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Full Name</label><input type="text" id="profileName" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm font-semibold focus:border-[#f58c14] focus:bg-white outline-none transition" required></div>
-            <div><label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Phone Number</label><input type="tel" id="profilePhone" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm font-semibold focus:border-[#f58c14] focus:bg-white outline-none transition" required></div>
-            <div><label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Email Address</label><input type="email" id="profileEmail" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm font-semibold focus:border-[#f58c14] focus:bg-white outline-none transition" required></div>
-            <button type="submit" class="bg-[#0b1a38] hover:bg-black text-white font-black text-xs uppercase tracking-wider px-8 py-3.5 rounded-xl transition shadow-sm">Save Profile</button>
+          <div class="settings-label">Push Notifications</div>
+          <div class="settings-desc">Get alerts for flash deals and order updates</div>
+        </div>
+        <button class="settings-toggle on" id="toggleNotif" onclick="toggleSetting('notifications')"></button>
+      </div>
+      <div class="settings-item">
+        <div>
+          <div class="settings-label">Email Updates</div>
+          <div class="settings-desc">Receive new arrivals and exclusive offers</div>
+        </div>
+        <button class="settings-toggle on" id="toggleEmail" onclick="toggleSetting('email')"></button>
+      </div>
+      <div class="settings-item">
+        <div>
+          <div class="settings-label">Dark Mode</div>
+          <div class="settings-desc">Switch to dark color theme</div>
+        </div>
+        <button class="settings-toggle" id="toggleDark" onclick="toggleSetting('dark')"></button>
+      </div>
+      <div class="settings-item">
+        <div style="width:100%;">
+          <div class="settings-label">Change Password</div>
+          <div class="settings-desc">Update your account password</div>
+          <form onsubmit="changePassword(event)" style="display:flex;gap:8px;margin-top:8px;">
+            <input type="password" id="newPassword" placeholder="New password" required style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none;">
+            <button type="submit" style="background:var(--accent);color:white;border:none;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Update</button>
           </form>
         </div>
-        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-6">
-          <h4 class="font-black text-sm uppercase tracking-wider mb-4">Change Password</h4>
-          <form id="passwordForm" onsubmit="changePassword(event)" class="space-y-4">
-            <div><label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Current Password</label><input type="password" id="currentPass" class="w-full bg-white border border-gray-200 px-4 py-3 rounded-xl text-sm font-medium focus:border-[#f58c14] outline-none" required></div>
-            <div><label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">New Password</label><input type="password" id="newPass" class="w-full bg-white border border-gray-200 px-4 py-3 rounded-xl text-sm font-medium focus:border-[#f58c14] outline-none" required></div>
-            <button type="submit" class="w-full bg-white hover:bg-gray-50 text-xs font-black uppercase tracking-wider px-6 py-3 rounded-xl border border-gray-200 transition">Update Password</button>
-          </form>
-        </div>
       </div>
     </section>
 
-    <!-- SAVED ADDRESSES -->
-    <section id="addresses" class="mb-8 bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="font-black text-sm uppercase tracking-wider">Saved Addresses</h2>
-        <button onclick="showAddAddressModal()" class="bg-[#f58c14] hover:bg-[#e67f0f] text-white px-5 py-2.5 text-xs font-black rounded-xl shadow-sm">+ Add Address</button>
-      </div>
-      <div id="addressesList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-      <p class="text-[11px] text-gray-500 mt-4 font-medium">Tip: Set a default address to auto-fill checkout on mobile. Your addresses are stored locally and synced at checkout.</p>
-    </section>
-
-    <!-- SAVED PAYMENT METHODS -->
-    <section id="payments" class="mb-8 bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
-      <div class="flex justify-between items-center mb-6">
-        <div>
-          <h2 class="font-black text-sm uppercase tracking-wider">Saved Payment Methods</h2>
-          <p class="text-[11px] text-gray-500 font-medium mt-1">MoMo and card methods for faster checkout</p>
-        </div>
-        <button onclick="showAddPaymentModal()" class="bg-[#0b1a38] hover:bg-black text-white px-5 py-2.5 text-xs font-black rounded-xl shadow-sm">+ Add Method</button>
-      </div>
-      <div id="paymentsList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-      <div class="mt-5 bg-[#fff7ed] border border-orange-100 rounded-xl p-4 flex gap-3">
-        <span class="text-[#f58c14] font-black text-xs">SECURE</span>
-        <p class="text-[11px] text-gray-600 leading-relaxed">We store only masked identifiers locally (e.g., last 4 digits). Full credentials are never saved in browser. Use MoMo for fastest verification in Ghana.</p>
-      </div>
-    </section>
-
-    <!-- ORDER HISTORY -->
-    <section id="orders" class="mb-8 bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
-      <h2 class="font-black text-sm uppercase tracking-wider mb-6">Order History</h2>
-      <div id="orderHistoryList" class="space-y-3"></div>
-    </section>
-
-    <!-- BROWSING HISTORY -->
-    <section class="mb-8 bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
-      <div class="flex justify-between items-center mb-6"><h2 class="font-black text-sm uppercase tracking-wider">Browsing History</h2><button onclick="clearBrowsingHistory()" class="text-xs font-bold px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl border border-red-100">Clear History</button></div>
-      <div id="browsingHistoryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4"></div>
-    </section>
-
-    <!-- WISHLIST -->
-    <section class="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
-      <h2 class="font-black text-sm uppercase tracking-wider mb-6">Wishlist</h2>
-      <div id="wishlistAccountGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4"></div>
-    </section>
   </div>
+</div>
 
-  <!-- Add/Edit Address Modal -->
-  <div id="addressModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="bg-white border border-gray-200 w-full max-w-md rounded-2xl p-6 shadow-2xl">
-      <div class="flex justify-between items-center mb-6"><h3 id="addressModalTitle" class="font-black text-base">Add New Address</h3><button onclick="closeAddressModal()" class="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50">×</button></div>
-      <form id="addressForm" onsubmit="saveAddress(event)" class="space-y-4">
-        <input type="hidden" id="addressId">
-        <div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Address Name</label><input type="text" id="addrName" placeholder="Home / Office" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white" required></div>
-        <div class="grid grid-cols-2 gap-4"><div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Recipient Name</label><input type="text" id="addrRecipient" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white" required></div><div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Phone</label><input type="tel" id="addrPhone" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white" required></div></div>
-        <div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Zone / Area</label><select id="addrZone" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white" required><option value="Accra Central">Accra Central</option><option value="East Legon, Accra">East Legon, Accra</option><option value="Airport Residential">Airport Residential</option><option value="Spintex Road">Spintex Road</option><option value="Kumasi Metropolis">Kumasi Metropolis</option><option value="Takoradi City">Takoradi City</option><option value="Other Ghana District">Other Ghana District</option></select></div>
-        <div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Street Address</label><textarea id="addrStreet" rows="2" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white" required></textarea></div>
-        <div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Landmark (Optional)</label><input type="text" id="addrLandmark" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white"></div>
-        <div class="flex items-center gap-2 pt-1"><input type="checkbox" id="addrDefault" class="accent-[#f58c14] w-4 h-4"><label for="addrDefault" class="text-xs font-bold text-gray-700">Set as default delivery address</label></div>
-        <div class="pt-4 flex gap-3"><button type="button" onclick="closeAddressModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-xs font-black py-3 rounded-xl">Cancel</button><button type="submit" class="flex-1 bg-[#0b1a38] hover:bg-black text-white text-xs font-black py-3 rounded-xl">Save Address</button></div>
-      </form>
+<!-- Order Detail Modal -->
+<div id="orderDetailOverlay" class="modal-overlay" onclick="closeOrderDetail()">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-sheet-header">
+      <h3 id="orderDetailRef">Order #--</h3>
+      <button class="modal-close" onclick="closeOrderDetail()">×</button>
     </div>
+    <div id="orderDetailContent"></div>
   </div>
+</div>
 
-  <!-- Add/Edit Payment Modal -->
-  <div id="paymentModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="bg-white border border-gray-200 w-full max-w-md rounded-2xl p-6 shadow-2xl">
-      <div class="flex justify-between items-center mb-6"><h3 id="paymentModalTitle" class="font-black text-base">Add Payment Method</h3><button onclick="closePaymentModal()" class="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50">×</button></div>
-      <form id="paymentForm" onsubmit="savePaymentMethod(event)" class="space-y-4">
-        <input type="hidden" id="paymentId">
-        <div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Payment Type</label><select id="payType" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white" required><option value="momo">Mobile Money (MoMo)</option><option value="card">Credit / Debit Card</option><option value="cod">Cash on Delivery (Accra)</option></select></div>
-        <div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Label / Nickname</label><input type="text" id="payLabel" placeholder="e.g. Personal MoMo, Company Card" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white" required></div>
-        <div class="grid grid-cols-2 gap-4"><div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Provider / Network</label><input type="text" id="payProvider" placeholder="MTN / Visa / Telecel" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white"></div><div><label class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Last 4 / Number</label><input type="text" id="payLast4" placeholder="e.g. 1578 or 4582" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#f58c14] focus:bg-white"></div></div>
-        <div class="flex items-center gap-2 pt-1"><input type="checkbox" id="payDefault" class="accent-[#f58c14] w-4 h-4"><label for="payDefault" class="text-xs font-bold text-gray-700">Set as default payment method</label></div>
-        <div class="pt-4 flex gap-3"><button type="button" onclick="closePaymentModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-xs font-black py-3 rounded-xl">Cancel</button><button type="submit" class="flex-1 bg-[#f58c14] hover:bg-[#e67f0f] text-white text-xs font-black py-3 rounded-xl">Save Method</button></div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Order Details Modal -->
-  <div id="orderDetailsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="bg-white border border-gray-200 w-full max-w-3xl rounded-2xl max-h-[90vh] overflow-y-auto shadow-2xl no-scrollbar">
-      <div class="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white rounded-t-2xl"><div><h3 class="font-black text-base">Order Details</h3><span id="orderModalRef" class="text-[#f58c14] text-sm font-black"></span></div><button onclick="closeOrderModal()" class="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50">×</button></div>
-      <div class="p-6 space-y-7">
-        <div><h4 class="font-black text-[11px] uppercase tracking-widest text-[#f58c14] mb-3">Customer & Delivery</h4><div id="orderCustomerInfo" class="bg-gray-50 border border-gray-200 p-5 rounded-xl text-sm grid grid-cols-1 md:grid-cols-2 gap-y-3"></div></div>
-        <div><h4 class="font-black text-[11px] uppercase tracking-widest text-[#f58c14] mb-3">Items Ordered</h4><div id="orderItemsList" class="space-y-3"></div></div>
-        <div class="bg-gray-50 border border-gray-200 p-5 rounded-xl"><div class="flex justify-between text-xs font-bold"><span>Subtotal</span><span id="orderModalSubtotal"></span></div><div class="flex justify-between text-xs font-bold mt-1"><span>Delivery Fee</span><span id="orderModalDelivery"></span></div><div class="flex justify-between text-sm font-black border-t border-gray-200 mt-3 pt-3"><span>Total</span><span id="orderModalTotal" class="text-[#f58c14]"></span></div></div>
-        <div><h4 class="font-black text-[11px] uppercase tracking-widest text-[#f58c14] mb-3">Order Status Timeline</h4><div id="orderTimeline" class="flex flex-col gap-2 text-xs"></div></div>
-        <div class="flex gap-3"><button onclick="reorderFromOrder()" class="flex-1 bg-[#0b1a38] hover:bg-black text-white font-black text-xs py-3.5 rounded-xl">Reorder Items</button><button onclick="closeOrderModal()" class="flex-1 bg-gray-100 text-xs font-black py-3.5 rounded-xl">Close</button></div>
+<!-- Address Form Modal -->
+<div id="addressFormOverlay" class="form-modal" onclick="closeAddressForm()">
+  <div class="form-modal-card" onclick="event.stopPropagation()">
+    <h3 id="addressFormTitle">Add New Address</h3>
+    <form id="addressFormElem" onsubmit="saveAddress(event)">
+      <input type="hidden" id="addrFormId">
+      <div class="form-field">
+        <label>Address Label</label>
+        <input type="text" id="addrLabel" placeholder="Home / Office" required>
       </div>
-    </div>
+      <div class="form-field">
+        <label>Recipient Name</label>
+        <input type="text" id="addrRecipient" required>
+      </div>
+      <div class="form-field">
+        <label>Phone</label>
+        <input type="tel" id="addrPhone" required>
+      </div>
+      <div class="form-field">
+        <label>Zone / Area</label>
+        <select id="addrZone" required>
+          <option value="Accra Central">Accra Central</option>
+          <option value="East Legon, Accra">East Legon, Accra</option>
+          <option value="Airport Residential">Airport Residential</option>
+          <option value="Spintex Road">Spintex Road</option>
+          <option value="Kumasi Metropolis">Kumasi Metropolis</option>
+          <option value="Takoradi City">Takoradi City</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Street Address</label>
+        <textarea id="addrStreet" required></textarea>
+      </div>
+      <div class="form-field">
+        <label>Landmark (Optional)</label>
+        <input type="text" id="addrLandmark">
+      </div>
+      <div class="form-field" style="flex-direction:row;align-items:center;gap:8px;">
+        <input type="checkbox" id="addrIsDefault" style="width:18px;height:18px;accent-color:var(--accent);">
+        <label style="font-size:12px;font-weight:600;text-transform:none;letter-spacing:0;">Set as default delivery address</label>
+      </div>
+      <div class="form-modal-actions">
+        <button type="button" class="cancel-btn" onclick="closeAddressForm()">Cancel</button>
+        <button type="submit" class="save-btn">Save Address</button>
+      </div>
+    </form>
   </div>
+</div>
 
-  <div id="toastNotification" class="toast-msg"></div>
-  <script src="assets/js/account.js"></script>
+<!-- Toast -->
+<div class="toast" id="toast">Message</div>
+
+<script src="assets/js/account.js"></script>
 </body>
 </html>

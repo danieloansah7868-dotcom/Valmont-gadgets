@@ -151,7 +151,7 @@
   <script src="https://js.paystack.co/v1/inline.js"></script>
 
 </head>
-<body class="bg-[#f1f1f2] text-[#333333] pb-16 md:pb-0">
+<body class="bg-[#f1f1f2] text-[#333333] pb-20 md:pb-0">
 
   <!-- 1. TOP NOTICE BANNER -->
   <div class="bg-[#0b1a38] text-white py-2 px-4 text-center hidden md:block">
@@ -195,10 +195,10 @@
       <!-- Right Header Actions (Desktop and Mobile) -->
       <div class="flex items-center gap-2 md:gap-5 lg:gap-8 shrink-0">
         
-        <!-- Mobile Profile Button (Account top instead of bottom!) -->
-        <button onclick="openLoginModal();" class="flex items-center text-gray-700 hover:text-[#f68b1e] md:hidden p-1.5 shrink-0">
+        <!-- Mobile Account Button (links to /account.html) -->
+        <a href="account.html" class="flex items-center text-gray-700 hover:text-[#f68b1e] md:hidden p-1.5 shrink-0" aria-label="My Account">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5.5 h-5.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
-        </button>
+        </a>
 
         <!-- Desktop Account Dropdown -->
         <div class="relative group hidden md:block">
@@ -216,10 +216,10 @@
               </button>
             </div>
             <div class="py-1">
-              <button onclick="openLoginModal();" class="w-full text-left px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition">
+              <a href="account.html" class="w-full text-left px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
-                My Profile / Login
-              </button>
+                My Profile / Account
+              </a>
               <button onclick="openWishlistModal();" class="w-full text-left px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" /></svg>
                 Saved Items (Wishlist)
@@ -384,7 +384,7 @@
 
       </div>
 
-            <!-- VALMONT MOBILE QUICK ACTIONS GRID (EXACTLY LIKE JUMIA'S HOME TILES!) -->
+            <!-- VALMONT MOBILE QUICK ACTIONS GRID -->
       <div class="md:hidden grid grid-cols-4 gap-3.5 mb-5 px-1">
         <!-- Flash Deals -->
         <button onclick="const el = document.getElementById('store-feed'); if (el && typeof el.scrollIntoView === 'function') { el.scrollIntoView({ behavior: 'smooth' }); }" class="flex flex-col items-center gap-1.5 focus:scale-95 transition">
@@ -393,13 +393,13 @@
           </div>
           <span class="text-[10px] text-gray-700 font-extrabold text-center tracking-tight leading-tight">Flash Deals</span>
         </button>
-        <!-- Dealer Portal -->
-        <button onclick="openDealerModal();" class="flex flex-col items-center gap-1.5 focus:scale-95 transition">
+        <!-- My Account -->
+        <a href="account.html" class="flex flex-col items-center gap-1.5 focus:scale-95 transition">
           <div class="h-12 w-12 rounded-full bg-blue-100 text-[#0b1a38] flex items-center justify-center shadow-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" class="w-5.5 h-5.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5m-3-12h13.5m-13.5 6h13.5m-13.5 6h13.5" /></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" class="w-5.5 h-5.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
           </div>
-          <span class="text-[10px] text-gray-700 font-extrabold text-center tracking-tight leading-tight">Join B2B</span>
-        </button>
+          <span class="text-[10px] text-gray-700 font-extrabold text-center tracking-tight leading-tight">My Account</span>
+        </a>
         <!-- Saved Items -->
         <button onclick="openWishlistModal();" class="flex flex-col items-center gap-1.5 focus:scale-95 transition">
           <div class="h-12 w-12 rounded-full bg-red-100 text-red-500 flex items-center justify-center shadow-sm">
@@ -1870,30 +1870,35 @@
     // Money formatter (GH₵)
     const money = value => `GH₵ ${Math.max(0, Number(value || 0)).toLocaleString()}`;
 
-    // Highlights only the active tab in Jumia Orange and turns others gray (Global Core)
+    // Highlights only the active tab in accent color and turns others gray
     function updateMobileNavHighlights(activeTab) {
-      const tabs = {
-        home: document.querySelector('button[onclick*="mobileGoHome"]'),
-        categories: document.querySelector('button[onclick*="openMobileCategoriesModal"]'),
-        saved: document.querySelector('button[onclick*="openWishlistModal"]'),
-        dealer: document.querySelector('button[onclick*="openDealerModal"]'),
-        bag: document.getElementById('mobileCartBtn')
+      const items = document.querySelectorAll('.bottom-nav-item');
+      items.forEach(item => item.classList.remove('active'));
+      
+      const idMap = {
+        home: 'navHome',
+        categories: 'navCategories',
+        saved: 'navSaved',
+        account: 'navAccount',
+        bag: 'navBag',
+        dealer: 'navAccount'
       };
+      
+      const activeId = idMap[activeTab];
+      if (activeId) {
+        const el = document.getElementById(activeId);
+        if (el) el.classList.add('active');
+      }
+    }
 
-      // Reset all tabs to gray
-      Object.keys(tabs).forEach(key => {
-        const btn = tabs[key];
-        if (btn) {
-          btn.classList.remove('text-[#f68b1e]', 'font-black');
-          btn.classList.add('text-gray-500', 'font-bold');
-        }
-      });
-
-      // Set selected tab to Jumia Orange
-      const activeBtn = tabs[activeTab];
-      if (activeBtn) {
-        activeBtn.classList.remove('text-gray-500', 'font-bold');
-        activeBtn.classList.add('text-[#f68b1e]', 'font-black');
+    // Update mobile account label to show user name if logged in
+    function updateMobileAccountLabel() {
+      const label = document.getElementById('mobileAccountLabel');
+      const user = JSON.parse(localStorage.getItem('valmont_user') || 'null');
+      if (label && user) {
+        label.textContent = user.name.split(' ')[0];
+      } else if (label) {
+        label.textContent = 'Account';
       }
     }
 
@@ -2722,32 +2727,46 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
         const email = document.getElementById('loginEmail').value.trim();
         const pass = document.getElementById('loginPassword').value.trim();
         
-        // Mock profile lookup based on email prefix
-        const baseName = email.split('@')[0];
-        const formattedName = baseName.charAt(0).toUpperCase() + baseName.slice(1);
-        currentUser = {
-          name: formattedName,
-          phone: '054 245 1578',
-          email: email,
-          address: 'East Legon, Accra'
-        };
+        // Check registered users first, fall back to mock profile
+        const users = JSON.parse(localStorage.getItem('valmont_registered_users') || '[]');
+        const found = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+        
+        if (found && found.password === pass) {
+          currentUser = { name: found.name, phone: found.phone, email: found.email, address: found.address || 'East Legon, Accra' };
+        } else {
+          const baseName = email.split('@')[0];
+          const formattedName = baseName.charAt(0).toUpperCase() + baseName.slice(1).replace(/[._]/g, ' ');
+          currentUser = { name: formattedName, phone: '054 245 1578', email: email, address: 'East Legon, Accra' };
+          // Auto-register
+          if (!found) {
+            users.push({ name: formattedName, email: email, password: pass, phone: '054 245 1578' });
+            localStorage.setItem('valmont_registered_users', JSON.stringify(users));
+          }
+        }
         localStorage.setItem('valmont_user', JSON.stringify(currentUser));
         
         // Autofill forms
-        if (document.getElementById('shippingName')) document.getElementById('shippingName').value = formattedName;
-        if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = '054 245 1578';
-        if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = 'Near East Legon Police Station';
+        if (document.getElementById('shippingName')) document.getElementById('shippingName').value = currentUser.name;
+        if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = currentUser.phone;
+        if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = currentUser.address || 'Near East Legon Police Station';
         if (document.getElementById('shippingCity')) document.getElementById('shippingCity').value = 'Accra';
         if (document.getElementById('shippingTown')) document.getElementById('shippingTown').value = 'East Legon';
 
         updateUserUI();
         closeLoginModal();
-        alert(`Welcome back to Valmont, ${formattedName}!`);
+        alert(`Welcome back to Valmont, ${currentUser.name}!`);
       } else {
         const name = document.getElementById('signUpName').value.trim();
         const email = document.getElementById('signUpEmail').value.trim();
         const phone = document.getElementById('signUpPhone').value.trim();
         const address = document.getElementById('signUpAddress').value.trim();
+        
+        // Register for account page compatibility
+        const users = JSON.parse(localStorage.getItem('valmont_registered_users') || '[]');
+        if (!users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+          users.push({ name, email, password: '', phone, address });
+          localStorage.setItem('valmont_registered_users', JSON.stringify(users));
+        }
         
         currentUser = { name, phone, email, address };
         localStorage.setItem('valmont_user', JSON.stringify(currentUser));
@@ -2773,6 +2792,13 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
         address: "Airport Residential, Accra"
       };
       localStorage.setItem('valmont_user', JSON.stringify(currentUser));
+      
+      // Register for account page compatibility
+      const users = JSON.parse(localStorage.getItem('valmont_registered_users') || '[]');
+      if (!users.find(u => u.email === currentUser.email)) {
+        users.push({ name: currentUser.name, email: currentUser.email, password: '', phone: currentUser.phone });
+        localStorage.setItem('valmont_registered_users', JSON.stringify(users));
+      }
       
       // Autofill forms
       if (document.getElementById('shippingName')) document.getElementById('shippingName').value = "Daniel Kofi";
@@ -2800,11 +2826,12 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     function updateUserUI() {
       if (currentUser) {
         accountLabel.textContent = `Hi, ${currentUser.name.split(' ')[0]}`;
-        logoutBtn.classList.remove('hidden');
+        if (logoutBtn) logoutBtn.classList.remove('hidden');
       } else {
         accountLabel.textContent = "Sign In";
-        logoutBtn.classList.add('hidden');
+        if (logoutBtn) logoutBtn.classList.add('hidden');
       }
+      updateMobileAccountLabel();
     }
 
     function handleLogout() {
@@ -3624,6 +3651,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     if (typeof updateCartCount === 'function') updateCartCount();
     if (typeof updateWishlistUI === 'function') updateWishlistUI();
     if (typeof updateMobileNavHighlights === 'function') updateMobileNavHighlights('home');
+    if (typeof updateMobileAccountLabel === 'function') updateMobileAccountLabel();
   }, 300);
 
 
@@ -3838,50 +3866,42 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
 
 
   
-  <!-- 11. JUMIA-STYLE MOBILE BOTTOM NAVIGATION BAR -->
-  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-1 flex justify-around items-center shadow-[0_-3px_12px_rgba(0,0,0,0.08)] z-40 md:hidden">
+  <!-- 11. MOBILE BOTTOM NAVIGATION BAR (HOME | CATEGORIES | SAVED | ACCOUNT | BAG) -->
+  <nav class="bottom-nav md:hidden">
     
-    <!-- Home Button -->
-    <button onclick="mobileGoHome();" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#f68b1e] transition w-16">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.445 1.052-.682 1.67-.682.62 0 1.23.237 1.67.682L21.75 12M13.5 9.25v12.5M10.5 9.25v12.5" />
-      </svg>
-      <span class="text-[9px] font-bold tracking-wider mt-1 uppercase">Home</span>
+    <!-- Home -->
+    <button onclick="mobileGoHome();" class="bottom-nav-item" id="navHome">
+      <span class="icon">🏠</span>
+      <span>Home</span>
     </button>
 
-    <!-- Categories Button -->
-    <button onclick="openMobileCategoriesModal();" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#f68b1e] transition w-16">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6h16.5M3.75 12h16.5m-16.5 6h16.5" />
-      </svg>
-      <span class="text-[9px] font-bold tracking-wider mt-1 uppercase">Categories</span>
+    <!-- Categories -->
+    <button onclick="openMobileCategoriesModal();" class="bottom-nav-item" id="navCategories">
+      <span class="icon">☰</span>
+      <span>Categories</span>
     </button>
 
-    <!-- Wishlist Button -->
-    <button onclick="openWishlistModal();" class="relative flex flex-col items-center justify-center text-gray-500 hover:text-[#f68b1e] transition w-16">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-      </svg>
-      <span class="absolute -top-1.5 right-2 bg-red-500 text-white text-[8px] font-black rounded-full h-4 w-4 flex items-center justify-center hidden" id="mobileWishlistBadge">0</span>
-      <span class="text-[9px] font-bold tracking-wider mt-1 uppercase">Saved</span>
+    <!-- Saved / Wishlist -->
+    <button onclick="openWishlistModal();" class="bottom-nav-item" id="navSaved">
+      <span class="icon">♡</span>
+      <span>Saved</span>
+      <span class="badge hidden" id="mobileWishlistBadge">0</span>
     </button>
 
-    <!-- Dealer Portal Button -->
-    <button onclick="openDealerModal();" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#f68b1e] transition w-16">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5m-3-12h13.5m-13.5 6h13.5m-13.5 6h13.5" />
-      </svg>
-      <span class="text-[9px] font-bold tracking-wider mt-1 uppercase" id="mobileDealerBtnText">Dealer</span>
+    <!-- Account (replaces DEALER) -->
+    <a href="account.html" class="bottom-nav-item" id="navAccount">
+      <span class="icon">👤</span>
+      <span id="mobileAccountLabel">Account</span>
+    </a>
+
+    <!-- Bag -->
+    <button id="mobileCartBtn" onclick="openCart();" class="bottom-nav-item" id="navBag">
+      <span class="icon">🛍</span>
+      <span>Bag</span>
+      <span class="badge hidden" id="mobileCartBadge">0</span>
     </button>
 
-    <!-- Bag Button (Moved from top to bottom Jumia-style!) -->
-    <button id="mobileCartBtn" onclick="openCart();" class="relative flex flex-col items-center justify-center text-gray-500 hover:text-[#f68b1e] transition w-16">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
-      <span class="absolute -top-1.5 right-2 bg-[#f68b1e] text-white text-[8px] font-black rounded-full h-4 w-4 flex items-center justify-center hidden" id="mobileCartBadge">0</span>
-      <span class="text-[9px] font-bold tracking-wider mt-1 uppercase">Bag</span>
-    </button>
-
-  </div>
+  </nav>
 
   <!-- 12. JUMIA-STYLE MOBILE CATEGORIES POP-UP DRAWER -->
   <div id="mobileCategoriesOverlay" class="fixed inset-0 bg-black/60 z-50 hidden transition-opacity" onclick="closeMobileCategoriesModal();"></div>
@@ -3973,8 +3993,8 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     </div>
   </div>
 
-  <!-- 13. FLOATING WHATSAPP BUTTON (JUMIA COMPLIANT) -->
-  <a href="https://wa.me/233542451578" target="_blank" class="fixed bottom-20 md:bottom-6 right-6 bg-[#25d366] text-white p-3.5 rounded-full shadow-2xl hover:bg-[#20ba5a] transition duration-200 z-50 flex items-center justify-center" aria-label="Order on WhatsApp">
+  <!-- 13. FLOATING WHATSAPP BUTTON (above bottom nav on mobile) -->
+  <a href="https://wa.me/233542451578" target="_blank" class="whatsapp-float" aria-label="Order on WhatsApp">
     <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 fill-current" viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L3 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-93.8-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 89.4-184.5 184.6-184.5 46 0 89.3 18 121.9 50.6 32.6 32.5 50.5 75.9 50.5 122.1-.1 101.8-94.9 184.5-184.6 184.5zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
   </a>
 
