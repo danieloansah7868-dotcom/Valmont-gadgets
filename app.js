@@ -978,6 +978,28 @@ function loadPaystackScript(callback) {
       p.stock_quantity = isPopular ? 3 + (index % 6) : p.category === 'samsung' ? 5 + (index % 8) : isAccessory ? 15 + (index % 16) : 6 + (index % 12);
     });
 
+    /**
+     * Renders a product image. Local uploads/*.png have pre-generated 400/800
+     * WebP derivatives (scripts/optimize-images.sh), so they are served through
+     * <picture> with a PNG fallback; remote images are emitted as plain <img>.
+     * Keeps client-rendered cards on the same optimised assets as the
+     * pre-rendered ones.
+     */
+    function productImg(src, alt, size, opts) {
+      const o = opts || {};
+      const cls = o.className || 'max-h-full object-contain';
+      const lazy = o.eager ? '' : ' loading="lazy"';
+      const prio = o.eager ? ' fetchpriority="high"' : '';
+      const sizes = o.sizes || `${size}px`;
+      const safeAlt = String(alt || '').replace(/"/g, '&quot;');
+      if (/^uploads\/.+\.png$/.test(src || '')) {
+        const base = src.replace(/\.png$/, '');
+        return `<picture><source type="image/webp" srcset="${base}_400.webp 400w, ${base}_800.webp 800w" sizes="${sizes}">` +
+               `<img src="${src}" alt="${safeAlt}" width="${size}" height="${size}"${lazy}${prio} decoding="async" class="${cls}" /></picture>`;
+      }
+      return `<img src="${src}" alt="${safeAlt}" width="${size}" height="${size}"${lazy}${prio} decoding="async" class="${cls}" />`;
+    }
+
     // Populate private costs
     PRODUCTS.forEach(p => {
       PRIVATE_COST_LEDGER[p.id] = { wholesale: p.wholesale, delivery: p.deliveryCost, payment: p.paymentCost };
@@ -1172,7 +1194,7 @@ function loadPaystackScript(callback) {
               
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
-                  <img src="${p.image}" alt="${p.name}" width="140" height="140" loading="lazy" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
+                  ${productImg(p.image, p.name, 140, {className: 'max-h-full object-contain group-hover:scale-105 transition duration-200', sizes: '(max-width: 640px) 45vw, 140px'})}
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">${p.name}</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">${p.specs}</p>
@@ -1228,7 +1250,7 @@ function loadPaystackScript(callback) {
           <div class="bg-white rounded-[4px] p-2.5 border border-gray-100 hover:border-orange-200/50 shrink-0 w-[145px] hover:shadow transition relative cursor-pointer" onclick="openProductDetail('${p.id}')">
             <span class="absolute top-1 left-1 bg-orange-50 text-[#f68b1e] text-[9px] font-black px-1.5 py-0.5 rounded-sm">-${discount}%</span>
             <div class="h-[100px] w-full flex items-center justify-center overflow-hidden mb-1 bg-gray-50 rounded-[4px]">
-              <img src="${p.image}" alt="${p.name}" width="100" height="100" loading="lazy" class="max-h-full object-contain" />
+              ${productImg(p.image, p.name, 100)}
             </div>
             <h5 class="text-[11px] text-gray-800 font-bold truncate">${p.name}</h5>
             <div class="mt-1 leading-tight">
@@ -1307,7 +1329,7 @@ function loadPaystackScript(callback) {
         return `
           <div class="flex items-center gap-3 border-b pb-3.5">
             <div class="h-14 w-14 bg-gray-50 border rounded flex items-center justify-center overflow-hidden shrink-0">
-              <img src="${p.image}" alt="${p.name}" width="100" height="100" loading="lazy" class="max-h-full object-contain" />
+              ${productImg(p.image, p.name, 100)}
             </div>
             <div class="flex-1 min-w-0">
               <h5 class="text-[12px] font-bold text-gray-800 truncate">${p.name}</h5>
@@ -1375,7 +1397,7 @@ function loadPaystackScript(callback) {
         return `
           <div class="bg-white rounded-[4px] p-2 border border-gray-100 shrink-0 w-[130px] hover:shadow transition cursor-pointer" onclick="openProductDetail('${p.id}')">
             <div class="h-[90px] w-full flex items-center justify-center overflow-hidden mb-1 bg-gray-50 rounded-[4px]">
-              <img src="${p.image}" alt="${p.name}" width="100" height="100" loading="lazy" class="max-h-full object-contain" />
+              ${productImg(p.image, p.name, 100)}
             </div>
             <h5 class="text-[10px] text-gray-800 font-bold truncate leading-none">${p.name.split(' — ')[0]}</h5>
             <span class="block text-[11px] font-black text-gray-900 mt-1">${money(p.retail)}</span>
@@ -1506,7 +1528,7 @@ function loadPaystackScript(callback) {
         return `
           <div class="flex items-center gap-3 border-b pb-3">
             <div class="h-13 w-14 bg-gray-50 border rounded flex items-center justify-center overflow-hidden shrink-0">
-              <img src="${item.image}" alt="${item.name}" width="60" height="60" loading="lazy" class="max-h-full object-contain" />
+              ${productImg(item.image, item.name, 60)}
             </div>
             <div class="flex-1 min-w-0">
               <h5 class="text-[12px] font-bold text-gray-800 truncate leading-tight">${item.name}</h5>
@@ -1838,7 +1860,12 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
 
       selectedDetailProduct = product;
 
-      document.getElementById('detailImg').src = product.image;
+      const detailImg = document.getElementById('detailImg');
+      // Prefer the optimised WebP for local uploads; the PNG stays as fallback.
+      detailImg.src = /^uploads\/.+\.png$/.test(product.image || '')
+        ? product.image.replace(/\.png$/, '_800.webp')
+        : product.image;
+      detailImg.alt = product.name;
       document.getElementById('detailName').textContent = product.name;
       const reviewEl = document.getElementById('detailReviews'); if (reviewEl) reviewEl.textContent = product.reviews_count || 0;
       document.getElementById('detailSpecs').textContent = product.specs;
