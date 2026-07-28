@@ -1,0 +1,24 @@
+{
+  "name": "valmont-gadgets",
+  "version": "1.0.0",
+  "description": "",
+  "main": "sw.js",
+  "scripts": {
+    "build:css": "tailwindcss -i tailwind-input.css -o tailwind.min.css --minify"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danieloansah7868-dotcom/Valmont-gadgets.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/danieloansah7868-dotcom/Valmont-gadgets/issues"
+  },
+  "homepage": "https://github.com/danieloansah7868-dotcom/Valmont-gadgets#readme",
+  "devDependencies": {
+    "tailwindcss": "^3.4.19",
+    "terser": "^5.49.0"
+  }
+}
