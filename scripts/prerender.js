@@ -65,6 +65,11 @@ function normalise(products) {
       : p.category === 'samsung' ? 5 + (index % 8)
       : isAccessory ? 15 + (index % 16)
       : 6 + (index % 12);
+    // UK Used stock — three phones whose copy reads "UK Used - 6m Store
+    // Warranty" are advertised to Google as UsedCondition. "Swapping Allowed"
+    // on its own (trade-ins on a NEW unit, e.g. VG-AW-17PROMAX) does not
+    // flip the condition.
+    p._isUsed = /\bUK Used\b/i.test(p.stock || '') && /6m Store Warranty/i.test(p.stock || '');
   });
   return products;
 }
@@ -203,7 +208,9 @@ function productJsonLd(products) {
         (p.stock_quantity || 0) > 0
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
-      itemCondition: 'https://schema.org/NewCondition',
+      itemCondition: p._isUsed
+        ? 'https://schema.org/UsedCondition'
+        : 'https://schema.org/NewCondition',
       seller: { '@type': 'Organization', name: 'Valmont Gadgets' },
     },
   }));
