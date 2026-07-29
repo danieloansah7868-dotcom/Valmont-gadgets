@@ -668,7 +668,7 @@
         "priceCurrency": "GHS",
         "price": "8500",
         "availability": "https://schema.org/InStock",
-        "itemCondition": "https://schema.org/NewCondition",
+        "itemCondition": "https://schema.org/UsedCondition",
         "seller": {
           "@type": "Organization",
           "name": "Valmont Gadgets"
@@ -714,7 +714,7 @@
         "priceCurrency": "GHS",
         "price": "7900",
         "availability": "https://schema.org/InStock",
-        "itemCondition": "https://schema.org/NewCondition",
+        "itemCondition": "https://schema.org/UsedCondition",
         "seller": {
           "@type": "Organization",
           "name": "Valmont Gadgets"
@@ -737,7 +737,7 @@
         "priceCurrency": "GHS",
         "price": "5600",
         "availability": "https://schema.org/InStock",
-        "itemCondition": "https://schema.org/NewCondition",
+        "itemCondition": "https://schema.org/UsedCondition",
         "seller": {
           "@type": "Organization",
           "name": "Valmont Gadgets"
@@ -1810,6 +1810,9 @@
               <button data-cat-filter="all" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-bold rounded-[4px] transition flex items-center gap-2 text-[#f68b1e] bg-orange-50/50">
                 All Products
               </button>
+              <button data-cat-filter="falaa" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#f68b1e]">
+                Falaa Deals — Used Phones
+              </button>
               <button data-cat-filter="iphones" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#f68b1e]">
                 iPhones & Apple
               </button>
@@ -1862,9 +1865,12 @@
                 Flash Sale Live
               </span>
               <h1 class="font-black text-[24px] md:text-[28px] tracking-tight leading-tight text-[#0b1a38] mt-3 mb-2">
-                <span class="sr-only">Valmont Gadgets — Genuine Phones, Executive Laptops &amp; Electronics in Ghana: </span>EXECUTIVE <br class="hidden md:inline">MIDWEEK DEALS
+                <span class="sr-only">Valmont Gadgets — Genuine Phones, Executive Laptops &amp; Electronics in Ghana: </span>FALAA <br>DEALS
               </h1>
-              <p class="text-[13px] text-gray-500 font-semibold mb-4 leading-snug">
+              <p class="text-[13px] text-gray-500 font-semibold mb-1 leading-snug">
+                Cheap deals on clean used phones — falaa prices.
+              </p>
+              <p class="text-[12px] text-gray-400 font-medium mb-4 leading-snug">
                 Genuine phones, laptops & accessories with 12-month warranty & sealed packaging.
               </p>
               <a href="#store-feed" class="inline-block bg-[#f68b1e] hover:bg-orange-600 text-white font-extrabold text-[12px] tracking-widest px-6 py-2.5 rounded-[4px] transition shadow-sm uppercase">
@@ -1876,7 +1882,7 @@
               <picture>
                 <source type="image/webp" srcset="uploads/clean_15_pro_400.webp 400w, uploads/clean_15_pro_800.webp 800w, uploads/clean_15_pro.webp 600w" sizes="(max-width: 768px) 400px, 600px">
                 <source type="image/png" srcset="uploads/clean_15_pro.png 600w">
-                <img src="uploads/clean_15_pro.png" alt="Featured iPhone 15 Pro — Valmont Gadgets Executive Midweek Deals" width="600" height="327" fetchpriority="high" class="max-h-[170px] w-auto object-contain drop-shadow-xl animate-bounce" style="animation-duration: 5s;" />
+                <img src="uploads/clean_15_pro.png" alt="Featured iPhone 15 Pro — Valmont Gadgets Falaa Deals" width="600" height="327" fetchpriority="high" class="max-h-[170px] w-auto object-contain drop-shadow-xl animate-bounce" style="animation-duration: 5s;" />
               </picture>
             </div>
           </div>
@@ -1950,6 +1956,7 @@
       <!-- Mobile Category Chips (hidden on desktop) -->
       <div class="category-filters md:hidden flex gap-2 overflow-x-auto pb-3 mb-4 no-scrollbar">
         <button data-cat-filter="all" class="cat-pill mobile-chip bg-[#f68b1e] text-white text-[12px] font-bold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">All Products</button>
+        <button data-cat-filter="falaa" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Falaa Deals</button>
         <button data-cat-filter="iphones" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">iPhones</button>
         <button data-cat-filter="samsung" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Samsung</button>
         <button data-cat-filter="android" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Androids</button>
@@ -2020,12 +2027,17 @@
                 -25%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-[#0b1a38] text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                SEALED
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&amp;w=800&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&amp;w=400&amp;auto=format&amp;fit=crop 400w, https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&amp;w=800&amp;auto=format&amp;fit=crop 800w" sizes="(max-width: 640px) 45vw, 140px" alt="Apple MagSafe Silicone Case for iPhone 15 Pro Max" width="140" height="140" fetchpriority="high" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">Apple MagSafe Silicone Case for iPhone 15 Pro Max</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">Liquid Silicone • Perfect MagSafe Alignment • Soft Microfiber Lining • Original Sealed Packaging</p>
+                
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 450</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 600</span>
@@ -2061,12 +2073,17 @@
                 -22%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-[#f68b1e] text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                HOT
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&amp;w=800&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&amp;w=400&amp;auto=format&amp;fit=crop 400w, https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&amp;w=800&amp;auto=format&amp;fit=crop 800w" sizes="(max-width: 640px) 45vw, 140px" alt="Spigen Rugged Armor Case for iPhone 15 Pro Max" width="140" height="140" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">Spigen Rugged Armor Case for iPhone 15 Pro Max</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">Matte Black • Carbon Fiber Accents • Military Grade Drop Protection • Case Friendly</p>
+                
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 350</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 450</span>
@@ -2102,12 +2119,17 @@
                 -10%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-[#f68b1e] text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                HOT
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&amp;w=800&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&amp;w=400&amp;auto=format&amp;fit=crop 400w, https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&amp;w=800&amp;auto=format&amp;fit=crop 800w" sizes="(max-width: 640px) 45vw, 140px" alt="Samsung Galaxy S24 Ultra 512GB" width="140" height="140" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">Samsung Galaxy S24 Ultra 512GB</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">Titanium Black • S Pen • 200MP • Snapdragon 8 Gen 3</p>
+                
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 15,200</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 16,800</span>
@@ -2143,12 +2165,17 @@
                 -30%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-[#f68b1e] text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                DEAL
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&amp;w=800&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&amp;w=400&amp;auto=format&amp;fit=crop 400w, https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&amp;w=800&amp;auto=format&amp;fit=crop 800w" sizes="(max-width: 640px) 45vw, 140px" alt="Original Samsung Galaxy S24 Ultra Camera Glass" width="140" height="140" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">Original Samsung Galaxy S24 Ultra Camera Glass</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">Sapphire Crystal Lens • Triple Camera Lens Housing Kit</p>
+                
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 350</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 500</span>
@@ -2184,12 +2211,17 @@
                 -16%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-[#f68b1e] text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                HOT
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&amp;w=800&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&amp;w=400&amp;auto=format&amp;fit=crop 400w, https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&amp;w=800&amp;auto=format&amp;fit=crop 800w" sizes="(max-width: 640px) 45vw, 140px" alt="Original iPhone 15 Pro Max Replacement Screen" width="140" height="140" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">Original iPhone 15 Pro Max Replacement Screen</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">Super Retina XDR OLED • Ceramic Shield Glass • Original Part</p>
+                
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 3,200</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 3,800</span>
@@ -2225,12 +2257,17 @@
                 -8%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-[#f68b1e] text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                HOT
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="https://images.unsplash.com/photo-1696446703255-020d67fa2f3b?q=80&amp;w=800&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1696446703255-020d67fa2f3b?q=80&amp;w=400&amp;auto=format&amp;fit=crop 400w, https://images.unsplash.com/photo-1696446703255-020d67fa2f3b?q=80&amp;w=800&amp;auto=format&amp;fit=crop 800w" sizes="(max-width: 640px) 45vw, 140px" alt="iPhone 15 Pro Max 256GB — Dual SIM" width="140" height="140" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">iPhone 15 Pro Max 256GB — Dual SIM</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">Titanium • A17 Pro • Sealed • eSIM + Physical SIM</p>
+                
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 16,500</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 18,000</span>
@@ -2266,12 +2303,17 @@
                 -13%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-amber-700 text-amber-100 border border-amber-600 text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                FALAA
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <picture><source type="image/webp" srcset="uploads/clean_13_400.webp 400w, uploads/clean_13_800.webp 800w" sizes="(max-width: 640px) 45vw, 140px"><img src="uploads/clean_13.png" alt="iPhone 13 128GB — UK Used Multi-Colors" width="140" height="140" loading="lazy" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" /></picture>
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">iPhone 13 128GB — UK Used Multi-Colors</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">Red / Product Blue / Midnight • 128GB Storage • Excellent Condition • Swapping Allowed</p>
+                <p class="text-[9px] text-amber-700 font-bold mt-1 bg-amber-50 px-1.5 py-0.5 rounded w-fit">UK Used — Grade A</p>
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 5,600</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 6,400</span>
@@ -2307,12 +2349,17 @@
                 -10%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-amber-700 text-amber-100 border border-amber-600 text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                FALAA
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <picture><source type="image/webp" srcset="uploads/clean_13_promax_400.webp 400w, uploads/clean_13_promax_800.webp 800w" sizes="(max-width: 640px) 45vw, 140px"><img src="uploads/clean_13_promax.png" alt="iPhone 13 Pro Max 128GB — UK Used" width="140" height="140" loading="lazy" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" /></picture>
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">iPhone 13 Pro Max 128GB — UK Used</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">Sierra Blue / Gold • 128GB Storage • Solid Battery Health • Clean Body • Swapping Allowed</p>
+                <p class="text-[9px] text-amber-700 font-bold mt-1 bg-amber-50 px-1.5 py-0.5 rounded w-fit">UK Used — Grade A</p>
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 7,900</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 8,800</span>
@@ -2348,12 +2395,17 @@
                 -19%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-[#0b1a38] text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                SEALED
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&amp;w=800&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&amp;w=400&amp;auto=format&amp;fit=crop 400w, https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&amp;w=800&amp;auto=format&amp;fit=crop 800w" sizes="(max-width: 640px) 45vw, 140px" alt="Original iPhone 13 Replacement Battery" width="140" height="140" loading="lazy" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">Original iPhone 13 Replacement Battery</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">3227mAh Capacity • 100% Health Verification Chip • Zero Cycles</p>
+                
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 650</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 800</span>
@@ -2389,12 +2441,17 @@
                 -9%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-[#0b1a38] text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                SEALED
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&amp;w=800&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&amp;w=400&amp;auto=format&amp;fit=crop 400w, https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&amp;w=800&amp;auto=format&amp;fit=crop 800w" sizes="(max-width: 640px) 45vw, 140px" alt="iPad Air M2 11-inch 128GB — Blue" width="140" height="140" loading="lazy" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">iPad Air M2 11-inch 128GB — Blue</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">M2 Chip • Liquid Retina • Touch ID • Sealed</p>
+                
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 6,900</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 7,600</span>
@@ -2430,12 +2487,17 @@
                 -11%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-[#f68b1e] text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                HOT
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&amp;w=800&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&amp;w=400&amp;auto=format&amp;fit=crop 400w, https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&amp;w=800&amp;auto=format&amp;fit=crop 800w" sizes="(max-width: 640px) 45vw, 140px" alt="iPhone 11 Pro Max 256GB — Midnight Green" width="140" height="140" loading="lazy" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">iPhone 11 Pro Max 256GB — Midnight Green</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">6.5-inch Super Retina XDR OLED • Triple 12MP Cameras • Face ID • A13 Bionic</p>
+                
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 5,800</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 6,500</span>
@@ -2471,12 +2533,17 @@
                 -9%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-[#f68b1e] text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                HOT
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&amp;w=800&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&amp;w=400&amp;auto=format&amp;fit=crop 400w, https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&amp;w=800&amp;auto=format&amp;fit=crop 800w" sizes="(max-width: 640px) 45vw, 140px" alt="iPad Pro 11-inch M4 256GB — WiFi" width="140" height="140" loading="lazy" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">iPad Pro 11-inch M4 256GB — WiFi</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">Ultra Retina XDR • M4 Chip • Space Black • Sealed</p>
+                
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 12,500</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 13,800</span>
@@ -2512,12 +2579,17 @@
                 -10%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-[#f68b1e] text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                DEAL
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&amp;w=800&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&amp;w=400&amp;auto=format&amp;fit=crop 400w, https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&amp;w=800&amp;auto=format&amp;fit=crop 800w" sizes="(max-width: 640px) 45vw, 140px" alt="iPhone 11 128GB — White" width="140" height="140" loading="lazy" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">iPhone 11 128GB — White</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">6.1-inch Liquid Retina • Dual 12MP Cameras • A13 Bionic • Best Seller in Ghana</p>
+                
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 4,400</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 4,900</span>
@@ -2553,12 +2625,17 @@
                 -11%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-[#f68b1e] text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                DEAL
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&amp;w=800&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&amp;w=400&amp;auto=format&amp;fit=crop 400w, https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&amp;w=800&amp;auto=format&amp;fit=crop 800w" sizes="(max-width: 640px) 45vw, 140px" alt="Xiaomi Redmi Note 13 Pro+ 5G 256GB" width="140" height="140" loading="lazy" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">Xiaomi Redmi Note 13 Pro+ 5G 256GB</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">200MP Camera • 120W HyperCharge • IP68 Waterproof • Sealed</p>
+                
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 4,800</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 5,400</span>
@@ -2594,12 +2671,17 @@
                 -11%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-[#0b1a38] text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                SEALED
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="https://images.unsplash.com/photo-1593642632823-8f785ba67e45?q=80&amp;w=800&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1593642632823-8f785ba67e45?q=80&amp;w=400&amp;auto=format&amp;fit=crop 400w, https://images.unsplash.com/photo-1593642632823-8f785ba67e45?q=80&amp;w=800&amp;auto=format&amp;fit=crop 800w" sizes="(max-width: 640px) 45vw, 140px" alt="Dell XPS 13 Plus i7 16GB/512GB — Platinum" width="140" height="140" loading="lazy" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">Dell XPS 13 Plus i7 16GB/512GB — Platinum</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">13.4-inch OLED • i7-1360P • InfinityEdge • Sealed</p>
+                
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 13,200</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 14,800</span>
@@ -2635,12 +2717,17 @@
                 -11%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-[#f68b1e] text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                CLASSIC
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&amp;w=800&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&amp;w=400&amp;auto=format&amp;fit=crop 400w, https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&amp;w=800&amp;auto=format&amp;fit=crop 800w" sizes="(max-width: 640px) 45vw, 140px" alt="iPhone XS Max 256GB — Space Gray" width="140" height="140" loading="lazy" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">iPhone XS Max 256GB — Space Gray</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">6.5-inch Super Retina OLED • Dual 12MP Cameras • Face ID • A12 Bionic</p>
+                
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 3,900</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 4,400</span>
@@ -2676,12 +2763,17 @@
                 -10%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-[#f68b1e] text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                HOT
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&amp;w=800&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&amp;w=400&amp;auto=format&amp;fit=crop 400w, https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&amp;w=800&amp;auto=format&amp;fit=crop 800w" sizes="(max-width: 640px) 45vw, 140px" alt="OnePlus 12 256GB — Silky Black" width="140" height="140" loading="lazy" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">OnePlus 12 256GB — Silky Black</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">Snapdragon 8 Gen 3 • 100W SuperVOOC • 16GB RAM • Sealed</p>
+                
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 9,200</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 10,200</span>
@@ -2717,12 +2809,17 @@
                 -13%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-[#f68b1e] text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                DEAL
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&amp;w=800&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&amp;w=400&amp;auto=format&amp;fit=crop 400w, https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&amp;w=800&amp;auto=format&amp;fit=crop 800w" sizes="(max-width: 640px) 45vw, 140px" alt="Samsung Galaxy A55 256GB — Awesome Navy" width="140" height="140" loading="lazy" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">Samsung Galaxy A55 256GB — Awesome Navy</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">8GB RAM • 120Hz AMOLED • IP67 • Sealed</p>
+                
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 4,200</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 4,800</span>
@@ -2758,12 +2855,17 @@
                 -9%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-[#f68b1e] text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                DEAL
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="https://images.unsplash.com/photo-1583223667854-e0e05b1ad2ad?q=80&amp;w=800&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1583223667854-e0e05b1ad2ad?q=80&amp;w=400&amp;auto=format&amp;fit=crop 400w, https://images.unsplash.com/photo-1583223667854-e0e05b1ad2ad?q=80&amp;w=800&amp;auto=format&amp;fit=crop 800w" sizes="(max-width: 640px) 45vw, 140px" alt="HP Spectre x360 13.5-inch i7 16GB/1TB" width="140" height="140" loading="lazy" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">HP Spectre x360 13.5-inch i7 16GB/1TB</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">OLED Touch • Intel i7-1355U • Convertible • Sealed</p>
+                
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 14,500</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 16,000</span>
@@ -2799,12 +2901,17 @@
                 -13%
               </div>
 
+              <div class="absolute top-2.5 right-11 bg-[#f68b1e] text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                CLASSIC
+              </div>
+
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   <img src="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&amp;w=800&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&amp;w=400&amp;auto=format&amp;fit=crop 400w, https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&amp;w=800&amp;auto=format&amp;fit=crop 800w" sizes="(max-width: 640px) 45vw, 140px" alt="iPhone X 256GB — Silver" width="140" height="140" loading="lazy" decoding="async" class="max-h-full object-contain group-hover:scale-105 transition duration-200" />
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">iPhone X 256GB — Silver</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">5.8-inch Super Retina OLED • Dual 12MP Cameras • Face ID • A11 Bionic</p>
+                
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">GH₵ 2,950</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">GH₵ 3,400</span>
@@ -3071,6 +3178,10 @@
           </div>
 
           <div class="border-t pt-3 space-y-2 text-[12px] font-semibold text-gray-600 mb-4">
+            <div class="flex items-center gap-1.5" id="detailConditionRow">
+              <span class="text-amber-600">Condition</span>
+              <span id="detailCondition">Brand New — Factory Sealed</span>
+            </div>
             <div class="flex items-center gap-1.5">
               <span class="text-green-600">Check</span>
               <span id="detailSpecs">Specification bullet points</span>

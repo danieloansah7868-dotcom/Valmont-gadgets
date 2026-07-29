@@ -12,7 +12,7 @@ const today = new Date().toISOString().slice(0, 10);
 
 // Mirrors CATEGORY_LABELS in app.js (minus `all`, which is the homepage).
 const CATEGORIES = [
-  'iphones', 'samsung', 'android', 'tablets', 'smartwatches', 'laptops',
+  'falaa', 'iphones', 'samsung', 'android', 'tablets', 'smartwatches', 'laptops',
   'laptop_acc', 'audio', 'gaming', 'phone_acc', 'phone_parts',
   'travel_acc', 'chargers',
 ];

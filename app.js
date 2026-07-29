@@ -436,12 +436,13 @@ function loadPaystackScript(callback) {
       {
         id: 'VG-AW-16SNAP',
         name: 'iPhone 16 128GB — White (Snapchat Banned)',
-        category: 'iphones',
+        category: 'falaa',
         retail: 8500,
         compareAt: 11000,
-        badge: 'BARGAIN',
+        badge: 'FALAA',
         specs: '128GB Storage • Very Neat & Solid UK Used • Snapchat App Lock Only • falaa price!',
         stock: 'In stock • UK Used • 6m Store Warranty',
+        condition: 'UK Used — Grade A (Snapchat Lock)',
         image: 'uploads/clean_16_snapchat.png',
         wholesale: 7100,
         deliveryCost: 80,
@@ -464,12 +465,13 @@ function loadPaystackScript(callback) {
       {
         id: 'VG-AW-13PROMAX',
         name: 'iPhone 13 Pro Max 128GB — UK Used',
-        category: 'iphones',
+        category: 'falaa',
         retail: 7900,
         compareAt: 8800,
-        badge: 'UK USED',
+        badge: 'FALAA',
         specs: 'Sierra Blue / Gold • 128GB Storage • Solid Battery Health • Clean Body • Swapping Allowed',
         stock: 'In stock • UK Used • 6m Store Warranty',
+        condition: 'UK Used — Grade A',
         image: 'uploads/clean_13_promax.png',
         wholesale: 6700,
         deliveryCost: 80,
@@ -478,12 +480,13 @@ function loadPaystackScript(callback) {
       {
         id: 'VG-AW-13',
         name: 'iPhone 13 128GB — UK Used Multi-Colors',
-        category: 'iphones',
+        category: 'falaa',
         retail: 5600,
         compareAt: 6400,
-        badge: 'UK USED',
+        badge: 'FALAA',
         specs: 'Red / Product Blue / Midnight • 128GB Storage • Excellent Condition • Swapping Allowed',
         stock: 'In stock • UK Used • 6m Store Warranty',
+        condition: 'UK Used — Grade A',
         image: 'uploads/clean_13.png',
         wholesale: 4800,
         deliveryCost: 60,
@@ -1060,6 +1063,7 @@ function loadPaystackScript(callback) {
     // Global Category Labels for spacious layout and mobile sync
     const CATEGORY_LABELS = {
       all: 'Verified Premium Stock',
+      falaa: 'Falaa Deals — Cheap Used Phones',
       iphones: 'iPhones & Apple Devices',
       samsung: 'Samsung Galaxy Series',
       android: 'Android Flagship Phones',
@@ -1191,6 +1195,10 @@ function loadPaystackScript(callback) {
               <div class="absolute top-2.5 left-2 bg-orange-50 text-[#f68b1e] text-[10px] font-black px-1.5 py-0.5 rounded-sm">
                 -${discount}%
               </div>
+              ${p.badge ? `
+              <div class="absolute top-2.5 right-11 ${p.badge === 'FALAA' ? 'bg-amber-700 text-amber-100 border border-amber-600' : p.badge === 'SEALED' ? 'bg-[#0b1a38] text-white' : 'bg-[#f68b1e] text-white'} text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                ${p.badge}
+              </div>` : ''}
               
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
@@ -1198,6 +1206,7 @@ function loadPaystackScript(callback) {
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">${p.name}</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">${p.specs}</p>
+                ${p.condition ? `<p class="text-[9px] text-amber-700 font-bold mt-1 bg-amber-50 px-1.5 py-0.5 rounded w-fit">${p.condition}</p>` : ''}
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">${isDealerMode ? money(p.wholesale) : money(p.retail)}</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">${isDealerMode ? money(p.retail) : money(p.compareAt)}</span>
@@ -1870,6 +1879,26 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       const reviewEl = document.getElementById('detailReviews'); if (reviewEl) reviewEl.textContent = product.reviews_count || 0;
       document.getElementById('detailSpecs').textContent = product.specs;
       document.getElementById('detailStock').textContent = product.stock;
+      
+      const badgeEl = document.getElementById('detailBadge');
+      if (product.badge) {
+        badgeEl.textContent = product.badge;
+        badgeEl.classList.remove('hidden');
+        if (product.badge === 'FALAA') {
+          badgeEl.className = "bg-amber-700 text-amber-100 text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-sm border border-amber-600 shadow-sm";
+        } else if (product.badge === 'SEALED') {
+          badgeEl.className = "bg-[#0b1a38] text-white text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-sm";
+        } else {
+          badgeEl.className = "bg-[#f68b1e] text-white text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-sm";
+        }
+      } else {
+        badgeEl.classList.add('hidden');
+      }
+
+      const conditionEl = document.getElementById('detailCondition');
+      if (conditionEl) {
+        conditionEl.textContent = product.condition || 'Brand New — Factory Sealed';
+      }
       if (isDealerMode) {
         document.getElementById('detailPrice').textContent = money(product.wholesale);
         document.getElementById('detailCompareAt').textContent = money(product.retail);

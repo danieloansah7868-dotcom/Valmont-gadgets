@@ -125,6 +125,10 @@ ${discount > 0 ? `
               <div class="absolute top-2.5 left-2 bg-orange-50 text-[#f68b1e] text-[10px] font-black px-1.5 py-0.5 rounded-sm">
                 -${discount}%
               </div>` : ''}
+${p.badge ? `
+              <div class="absolute top-2.5 right-11 ${p.badge === 'FALAA' ? 'bg-amber-700 text-amber-100 border border-amber-600' : p.badge === 'SEALED' ? 'bg-[#0b1a38] text-white' : 'bg-[#f68b1e] text-white'} text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                ${esc(p.badge)}
+              </div>` : ''}
 
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
@@ -132,6 +136,7 @@ ${discount > 0 ? `
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">${esc(p.name)}</h4>
                 <p class="text-[10px] text-gray-400 font-medium truncate mt-1">${esc(p.specs)}</p>
+                ${p.condition ? `<p class="text-[9px] text-amber-700 font-bold mt-1 bg-amber-50 px-1.5 py-0.5 rounded w-fit">${esc(p.condition)}</p>` : ''}
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">${money(p.retail)}</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">${money(p.compareAt || p.retail)}</span>
@@ -203,7 +208,9 @@ function productJsonLd(products) {
         (p.stock_quantity || 0) > 0
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
-      itemCondition: 'https://schema.org/NewCondition',
+      itemCondition: p.category === 'falaa' || (p.condition && /used/i.test(p.condition))
+        ? 'https://schema.org/UsedCondition'
+        : 'https://schema.org/NewCondition',
       seller: { '@type': 'Organization', name: 'Valmont Gadgets' },
     },
   }));

@@ -19,8 +19,8 @@ const DEFAULT_CATEGORIES = [
 const DEFAULT_SETTINGS = {
   store_name: "Valmont Gadgets",
   admin_email: "admin@valmontgadgets.com",
-  hero_headline: "Executive Midweek Deals",
-  hero_subtitle: "Genuine phones, laptops and electronics with warranty support in Ghana.",
+  hero_headline: "Falaa Deals",
+  hero_subtitle: "Cheap deals on clean used phones — falaa prices. Genuine phones, laptops and electronics with warranty support in Ghana.",
   hero_cta: "Shop Deals",
   announcement: "GENUINE PHONES & LAPTOPS WITH 12-MONTH WARRANTY • FREE ACCRA DELIVERY ABOVE GH₵ 5,000!",
   store_hours: "Open Mon-Sat 9AM-7PM",
