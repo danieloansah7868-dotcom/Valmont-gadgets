@@ -1,4 +1,21 @@
 User-agent: *
 Allow: /
 
+# Private / non-content routes — no SEO value, should never be indexed.
+Disallow: /admin.html
+Disallow: /admin-login.html
+
+# Social & messaging scrapers need CSS/JS/images to build link previews.
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
 Sitemap: https://valmontgadgets.com/sitemap.xml
