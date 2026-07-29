@@ -572,3 +572,49 @@ body {
   content: "✓";
   font-size: 12px;
 }
+
+
+/* ===== WCAG AA CONTRAST: white-on-#f68b1e on light surfaces =====
+ * Brand orange #f68b1e behind white text scored only 2.43:1, failing WCAG AA
+ * (4.5:1) on the primary "Add To Bag" CTAs and header search button, both
+ * sitting on white/light card or page backgrounds.
+ *
+ * Darken those fills to #ad5900 (4.99:1 against #ffffff — passes AA on
+ * normal text). Brand orange is preserved on navy (#0b1a38) surfaces where
+ * #f68b1e vs #0b1a38 = 7.08:1 (AAA), and for orange as text/icon/border
+ * (which is the inverse pairing and already passes). Small decorative fills
+ * (stock bars, badges, pills, ping dot) that don't carry body copy are not
+ * targeted — they keep #f68b1e.
+ *
+ * Scoped CSS override only. No HTML/JS changed.
+ */
+
+/* 1. Header search submit button (white toolbar). */
+#searchBtn {
+  background-color: #ad5900 !important;
+}
+#searchBtn:hover {
+  background-color: #924a00 !important;
+}
+
+/* 2. Any filled-orange + white-text <button> or <a> that is NOT inside a
+ *    navy-chrome container. [class*=] substring matching avoids escaping
+ *    Tailwind arbitrary-value class names like bg-[#f68b1e]. */
+button[class*="bg-[#f68b1e]"][class*="text-white"],
+a[class*="bg-[#f68b1e]"][class*="text-white"] {
+  background-color: #ad5900 !important;
+}
+button[class*="bg-[#f68b1e]"][class*="hover:bg-orange-600"]:hover,
+a[class*="bg-[#f68b1e]"][class*="hover:bg-orange-600"]:hover {
+  background-color: #924a00 !important;
+}
+
+/* 3. Restore brand orange for white-on-orange fills that live inside the
+ *    navy-gradient flash-deal banner (#flash-clock timer chip). It's an
+ *    11px numeric badge, not body copy; the surrounding surface is dark
+ *    (from-[#0b1a38] to-[#1e355c]) so brand orange reads fine there and
+ *    scores 7.08:1 against #0b1a38 as text. No other navy container in the
+ *    page carries a white-on-orange filled CTA. */
+#flash-clock {
+  background-color: #f68b1e !important;
+}
