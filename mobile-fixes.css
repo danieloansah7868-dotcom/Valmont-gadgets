@@ -477,7 +477,7 @@ body {
   #detailModal .grid > div:last-child {
     padding: 20px !important;
   }
-  #detailAddToCart, #detailWhatsAppOrder {
+  #detailAddToCart, #detailExpressDelivery {
     width: 100%;
     min-height: 48px;
   }
@@ -618,3 +618,16 @@ a[class*="bg-[#f68b1e]"][class*="hover:bg-orange-600"]:hover {
 #flash-clock {
   background-color: #f68b1e !important;
 }
+
+/* ===== PREMIUM MOBILE PRODUCT REFINEMENTS ===== */
+@media (max-width: 767px) {
+  body { padding-bottom: 96px; }
+  .mobile-header { background: #0b1a38; border-bottom-color: #1e293b; }
+  .mobile-product-image { height: 180px; }
+  .mobile-product-body { padding: 14px; gap: 6px; }
+  .mobile-product-title { line-height: 1.35; }
+  .mobile-product-badge { top: 6px; left: 6px; background: rgba(11,26,56,.85); color: #fff; font-weight: 900; padding: 2px 5px; border-radius: 3px; border: 1px solid rgba(255,255,255,.2); }
+  .bottom-nav-item .icon { display:flex; align-items:center; justify-content:center; height:22px; }
+}
+@keyframes flipRotate { 0%,100% { transform: rotateY(0deg); } 50% { transform: rotateY(180deg); } }
+.animate-flip { animation: flipRotate 8s infinite ease-in-out; transform-style: preserve-3d; }

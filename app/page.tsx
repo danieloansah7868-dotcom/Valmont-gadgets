@@ -412,6 +412,14 @@ function getPrivateProfit(p: Product) {
   return p.retail - p.wholesale - p.deliveryCost - p.paymentCost;
 }
 
+function getVariants(product: Product) {
+  const source = `${product.name} ${product.specs}`.toLowerCase();
+  const colorMap: [string, string][] = [["black", "#111827"], ["midnight", "#1f2937"], ["titanium", "#94a3b8"], ["blue", "#2563eb"], ["purple", "#7e22ce"], ["pink", "#ec4899"], ["white", "#f8fafc"], ["silver", "#cbd5e1"], ["green", "#16a34a"], ["gold", "#d4a72c"], ["navy", "#172554"]];
+  const colors = colorMap.filter(([name]) => source.includes(name)).map(([, value]) => value).slice(0, 3);
+  const sizes = [...new Set((`${product.name} ${product.specs}`.match(/\b(?:\d+(?:\.\d+)?(?:GB|TB)|\d+GB RAM)\b/gi) || []).map((value) => value.toUpperCase()))].slice(0, 3);
+  return { colors: colors.length ? colors : ["#111827", "#94a3b8", "#f8fafc"], sizes };
+}
+
 export default function Page() {
   const [activeCat, setActiveCat] = useState<CategoryId>("all");
   const [query, setQuery] = useState("");
@@ -419,6 +427,7 @@ export default function Page() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [theme, setTheme] = useState<ThemeId>("light");
+  const [deliveryMessage, setDeliveryMessage] = useState("");
 
   useEffect(() => {
     const saved = window.localStorage.getItem("valmont_theme");
@@ -462,6 +471,11 @@ export default function Page() {
       if (ex) return prev.map((p) => (p.id === id ? { ...p, qty: p.qty + 1 } : p));
       return [...prev, { id, qty: 1 }];
     });
+  };
+
+  const addExpressDelivery = (product: Product) => {
+    const estimatedFee = Math.ceil(product.deliveryCost * 1.3);
+    setDeliveryMessage(`Valmont Express Delivery selected for ${product.name}. Estimated delivery fee: ${formatGH(estimatedFee)}.`);
   };
 
   const buildWALink = (name: string, retail: number) => {
@@ -563,10 +577,11 @@ export default function Page() {
                     <span className={`font-black text-[15px] tracking-tight ${theme === "navy" ? "text-white" : "text-[#0b1a38]"}`}>{formatGH(product.retail)}</span>
                     <span className="text-[11px] text-gray-400 line-through font-medium">{formatGH(product.compareAt)}</span>
                   </div>
+                  {(() => { const variants = getVariants(product); return <div className="mb-2 space-y-1"><div className="flex items-center gap-1"><span className="text-[9px] font-bold text-gray-500">Colours:</span>{variants.colors.map((color) => <span key={color} className="h-2.5 w-2.5 rounded-full border border-gray-300" style={{ backgroundColor: color }} />)}</div>{variants.sizes.length > 0 && <div className="flex items-center gap-1 flex-wrap"><span className="text-[9px] font-bold text-gray-500">Size:</span>{variants.sizes.map((size) => <span key={size} className="rounded border border-gray-200 px-1.5 py-0.5 text-[8px] font-bold text-gray-600">{size}</span>)}</div>}</div>; })()}
                   <p className="text-[10px] font-bold text-[#f58c14] mb-3 tracking-wide uppercase">{product.stock}</p>
                   <div className="flex gap-2">
                     <button onClick={() => addToCart(product.id)} className="bg-[#0b1a38] hover:bg-black text-white font-extrabold text-[11px] tracking-wide rounded-lg px-3 py-2.5 w-2/3 transition uppercase">Add to Cart</button>
-                    <a href={buildWALink(product.name, product.retail)} target="_blank" rel="noopener noreferrer" className="bg-[#f58c14] hover:bg-[#e67f0f] text-white font-extrabold text-[11px] tracking-widest rounded-lg px-3 py-2.5 w-1/3 text-center transition uppercase">WA</a>
+                    <button onClick={() => addExpressDelivery(product)} className="bg-[#f58c14] hover:bg-[#e67f0f] text-white font-extrabold text-[10px] tracking-wide rounded-lg px-2 py-2.5 w-1/3 text-center transition uppercase">Express</button>
                   </div>
                 </div>
               </div>
@@ -584,6 +599,7 @@ export default function Page() {
 
 
       <p className="sr-only" aria-live="polite">THEME ACTIVE: {theme.toUpperCase()}</p>
+      {deliveryMessage && <div role="status" className="fixed bottom-5 left-1/2 z-[80] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-xl bg-[#0b1a38] px-4 py-3 text-center text-[11px] font-bold text-white shadow-xl">{deliveryMessage}<button onClick={() => setDeliveryMessage("")} className="ml-3 text-[#f58c14]" aria-label="Dismiss delivery message">Close</button></div>}
       {drawerOpen && (
         <div className="fixed inset-0 z-[60]">
           <div onClick={() => setDrawerOpen(false)} className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>

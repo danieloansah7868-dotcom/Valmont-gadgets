@@ -1145,6 +1145,27 @@ function loadPaystackScript(callback) {
       history.replaceState({}, '', `${location.pathname}${query ? '?' + query : ''}${location.hash}`);
     }
 
+    function getProductVariants(product) {
+      const source = `${product.name} ${product.specs}`.toLowerCase();
+      const palette = [
+        ['black', '#111827'], ['midnight', '#1f2937'], ['obsidian', '#171717'], ['titanium', '#94a3b8'],
+        ['blue', '#2563eb'], ['purple', '#7e22ce'], ['pink', '#ec4899'], ['white', '#f8fafc'],
+        ['silver', '#cbd5e1'], ['green', '#16a34a'], ['gray', '#6b7280'], ['grey', '#6b7280'],
+        ['gold', '#d4a72c'], ['cream', '#f5f0df'], ['navy', '#172554']
+      ];
+      const colors = palette.filter(([name]) => source.includes(name)).map(([, value]) => value).slice(0, 3);
+      const storage = [...new Set((`${product.name} ${product.specs}`.match(/\b(?:\d+(?:\.\d+)?(?:GB|TB)|\d+GB RAM)\b/gi) || []).map(value => value.toUpperCase()))].slice(0, 3);
+      return { colors: colors.length ? colors : ['#111827', '#94a3b8', '#f8fafc'], storage };
+    }
+
+    function renderProductVariants(product) {
+      const { colors, storage } = getProductVariants(product);
+      return `<div class="mt-1.5 space-y-1" aria-label="Available colour and storage variations">
+        <div class="flex items-center gap-1"><span class="text-[9px] font-bold text-gray-500">Colours:</span>${colors.map(color => `<span class="w-2 h-2 rounded-full border border-gray-300" style="background:${color}" aria-hidden="true"></span>`).join('')}</div>
+        ${storage.length ? `<div class="flex items-center gap-1 flex-wrap"><span class="text-[9px] font-bold text-gray-500">Size:</span>${storage.map(size => `<span class="border border-gray-200 rounded px-1.5 py-0.5 text-[8px] font-bold text-gray-600">${size}</span>`).join('')}</div>` : ''}
+      </div>`;
+    }
+
     function renderProducts() {
       document.querySelector('.product-pagination')?.remove();
       let filtered = PRODUCTS.filter(p => {
@@ -1215,6 +1236,7 @@ function loadPaystackScript(callback) {
     </div>
                   <span class="text-gray-400 font-bold ml-1">(${p.reviews_count || 0})</span>
                 </div>
+                ${renderProductVariants(p)}
 
                 <!-- Jumia-Style Dynamic Stock Depletion Progress Bar (Vibrant and Professional!) -->
                 <div class="mt-2.5">
@@ -1435,6 +1457,13 @@ function loadPaystackScript(callback) {
     document.getElementById('cartBtn').addEventListener('click', openCart);
     closeCartBtn.addEventListener('click', closeCart);
     cartOverlay.addEventListener('click', closeCart);
+
+    function addExpressDelivery(product) {
+      const expressFee = Math.ceil((Number(product.deliveryCost) || 0) * 1.3);
+      const message = `Valmont Express Delivery selected for ${product.name}. Estimated delivery fee: ${money(expressFee)}. Our team will confirm dispatch details.`;
+      if (typeof showValmontToast === 'function') showValmontToast(message);
+      else alert(message);
+    }
 
     function addToCart(id) {
       const product = PRODUCTS.find(p => p.id === id);
@@ -1907,11 +1936,8 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       }
     });
 
-    document.getElementById('detailWhatsAppOrder').addEventListener('click', () => {
-      if (selectedDetailProduct) {
-        const msg = `Hello Valmont Gadgets! I am interested in ordering: ${selectedDetailProduct.name} (${money(selectedDetailProduct.retail)}). Please confirm stock and delivery timeline.`;
-        window.open(`https://wa.me/233542451578?text=${encodeURIComponent(msg)}`, '_blank');
-      }
+    document.getElementById('detailExpressDelivery').addEventListener('click', () => {
+      if (selectedDetailProduct) addExpressDelivery(selectedDetailProduct);
     });
 
 
