@@ -580,7 +580,7 @@ async function submitCheckoutOrder(){
     const gatewayUrl = new URL("https://valmontpay.app/pay.html");
     gatewayUrl.searchParams.set("merchant", "Valmont Gadgets");
     gatewayUrl.searchParams.set("amount", Number(orderData.total_amount).toFixed(2));
-    gatewayUrl.searchParams.set("email", orderData.email || "sales@valmontgadgets.com");
+    gatewayUrl.searchParams.set("email", orderData.email || orderData.customer_email || "sales@valmontgadgets.com");
     gatewayUrl.searchParams.set("reference", orderData.reference_code);
     gatewayUrl.searchParams.set("callback_url", "https://valmontgadgets.com/order-confirmed.html");
     window.location.href = gatewayUrl.toString();
@@ -591,7 +591,7 @@ async function submitCheckoutOrder(){
 }
 function finalizeSuccessfulOrder(order){
   const itemsText = order.items.map(i => { const variants = [i.selected_color, i.selected_storage].filter(Boolean).join("/"); return `* ${i.name} ${variants ? `(${variants})` : ""} - Qty ${i.qty} - GH₵ ${(i.price * i.qty).toLocaleString()}`; }).join("\\n");
-  const paymentNames = { momo: "Mobile Money Invoice", cod: "Cash on Delivery", card: "Paid via Valmont-Pay Secure Gateway" };
+  const paymentNames = { momo: "Mobile Money Invoice", cod: "Cash on Delivery", card: "Paid via Valmont-Pay" };
   const textReceipt = `*VALMONT GADGETS - NEW ORDER*\\nReference Code: *#${order.reference_code}*\\n\\n*ITEMS:*\\n${itemsText}\\n\\n*SHIPPING SUMMARY:*\\nSubtotal: GH₵ ${(order.total_amount - (order.total_amount >= 5000 ? 0 : 150)).toLocaleString()}\\nDelivery Fee: ${order.total_amount >= 5000 ? "FREE" : "GH₵ 150"}\\n*TOTAL BILL: GH₵ ${order.total_amount.toLocaleString()}*\\n\\n*PAYMENT METHOD:* ${paymentNames[order.payment_method]}\\n\\n*DELIVERY DETAILS:*\\nRecipient: ${order.customer_name}\\nPhone: ${order.customer_phone}\\nRegion/Area: ${order.customer_area}\\nAddress/Landmark: ${order.customer_street || "To be provided via chat"}\\n\\n_Thank you for choosing Valmont Gadgets Ghana. We are preparing your shipment!_`;
   const waUrl = `https://wa.me/233542451578?text=${encodeURIComponent(textReceipt)}`;
   cart = []; localStorage.setItem("valmont_cart", JSON.stringify(cart)); updateCartBadge(); closeCartDrawer(); window.open(waUrl, "_blank"); showToast(`Order #${order.reference_code} submitted. Opening WhatsApp checkout...`);
@@ -611,7 +611,7 @@ function initUserProfile(){
   else {
     if (profileLabel) profileLabel.textContent = userProfile.name.split(" ")[0]; if (profileForm) profileForm.classList.add("hidden");
     if (profileDetailsView) { profileDetailsView.classList.remove("hidden"); const dn = document.getElementById("profileDispName"); if(dn) dn.textContent = userProfile.name; const dp = document.getElementById("profileDispPhone"); if(dp) dp.textContent = userProfile.phone; const de = document.getElementById("profileDispEmail"); if(de) de.textContent = userProfile.email; }
-    const sn = document.getElementById("shippingName"); if(sn) sn.value = userProfile.name; const sp = document.getElementById("shippingPhone"); if(sp) sp.value = userProfile.phone;
+    const sn = document.getElementById("shippingName"); if(sn) sn.value = userProfile.name; const sp = document.getElementById("shippingPhone"); if(sp) sp.value = userProfile.phone; const se = document.getElementById("shippingEmail"); if(se && userProfile.email) se.value = userProfile.email;
   }
 }
 function handleProfileSubmit(event){

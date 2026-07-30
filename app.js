@@ -1312,6 +1312,18 @@ document.addEventListener("keydown", function(e) {
     const wishlistModalItems = document.getElementById('wishlistModalItems');
 
     function openWishlistModal() {
+      // Close cart drawer if open
+      const cartDrawer = document.getElementById('cartDrawer');
+      if (cartDrawer && !cartDrawer.classList.contains('translate-x-full')) {
+        cartDrawer.classList.add('translate-x-full');
+      }
+      // Close categories modal if open
+      const catModal = document.getElementById('mobileCategoriesModal');
+      if (catModal && !catModal.classList.contains('hidden') && !catModal.classList.contains('translate-y-full')) {
+        catModal.classList.add('translate-y-full');
+        const catOverlay = document.getElementById('mobileCategoriesOverlay');
+        if (catOverlay) { catOverlay.classList.remove('opacity-100'); setTimeout(() => catOverlay.classList.add('hidden'), 300); }
+      }
       wishlistOverlay.classList.remove('hidden');
       setTimeout(() => wishlistOverlay.classList.add('opacity-100'), 10);
       wishlistModal.classList.remove('hidden');
@@ -1432,6 +1444,13 @@ document.addEventListener("keydown", function(e) {
     let checkoutStep = 1;
 
     function openCart() {
+      // Close categories modal if open
+      const catModal = document.getElementById('mobileCategoriesModal');
+      if (catModal && !catModal.classList.contains('hidden') && !catModal.classList.contains('translate-y-full')) {
+        catModal.classList.add('translate-y-full');
+        const catOverlay = document.getElementById('mobileCategoriesOverlay');
+        if (catOverlay) { catOverlay.classList.remove('opacity-100'); setTimeout(() => catOverlay.classList.add('hidden'), 300); }
+      }
       cartOverlay.classList.remove('hidden');
       setTimeout(() => cartOverlay.classList.add('opacity-100'), 10);
       cartDrawer.classList.remove('translate-x-full');
@@ -1696,8 +1715,8 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       if (paymentOpt === 'cod') {
         // Cash on delivery goes straight to WhatsApp!
         finalizeCheckout();
-      } else {
-        // Online payments (card / momo) redirect to the Valmont-Pay gateway.
+      } else if (paymentOpt === 'card') {
+        // Card payments redirect straight to the Valmont-Pay secure gateway.
         redirectToValmontPay({
           subtotal: subtotal,
           reference: ref,
@@ -1717,6 +1736,9 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
             };
           })
         });
+      } else {
+        // Mobile Money continues to use the in-page payment modal.
+        openPaystackModal(subtotal, paymentOpt, phone);
       }
     }
 
@@ -1760,6 +1782,44 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     // simply forward the customer to the Valmont-Pay gateway.
     const paystackOverlay = document.getElementById('paystackOverlay');
     const paystackModal = document.getElementById('paystackModal');
+    const paystackForm = document.getElementById('paystackFormContainer');
+    const paystackLoader = document.getElementById('paystackLoader');
+    const paystackSuccess = document.getElementById('paystackSuccess');
+    const paystackPayBtn = document.getElementById('paystackPayBtn');
+    const paystackFooter = document.getElementById('paystackFooter');
+
+    // Mobile Money is still collected via the in-page modal (network + phone).
+    // Card payments bypass this modal entirely and redirect straight to the
+    // Valmont-Pay gateway via redirectToValmontPay() above.
+    function openPaystackModal(amount, option, phone) {
+      if (paystackOverlay) paystackOverlay.classList.remove('hidden');
+      if (paystackModal) paystackModal.classList.remove('hidden');
+
+      const amtEl = document.getElementById('paystackAmount');
+      if (amtEl) amtEl.textContent = money(amount);
+
+      if (paystackForm) paystackForm.classList.remove('hidden');
+      if (paystackLoader) paystackLoader.classList.add('hidden');
+      if (paystackSuccess) paystackSuccess.classList.add('hidden');
+      if (paystackFooter) paystackFooter.classList.remove('hidden');
+
+      if (paystackForm && option === 'momo') {
+        paystackForm.innerHTML = `
+          <div>
+            <label class="block text-[11px] font-black uppercase text-gray-400 mb-1">Select Network *</label>
+            <select id="paystackNetwork" class="w-full border p-2.5 rounded-lg text-[13px] outline-none font-bold bg-white focus:border-[#3bb75e]">
+              <option value="mtn">MTN Mobile Money</option>
+              <option value="telecel">Telecel Cash</option>
+              <option value="at">AT Money</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-black uppercase text-gray-400 mb-1">Mobile Money Phone Number *</label>
+            <input id="paystackPhone" type="tel" value="${phone}" class="w-full border p-2.5 rounded-lg text-[13px] outline-none font-semibold focus:border-[#3bb75e]" required />
+          </div>
+        `;
+      }
+    }
 
     function closePaystackModal() {
       if (paystackOverlay) paystackOverlay.classList.add('hidden');
@@ -1767,11 +1827,13 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     }
 
     function processSimulatedPayment() {
-      // Compatibility shim: the checkout button used to invoke this function
-      // to open a simulated Paystack pop-up. Now we simply re-run the checkout
-      // pipeline which redirects the customer to Valmont-Pay.
+      // Compatibility shim: the "Pay" button in the legacy in-page modal used
+      // to invoke this. For MoMo the modal collects the network + phone and
+      // then re-runs the checkout pipeline, which now routes card payments
+      // through redirectToValmontPay() and MoMo through the existing
+      // finalizeCheckout / WhatsApp handoff.
       closePaystackModal();
-      try { triggerWhatsAppOrder(false); } catch (e) { console.error('Checkout redirect failed:', e); }
+      try { triggerWhatsAppOrder(false); } catch (e) { console.error('Checkout handoff failed:', e); }
     }
 
     async function finalizeCheckout() {
@@ -1999,6 +2061,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
         // Autofill forms
         if (document.getElementById('shippingName')) document.getElementById('shippingName').value = currentUser.name;
         if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = currentUser.phone;
+        if (document.getElementById('shippingEmail') && currentUser.email) document.getElementById('shippingEmail').value = currentUser.email;
         if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = currentUser.address || 'Near East Legon Police Station';
         if (document.getElementById('shippingCity')) document.getElementById('shippingCity').value = 'Accra';
         if (document.getElementById('shippingTown')) document.getElementById('shippingTown').value = 'East Legon';
@@ -2025,6 +2088,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
         // Autofill forms
         if (document.getElementById('shippingName')) document.getElementById('shippingName').value = name;
         if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = phone;
+        if (document.getElementById('shippingEmail') && email) document.getElementById('shippingEmail').value = email;
         if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = address;
         if (document.getElementById('shippingCity')) document.getElementById('shippingCity').value = 'Accra';
         if (document.getElementById('shippingTown')) document.getElementById('shippingTown').value = address;
@@ -2054,6 +2118,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       // Autofill forms
       if (document.getElementById('shippingName')) document.getElementById('shippingName').value = "Daniel Kofi";
       if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = "054 245 1578";
+      if (document.getElementById('shippingEmail')) document.getElementById('shippingEmail').value = "daniel@valmontgadgets.com";
       if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = "Near Airport Residential Area";
       if (document.getElementById('shippingCity')) document.getElementById('shippingCity').value = "Accra";
       if (document.getElementById('shippingTown')) document.getElementById('shippingTown').value = "Airport Residential";
@@ -2347,6 +2412,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     if (currentUser) {
       document.getElementById('shippingName').value = currentUser.name;
       document.getElementById('shippingPhone').value = currentUser.phone;
+      if (currentUser.email && document.getElementById('shippingEmail')) document.getElementById('shippingEmail').value = currentUser.email;
     }
   
 
@@ -2842,6 +2908,11 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
   }
 
   function openMobileCategoriesModal() {
+    // Close shopping bag drawer if it's open
+    const cartDrawer = document.getElementById('cartDrawer');
+    if (cartDrawer && !cartDrawer.classList.contains('translate-x-full')) {
+      cartDrawer.classList.add('translate-x-full');
+    }
     if (mobileCategoriesOverlay) {
       mobileCategoriesOverlay.classList.remove('hidden');
       setTimeout(() => mobileCategoriesOverlay.classList.add('opacity-100'), 10);

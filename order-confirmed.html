@@ -213,8 +213,30 @@
 
       // Clear the pending order (and the cart) once the confirmation
       // page has successfully loaded and populated the receipt.
+      // Also append this paid order to the local order log so the
+      // customer's Account > Orders view reflects it immediately.
       if (status === 'success') {
         try {
+          if (order) {
+            const log = JSON.parse(localStorage.getItem('valmont_orders') || '[]');
+            const alreadyLogged = log.some(function (o) {
+              return String(o.reference_code || o.id || '') === String(displayRef);
+            });
+            if (!alreadyLogged) {
+              log.unshift({
+                reference_code: displayRef,
+                customer_name:  order.customer_name  || order.name  || '',
+                customer_phone: order.customer_phone || order.phone || '',
+                customer_email: order.email || order.customer_email || '',
+                total_amount:   Number(order.total_amount || 0),
+                items:          Array.isArray(order.items) ? order.items : [],
+                status:         'Paid',
+                payment_method: 'Valmont-Pay',
+                created_at:     new Date().toISOString()
+              });
+              localStorage.setItem('valmont_orders', JSON.stringify(log));
+            }
+          }
           localStorage.removeItem('valmont_pending_order');
           localStorage.removeItem('valmont_cart');
         } catch (e) {}
