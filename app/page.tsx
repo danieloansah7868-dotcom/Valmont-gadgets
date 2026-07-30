@@ -419,6 +419,7 @@ export default function Page() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [theme, setTheme] = useState<ThemeId>("light");
+  const [deliveryMessage, setDeliveryMessage] = useState("");
 
   useEffect(() => {
     const saved = window.localStorage.getItem("valmont_theme");
@@ -462,6 +463,11 @@ export default function Page() {
       if (ex) return prev.map((p) => (p.id === id ? { ...p, qty: p.qty + 1 } : p));
       return [...prev, { id, qty: 1 }];
     });
+  };
+
+  const addExpressDelivery = (product: Product) => {
+    const estimatedFee = Math.ceil(product.deliveryCost * 1.3);
+    setDeliveryMessage(`Valmont Express Delivery selected for ${product.name}. Estimated delivery fee: ${formatGH(estimatedFee)}.`);
   };
 
   const buildWALink = (name: string, retail: number) => {
@@ -566,7 +572,7 @@ export default function Page() {
                   <p className="text-[10px] font-bold text-[#f58c14] mb-3 tracking-wide uppercase">{product.stock}</p>
                   <div className="flex gap-2">
                     <button onClick={() => addToCart(product.id)} className="bg-[#0b1a38] hover:bg-black text-white font-extrabold text-[11px] tracking-wide rounded-lg px-3 py-2.5 w-2/3 transition uppercase">Add to Cart</button>
-                    <a href={buildWALink(product.name, product.retail)} target="_blank" rel="noopener noreferrer" className="bg-[#f58c14] hover:bg-[#e67f0f] text-white font-extrabold text-[11px] tracking-widest rounded-lg px-3 py-2.5 w-1/3 text-center transition uppercase">WA</a>
+                    <button onClick={() => addExpressDelivery(product)} className="bg-[#f58c14] hover:bg-[#e67f0f] text-white font-extrabold text-[10px] tracking-wide rounded-lg px-2 py-2.5 w-1/3 text-center transition uppercase">Express</button>
                   </div>
                 </div>
               </div>
@@ -584,6 +590,7 @@ export default function Page() {
 
 
       <p className="sr-only" aria-live="polite">THEME ACTIVE: {theme.toUpperCase()}</p>
+      {deliveryMessage && <div role="status" className="fixed bottom-5 left-1/2 z-[80] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-xl bg-[#0b1a38] px-4 py-3 text-center text-[11px] font-bold text-white shadow-xl">{deliveryMessage}<button onClick={() => setDeliveryMessage("")} className="ml-3 text-[#f58c14]" aria-label="Dismiss delivery message">Close</button></div>}
       {drawerOpen && (
         <div className="fixed inset-0 z-[60]">
           <div onClick={() => setDrawerOpen(false)} className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>

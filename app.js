@@ -1436,6 +1436,13 @@ function loadPaystackScript(callback) {
     closeCartBtn.addEventListener('click', closeCart);
     cartOverlay.addEventListener('click', closeCart);
 
+    function addExpressDelivery(product) {
+      const expressFee = Math.ceil((Number(product.deliveryCost) || 0) * 1.3);
+      const message = `Valmont Express Delivery selected for ${product.name}. Estimated delivery fee: ${money(expressFee)}. Our team will confirm dispatch details.`;
+      if (typeof showValmontToast === 'function') showValmontToast(message);
+      else alert(message);
+    }
+
     function addToCart(id) {
       const product = PRODUCTS.find(p => p.id === id);
       if (!product) return;
@@ -1907,11 +1914,8 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       }
     });
 
-    document.getElementById('detailWhatsAppOrder').addEventListener('click', () => {
-      if (selectedDetailProduct) {
-        const msg = `Hello Valmont Gadgets! I am interested in ordering: ${selectedDetailProduct.name} (${money(selectedDetailProduct.retail)}). Please confirm stock and delivery timeline.`;
-        window.open(`https://wa.me/233542451578?text=${encodeURIComponent(msg)}`, '_blank');
-      }
+    document.getElementById('detailExpressDelivery').addEventListener('click', () => {
+      if (selectedDetailProduct) addExpressDelivery(selectedDetailProduct);
     });
 
 
