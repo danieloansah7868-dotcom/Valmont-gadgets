@@ -115,6 +115,27 @@ function imageMarkup(p, index) {
   return `<img src="${esc(p.image)}"${srcset} alt="${alt}" width="140" height="140"${loading}${priority} decoding="async" class="${cls}" />`;
 }
 
+function productVariants(p) {
+  const source = `${p.name} ${p.specs}`.toLowerCase();
+  const palette = [
+    ['black', '#111827'], ['midnight', '#1f2937'], ['obsidian', '#171717'], ['titanium', '#94a3b8'],
+    ['blue', '#2563eb'], ['purple', '#7e22ce'], ['pink', '#ec4899'], ['white', '#f8fafc'],
+    ['silver', '#cbd5e1'], ['green', '#16a34a'], ['gray', '#6b7280'], ['grey', '#6b7280'],
+    ['gold', '#d4a72c'], ['cream', '#f5f0df'], ['navy', '#172554']
+  ];
+  const colors = palette.filter(([name]) => source.includes(name)).map(([, value]) => value).slice(0, 3);
+  const storage = [...new Set((`${p.name} ${p.specs}`.match(/\b(?:\d+(?:\.\d+)?(?:GB|TB)|\d+GB RAM)\b/gi) || []).map(value => value.toUpperCase()))].slice(0, 3);
+  return { colors: colors.length ? colors : ['#111827', '#94a3b8', '#f8fafc'], storage };
+}
+
+function variantsMarkup(p) {
+  const { colors, storage } = productVariants(p);
+  return `<div class="mt-1.5 space-y-1" aria-label="Available colour and storage variations">
+        <div class="flex items-center gap-1"><span class="text-[9px] font-bold text-gray-500">Colours:</span>${colors.map(color => `<span class="w-2 h-2 rounded-full border border-gray-300" style="background:${color}" aria-hidden="true"></span>`).join('')}</div>
+        ${storage.length ? `<div class="flex items-center gap-1 flex-wrap"><span class="text-[9px] font-bold text-gray-500">Size:</span>${storage.map(size => `<span class="border border-gray-200 rounded px-1.5 py-0.5 text-[8px] font-bold text-gray-600">${size}</span>`).join('')}</div>` : ''}
+      </div>`;
+}
+
 function card(p, index) {
   const discount = p.compareAt ? Math.round((1 - p.retail / p.compareAt) * 100) : 0;
   const id = esc(p.id);
@@ -146,6 +167,7 @@ ${discount > 0 ? `
                   <div class="flex items-center gap-0.5 text-amber-500" role="img" aria-label="Rated 5 out of 5">${STAR.repeat(5)}</div>
                   <span class="text-gray-400 font-bold ml-1">(${reviews})</span>
                 </div>
+                ${variantsMarkup(p)}
 
                 <div class="mt-2.5">
                   <div class="flex justify-between items-center text-[10px] text-gray-500 font-bold">

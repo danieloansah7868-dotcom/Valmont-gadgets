@@ -412,6 +412,14 @@ function getPrivateProfit(p: Product) {
   return p.retail - p.wholesale - p.deliveryCost - p.paymentCost;
 }
 
+function getVariants(product: Product) {
+  const source = `${product.name} ${product.specs}`.toLowerCase();
+  const colorMap: [string, string][] = [["black", "#111827"], ["midnight", "#1f2937"], ["titanium", "#94a3b8"], ["blue", "#2563eb"], ["purple", "#7e22ce"], ["pink", "#ec4899"], ["white", "#f8fafc"], ["silver", "#cbd5e1"], ["green", "#16a34a"], ["gold", "#d4a72c"], ["navy", "#172554"]];
+  const colors = colorMap.filter(([name]) => source.includes(name)).map(([, value]) => value).slice(0, 3);
+  const sizes = [...new Set((`${product.name} ${product.specs}`.match(/\b(?:\d+(?:\.\d+)?(?:GB|TB)|\d+GB RAM)\b/gi) || []).map((value) => value.toUpperCase()))].slice(0, 3);
+  return { colors: colors.length ? colors : ["#111827", "#94a3b8", "#f8fafc"], sizes };
+}
+
 export default function Page() {
   const [activeCat, setActiveCat] = useState<CategoryId>("all");
   const [query, setQuery] = useState("");
@@ -569,6 +577,7 @@ export default function Page() {
                     <span className={`font-black text-[15px] tracking-tight ${theme === "navy" ? "text-white" : "text-[#0b1a38]"}`}>{formatGH(product.retail)}</span>
                     <span className="text-[11px] text-gray-400 line-through font-medium">{formatGH(product.compareAt)}</span>
                   </div>
+                  {(() => { const variants = getVariants(product); return <div className="mb-2 space-y-1"><div className="flex items-center gap-1"><span className="text-[9px] font-bold text-gray-500">Colours:</span>{variants.colors.map((color) => <span key={color} className="h-2.5 w-2.5 rounded-full border border-gray-300" style={{ backgroundColor: color }} />)}</div>{variants.sizes.length > 0 && <div className="flex items-center gap-1 flex-wrap"><span className="text-[9px] font-bold text-gray-500">Size:</span>{variants.sizes.map((size) => <span key={size} className="rounded border border-gray-200 px-1.5 py-0.5 text-[8px] font-bold text-gray-600">{size}</span>)}</div>}</div>; })()}
                   <p className="text-[10px] font-bold text-[#f58c14] mb-3 tracking-wide uppercase">{product.stock}</p>
                   <div className="flex gap-2">
                     <button onClick={() => addToCart(product.id)} className="bg-[#0b1a38] hover:bg-black text-white font-extrabold text-[11px] tracking-wide rounded-lg px-3 py-2.5 w-2/3 transition uppercase">Add to Cart</button>
