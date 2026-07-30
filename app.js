@@ -1319,6 +1319,18 @@ function loadPaystackScript(callback) {
     const wishlistModalItems = document.getElementById('wishlistModalItems');
 
     function openWishlistModal() {
+      // Close cart drawer if open
+      const cartDrawer = document.getElementById('cartDrawer');
+      if (cartDrawer && !cartDrawer.classList.contains('translate-x-full')) {
+        cartDrawer.classList.add('translate-x-full');
+      }
+      // Close categories modal if open
+      const catModal = document.getElementById('mobileCategoriesModal');
+      if (catModal && !catModal.classList.contains('hidden') && !catModal.classList.contains('translate-y-full')) {
+        catModal.classList.add('translate-y-full');
+        const catOverlay = document.getElementById('mobileCategoriesOverlay');
+        if (catOverlay) { catOverlay.classList.remove('opacity-100'); setTimeout(() => catOverlay.classList.add('hidden'), 300); }
+      }
       wishlistOverlay.classList.remove('hidden');
       setTimeout(() => wishlistOverlay.classList.add('opacity-100'), 10);
       wishlistModal.classList.remove('hidden');
@@ -1439,6 +1451,13 @@ function loadPaystackScript(callback) {
     let checkoutStep = 1;
 
     function openCart() {
+      // Close categories modal if open
+      const catModal = document.getElementById('mobileCategoriesModal');
+      if (catModal && !catModal.classList.contains('hidden') && !catModal.classList.contains('translate-y-full')) {
+        catModal.classList.add('translate-y-full');
+        const catOverlay = document.getElementById('mobileCategoriesOverlay');
+        if (catOverlay) { catOverlay.classList.remove('opacity-100'); setTimeout(() => catOverlay.classList.add('hidden'), 300); }
+      }
       cartOverlay.classList.remove('hidden');
       setTimeout(() => cartOverlay.classList.add('opacity-100'), 10);
       cartDrawer.classList.remove('translate-x-full');
@@ -2892,6 +2911,11 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
   }
 
   function openMobileCategoriesModal() {
+    // Close shopping bag drawer if it's open
+    const cartDrawer = document.getElementById('cartDrawer');
+    if (cartDrawer && !cartDrawer.classList.contains('translate-x-full')) {
+      cartDrawer.classList.add('translate-x-full');
+    }
     if (mobileCategoriesOverlay) {
       mobileCategoriesOverlay.classList.remove('hidden');
       setTimeout(() => mobileCategoriesOverlay.classList.add('opacity-100'), 10);
