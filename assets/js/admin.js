@@ -1,8 +1,8 @@
 // Valmont Gadgets complete admin panel
 // Password gate, Supabase CRUD, localStorage fallback, image uploads and responsive UI.
 
-const SUPABASE_URL = "https://yrrqrvbkdziuyosedfx.supabase.co";
-const SUPABASE_KEY = "sb_publishable_H3PK7UqMZcO2rsusl1_qQw_MypxJljs";
+const SUPABASE_URL = "https://eydsoqnpetqczaeqrscc.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4ODc1NjYsImV4cCI6MjEwMDQ2MzU2Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc";
 const ADMIN_EMAIL = "admin@valmontgadgets.com";
 const ADMIN_PASSWORD = "valmont2026";
 const DEFAULT_ADMIN_PASSWORD = ADMIN_PASSWORD;

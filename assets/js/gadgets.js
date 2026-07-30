@@ -1,6 +1,6 @@
 // Valmont Gadgets Storefront JS - White Template Mobile Redesign
-const SUPABASE_URL = "https://yrrqrvbkdziuyosedfx.supabase.co";
-const SUPABASE_KEY = "sb_publishable_H3PK7UqMZcO2rsusl1_qQw_MypxJljs";
+const SUPABASE_URL = "https://eydsoqnpetqczaeqrscc.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4ODc1NjYsImV4cCI6MjEwMDQ2MzU2Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc";
 
 const DEFAULT_PRODUCTS_SEED = [
   { id: "vmp-001", name: "iPhone 15 Pro Max", slug: "iphone-15-pro-max", category: "iphones", price: 16500, wholesale_price: 13900, compare_at_price: 18975, specs: "Titanium, A17 Pro, Sealed", description: "Premium iPhone 15 Pro Max", badge: "HOT", rating: 4.9, reviews_count: 3, stock_quantity: 8, image_url: "https://images.unsplash.com/photo-1696446703255-020d67fa2f3b?q=80&w=800&auto=format&fit=crop", image: "/assets/images/products/iphone-17-pro-max.jpg", images: [], colors: [], storage_options: [], is_active: true },
