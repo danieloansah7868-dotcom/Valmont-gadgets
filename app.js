@@ -44,16 +44,9 @@ document.addEventListener("keydown", function(e) {
   }
 });
 
-function loadPaystackScript(callback) {
-  if (window.PaystackPop) {
-    return callback();
-  }
-  const script = document.createElement("script");
-  script.src = "https://js.paystack.co/v1/inline.js";
-  script.async = true;
-  script.onload = () => callback();
-  document.head.appendChild(script);
-}
+// Legacy Paystack inline loader removed. All online payments now flow
+// through the central Valmont-Pay gateway (https://valmontpay.app/pay.html)
+// via a full-page redirect. No third-party payment SDK is loaded from this app.
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -1704,67 +1697,69 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
         // Cash on delivery goes straight to WhatsApp!
         finalizeCheckout();
       } else {
-        // Trigger Real Paystack pop-up checkout!
-        openPaystackModal(subtotal, paymentOpt, phone);
+        // Online payments (card / momo) redirect to the Valmont-Pay gateway.
+        redirectToValmontPay({
+          subtotal: subtotal,
+          reference: ref,
+          name: name,
+          phone: phone,
+          area: area,
+          street: street,
+          fullAddress: fullAddress,
+          paymentMethod: paymentNames[paymentOpt],
+          items: cart.map(function (item) {
+            return {
+              id: item.id,
+              name: item.name,
+              image_url: item.image || item.image_url,
+              qty: item.qty,
+              price: item.retail
+            };
+          })
+        });
       }
     }
 
+    function redirectToValmontPay(ctx) {
+      const emailEl = document.getElementById('shippingEmail');
+      const email = (emailEl && emailEl.value ? emailEl.value.trim() : '') || 'sales@valmontgadgets.com';
+
+      const pendingOrder = {
+        reference_code: ctx.reference,
+        customer_name: ctx.name,
+        customer_phone: ctx.phone,
+        customer_email: email,
+        email: email,
+        customer_area: ctx.area,
+        customer_street: ctx.street,
+        delivery_address: ctx.fullAddress,
+        payment_method: ctx.paymentMethod,
+        total_amount: ctx.subtotal,
+        items: ctx.items
+      };
+
+      try {
+        localStorage.setItem('valmont_pending_order', JSON.stringify(pendingOrder));
+      } catch (e) {
+        console.warn('Unable to persist pending order:', e);
+      }
+
+      const gatewayUrl = new URL('https://valmontpay.app/pay.html');
+      gatewayUrl.searchParams.set('merchant', 'Valmont Gadgets');
+      gatewayUrl.searchParams.set('amount', Number(ctx.subtotal).toFixed(2));
+      gatewayUrl.searchParams.set('email', email);
+      gatewayUrl.searchParams.set('reference', ctx.reference);
+      gatewayUrl.searchParams.set('callback_url', 'https://valmontgadgets.com/order-confirmed.html');
+
+      window.location.href = gatewayUrl.toString();
+    }
+
+    // Legacy in-page Paystack modal removed. The DOM elements below (if still
+    // present in cached HTML) are hidden by default and the compatibility stubs
+    // ensure legacy inline handlers (e.g. onclick="processSimulatedPayment()")
+    // simply forward the customer to the Valmont-Pay gateway.
     const paystackOverlay = document.getElementById('paystackOverlay');
     const paystackModal = document.getElementById('paystackModal');
-    const paystackForm = document.getElementById('paystackFormContainer');
-    const paystackLoader = document.getElementById('paystackLoader');
-    const paystackSuccess = document.getElementById('paystackSuccess');
-    const paystackPayBtn = document.getElementById('paystackPayBtn');
-    const paystackFooter = document.getElementById('paystackFooter');
-
-    function openPaystackModal(amount, option, phone) {
-      if (paystackOverlay) paystackOverlay.classList.remove('hidden');
-      if (paystackModal) paystackModal.classList.remove('hidden');
-      
-      const amtEl = document.getElementById('paystackAmount');
-      if (amtEl) amtEl.textContent = money(amount);
-
-      if (paystackForm) paystackForm.classList.remove('hidden');
-      if (paystackLoader) paystackLoader.classList.add('hidden');
-      if (paystackSuccess) paystackSuccess.classList.add('hidden');
-      if (paystackFooter) paystackFooter.classList.remove('hidden');
-
-      if (paystackForm) {
-        if (option === 'momo') {
-          paystackForm.innerHTML = `
-            <div>
-              <label class="block text-[11px] font-black uppercase text-gray-400 mb-1">Select Network *</label>
-              <select id="paystackNetwork" class="w-full border p-2.5 rounded-lg text-[13px] outline-none font-bold bg-white focus:border-[#3bb75e]">
-                <option value="mtn">MTN Mobile Money</option>
-                <option value="telecel">Telecel Cash</option>
-                <option value="at">AT Money</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-[11px] font-black uppercase text-gray-400 mb-1">Mobile Money Phone Number *</label>
-              <input id="paystackPhone" type="tel" value="${phone}" class="w-full border p-2.5 rounded-lg text-[13px] outline-none font-semibold focus:border-[#3bb75e]" required />
-            </div>
-          `;
-        } else if (option === 'card') {
-          paystackForm.innerHTML = `
-            <div>
-              <label class="block text-[11px] font-black uppercase text-gray-400 mb-1">Card Number *</label>
-              <input type="text" placeholder="4000 1234 5678 9010" class="w-full border p-2.5 rounded-lg text-[13px] outline-none font-semibold focus:border-[#3bb75e]" required />
-            </div>
-            <div class="grid grid-cols-2 gap-3 mt-3">
-              <div>
-                <label class="block text-[11px] font-black uppercase text-gray-400 mb-1">Expiry Date *</label>
-                <input type="text" placeholder="12/28" class="w-full border p-2.5 rounded-lg text-[13px] outline-none font-semibold focus:border-[#3bb75e]" required />
-              </div>
-              <div>
-                <label class="block text-[11px] font-black uppercase text-gray-400 mb-1">CVV *</label>
-                <input type="password" placeholder="123" class="w-full border p-2.5 rounded-lg text-[13px] outline-none font-semibold focus:border-[#3bb75e]" required />
-              </div>
-            </div>
-          `;
-        }
-      }
-    }
 
     function closePaystackModal() {
       if (paystackOverlay) paystackOverlay.classList.add('hidden');
@@ -1772,49 +1767,11 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     }
 
     function processSimulatedPayment() {
-      // Close the custom overlay since Paystack handles the pop-up iframe natively
+      // Compatibility shim: the checkout button used to invoke this function
+      // to open a simulated Paystack pop-up. Now we simply re-run the checkout
+      // pipeline which redirects the customer to Valmont-Pay.
       closePaystackModal();
-
-      const subtotal = cart.reduce((sum, item) => sum + (item.retail * item.qty), 0);
-      const phone = document.getElementById('shippingPhone').value.trim();
-      const name = document.getElementById('shippingName').value.trim();
-      const email = document.getElementById('shippingEmail') ? document.getElementById('shippingEmail').value.trim() : '';
-      const activeEmail = email || 'sales@valmontgadgets.com';
-
-      // Initialize REAL Paystack Pop-up with your live public key!
-      loadPaystackScript(() => {
-      let handler = PaystackPop.setup({
-        key: 'pk_live_f324d9792777c93ca3b5bef373e3dd1b982a0a54',
-        email: activeEmail,
-        amount: Math.round(subtotal * 100), // Amount in Pesewas (GH₵ * 100)
-        currency: 'GHS',
-        metadata: {
-          custom_fields: [
-            {
-              display_name: "Customer Name",
-              variable_name: "customer_name",
-              value: name
-            },
-            {
-              display_name: "Customer Phone",
-              variable_name: "customer_phone",
-              value: phone
-            }
-          ]
-        },
-        callback: function(response){
-          // Triggers on real payment success!
-          alert('Payment Successful! Reference: ' + response.reference);
-          paystackSavedPayment += ' (Paid - Ref: ' + response.reference + ')';
-          finalizeCheckout();
-        },
-        onClose: function(){
-          alert('Transaction cancelled by customer.');
-          updateMobileNavHighlights('home');
-        }
-      });
-      handler.openIframe();
-      });
+      try { triggerWhatsAppOrder(false); } catch (e) { console.error('Checkout redirect failed:', e); }
     }
 
     async function finalizeCheckout() {
