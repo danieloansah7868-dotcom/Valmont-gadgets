@@ -1319,6 +1319,18 @@ function loadPaystackScript(callback) {
     const wishlistModalItems = document.getElementById('wishlistModalItems');
 
     function openWishlistModal() {
+      // Close cart drawer if open
+      const cartDrawer = document.getElementById('cartDrawer');
+      if (cartDrawer && !cartDrawer.classList.contains('translate-x-full')) {
+        cartDrawer.classList.add('translate-x-full');
+      }
+      // Close categories modal if open
+      const catModal = document.getElementById('mobileCategoriesModal');
+      if (catModal && !catModal.classList.contains('hidden') && !catModal.classList.contains('translate-y-full')) {
+        catModal.classList.add('translate-y-full');
+        const catOverlay = document.getElementById('mobileCategoriesOverlay');
+        if (catOverlay) { catOverlay.classList.remove('opacity-100'); setTimeout(() => catOverlay.classList.add('hidden'), 300); }
+      }
       wishlistOverlay.classList.remove('hidden');
       setTimeout(() => wishlistOverlay.classList.add('opacity-100'), 10);
       wishlistModal.classList.remove('hidden');
@@ -1439,6 +1451,13 @@ function loadPaystackScript(callback) {
     let checkoutStep = 1;
 
     function openCart() {
+      // Close categories modal if open
+      const catModal = document.getElementById('mobileCategoriesModal');
+      if (catModal && !catModal.classList.contains('hidden') && !catModal.classList.contains('translate-y-full')) {
+        catModal.classList.add('translate-y-full');
+        const catOverlay = document.getElementById('mobileCategoriesOverlay');
+        if (catOverlay) { catOverlay.classList.remove('opacity-100'); setTimeout(() => catOverlay.classList.add('hidden'), 300); }
+      }
       cartOverlay.classList.remove('hidden');
       setTimeout(() => cartOverlay.classList.add('opacity-100'), 10);
       cartDrawer.classList.remove('translate-x-full');
@@ -1703,8 +1722,11 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       if (paymentOpt === 'cod') {
         // Cash on delivery goes straight to WhatsApp!
         finalizeCheckout();
+      } else if (paymentOpt === 'card') {
+        // Redirect to Valmont-Pay secure gateway
+        openPaystackModal(subtotal, paymentOpt, phone);
       } else {
-        // Trigger Real Paystack pop-up checkout!
+        // MoMo goes to payment modal
         openPaystackModal(subtotal, paymentOpt, phone);
       }
     }
@@ -1746,20 +1768,17 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
             </div>
           `;
         } else if (option === 'card') {
+          const cardEmail = document.getElementById('shippingEmail') ? document.getElementById('shippingEmail').value.trim() : 'sales@valmontgadgets.com';
           paystackForm.innerHTML = `
-            <div>
-              <label class="block text-[11px] font-black uppercase text-gray-400 mb-1">Card Number *</label>
-              <input type="text" placeholder="4000 1234 5678 9010" class="w-full border p-2.5 rounded-lg text-[13px] outline-none font-semibold focus:border-[#3bb75e]" required />
-            </div>
-            <div class="grid grid-cols-2 gap-3 mt-3">
-              <div>
-                <label class="block text-[11px] font-black uppercase text-gray-400 mb-1">Expiry Date *</label>
-                <input type="text" placeholder="12/28" class="w-full border p-2.5 rounded-lg text-[13px] outline-none font-semibold focus:border-[#3bb75e]" required />
+            <div class="text-center py-4">
+              <div class="h-12 w-12 bg-orange-50 rounded-full flex items-center justify-center text-[#f68b1e] text-2xl mx-auto mb-3">💳</div>
+              <h4 class="font-black text-[14px] text-gray-800 mb-1">Valmont-Pay Secure Gateway</h4>
+              <p class="text-[11px] text-gray-500 font-medium">You will be redirected to our secure Valmont-Pay payment page to complete your card payment.</p>
+              <div class="mt-4 bg-gray-50 rounded-lg p-3 text-left text-[11px]">
+                <p class="font-bold text-gray-600">Email: <span class="text-gray-800">${cardEmail || 'Not provided'}</span></p>
+                <p class="font-bold text-gray-600 mt-1">Amount: <span class="text-[#f68b1e]">${money(amount)}</span></p>
               </div>
-              <div>
-                <label class="block text-[11px] font-black uppercase text-gray-400 mb-1">CVV *</label>
-                <input type="password" placeholder="123" class="w-full border p-2.5 rounded-lg text-[13px] outline-none font-semibold focus:border-[#3bb75e]" required />
-              </div>
+              <p class="text-[10px] text-gray-400 mt-3">Supported: Visa, Mastercard, MoMo via Valmont-Pay</p>
             </div>
           `;
         }
@@ -1772,49 +1791,52 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     }
 
     function processSimulatedPayment() {
-      // Close the custom overlay since Paystack handles the pop-up iframe natively
-      closePaystackModal();
-
+      // Redirect to Valmont-Pay secure payment gateway
       const subtotal = cart.reduce((sum, item) => sum + (item.retail * item.qty), 0);
       const phone = document.getElementById('shippingPhone').value.trim();
       const name = document.getElementById('shippingName').value.trim();
       const email = document.getElementById('shippingEmail') ? document.getElementById('shippingEmail').value.trim() : '';
+      const city = document.getElementById('shippingCity').value.trim();
+      const town = document.getElementById('shippingTown').value.trim();
+      const gps = document.getElementById('shippingGPS').value.trim();
+      const street = document.getElementById('shippingStreet').value.trim();
       const activeEmail = email || 'sales@valmontgadgets.com';
+      const timestamp = Date.now();
+      const reference = 'VG-' + timestamp;
 
-      // Initialize REAL Paystack Pop-up with your live public key!
-      loadPaystackScript(() => {
-      let handler = PaystackPop.setup({
-        key: 'pk_live_f324d9792777c93ca3b5bef373e3dd1b982a0a54',
-        email: activeEmail,
-        amount: Math.round(subtotal * 100), // Amount in Pesewas (GH₵ * 100)
-        currency: 'GHS',
-        metadata: {
-          custom_fields: [
-            {
-              display_name: "Customer Name",
-              variable_name: "customer_name",
-              value: name
-            },
-            {
-              display_name: "Customer Phone",
-              variable_name: "customer_phone",
-              value: phone
-            }
-          ]
-        },
-        callback: function(response){
-          // Triggers on real payment success!
-          alert('Payment Successful! Reference: ' + response.reference);
-          paystackSavedPayment += ' (Paid - Ref: ' + response.reference + ')';
-          finalizeCheckout();
-        },
-        onClose: function(){
-          alert('Transaction cancelled by customer.');
-          updateMobileNavHighlights('home');
-        }
-      });
-      handler.openIframe();
-      });
+      // Show loader in modal before redirecting
+      if (paystackForm) paystackForm.classList.add('hidden');
+      if (paystackFooter) paystackFooter.classList.add('hidden');
+      if (paystackLoader) { paystackLoader.classList.remove('hidden'); paystackLoader.classList.add('flex'); }
+      const statusMsg = document.getElementById('paystackLoaderStatus');
+      if (statusMsg) statusMsg.textContent = 'Redirecting to Valmont-Pay...';
+
+      // Store pending order in localStorage for retrieval after payment callback
+      const pendingOrder = {
+        reference_code: reference,
+        customer_name: name,
+        customer_phone: phone,
+        customer_email: activeEmail,
+        customer_area: area || '',
+        customer_city: city,
+        customer_town: town,
+        customer_gps: gps,
+        customer_street: street,
+        total_amount: subtotal,
+        payment_method: 'card',
+        items: cart.map(i => ({ id: i.id, name: i.name, qty: i.qty, retail: i.retail, image_url: i.image || '' })),
+        receipt: paystackSavedReceipt,
+        created_at: new Date().toISOString()
+      };
+      localStorage.setItem('valmont_pending_order', JSON.stringify(pendingOrder));
+
+      // Build Valmont-Pay gateway URL and redirect
+      const valmontPayUrl = 'https://valmontpay.app/pay.html?merchant=Valmont+Gadgets&amount=' + subtotal + '&email=' + encodeURIComponent(activeEmail) + '&reference=' + reference + '&callback_url=' + encodeURIComponent('https://valmont-gadgets2.vercel.app/order-confirmed');
+
+      // Redirect after brief loader delay for UX
+      setTimeout(function() {
+        window.location.href = valmontPayUrl;
+      }, 1200);
     }
 
     async function finalizeCheckout() {
@@ -2042,6 +2064,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
         // Autofill forms
         if (document.getElementById('shippingName')) document.getElementById('shippingName').value = currentUser.name;
         if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = currentUser.phone;
+        if (document.getElementById('shippingEmail') && currentUser.email) document.getElementById('shippingEmail').value = currentUser.email;
         if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = currentUser.address || 'Near East Legon Police Station';
         if (document.getElementById('shippingCity')) document.getElementById('shippingCity').value = 'Accra';
         if (document.getElementById('shippingTown')) document.getElementById('shippingTown').value = 'East Legon';
@@ -2068,6 +2091,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
         // Autofill forms
         if (document.getElementById('shippingName')) document.getElementById('shippingName').value = name;
         if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = phone;
+        if (document.getElementById('shippingEmail') && email) document.getElementById('shippingEmail').value = email;
         if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = address;
         if (document.getElementById('shippingCity')) document.getElementById('shippingCity').value = 'Accra';
         if (document.getElementById('shippingTown')) document.getElementById('shippingTown').value = address;
@@ -2097,6 +2121,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       // Autofill forms
       if (document.getElementById('shippingName')) document.getElementById('shippingName').value = "Daniel Kofi";
       if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = "054 245 1578";
+      if (document.getElementById('shippingEmail')) document.getElementById('shippingEmail').value = "daniel@valmontgadgets.com";
       if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = "Near Airport Residential Area";
       if (document.getElementById('shippingCity')) document.getElementById('shippingCity').value = "Accra";
       if (document.getElementById('shippingTown')) document.getElementById('shippingTown').value = "Airport Residential";
@@ -2390,6 +2415,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     if (currentUser) {
       document.getElementById('shippingName').value = currentUser.name;
       document.getElementById('shippingPhone').value = currentUser.phone;
+      if (currentUser.email && document.getElementById('shippingEmail')) document.getElementById('shippingEmail').value = currentUser.email;
     }
   
 
@@ -2885,6 +2911,11 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
   }
 
   function openMobileCategoriesModal() {
+    // Close shopping bag drawer if it's open
+    const cartDrawer = document.getElementById('cartDrawer');
+    if (cartDrawer && !cartDrawer.classList.contains('translate-x-full')) {
+      cartDrawer.classList.add('translate-x-full');
+    }
     if (mobileCategoriesOverlay) {
       mobileCategoriesOverlay.classList.remove('hidden');
       setTimeout(() => mobileCategoriesOverlay.classList.add('opacity-100'), 10);
