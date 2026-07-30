@@ -292,24 +292,48 @@ class ValmontAdminDatabase {
   }
 
   async updateOrder(id, updates) {
-    const normalizedUpdates = {
+    // Full update payload — includes admin-editable delivery adjustment fields.
+    const fullUpdates = {
       status: updates.status,
       admin_notes: updates.admin_notes || ""
     };
+    if (updates.delivery_fee !== undefined && updates.delivery_fee !== null && updates.delivery_fee !== "") {
+      fullUpdates.delivery_fee = Number(updates.delivery_fee) || 0;
+    }
+    if (updates.total !== undefined && updates.total !== null && updates.total !== "") {
+      fullUpdates.total = Number(updates.total) || 0;
+    }
+    if (updates.estimated_delivery_date !== undefined) {
+      fullUpdates.estimated_delivery_date = updates.estimated_delivery_date || null;
+    }
+
     if (this.useSupabase) {
       try {
-        const { error } = await this.client.from("orders").update(normalizedUpdates).eq("id", id);
+        const { error } = await this.client.from("orders").update(fullUpdates).eq("id", id);
         if (error) throw error;
       } catch (requestedError) {
+        // Retry without the newer columns (older DBs without the migration
+        // may reject `estimated_delivery_date`). Try the modern schema first,
+        // then the legacy `order_status` column.
+        const withoutEstimated = { ...fullUpdates };
+        delete withoutEstimated.estimated_delivery_date;
         try {
-          const { error } = await this.client.from("orders").update({ order_status: updates.status, admin_notes: updates.admin_notes || "" }).eq("id", id);
+          const { error } = await this.client.from("orders").update(withoutEstimated).eq("id", id);
           if (error) throw error;
-        } catch (legacyError) {
-          console.warn("Supabase order update failed; saving local copy only.", { requestedError, legacyError });
+        } catch (secondError) {
+          try {
+            const legacyPayload = { order_status: updates.status, admin_notes: updates.admin_notes || "" };
+            if (fullUpdates.delivery_fee !== undefined) legacyPayload.delivery_fee = fullUpdates.delivery_fee;
+            if (fullUpdates.total !== undefined) legacyPayload.total = fullUpdates.total;
+            const { error } = await this.client.from("orders").update(legacyPayload).eq("id", id);
+            if (error) throw error;
+          } catch (legacyError) {
+            console.warn("Supabase order update failed; saving local copy only.", { requestedError, secondError, legacyError });
+          }
         }
       }
     }
-    const orders = this.readLocal(storageKeys.orders, []).map(normalizeOrder).map(order => String(order.id) === String(id) ? { ...order, ...normalizedUpdates } : order);
+    const orders = this.readLocal(storageKeys.orders, []).map(normalizeOrder).map(order => String(order.id) === String(id) ? { ...order, ...fullUpdates } : order);
     this.writeLocal(storageKeys.orders, orders);
   }
 
@@ -693,20 +717,105 @@ function openOrderModal(id) {
     </div>
   `).join("") : emptyState("No item details were recorded for this order.");
 
+  const currentDeliveryFee = Number(order.delivery_fee || 0);
+  const currentSubtotal = Number(order.subtotal || 0);
+  const currentTotal = Number(order.total || (currentSubtotal + currentDeliveryFee));
+
   document.getElementById("orderDetailContent").innerHTML = `
     <div class="grid gap-4 md:grid-cols-2">
       <div class="rounded-xl border border-slate-800 bg-[#071126] p-4"><h3 class="mb-3 text-xs font-black uppercase tracking-widest text-gold">Customer Info</h3><p class="font-black text-white">${escapeHtml(order.customer.name)}</p><p class="text-sm font-semibold text-slate-300">${escapeHtml(order.customer.phone || "No phone")}</p><p class="text-sm font-semibold text-slate-300">${escapeHtml(order.customer.email || "No email")}</p><p class="mt-3 text-sm font-semibold text-slate-400">${escapeHtml(order.customer.address || "No delivery address")}</p></div>
-      <div class="rounded-xl border border-slate-800 bg-[#071126] p-4"><h3 class="mb-3 text-xs font-black uppercase tracking-widest text-gold">Payment & Totals</h3><div class="space-y-2 text-sm font-bold text-slate-300"><div class="flex justify-between"><span>Subtotal</span><span>${formatCurrency(order.subtotal)}</span></div><div class="flex justify-between"><span>Delivery fee</span><span>${formatCurrency(order.delivery_fee)}</span></div><div class="flex justify-between border-t border-slate-800 pt-2 text-base text-gold"><span>Total</span><span>${formatCurrency(order.total)}</span></div><div class="flex justify-between"><span>Payment method</span><span>${escapeHtml(order.payment_method || "Not set")}</span></div></div></div>
+      <div class="rounded-xl border border-slate-800 bg-[#071126] p-4">
+        <h3 class="mb-3 text-xs font-black uppercase tracking-widest text-gold">Payment & Totals</h3>
+        <div class="space-y-2 text-sm font-bold text-slate-300">
+          <div class="flex justify-between"><span>Subtotal</span><span id="orderSubtotalDisplay">${formatCurrency(currentSubtotal)}</span></div>
+          <div class="flex justify-between"><span>Delivery fee</span><span id="orderDeliveryFeeDisplay">${formatCurrency(currentDeliveryFee)}</span></div>
+          <div class="flex justify-between border-t border-slate-800 pt-2 text-base text-gold"><span>Total</span><span id="orderTotalDisplay">${formatCurrency(currentTotal)}</span></div>
+          <div class="flex justify-between"><span>Payment method</span><span>${escapeHtml(order.payment_method || "Not set")}</span></div>
+        </div>
+      </div>
     </div>
     <div><h3 class="mb-3 text-xs font-black uppercase tracking-widest text-gold">Items</h3><div class="space-y-3">${itemsMarkup}</div></div>
-    <div class="grid gap-4 md:grid-cols-2">
-      <div><label class="admin-label">Status</label><select id="orderStatusInput" class="admin-input">${["Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"].map(status => `<option ${normalizeStatus(order.status) === status ? "selected" : ""}>${status}</option>`).join("")}</select></div>
-      <div><label class="admin-label">Admin Notes</label><textarea id="orderNotesInput" rows="4" class="admin-input" placeholder="Internal notes only">${escapeHtml(order.admin_notes || "")}</textarea></div>
+
+    <div class="rounded-xl border border-amber-500/40 bg-[#0a1730] p-4">
+      <h3 class="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gold">
+        <span>Delivery Adjustment</span>
+        <span class="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300">Admin editable</span>
+      </h3>
+      <p class="mb-3 text-[11px] font-semibold text-slate-400">Update the delivery fee, estimated date and reason if transport fares change or weather causes delays. The order total will be recalculated automatically.</p>
+      <div class="grid gap-3 md:grid-cols-3">
+        <div>
+          <label class="admin-label">Adjusted Delivery Fee (GH₵)</label>
+          <input id="orderDeliveryFeeInput" type="number" min="0" step="0.01" value="${currentDeliveryFee}" class="admin-input" />
+        </div>
+        <div>
+          <label class="admin-label">Estimated Delivery Date / Timeframe</label>
+          <input id="orderEstimatedDateInput" type="text" value="${escapeAttr(order.estimated_delivery_date || "")}" placeholder="e.g. 2026-08-02 - Weather delay" class="admin-input" />
+        </div>
+        <div>
+          <label class="admin-label">Status</label>
+          <select id="orderStatusInput" class="admin-input">${["Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"].map(status => `<option ${normalizeStatus(order.status) === status ? "selected" : ""}>${status}</option>`).join("")}</select>
+        </div>
+      </div>
+      <div class="mt-3">
+        <label class="admin-label">Adjustment Reason / Admin Notes</label>
+        <textarea id="orderNotesInput" rows="3" class="admin-input" placeholder="e.g. Fare surcharge due to fuel / weather conditions">${escapeHtml(order.admin_notes || "")}</textarea>
+      </div>
+      <div class="mt-4 flex flex-wrap items-center justify-end gap-2">
+        <button id="notifyCustomerBtn" class="btn-muted inline-flex items-center gap-2" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M20.52 3.48A11.9 11.9 0 0 0 12 0C5.37 0 0 5.37 0 12a11.94 11.94 0 0 0 1.64 6L0 24l6.2-1.63A12 12 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.21-3.48-8.52ZM12 22a10 10 0 0 1-5.1-1.4l-.36-.21-3.68.97.98-3.59-.24-.37A9.94 9.94 0 0 1 2 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10Zm5.36-7.47c-.29-.15-1.73-.85-2-.95s-.46-.15-.66.15-.76.95-.94 1.15-.34.22-.63.07a8.2 8.2 0 0 1-2.41-1.49 9 9 0 0 1-1.66-2.06c-.17-.29 0-.44.13-.58.13-.13.29-.34.44-.51a2 2 0 0 0 .29-.49.55.55 0 0 0 0-.51c-.07-.15-.66-1.58-.9-2.16s-.48-.5-.66-.51h-.56a1.08 1.08 0 0 0-.78.36 3.28 3.28 0 0 0-1 2.44 5.7 5.7 0 0 0 1.19 3.05 13 13 0 0 0 5 4.4c.7.3 1.24.48 1.66.62a4 4 0 0 0 1.83.12 3 3 0 0 0 2-1.4 2.44 2.44 0 0 0 .17-1.4c-.06-.13-.25-.2-.54-.35Z"/></svg>
+          Notify Customer of Delivery/Fee Adjustment (WhatsApp)
+        </button>
+        <button id="saveOrderDetails" class="btn-gold" type="button">Save Order</button>
+      </div>
     </div>
-    <div class="flex justify-end"><button id="saveOrderDetails" class="btn-gold" type="button">Save Order</button></div>
   `;
+
+  // Auto-recalculate total when delivery fee is edited.
+  const feeInput = document.getElementById("orderDeliveryFeeInput");
+  const totalDisplay = document.getElementById("orderTotalDisplay");
+  const feeDisplay = document.getElementById("orderDeliveryFeeDisplay");
+  const recalcTotal = () => {
+    const newFee = Number(feeInput.value || 0);
+    const newTotal = currentSubtotal + newFee;
+    feeDisplay.textContent = formatCurrency(newFee);
+    totalDisplay.textContent = formatCurrency(newTotal);
+  };
+  feeInput.addEventListener("input", recalcTotal);
+  feeInput.addEventListener("change", recalcTotal);
+
+  // Notify Customer via WhatsApp with the adjusted values.
+  document.getElementById("notifyCustomerBtn").addEventListener("click", () => {
+    const newFee = Number(feeInput.value || 0);
+    const newTotal = currentSubtotal + newFee;
+    const estDate = document.getElementById("orderEstimatedDateInput").value.trim() || "to be confirmed";
+    const reason = document.getElementById("orderNotesInput").value.trim() || "operational conditions";
+    const customerName = order.customer.name || "Customer";
+    const ref = order.order_number || order.reference_code || order.id;
+    const message =
+      `Hello ${customerName}, regarding your Valmont Gadgets Order #${ref}:\n` +
+      `Due to ${reason}, your updated delivery fee is GH₵ ${newFee.toFixed(2)} ` +
+      `(New Total: GH₵ ${newTotal.toFixed(2)}).\n` +
+      `Your estimated delivery date is now ${estDate}.\n` +
+      `Thank you for your patience!`;
+
+    const rawPhone = String(order.customer.phone || "").replace(/[^0-9]/g, "");
+    let waNumber = rawPhone;
+    if (waNumber.startsWith("0")) waNumber = "233" + waNumber.slice(1);
+    if (!waNumber) waNumber = "233542451578"; // fall back to Valmont dispatch line
+    const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, "_blank", "noopener");
+  });
+
   document.getElementById("saveOrderDetails").addEventListener("click", async () => {
-    await db.updateOrder(order.id, { status: document.getElementById("orderStatusInput").value, admin_notes: document.getElementById("orderNotesInput").value });
+    const newFee = Number(feeInput.value || 0);
+    const newTotal = currentSubtotal + newFee;
+    await db.updateOrder(order.id, {
+      status: document.getElementById("orderStatusInput").value,
+      admin_notes: document.getElementById("orderNotesInput").value,
+      delivery_fee: newFee,
+      total: newTotal,
+      estimated_delivery_date: document.getElementById("orderEstimatedDateInput").value.trim()
+    });
     const refreshedCustomers = await db.getCustomers();
     state.orders = attachCustomersToOrders(await db.getOrders(), refreshedCustomers);
     state.customers = mergeCustomersWithOrders(refreshedCustomers, state.orders);
@@ -1325,6 +1434,7 @@ function normalizeOrder(order) {
     payment_method: order.payment_method || "",
     status: normalizeStatus(order.status || order.order_status || "Pending"),
     admin_notes: order.admin_notes || "",
+    estimated_delivery_date: order.estimated_delivery_date || order.estimated_delivery || "",
     created_at: order.created_at || new Date().toISOString()
   };
 }

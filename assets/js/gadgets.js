@@ -569,37 +569,25 @@ function handleCartBackAction(){ if (checkoutStep > 1) { checkoutStep--; renderC
 
 async function submitCheckoutOrder(){
   const name = document.getElementById("shippingName")?.value.trim() || ""; const phone = document.getElementById("shippingPhone")?.value.trim() || ""; const area = document.getElementById("shippingArea")?.value || ""; const street = document.getElementById("shippingStreet")?.value.trim() || "";
+  const emailInput = document.getElementById("shippingEmail")?.value.trim() || (typeof userProfile !== "undefined" && userProfile && userProfile.email) || "";
   const paymentOpt = document.querySelector('input[name="paymentOption"]:checked'); const paymentMethod = paymentOpt ? paymentOpt.value : "momo";
   const subtotalValue = cart.reduce((sum, item) => sum + (item.price + (item.price_adjustment || 0)) * item.qty, 0); const deliveryValue = subtotalValue >= 5000 ? 0 : 150; const totalAmount = subtotalValue + deliveryValue;
   const referenceCode = "VG-" + Date.now().toString().slice(-6);
-  const orderData = { reference_code: referenceCode, customer_name: name, customer_phone: phone, customer_area: area, customer_street: street, payment_method: paymentMethod, total_amount: totalAmount, items: cart.map(i => ({ id: i.id, name: i.name, image_url: i.image_url, qty: i.qty, price: i.price + (i.price_adjustment || 0), selected_color: i.selected_color, selected_storage: i.selected_storage })) };
-  if (paymentMethod === "card") { openValmontPayGateway(orderData); } else { const success = await db.createOrder(orderData); if (success) finalizeSuccessfulOrder(orderData); else showToast("Failed to record order. Please try again."); }
-}
-
-function openValmontPayGateway(order) {
-  const email = document.getElementById("shippingEmail")?.value.trim() || userProfile?.email || "sales@valmontgadgets.com";
-  const timestamp = Date.now();
-  const reference = "VG-" + timestamp;
-  order.reference_code = reference;
-  order.customer_email = email;
-
-  // Store pending order in localStorage for retrieval after payment callback
-  localStorage.setItem("valmont_pending_order", JSON.stringify(order));
-
-  // Build Valmont-Pay gateway URL
-  const valmontPayUrl = "https://valmontpay.app/pay.html?merchant=Valmont+Gadgets&amount=" + order.total_amount + "&email=" + encodeURIComponent(email) + "&reference=" + reference + "&callback_url=" + encodeURIComponent("https://valmont-gadgets2.vercel.app/order-confirmed");
-
-  // Show loader then redirect
-  const modal = document.getElementById("paystackModal");
-  if (modal) modal.classList.remove("hidden");
-  const fc = document.getElementById("paystackFormContainer"); if (fc) fc.classList.add("hidden");
-  const footer = document.getElementById("paystackFooter"); if (footer) footer.classList.add("hidden");
-  const loader = document.getElementById("paystackLoader");
-  if (loader) { loader.classList.remove("hidden"); loader.classList.add("flex"); }
-  const statusMsg = document.getElementById("paystackLoaderStatus");
-  if (statusMsg) statusMsg.textContent = "Redirecting to Valmont-Pay...";
-
-  setTimeout(function() { window.location.href = valmontPayUrl; }, 1200);
+  const orderData = { reference_code: referenceCode, customer_name: name, customer_phone: phone, customer_email: emailInput, email: emailInput, customer_area: area, customer_street: street, payment_method: paymentMethod, total_amount: totalAmount, items: cart.map(i => ({ id: i.id, name: i.name, image_url: i.image_url, qty: i.qty, price: i.price + (i.price_adjustment || 0), selected_color: i.selected_color, selected_storage: i.selected_storage })) };
+  if (paymentMethod === "card") {
+    // Redirect to Valmont-Pay gateway for real online card payments
+    try { localStorage.setItem("valmont_pending_order", JSON.stringify(orderData)); } catch (e) { console.warn("Unable to persist pending order", e); }
+    const gatewayUrl = new URL("https://valmontpay.app/pay.html");
+    gatewayUrl.searchParams.set("merchant", "Valmont Gadgets");
+    gatewayUrl.searchParams.set("amount", Number(orderData.total_amount).toFixed(2));
+    gatewayUrl.searchParams.set("email", orderData.email || orderData.customer_email || "sales@valmontgadgets.com");
+    gatewayUrl.searchParams.set("reference", orderData.reference_code);
+    gatewayUrl.searchParams.set("callback_url", "https://valmontgadgets.com/order-confirmed.html");
+    window.location.href = gatewayUrl.toString();
+    return;
+  }
+  const success = await db.createOrder(orderData);
+  if (success) finalizeSuccessfulOrder(orderData); else showToast("Failed to record order. Please try again.");
 }
 function finalizeSuccessfulOrder(order){
   const itemsText = order.items.map(i => { const variants = [i.selected_color, i.selected_storage].filter(Boolean).join("/"); return `* ${i.name} ${variants ? `(${variants})` : ""} - Qty ${i.qty} - GH₵ ${(i.price * i.qty).toLocaleString()}`; }).join("\\n");
@@ -609,34 +597,12 @@ function finalizeSuccessfulOrder(order){
   cart = []; localStorage.setItem("valmont_cart", JSON.stringify(cart)); updateCartBadge(); closeCartDrawer(); window.open(waUrl, "_blank"); showToast(`Order #${order.reference_code} submitted. Opening WhatsApp checkout...`);
 }
 
-// Paystack
-let currentPendingOrder = null;
-function openPaystackTerminal(order){
-  currentPendingOrder = order;
-  const amountEl = document.getElementById("paystackAmount"); if(amountEl) amountEl.textContent = `GH₵ ${order.total_amount.toLocaleString()}`;
-  const formContainer = document.getElementById("paystackFormContainer");
-  if(formContainer) formContainer.innerHTML = `<div class="space-y-3"><div><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Card Holder Name</label><input type="text" value="${order.customer_name}" class="w-full bg-white border border-gray-200 p-2.5 rounded-xl text-[#0b1a38] text-xs outline-none focus:border-[#f58c14]" /></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Card Number</label><input type="text" placeholder="4012 8834 1120 4456" class="w-full bg-white border border-gray-200 p-2.5 rounded-xl text-[#0b1a38] text-xs outline-none focus:border-[#f58c14]" /></div><div class="grid grid-cols-2 gap-3"><div><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Expiry Date</label><input type="text" placeholder="MM/YY" class="w-full bg-white border border-gray-200 p-2.5 rounded-xl text-[#0b1a38] text-xs outline-none focus:border-[#f58c14]" /></div><div><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">CVV</label><input type="password" placeholder="332" class="w-full bg-white border border-gray-200 p-2.5 rounded-xl text-[#0b1a38] text-xs outline-none focus:border-[#f58c14]" /></div></div></div>`;
-  const modal = document.getElementById("paystackModal"); if(modal) modal.classList.remove("hidden");
-  const fc = document.getElementById("paystackFormContainer"); if(fc) fc.classList.remove("hidden");
-  const loader = document.getElementById("paystackLoader"); if(loader) loader.classList.add("hidden");
-  const success = document.getElementById("paystackSuccess"); if(success) success.classList.add("hidden");
-  const footer = document.getElementById("paystackFooter"); if(footer) footer.classList.remove("hidden");
-}
-function closePaystackTerminal(){ const m = document.getElementById("paystackModal"); if(m) m.classList.add("hidden"); currentPendingOrder = null; }
-async function processSimulatedPaystackPayment(){
-  if (!currentPendingOrder) return;
-  const fc = document.getElementById("paystackFormContainer"); const pf = document.getElementById("paystackFooter"); const loader = document.getElementById("paystackLoader");
-  if(fc) fc.classList.add("hidden"); if(pf) pf.classList.add("hidden"); if(loader) loader.classList.remove("hidden"); loader.classList.add("flex");
-  const statusMsg = document.getElementById("paystackLoaderStatus");
-  if(statusMsg) statusMsg.textContent = "Validating card details with your bank..."; await new Promise(r => setTimeout(r, 1500));
-  if(statusMsg) statusMsg.textContent = "Authorizing transaction via secure 3D-Secure gate..."; await new Promise(r => setTimeout(r, 1500));
-  if(statusMsg) statusMsg.textContent = "Finalizing secure GH₵ settlement..."; await new Promise(r => setTimeout(r, 1200));
-  if(loader) loader.classList.add("hidden");
-  const successEl = document.getElementById("paystackSuccess"); if(successEl){ successEl.classList.remove("hidden"); successEl.classList.add("flex"); }
-  await new Promise(r => setTimeout(r, 1500));
-  const success = await db.createOrder(currentPendingOrder);
-  if (success) { const orderToFinalize = { ...currentPendingOrder }; closePaystackTerminal(); finalizeSuccessfulOrder(orderToFinalize); } else { showToast("Error recording payment. Please contact support."); closePaystackTerminal(); }
-}
+// Card / online payments are handled by the external Valmont-Pay gateway.
+// The old simulated Paystack terminal has been removed. These stubs remain to
+// keep any legacy inline handlers (e.g. onclick="processSimulatedPaystackPayment()")
+// from throwing if they are still present in cached HTML.
+function closePaystackTerminal(){ const m = document.getElementById("paystackModal"); if(m) m.classList.add("hidden"); }
+function processSimulatedPaystackPayment(){ closePaystackTerminal(); showToast("Redirecting to Valmont-Pay..."); submitCheckoutOrder(); }
 
 // Profile
 function initUserProfile(){
