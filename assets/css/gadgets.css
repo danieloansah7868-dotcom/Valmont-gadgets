@@ -7,8 +7,8 @@
   --bg-card: #ffffff;
   --bg-navy: #0b1a38;
   --bg-navy-light: #12234a;
-  --accent: #f58c14;
-  --accent-hover: #e67f0f;
+  --accent: #ff8c00;
+  --accent-hover: #e67e00;
   --text-primary: #0b1a38;
   --text-secondary: #64748b;
   --text-muted: #94a3b8;
@@ -50,7 +50,7 @@ body {
   left: 50%;
   transform: translateX(-50%) translateY(150%);
   background: var(--bg-navy);
-  border: 1px solid rgba(245,140,20,0.3);
+  border: 1px solid rgba(255,140,0,0.3);
   border-left: 4px solid var(--accent);
   padding: 12px 20px;
   color: #fff;
@@ -132,7 +132,7 @@ body {
 .search-wrapper:focus-within{
   background:#fff;
   border-color: var(--accent);
-  box-shadow: 0 0 0 4px rgba(245,140,20,.12);
+  box-shadow: 0 0 0 4px rgba(255,140,0,.12);
 }
 .search-wrapper input{
   background: transparent;
@@ -240,7 +240,7 @@ body {
 .product-card:hover{
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
-  border-color: rgba(245,140,20,.25);
+  border-color: rgba(255,140,0,.25);
 }
 .product-card-image{
   width:100%;
@@ -301,7 +301,7 @@ body {
 }
 .wishlist-heart:hover, .wishlist-heart.active{
   color: var(--accent);
-  border-color: rgba(245,140,20,.35);
+  border-color: rgba(255,140,0,.35);
   background: rgba(255,247,237,.95);
 }
 .wishlist-heart.active svg{ fill: currentColor; }
@@ -485,7 +485,7 @@ body {
 
 /* Focus */
 input:focus, button:focus, select:focus{ outline:none; }
-input:focus-visible, select:focus-visible{ box-shadow:0 0 0 4px rgba(245,140,20,.18); }
+input:focus-visible, select:focus-visible{ box-shadow:0 0 0 4px rgba(255,140,0,.18); }
 
 /* Mobile storefront improvements */
 @media (max-width:768px){

@@ -1202,7 +1202,7 @@ document.addEventListener("keydown", function(e) {
                 </svg>
               </button>
 
-              <div class="absolute top-2.5 left-2 bg-orange-50 text-[#f68b1e] text-[10px] font-black px-1.5 py-0.5 rounded-sm">
+              <div class="absolute top-2.5 left-2 bg-orange-50 text-[#ff8c00] text-[10px] font-black px-1.5 py-0.5 rounded-sm">
                 -${discount}%
               </div>
               
@@ -1237,12 +1237,12 @@ document.addEventListener("keydown", function(e) {
                     <span>${p.stock_quantity || 0} items left</span>
                   </div>
                   <div class="w-full bg-gray-200 h-1.5 rounded-full mt-1 overflow-hidden">
-                    <div class="bg-[#f68b1e] h-full" style="width: ${Math.min(100, (p.stock_quantity || 0) * 4)}%"></div>
+                    <div class="bg-[#ff8c00] h-full" style="width: ${Math.min(100, (p.stock_quantity || 0) * 4)}%"></div>
                   </div>
                 </div>
               </div>
               <div class="px-3 pb-3 hidden md:block">
-                <button onclick="event.stopPropagation(); addToCart('${p.id}')" class="w-full bg-[#f68b1e] hover:bg-orange-600 text-white font-bold text-[11px] py-2 rounded-[4px] uppercase transition tracking-widest shadow-sm">
+                <button onclick="event.stopPropagation(); addToCart('${p.id}')" class="w-full bg-[#ff8c00] hover:bg-orange-600 text-white font-bold text-[11px] py-2 rounded-[4px] uppercase transition tracking-widest shadow-sm">
                   Add To Bag
                 </button>
               </div>
@@ -1263,7 +1263,7 @@ document.addEventListener("keydown", function(e) {
         const discount = Math.round((1 - (p.retail / p.compareAt)) * 100);
         return `
           <div class="bg-white rounded-[4px] p-2.5 border border-gray-100 hover:border-orange-200/50 shrink-0 w-[145px] hover:shadow transition relative cursor-pointer" onclick="openProductDetail('${p.id}')">
-            <span class="absolute top-1 left-1 bg-orange-50 text-[#f68b1e] text-[9px] font-black px-1.5 py-0.5 rounded-sm">-${discount}%</span>
+            <span class="absolute top-1 left-1 bg-orange-50 text-[#ff8c00] text-[9px] font-black px-1.5 py-0.5 rounded-sm">-${discount}%</span>
             <div class="h-[100px] w-full flex items-center justify-center overflow-hidden mb-1 bg-gray-50 rounded-[4px]">
               ${productImg(p.image, p.name, 100)}
             </div>
@@ -1272,6 +1272,7 @@ document.addEventListener("keydown", function(e) {
               <span class="block text-[13px] font-black text-gray-900">${money(p.retail)}</span>
               <span class="block text-[10px] text-gray-400 line-through font-semibold">${money(p.compareAt)}</span>
             </div>
+            <button type="button" class="flash-add" onclick="event.stopPropagation(); addToCart('${p.id}')">Add to Bag</button>
           </div>
         `;
       }).join('');
@@ -1363,7 +1364,7 @@ document.addEventListener("keydown", function(e) {
               <p class="text-[11px] text-gray-500 font-black mt-0.5">${money(p.retail)}</p>
             </div>
             <div class="flex gap-2 shrink-0">
-              <button onclick="addToCart('${p.id}'); closeWishlistModal();" class="bg-[#f68b1e] hover:bg-orange-600 text-white font-bold text-[10px] px-3.5 py-2 rounded-[4px] uppercase transition">
+              <button onclick="addToCart('${p.id}'); closeWishlistModal();" class="bg-[#ff8c00] hover:bg-orange-600 text-white font-bold text-[10px] px-3.5 py-2 rounded-[4px] uppercase transition">
                 Add To Bag
               </button>
               <button onclick="toggleWishlist('${p.id}'); renderWishlistModal();" class="text-gray-400 hover:text-red-500 text-sm">
@@ -1605,7 +1606,7 @@ document.addEventListener("keydown", function(e) {
       document.getElementById('checkoutStep3').classList.add('hidden');
       backActionBtn.classList.add('hidden');
       
-      document.getElementById('stepTab1').className = "text-[#f68b1e] border-b-2 border-[#f68b1e] pb-0.5";
+      document.getElementById('stepTab1').className = "text-[#ff8c00] border-b-2 border-[#ff8c00] pb-0.5";
       document.getElementById('stepTab2').className = "pb-0.5";
       document.getElementById('stepTab3').className = "pb-0.5";
       
@@ -1630,7 +1631,7 @@ document.addEventListener("keydown", function(e) {
         backActionBtn.classList.remove('hidden');
         
         document.getElementById('stepTab1').className = "text-gray-400 pb-0.5";
-        document.getElementById('stepTab2').className = "text-[#f68b1e] border-b-2 border-[#f68b1e] pb-0.5";
+        document.getElementById('stepTab2').className = "text-[#ff8c00] border-b-2 border-[#ff8c00] pb-0.5";
         checkoutActionBtn.querySelector('span').textContent = "Proceed to Payment";
       } else if (checkoutStep === 2) {
         const name = document.getElementById('shippingName').value.trim();
@@ -1650,7 +1651,7 @@ document.addEventListener("keydown", function(e) {
         document.getElementById('checkoutStep3').classList.remove('hidden');
         
         document.getElementById('stepTab2').className = "text-gray-400 pb-0.5";
-        document.getElementById('stepTab3').className = "text-[#f68b1e] border-b-2 border-[#f68b1e] pb-0.5";
+        document.getElementById('stepTab3').className = "text-[#ff8c00] border-b-2 border-[#ff8c00] pb-0.5";
         checkoutActionBtn.querySelector('span').textContent = "Submit Secure Order";
       } else if (checkoutStep === 3) {
         triggerWhatsAppOrder();
@@ -1664,7 +1665,7 @@ document.addEventListener("keydown", function(e) {
         document.getElementById('checkoutStep2').classList.remove('hidden');
         
         document.getElementById('stepTab3').className = "text-gray-400 pb-0.5";
-        document.getElementById('stepTab2').className = "text-[#f68b1e] border-b-2 border-[#f68b1e] pb-0.5";
+        document.getElementById('stepTab2').className = "text-[#ff8c00] border-b-2 border-[#ff8c00] pb-0.5";
         checkoutActionBtn.querySelector('span').textContent = "Proceed to Payment";
       } else if (checkoutStep === 2) {
         checkoutStep = 1;
@@ -1673,7 +1674,7 @@ document.addEventListener("keydown", function(e) {
         backActionBtn.classList.add('hidden');
         
         document.getElementById('stepTab2').className = "text-gray-400 pb-0.5";
-        document.getElementById('stepTab1').className = "text-[#f68b1e] border-b-2 border-[#f68b1e] pb-0.5";
+        document.getElementById('stepTab1').className = "text-[#ff8c00] border-b-2 border-[#ff8c00] pb-0.5";
         checkoutActionBtn.querySelector('span').textContent = "Proceed to Shipping";
       }
     });
@@ -1995,7 +1996,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       const submitBtn = document.getElementById('loginSubmitBtn');
       
       if (tab === 'signin') {
-        if (tabSignIn) tabSignIn.className = "flex-1 text-center pb-2.5 text-[13px] font-black uppercase tracking-wider border-b-2 border-[#f68b1e] text-[#f68b1e] transition-all";
+        if (tabSignIn) tabSignIn.className = "flex-1 text-center pb-2.5 text-[13px] font-black uppercase tracking-wider border-b-2 border-[#ff8c00] text-[#ff8c00] transition-all";
         if (tabSignUp) tabSignUp.className = "flex-1 text-center pb-2.5 text-[13px] text-gray-400 font-bold uppercase tracking-wider hover:text-gray-700 transition-all";
         if (viewSignIn) viewSignIn.classList.remove('hidden');
         if (viewSignUp) viewSignUp.classList.add('hidden');
@@ -2010,7 +2011,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
         if (document.getElementById('loginEmail')) document.getElementById('loginEmail').required = true;
         if (document.getElementById('loginPassword')) document.getElementById('loginPassword').required = true;
       } else {
-        if (tabSignUp) tabSignUp.className = "flex-1 text-center pb-2.5 text-[13px] font-black uppercase tracking-wider border-b-2 border-[#f68b1e] text-[#f68b1e] transition-all";
+        if (tabSignUp) tabSignUp.className = "flex-1 text-center pb-2.5 text-[13px] font-black uppercase tracking-wider border-b-2 border-[#ff8c00] text-[#ff8c00] transition-all";
         if (tabSignIn) tabSignIn.className = "flex-1 text-center pb-2.5 text-[13px] text-gray-400 font-bold uppercase tracking-wider hover:text-gray-700 transition-all";
         if (viewSignIn) viewSignIn.classList.add('hidden');
         if (viewSignUp) viewSignUp.classList.remove('hidden');
@@ -2259,14 +2260,14 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
         const isDesktop = btn.classList.contains('desktop-cat') || btn.closest('aside') !== null;
         if (isDesktop) {
           if (btn.dataset.catFilter === key) {
-            btn.className = "cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-bold rounded-[4px] transition flex items-center gap-2 text-[#f68b1e] bg-orange-50/50";
+            btn.className = "cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-bold rounded-[4px] transition flex items-center gap-2 text-[#ff8c00] bg-orange-50/50";
           } else {
-            btn.className = "cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#f68b1e]";
+            btn.className = "cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#ff8c00]";
           }
         } else {
           // Mobile chip
           if (btn.dataset.catFilter === key) {
-            btn.className = "cat-pill mobile-chip bg-[#f68b1e] text-white text-[12px] font-bold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm";
+            btn.className = "cat-pill mobile-chip bg-[#ff8c00] text-white text-[12px] font-bold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm";
           } else {
             btn.className = "cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm";
           }
@@ -2443,22 +2444,22 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
           <p class="lead">This is a reseller business model. You set the retail price; your supplier charges you the wholesale price. Record the difference as your direct profit.</p>
           <div class="grid grid-cols-1 md:grid-cols-4 gap-6 text-[13px]">
             <div class="bg-[#0d1e3d] p-4 rounded-lg border border-[#142850]">
-              <span class="block text-2xl font-bold text-[#f68b1e] mb-2">01</span>
+              <span class="block text-2xl font-bold text-[#ff8c00] mb-2">01</span>
               <h4 class="font-extrabold text-[12px] uppercase mb-1.5">Get Price List</h4>
               <p class="text-gray-400 font-medium">Verify wholesale price, storage options, and current stock with the supplier before listing items.</p>
             </div>
             <div class="bg-[#0d1e3d] p-4 rounded-lg border border-[#142850]">
-              <span class="block text-2xl font-bold text-[#f68b1e] mb-2">02</span>
+              <span class="block text-2xl font-bold text-[#ff8c00] mb-2">02</span>
               <h4 class="font-extrabold text-[12px] uppercase mb-1.5">Set Selling Price</h4>
               <p class="text-gray-400 font-medium">Add your custom markup and profit margin. Publish one clear, all-inclusive selling price.</p>
             </div>
             <div class="bg-[#0d1e3d] p-4 rounded-lg border border-[#142850]">
-              <span class="block text-2xl font-bold text-[#f68b1e] mb-2">03</span>
+              <span class="block text-2xl font-bold text-[#ff8c00] mb-2">03</span>
               <h4 class="font-extrabold text-[12px] uppercase mb-1.5">Confirm Stock</h4>
               <p class="text-gray-400 font-medium">Always confirm product availability with the supplier before sending payment details to a customer.</p>
             </div>
             <div class="bg-[#0d1e3d] p-4 rounded-lg border border-[#142850]">
-              <span class="block text-2xl font-bold text-[#f68b1e] mb-2">04</span>
+              <span class="block text-2xl font-bold text-[#ff8c00] mb-2">04</span>
               <h4 class="font-extrabold text-[12px] uppercase mb-1.5">Receive & Settle</h4>
               <p class="text-gray-400 font-medium">Customer pays you retail, you pay supplier wholesale. Keep the difference as instant business profit!</p>
             </div>
@@ -2487,16 +2488,16 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
                   </div>
                   <div>
                     <span class="block text-[10px] uppercase tracking-wider font-extrabold text-gray-500">Keep Profit</span>
-                    <span id="keep-amount" class="text-xl font-black text-[#f68b1e]">GH₵ 0</span>
+                    <span id="keep-amount" class="text-xl font-black text-[#ff8c00]">GH₵ 0</span>
                   </div>
                 </div>
-                <div class="mt-3 text-[12px] font-bold text-[#f68b1e]" id="margin">0.0% margin on sale</div>
+                <div class="mt-3 text-[12px] font-bold text-[#ff8c00]" id="margin">0.0% margin on sale</div>
               </div>
             </div>
 
             <div class="calc-box bg-[#0b1a38] p-6 rounded-xl border border-[#142850]">
               <div class="field mb-4">
-                <label for="product-selector" style="font-weight: 700; color: #f68b1e; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 6px;">
+                <label for="product-selector" style="font-weight: 700; color: #ff8c00; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 6px;">
                   Quick Fill from Store Stock
                 </label>
                 <select id="product-selector" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #142850; background-color: #050d24; color: #ffffff; font-weight: 600; font-size: 14px; outline: none; transition: border-color 0.2s;">
@@ -2530,7 +2531,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
               <div class="k">Keep the Business Organized</div>
               <h2 class="t" style="text-align:left;">One Order Sheet.<br>Every Sale Visible.</h2>
               <p class="lead">Do not rely on memory or WhatsApp chats alone. Use this structured order log to manage delivery statuses, wholesale settlements, and business profits.</p>
-              <button id="new-order" class="bg-[#f68b1e] hover:bg-orange-600 text-white font-bold text-[11px] tracking-widest px-6 py-3 rounded-[4px] uppercase transition shadow">
+              <button id="new-order" class="bg-[#ff8c00] hover:bg-orange-600 text-white font-bold text-[11px] tracking-widest px-6 py-3 rounded-[4px] uppercase transition shadow">
                 + Add Example Order
               </button>
             </div>
@@ -2559,7 +2560,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
             <div class="faq-item">
               <div class="faq-header">
                 <span>How do I know what to pay my supplier?</span>
-                <span class="faq-icon text-[#f68b1e] text-lg">+</span>
+                <span class="faq-icon text-[#ff8c00] text-lg">+</span>
               </div>
               <div class="faq-body">
                 <p>Verify wholesale pricing agreements with your supplier before listing. Pay exactly the wholesale price recorded for each transaction rather than a variable percentage, unless otherwise negotiated in writing.</p>
@@ -2568,7 +2569,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
             <div class="faq-item">
               <div class="faq-header">
                 <span>What is my exact retail commission or profit?</span>
-                <span class="faq-icon text-[#f68b1e] text-lg">+</span>
+                <span class="faq-icon text-[#ff8c00] text-lg">+</span>
               </div>
               <div class="faq-body">
                 <p>Your direct retail profit is calculated as: *Customer Retail Price − Supplier Wholesale Price − Shipping/MoMo Fees*. Example: GH₵ 2,450 selling price − GH₵ 2,000 wholesale − GH₵ 80 shipping costs = GH₵ 370 net business profit.</p>
@@ -2577,7 +2578,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
             <div class="faq-item">
               <div class="faq-header">
                 <span>Should customers pay my business or the supplier?</span>
-                <span class="faq-icon text-[#f68b1e] text-lg">+</span>
+                <span class="faq-icon text-[#ff8c00] text-lg">+</span>
               </div>
               <div class="faq-body">
                 <p>Customers pay your authorized Valmont Gadgets channels (Mobile Money or Bank Account) after you confirm stock availability. You immediately pay the supplier's wholesale invoice to dispatch the order, keeping your profit.</p>
@@ -2586,7 +2587,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
             <div class="faq-item">
               <div class="faq-header">
                 <span>What warranty is guaranteed on phones and gadgets?</span>
-                <span class="faq-icon text-[#f68b1e] text-lg">+</span>
+                <span class="faq-icon text-[#ff8c00] text-lg">+</span>
               </div>
               <div class="faq-body">
                 <p>All premium devices (iPhones & Apple, Samsung Galaxy flagship phones, MacBooks) come with an official 12-month manufacturer warranty. Accessories and batteries feature standard 3-6 month store guarantees.</p>
@@ -2961,7 +2962,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     const keys = Object.keys(CATEGORY_LABELS);
     mobileCategoryGrid.innerHTML = keys.map(key => {
       const isSelected = activeFilter === key;
-      const activeClass = isSelected ? 'bg-orange-50 border-[#f68b1e] text-[#f68b1e] font-bold' : 'bg-gray-50 border-gray-100 text-gray-700 font-medium';
+      const activeClass = isSelected ? 'bg-orange-50 border-[#ff8c00] text-[#ff8c00] font-bold' : 'bg-gray-50 border-gray-100 text-gray-700 font-medium';
       return `
         <button onclick="selectMobileCategory('${key}')" class="border p-3 rounded-lg text-[12px] text-center transition ${activeClass} shadow-sm truncate">
           ${CATEGORY_LABELS[key]}
