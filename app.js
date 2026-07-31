@@ -1504,6 +1504,10 @@ document.addEventListener("keydown", function(e) {
       } else {
         openCart();
       }
+
+      if (typeof ValmontAnalytics !== 'undefined' && ValmontAnalytics.trackAddToCart) {
+        try { ValmontAnalytics.trackAddToCart(product, 1); } catch (e) {}
+      }
     }
 
     function removeFromCart(id) {
@@ -1610,6 +1614,16 @@ document.addEventListener("keydown", function(e) {
 
     checkoutActionBtn.addEventListener('click', () => {
       if (checkoutStep === 1) {
+        var checkoutOrderData = {
+          items: (typeof cart !== 'undefined' ? cart : []).map(function (i) {
+            return { id: i.id || i.item_id || '', name: i.name || i.item_name || '', price: Number(i.retail || i.price || 0), qty: Number(i.qty || 1) };
+          }),
+          total_amount: (typeof cart !== 'undefined' ? cart.reduce(function (s, i) { return s + (Number(i.retail || i.price || 0) * Number(i.qty || 1)); }, 0) : 0),
+          reference_code: 'checkout-' + Date.now()
+        };
+        if (typeof ValmontAnalytics !== 'undefined' && ValmontAnalytics.trackBeginCheckout) {
+          try { ValmontAnalytics.trackBeginCheckout(checkoutOrderData); } catch (e) {}
+        }
         checkoutStep = 2;
         document.getElementById('checkoutStep1').classList.add('hidden');
         document.getElementById('checkoutStep2').classList.remove('hidden');
@@ -1937,6 +1951,10 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
 
       // Add to recently viewed!
       addToRecentlyViewed(product.id);
+
+      if (typeof ValmontAnalytics !== 'undefined' && ValmontAnalytics.trackViewItem) {
+        try { ValmontAnalytics.trackViewItem(product); } catch (e) {}
+      }
     }
 
     function closeProductDetail() {

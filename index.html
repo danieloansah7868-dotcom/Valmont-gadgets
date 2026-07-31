@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="ga-measurement-id" content="G-TEST1234">
+  <meta name="meta-pixel-id" content="1234567890">
   <title>VALMONT GADGETS — Genuine Phones, Executive Laptops & Electronics in Ghana | Premium Store</title>
   <!-- Primary Meta Description -->
   <meta name="description" content="Shop Valmont Gadgets for genuine phones, executive laptops &amp; electronics in Ghana. Get iPhones, Samsung, laptops, AirPods &amp; accessories with 12-month warranty &amp; free Accra delivery.">
@@ -1668,6 +1670,7 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0b1a38">
   <!-- Real Live Paystack Inline Integration -->
+    <script src="assets/js/analytics.js"></script>
     <script src="shop.min.js" defer></script>
 </head>
 <body class="bg-[#f1f1f2] text-[#333333] pb-20 md:pb-0">
@@ -3567,5 +3570,12 @@
     <span id="valmontToastText" class="flex-1 min-w-0 truncate">Item added to your bag!</span>
     <button onclick="openCart(); hideValmontToast();" class="text-[#f68b1e] font-black uppercase text-[11px] hover:underline shrink-0">View Bag</button>
   </div>
+  <script>
+    (function () {
+      if (window.ValmontAnalytics && typeof window.ValmontAnalytics.initAnalytics === 'function') {
+        try { window.ValmontAnalytics.initAnalytics(); } catch (e) {}
+      }
+    })();
+  </script>
 </body>
 </html>
