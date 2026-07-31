@@ -223,12 +223,12 @@ body {
 .product-grid{
   display:grid;
   grid-template-columns: repeat(2,1fr);
-  gap:10px;
+  gap:8px;
 }
-@media(min-width:640px){ .product-grid{ grid-template-columns: repeat(3,1fr); gap:14px; } }
-@media(min-width:768px){ .product-grid{ grid-template-columns: repeat(4,1fr); gap:16px; } }
-@media(min-width:1024px){ .product-grid{ grid-template-columns: repeat(5,1fr); gap:18px; } }
-@media(min-width:1280px){ .product-grid{ grid-template-columns: repeat(6,1fr); gap:20px; } }
+@media(min-width:640px){ .product-grid{ grid-template-columns: repeat(3,1fr); gap:12px; } }
+@media(min-width:768px){ .product-grid{ grid-template-columns: repeat(4,1fr); gap:14px; } }
+@media(min-width:1024px){ .product-grid{ grid-template-columns: repeat(5,1fr); gap:16px; } }
+@media(min-width:1280px){ .product-grid{ grid-template-columns: repeat(6,1fr); gap:18px; } }
 
 .product-card{
   background: var(--bg-card);
