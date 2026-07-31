@@ -1666,18 +1666,34 @@
       justify-content:center; background:#fff; border-bottom:1px solid #e5e7eb;
     }
     .reference-category-strip .desktop-cat {
-      border:0; border-radius:999px; background:#0b1a38; color:#fff;
-      padding:6px 18px; font-size:12px; font-weight:700; white-space:nowrap;
-      cursor:pointer; transition:background .15s;
+      border:0 !important; border-radius:999px !important; background:#0b1a38 !important; color:#fff !important;
+      padding:6px 18px !important; font-size:12px !important; font-weight:700 !important; white-space:nowrap !important;
+      width:auto !important; text-align:center !important; cursor:pointer; transition:background .15s;
     }
     .reference-category-strip .desktop-cat:hover,
-    .reference-category-strip .desktop-cat.active { background:#ff8c00; }
+    .reference-category-strip .desktop-cat.active { background:#ff8c00 !important; }
+
+    /* ── Sidebar category pills active state ── */
+    aside .desktop-cat.active {
+      color:#ff8c00 !important; background:rgba(255,140,0,0.05) !important;
+    }
+    aside .desktop-cat:not(.active) {
+      color:#374151 !important; background:transparent !important;
+    }
+    aside .desktop-cat:not(.active):hover {
+      color:#ff8c00 !important; background:#f9fafb !important;
+    }
+    aside .desktop-cat {
+      width:100% !important; text-align:left !important;
+      padding:6px 12px !important; font-size:12.5px !important;
+      border-radius:4px !important;
+    }
 
     /* ── Flash Deals Grid (desktop) ── */
     #flashProductsRow {
       display:grid; grid-template-columns:repeat(4,1fr); gap:14px;
     }
-    #flashProductsRow > div { min-width:0; }
+    #flashProductsRow > div { min-width:0; width:auto !important; }
     #flashProductsRow .flash-add {
       display:flex; width:100%; margin-top:8px; align-items:center;
       justify-content:center; gap:6px; border:0; border-radius:6px;
@@ -1733,8 +1749,7 @@
         white-space:nowrap !important; flex-shrink:0 !important;
         cursor:pointer; transition:all .15s;
       }
-      .category-filters .mobile-chip.active,
-      .category-filters .mobile-chip:first-child {
+      .category-filters .mobile-chip.active {
         background:#ff8c00 !important; color:#fff !important;
         border-color:#ff8c00 !important;
       }
@@ -1765,7 +1780,11 @@
         border-radius:0 !important; box-shadow:none !important;
         background:#fff !important;
       }
-      #store-feed > div:first-child { display:none !important; }
+      #store-feed > div:first-child {
+        border-bottom:0 !important; padding:8px 12px 0 !important;
+        margin-bottom:4px !important;
+      }
+      #store-feed > div:first-child > div:last-child { display:none !important; }
 
       /* ── Product Grid: 2 columns ── */
       #productGrid {
@@ -1801,6 +1820,8 @@
         border-radius:999px !important; padding:7px 4px !important;
         font-size:10px !important; letter-spacing:0 !important;
         text-transform:none !important;
+        background:#ff8c00 !important; color:#fff !important;
+        border:0 !important;
       }
       #productGrid .absolute.top-2\.5 { top:5px !important; }
 
@@ -1837,6 +1858,7 @@
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="apple-touch-icon" href="favicon.png">
   <link rel="stylesheet" href="mobile-fixes.css">
+  <link rel="stylesheet" href="assets/css/gadgets.css">
 
 
   <!-- PWA Manifest & Service Worker Registration -->
@@ -1981,7 +2003,8 @@
         <button type="button" data-cat-filter="smartwatches" class="cat-pill desktop-cat">Smart Watches</button>
         <button type="button" data-cat-filter="audio" class="cat-pill desktop-cat">Audio</button>
         <button type="button" data-cat-filter="gaming" class="cat-pill desktop-cat">Gaming</button>
-        <button type="button" data-cat-filter="all" class="cat-pill desktop-cat">Deals</button>
+        <button type="button" data-cat-filter="phone_acc" class="cat-pill desktop-cat">Accessories</button>
+        <button type="button" data-cat-filter="chargers" class="cat-pill desktop-cat">Power</button>
       </nav>
 
       <!-- Jumia Hero Row (Sidebar + Slider + Promos) -->
@@ -1994,46 +2017,46 @@
               Categories
             </h2>
             <nav class="space-y-0.5">
-              <button data-cat-filter="all" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-bold rounded-[4px] transition flex items-center gap-2 text-[#ff8c00] bg-orange-50/50">
+              <button data-cat-filter="all" class="cat-pill desktop-cat active w-full text-left px-3 py-1.5 text-[12.5px] font-bold rounded-[4px] transition flex items-center gap-2">
                 All Products
               </button>
-              <button data-cat-filter="iphones" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#ff8c00]">
+              <button data-cat-filter="iphones" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition flex items-center gap-2">
                 iPhones & Apple
               </button>
-              <button data-cat-filter="samsung" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#ff8c00]">
+              <button data-cat-filter="samsung" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition flex items-center gap-2">
                 Samsung Galaxy
               </button>
-              <button data-cat-filter="android" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#ff8c00]">
+              <button data-cat-filter="android" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition flex items-center gap-2">
                 Android Flagships
               </button>
-              <button data-cat-filter="tablets" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#ff8c00]">
+              <button data-cat-filter="tablets" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition flex items-center gap-2">
                 Tablets & iPads
               </button>
-              <button data-cat-filter="smartwatches" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#ff8c00]">
+              <button data-cat-filter="smartwatches" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition flex items-center gap-2">
                 Smartwatches
               </button>
-              <button data-cat-filter="laptops" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#ff8c00]">
+              <button data-cat-filter="laptops" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition flex items-center gap-2">
                 Executive Laptops
               </button>
-              <button data-cat-filter="laptop_acc" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#ff8c00]">
+              <button data-cat-filter="laptop_acc" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition flex items-center gap-2">
                 Laptop Accessories
               </button>
-              <button data-cat-filter="audio" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#ff8c00]">
+              <button data-cat-filter="audio" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition flex items-center gap-2">
                 Smart Audio
               </button>
-              <button data-cat-filter="gaming" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#ff8c00]">
+              <button data-cat-filter="gaming" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition flex items-center gap-2">
                 Gaming & Consoles
               </button>
-              <button data-cat-filter="phone_acc" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#ff8c00]">
+              <button data-cat-filter="phone_acc" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition flex items-center gap-2">
                 Phone Accessories
               </button>
-              <button data-cat-filter="phone_parts" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#ff8c00]">
+              <button data-cat-filter="phone_parts" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition flex items-center gap-2">
                 Phone Parts & Spares
               </button>
-              <button data-cat-filter="travel_acc" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#ff8c00]">
+              <button data-cat-filter="travel_acc" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition flex items-center gap-2">
                 Travel & Gadgets
               </button>
-              <button data-cat-filter="chargers" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#ff8c00]">
+              <button data-cat-filter="chargers" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition flex items-center gap-2">
                 Power & Chargers
               </button>
             </nav>

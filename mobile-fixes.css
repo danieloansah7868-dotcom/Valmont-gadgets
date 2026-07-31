@@ -211,8 +211,7 @@ html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
   /* Modal overlay navy tint */
   .fixed.inset-0.bg-black\/60 { background: rgba(11,26,56,0.5) !important; }
 
-  /* Product card shadow */
-  #productGrid > div > div { box-shadow: 0 1px 3px rgba(11,26,56,.06) !important; border-radius: 12px !important; overflow: hidden !important; }
+  /* Product card shadow — handled by inline styles on #productGrid > div */
 }
 
 @keyframes flipRotate { 0%,100% { transform: rotateY(0deg); } 50% { transform: rotateY(180deg); } }

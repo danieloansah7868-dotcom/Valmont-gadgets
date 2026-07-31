@@ -331,7 +331,7 @@ function renderStorefrontGrid() {
           <p class="card-specs">${p.specs || ""}</p>
           <div class="card-price-row"><span class="card-price">GH₵ ${p.price.toLocaleString()}</span>${compareMarkup}${discPct}</div>${p.price > 5000 ? '<span class="card-free-delivery">Free Delivery</span>' : ""}
           <div class="card-rating">${ratingStars}</div>
-          <button onclick="event.stopPropagation(); quickAddProduct('${p.id}')" ${p.stock_quantity === 0 ? 'disabled' : ''} class="card-add-btn" type="button">${p.stock_quantity === 0 ? 'SOLD OUT' : 'ADD TO BAG'}</button>
+          <button onclick="event.stopPropagation(); quickAddProduct('${p.id}')" ${p.stock_quantity === 0 ? 'disabled' : ''} class="card-add-btn" type="button">${p.stock_quantity === 0 ? 'SOLD OUT' : 'Add to Bag'}</button>
         </div>
       </div>`;
   }).join("");
@@ -350,7 +350,7 @@ function renderFlashSale() {
   flashProductsRow.innerHTML = flashProducts.map(p => {
     const discPercent = Math.round(((p.compare_at_price - p.price) / p.compare_at_price) * 100);
     const imgSrc = p.image_url || p.image || '/assets/images/products/iphone-17-pro-max.jpg';
-    return `<div class="bg-white rounded-xl p-2.5 border border-gray-200 shrink-0 w-36 hover:border-orange-200 transition-all cursor-pointer shadow-sm" onclick="openProductQuickView('${p.id}')"><span class="absolute top-2 left-2 bg-[#ff8c00] text-white text-[9px] font-black px-2 py-0.5 rounded-full">-${discPercent}%</span><div class="h-24 w-full flex items-center justify-center overflow-hidden mb-2 bg-gray-50 rounded-lg p-2 border border-gray-100"><img src="${imgSrc}" alt="${p.name}" loading="lazy" class="max-h-full max-w-full object-contain" /></div><h4 class="text-[11px] text-[#0b1a38] font-bold truncate leading-tight">${p.name}</h4><div class="mt-1 leading-tight flex flex-col"><span class="text-xs font-black text-[#0b1a38]">GH₵ ${p.price.toLocaleString()}</span><span class="text-[10px] text-gray-400 line-through font-bold">GH₵ ${p.compare_at_price.toLocaleString()}</span></div></div>`;
+    return `<div class="bg-white rounded-xl p-2.5 border border-gray-200 shrink-0 hover:border-orange-200 transition-all cursor-pointer shadow-sm relative" onclick="openProductQuickView('${p.id}')"><span class="absolute top-2 left-2 bg-[#ff8c00] text-white text-[9px] font-black px-2 py-0.5 rounded-full z-10">-${discPercent}%</span><div class="h-24 w-full flex items-center justify-center overflow-hidden mb-2 bg-gray-50 rounded-lg p-2 border border-gray-100"><img src="${imgSrc}" alt="${p.name}" loading="lazy" class="max-h-full max-w-full object-contain" /></div><h4 class="text-[11px] text-[#0b1a38] font-bold truncate leading-tight">${p.name}</h4><div class="mt-1 leading-tight flex flex-col"><span class="text-xs font-black text-[#0b1a38]">GH₵ ${p.price.toLocaleString()}</span><span class="text-[10px] text-gray-400 line-through font-bold">GH₵ ${p.compare_at_price.toLocaleString()}</span></div><button onclick="event.stopPropagation(); quickAddProduct('${p.id}')" class="flash-add mt-2">Add to Bag</button></div>`;
   }).join("");
 }
 
@@ -687,19 +687,12 @@ function initUIEventListeners(){
   const setActivePill = (activeBtn) => {
     const activeCat = activeBtn?.dataset?.categoryPill || activeBtn?.dataset?.catFilter || activeBtn?.getAttribute('data-category-pill');
     document.querySelectorAll("[data-category-pill], [data-cat-filter]").forEach(p => {
-      // Reset all to inactive style
-      p.classList.remove("bg-[#0b1a38]", "bg-gold", "text-white", "text-slate-900", "bg-slate-panel", "text-slate-300");
-      p.classList.add("bg-white", "text-[#0b1a38]", "border", "border-gray-200");
-      // mobile pills are rounded-full, keep accordingly but ensure not active bg
-      if (p.classList.contains("mobile-cat-pill")) {
-        p.classList.remove("bg-[#0b1a38]", "text-white");
-        p.classList.add("bg-white", "text-[#0b1a38]");
-      }
+      // Reset all to inactive — just toggle the "active" class; CSS handles the rest
+      p.classList.remove("active");
     });
     if (!activeBtn) return;
-    // Active style
-    activeBtn.classList.remove("bg-white", "text-[#0b1a38]", "bg-slate-panel", "text-slate-300", "border", "border-gray-200");
-    activeBtn.classList.add("bg-[#0b1a38]", "text-white");
+    // Mark active
+    activeBtn.classList.add("active");
   };
   document.querySelectorAll("[data-category-pill], [data-cat-filter]").forEach(btn => {
     btn.addEventListener("click", () => {
