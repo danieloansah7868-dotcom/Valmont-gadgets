@@ -866,9 +866,16 @@ function renderReviewsTable() {
   document.getElementById("reviewsTableBody").innerHTML = state.reviews.length ? state.reviews.map(review => `
     <tr>
       <td>${escapeHtml(getProductName(review.product_id))}</td>
-      <td class="font-bold text-white">${escapeHtml(review.customer_name)}</td>
+      <td class="font-bold text-white">
+        <div>${escapeHtml(review.customer_name)}</div>
+        ${review.customer_email ? `<div class="text-[11px] font-normal text-slate-400">${escapeHtml(review.customer_email)}</div>` : ''}
+        ${review.is_verified_buyer ? `<span class="inline-block mt-1 text-[10px] font-extrabold text-green-400 bg-green-900/40 border border-green-800/50 px-1.5 py-0.5 rounded">Verified Buyer</span>` : ''}
+      </td>
       <td class="text-gold">${"★".repeat(Number(review.rating || 0))}${"☆".repeat(5 - Number(review.rating || 0))}</td>
-      <td class="max-w-sm"><p class="line-clamp-2">${escapeHtml(review.comment || "")}</p></td>
+      <td class="max-w-sm">
+        <p class="line-clamp-2">${escapeHtml(review.comment || "")}</p>
+        ${review.photo_url ? `<a href="${escapeAttr(review.photo_url)}" target="_blank" rel="noopener" class="text-xs text-amber-400 font-bold underline mt-1 inline-block">View Photo</a>` : ''}
+      </td>
       <td>${formatDate(review.created_at)}</td>
       <td><span class="badge ${review.is_approved ? "badge-green" : "badge-amber"}">${review.is_approved ? "Approved" : "Pending"}</span></td>
       <td><div class="flex flex-wrap gap-2"><button class="btn-muted" data-approve-review="${escapeAttr(review.id)}">Approve</button><button class="btn-muted" data-reject-review="${escapeAttr(review.id)}">Reject</button><button class="btn-danger" data-delete-review="${escapeAttr(review.id)}">Delete</button></div></td>
@@ -1458,8 +1465,11 @@ function normalizeReview(review) {
     id: review.id || crypto.randomUUID(),
     product_id: review.product_id || "",
     customer_name: review.customer_name || review.name || "Customer",
+    customer_email: review.customer_email || review.email || "",
     rating: Math.max(1, Math.min(5, Number(review.rating || 5))),
     comment: review.comment || "",
+    photo_url: review.photo_url || "",
+    is_verified_buyer: review.is_verified_buyer !== false,
     is_approved: review.is_approved === true,
     created_at: review.created_at || new Date().toISOString()
   };
