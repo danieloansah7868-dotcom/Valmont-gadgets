@@ -19,7 +19,7 @@ module.exports = {
       colors: {
         navy: { deep: '#0b1a38', ink: '#071126', light: '#10214a' },
         panel: '#12234a',
-        gold: '#f58c14',
+        gold: '#ff8c00',
       },
     },
   },

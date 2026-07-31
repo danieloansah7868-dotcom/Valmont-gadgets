@@ -148,7 +148,7 @@ function card(p, index) {
                 <svg class="h-4.5 w-4.5 text-gray-400 hover:text-red-500" aria-hidden="true"><use href="#i-heart"/></svg>
               </button>
 ${discount > 0 ? `
-              <div class="absolute top-2.5 left-2 bg-orange-50 text-[#f68b1e] text-[10px] font-black px-1.5 py-0.5 rounded-sm">
+              <div class="absolute top-2.5 left-2 bg-orange-50 text-[#ff8c00] text-[10px] font-black px-1.5 py-0.5 rounded-sm">
                 -${discount}%
               </div>` : ''}
 
@@ -174,12 +174,12 @@ ${discount > 0 ? `
                     <span>${stockQty} items left</span>
                   </div>
                   <div class="w-full bg-gray-200 h-1.5 rounded-full mt-1 overflow-hidden">
-                    <div class="bg-[#f68b1e] h-full" style="width: ${Math.min(100, stockQty * 4)}%"></div>
+                    <div class="bg-[#ff8c00] h-full" style="width: ${Math.min(100, stockQty * 4)}%"></div>
                   </div>
                 </div>
               </div>
               <div class="px-3 pb-3 hidden md:block">
-                <button type="button" onclick="event.stopPropagation(); addToCart('${id}')" class="w-full bg-[#f68b1e] hover:bg-orange-600 text-white font-bold text-[11px] py-2 rounded-[4px] uppercase transition tracking-widest shadow-sm">
+                <button type="button" onclick="event.stopPropagation(); addToCart('${id}')" class="w-full bg-[#ff8c00] hover:bg-orange-600 text-white font-bold text-[11px] py-2 rounded-[4px] uppercase transition tracking-widest shadow-sm">
                   Add To Bag
                 </button>
               </div>

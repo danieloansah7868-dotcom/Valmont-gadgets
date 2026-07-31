@@ -443,8 +443,8 @@ export default function Page() {
   };
 
   // Theme-specific corporate surface classes.
-  const headerBg = theme === "navy" ? "bg-[#0b1a38] border-[#1e345e]" : theme === "gold" ? "bg-white border-[#f58c14] border-b-2" : "bg-white border-gray-200";
-  const cardBg = theme === "navy" ? "bg-[#132144] border-[#1e345e] text-white" : theme === "gold" ? "bg-white border-amber-200 hover:border-[#f58c14] hover:shadow-[0_12px_28px_rgba(245,140,20,.16)]" : "bg-white border-gray-200";
+  const headerBg = theme === "navy" ? "bg-[#0b1a38] border-[#1e345e]" : theme === "gold" ? "bg-white border-[#ff8c00] border-b-2" : "bg-white border-gray-200";
+  const cardBg = theme === "navy" ? "bg-[#132144] border-[#1e345e] text-white" : theme === "gold" ? "bg-white border-amber-200 hover:border-[#ff8c00] hover:shadow-[0_12px_28px_rgba(255,140,0,.16)]" : "bg-white border-gray-200";
   const searchBg = theme === "navy" ? "bg-[#122040] border-[#1e345e]" : "bg-white border-gray-300";
   const pillInactive = theme === "navy" ? "bg-[#132144] text-[#8aa0c8] border-[#1e345e]" : theme === "gold" ? "bg-[#fffef7] text-[#0b1a38] border-amber-200" : "bg-white text-[#0b1a38] border-gray-300";
   const pageBg = theme === "navy" ? "bg-[#070e20] text-white" : theme === "gold" ? "bg-[#fffaf0] text-[#0b1a38]" : "bg-[#f6f7f9] text-[#0b1a38]";
@@ -513,7 +513,7 @@ export default function Page() {
             <span className={`px-2 text-[9px] font-black tracking-widest uppercase ${mutedText}`}>Theme</span>
             {(["light", "navy", "gold"] as ThemeId[]).map((choice) => <button key={choice} data-theme={choice} onClick={() => applyTheme(choice)} aria-pressed={theme === choice} className={`theme-btn px-2 py-1 rounded-full text-[9px] font-black tracking-widest uppercase ${theme === choice ? "is-active" : ""}`}>{choice}</button>)}
           </div>
-          <button onClick={() => setDrawerOpen(true)} className="bg-[#f58c14] hover:bg-[#e67f0f] text-white font-extrabold text-[12px] tracking-wide px-5 py-2.5 rounded-full shadow-sm transition">Cart ({totalQty})</button>
+          <button onClick={() => setDrawerOpen(true)} className="bg-[#ff8c00] hover:bg-[#e67e00] text-white font-extrabold text-[12px] tracking-wide px-5 py-2.5 rounded-full shadow-sm transition">Cart ({totalQty})</button>
         </div>
         <div className="max-w-[1280px] mx-auto px-4 pb-3.5">
           <div className="md:hidden flex justify-center mb-3"><div className={`flex items-center rounded-full border p-1 ${theme === "navy" ? "bg-[#122040] border-[#1e345e]" : theme === "gold" ? "bg-[#fff7e6] border-amber-200" : "bg-gray-100 border-gray-300"}`} role="group" aria-label="Theme selection"><span className={`px-2 text-[9px] font-black tracking-widest uppercase ${mutedText}`}>Theme</span>{(["light", "navy", "gold"] as ThemeId[]).map((choice) => <button key={choice} data-theme={choice} onClick={() => applyTheme(choice)} aria-pressed={theme === choice} className={`theme-btn px-2 py-1 rounded-full text-[9px] font-black tracking-widest uppercase ${theme === choice ? "is-active" : ""}`}>{choice}</button>)}</div></div>
@@ -533,7 +533,7 @@ export default function Page() {
 
       <div className="bg-[#fff7e6] border-b border-amber-200">
         <div className="max-w-[1280px] mx-auto px-4 py-2.5 text-center">
-          <p className="text-[11px] md:text-[12px] font-extrabold tracking-[0.14em] uppercase text-[#f58c14]">EXECUTIVE MIDWEEK DEALS — WHILE STOCKS LAST • 100% Sealed & Verified</p>
+          <p className="text-[11px] md:text-[12px] font-extrabold tracking-[0.14em] uppercase text-[#ff8c00]">EXECUTIVE MIDWEEK DEALS — WHILE STOCKS LAST • 100% Sealed & Verified</p>
         </div>
       </div>
 
@@ -544,7 +544,7 @@ export default function Page() {
               const count = cat.id === "all" ? PRODUCTS.length : PRODUCTS.filter((p) => p.category === cat.id).length;
               const active = activeCat === cat.id;
               return (
-                <button key={cat.id} onClick={() => setActiveCat(cat.id)} className={`shrink-0 whitespace-nowrap px-4 py-2.5 rounded-full text-[11px] font-extrabold tracking-widest uppercase border transition ${active ? (theme === "gold" ? "bg-[#f58c14] text-white border-[#f58c14] shadow" : "bg-[#0b1a38] text-white border-[#0b1a38] shadow") : `${pillInactive} hover:border-[#0b1a38]`}`}>
+                <button key={cat.id} onClick={() => setActiveCat(cat.id)} className={`shrink-0 whitespace-nowrap px-4 py-2.5 rounded-full text-[11px] font-extrabold tracking-widest uppercase border transition ${active ? (theme === "gold" ? "bg-[#ff8c00] text-white border-[#ff8c00] shadow" : "bg-[#0b1a38] text-white border-[#0b1a38] shadow") : `${pillInactive} hover:border-[#0b1a38]`}`}>
                   {cat.label} {cat.id === "all" ? `(${count})` : ""}
                 </button>
               );
@@ -554,12 +554,12 @@ export default function Page() {
 
         <div className="flex items-center justify-between mb-3 px-1">
           <p className={`text-[11px] font-bold tracking-wide uppercase ${mutedText}`}>{filtered.length} VERIFIED PRODUCTS {activeCat !== "all" ? `IN ${CATEGORIES.find((c) => c.id === activeCat)?.label.toUpperCase()}` : ""} {query ? `FOR "${query.toUpperCase()}"` : ""}</p>
-          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400"><span>Verified Stock</span><span className="w-2 h-2 bg-[#f58c14] rounded-full inline-block"></span></div>
+          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400"><span>Verified Stock</span><span className="w-2 h-2 bg-[#ff8c00] rounded-full inline-block"></span></div>
         </div>
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
           {filtered.map((product) => {
-            const badgeColor = product.badge === "HOT" ? "bg-[#f58c14]" : product.badge === "DEAL" ? "bg-[#f58c14]" : "bg-[#0b1a38]";
+            const badgeColor = product.badge === "HOT" ? "bg-[#ff8c00]" : product.badge === "DEAL" ? "bg-[#ff8c00]" : "bg-[#0b1a38]";
             return (
               <div key={product.id} className={`rounded-xl border p-3 flex flex-col hover:shadow-md transition-shadow ${cardBg}`}>
                 <div className="flex justify-between items-center mb-2">
@@ -578,10 +578,10 @@ export default function Page() {
                     <span className="text-[11px] text-gray-400 line-through font-medium">{formatGH(product.compareAt)}</span>
                   </div>
                   {(() => { const variants = getVariants(product); return <div className="mb-2 space-y-1"><div className="flex items-center gap-1"><span className="text-[9px] font-bold text-gray-500">Colours:</span>{variants.colors.map((color) => <span key={color} className="h-2.5 w-2.5 rounded-full border border-gray-300" style={{ backgroundColor: color }} />)}</div>{variants.sizes.length > 0 && <div className="flex items-center gap-1 flex-wrap"><span className="text-[9px] font-bold text-gray-500">Size:</span>{variants.sizes.map((size) => <span key={size} className="rounded border border-gray-200 px-1.5 py-0.5 text-[8px] font-bold text-gray-600">{size}</span>)}</div>}</div>; })()}
-                  <p className="text-[10px] font-bold text-[#f58c14] mb-3 tracking-wide uppercase">{product.stock}</p>
+                  <p className="text-[10px] font-bold text-[#ff8c00] mb-3 tracking-wide uppercase">{product.stock}</p>
                   <div className="flex gap-2">
                     <button onClick={() => addToCart(product.id)} className="bg-[#0b1a38] hover:bg-black text-white font-extrabold text-[11px] tracking-wide rounded-lg px-3 py-2.5 w-2/3 transition uppercase">Add to Cart</button>
-                    <button onClick={() => addExpressDelivery(product)} className="bg-[#f58c14] hover:bg-[#e67f0f] text-white font-extrabold text-[10px] tracking-wide rounded-lg px-2 py-2.5 w-1/3 text-center transition uppercase">Express</button>
+                    <button onClick={() => addExpressDelivery(product)} className="bg-[#ff8c00] hover:bg-[#e67e00] text-white font-extrabold text-[10px] tracking-wide rounded-lg px-2 py-2.5 w-1/3 text-center transition uppercase">Express</button>
                   </div>
                 </div>
               </div>
@@ -599,7 +599,7 @@ export default function Page() {
 
 
       <p className="sr-only" aria-live="polite">THEME ACTIVE: {theme.toUpperCase()}</p>
-      {deliveryMessage && <div role="status" className="fixed bottom-5 left-1/2 z-[80] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-xl bg-[#0b1a38] px-4 py-3 text-center text-[11px] font-bold text-white shadow-xl">{deliveryMessage}<button onClick={() => setDeliveryMessage("")} className="ml-3 text-[#f58c14]" aria-label="Dismiss delivery message">Close</button></div>}
+      {deliveryMessage && <div role="status" className="fixed bottom-5 left-1/2 z-[80] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-xl bg-[#0b1a38] px-4 py-3 text-center text-[11px] font-bold text-white shadow-xl">{deliveryMessage}<button onClick={() => setDeliveryMessage("")} className="ml-3 text-[#ff8c00]" aria-label="Dismiss delivery message">Close</button></div>}
       {drawerOpen && (
         <div className="fixed inset-0 z-[60]">
           <div onClick={() => setDrawerOpen(false)} className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
@@ -620,8 +620,8 @@ export default function Page() {
                       <div className="flex gap-2 mt-2">
                         <button onClick={() => setCart((c) => c.map((x) => (x.id === item.id ? { ...x, qty: Math.max(1, x.qty - 1) } : x)))} className="text-[10px] font-bold uppercase px-2 py-1 border border-gray-300 rounded">-</button>
                         <button onClick={() => setCart((c) => c.map((x) => (x.id === item.id ? { ...x, qty: x.qty + 1 } : x)))} className="text-[10px] font-bold uppercase px-2 py-1 border border-gray-300 rounded">+</button>
-                        <a href={buildWALink(prod.name, prod.retail)} target="_blank" className="text-[10px] font-bold uppercase px-2 py-1 bg-[#f58c14] text-white rounded">WA</a>
-                        <button onClick={() => setCart((c) => c.filter((x) => x.id !== item.id))} className="text-[10px] font-bold uppercase px-2 py-1 text-[#f58c14]">Remove</button>
+                        <a href={buildWALink(prod.name, prod.retail)} target="_blank" className="text-[10px] font-bold uppercase px-2 py-1 bg-[#ff8c00] text-white rounded">WA</a>
+                        <button onClick={() => setCart((c) => c.filter((x) => x.id !== item.id))} className="text-[10px] font-bold uppercase px-2 py-1 text-[#ff8c00]">Remove</button>
                       </div>
                     </div>
                     <p className="font-black text-[12px] text-[#0b1a38]">{formatGH(prod.retail * item.qty)}</p>
@@ -633,7 +633,7 @@ export default function Page() {
               <div className="flex justify-between mb-2 text-[12px] font-semibold text-gray-500 uppercase tracking-wide"><span>Subtotal</span><span>{formatGH(subtotal)}</span></div>
               <div className="flex justify-between mb-4 text-[14px] font-black text-[#0b1a38]"><span>Total Retail</span><span>{formatGH(subtotal)}</span></div>
               <p className="text-[10px] font-medium text-gray-500 mb-4 leading-relaxed uppercase tracking-wide">12-month warranty included. Free Accra delivery above GH₵ 5,000. MoMo & Card accepted.</p>
-              <a href={`https://wa.me/233542451578?text=${checkoutText}`} target="_blank" rel="noopener noreferrer" className="block w-full bg-[#f58c14] hover:bg-[#e67f0f] text-white text-center font-extrabold text-[12px] tracking-widest uppercase rounded-xl py-4 transition">Checkout via WhatsApp</a>
+              <a href={`https://wa.me/233542451578?text=${checkoutText}`} target="_blank" rel="noopener noreferrer" className="block w-full bg-[#ff8c00] hover:bg-[#e67e00] text-white text-center font-extrabold text-[12px] tracking-widest uppercase rounded-xl py-4 transition">Checkout via WhatsApp</a>
               <button onClick={() => setCart([])} className="w-full mt-2 text-[11px] font-bold tracking-widest uppercase text-gray-500 py-2">Clear Cart</button>
               {/* Private profit summary - console only, not rendered publicly. Ledger accessible only in backend. */}
               <div className="hidden">

@@ -7,8 +7,8 @@
   --bg-navy: #0b1a38;
   --text-primary: #0b1a38;
   --text-secondary: #64748b;
-  --accent: #f68b1e;
-  --accent-dark: #e07b16;
+  --accent: #ff8c00;
+  --accent-dark: #e67e00;
   --border: #e2e8f0;
   --danger: #ef4444;
   --success: #22c55e;
@@ -96,7 +96,7 @@ html {
 }
 .mobile-search input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(246,139,30,0.1);
+  box-shadow: 0 0 0 3px rgba(255,140,0,0.1);
 }
 .mobile-search button {
   background: var(--accent);
@@ -512,7 +512,7 @@ html {
 /* ===== CART PULSE ANIMATION ===== */
 @keyframes cartPulse {
   0% { transform: scale(1); }
-  50% { transform: scale(1.2); filter: drop-shadow(0 0 6px #f58c14); }
+  50% { transform: scale(1.2); filter: drop-shadow(0 0 6px #ff8c00); }
   100% { transform: scale(1); }
 }
 .cart-icon.pulse {
@@ -580,17 +580,17 @@ html {
 }
 
 
-/* ===== WCAG AA CONTRAST: white-on-#f68b1e on light surfaces =====
- * Brand orange #f68b1e behind white text scored only 2.43:1, failing WCAG AA
+/* ===== WCAG AA CONTRAST: white-on-#ff8c00 on light surfaces =====
+ * Brand orange #ff8c00 behind white text scored only 2.43:1, failing WCAG AA
  * (4.5:1) on the primary "Add To Bag" CTAs and header search button, both
  * sitting on white/light card or page backgrounds.
  *
  * Darken those fills to #ad5900 (4.99:1 against #ffffff — passes AA on
  * normal text). Brand orange is preserved on navy (#0b1a38) surfaces where
- * #f68b1e vs #0b1a38 = 7.08:1 (AAA), and for orange as text/icon/border
+ * #ff8c00 vs #0b1a38 = 7.08:1 (AAA), and for orange as text/icon/border
  * (which is the inverse pairing and already passes). Small decorative fills
  * (stock bars, badges, pills, ping dot) that don't carry body copy are not
- * targeted — they keep #f68b1e.
+ * targeted — they keep #ff8c00.
  *
  * Scoped CSS override only. No HTML/JS changed.
  */
@@ -605,13 +605,13 @@ html {
 
 /* 2. Any filled-orange + white-text <button> or <a> that is NOT inside a
  *    navy-chrome container. [class*=] substring matching avoids escaping
- *    Tailwind arbitrary-value class names like bg-[#f68b1e]. */
-button[class*="bg-[#f68b1e]"][class*="text-white"],
-a[class*="bg-[#f68b1e]"][class*="text-white"] {
+ *    Tailwind arbitrary-value class names like bg-[#ff8c00]. */
+button[class*="bg-[#ff8c00]"][class*="text-white"],
+a[class*="bg-[#ff8c00]"][class*="text-white"] {
   background-color: #ad5900 !important;
 }
-button[class*="bg-[#f68b1e]"][class*="hover:bg-orange-600"]:hover,
-a[class*="bg-[#f68b1e]"][class*="hover:bg-orange-600"]:hover {
+button[class*="bg-[#ff8c00]"][class*="hover:bg-orange-600"]:hover,
+a[class*="bg-[#ff8c00]"][class*="hover:bg-orange-600"]:hover {
   background-color: #924a00 !important;
 }
 
@@ -622,7 +622,7 @@ a[class*="bg-[#f68b1e]"][class*="hover:bg-orange-600"]:hover {
  *    scores 7.08:1 against #0b1a38 as text. No other navy container in the
  *    page carries a white-on-orange filled CTA. */
 #flash-clock {
-  background-color: #f68b1e !important;
+  background-color: #ff8c00 !important;
 }
 
 /* ===== PREMIUM MOBILE PRODUCT REFINEMENTS ===== */
@@ -655,7 +655,7 @@ a[class*="bg-[#f68b1e]"][class*="hover:bg-orange-600"]:hover {
     color: #ffffff !important;
   }
   header.sticky button:hover, header.sticky a:hover {
-    color: #f68b1e !important;
+    color: #ff8c00 !important;
   }
 
   /* Search bar on navy header */
@@ -675,10 +675,10 @@ a[class*="bg-[#f68b1e]"][class*="hover:bg-orange-600"]:hover {
     color: #94a3b8 !important;
   }
   header.sticky #searchBtn {
-    background: #f68b1e !important;
+    background: #ff8c00 !important;
   }
   header.sticky #searchBtn:hover {
-    background: #e07b16 !important;
+    background: #e67e00 !important;
   }
 
   /* Hamburger menu on mobile */
@@ -708,7 +708,7 @@ a[class*="bg-[#f68b1e]"][class*="hover:bg-orange-600"]:hover {
     transform: translateX(-50%);
     width: 24px;
     height: 3px;
-    background: #f68b1e;
+    background: #ff8c00;
     border-radius: 0 0 4px 4px;
   }
 
@@ -734,7 +734,7 @@ a[class*="bg-[#f68b1e]"][class*="hover:bg-orange-600"]:hover {
     font-weight: 600 !important;
   }
   #mobileCategoriesModal button:hover {
-    border-color: #f68b1e !important;
+    border-color: #ff8c00 !important;
     color: #0b1a38 !important;
   }
   #mobileCategoryGrid button {
@@ -780,10 +780,10 @@ a[class*="bg-[#f68b1e]"][class*="hover:bg-orange-600"]:hover {
 
   /* PWA install banner — fix WhatsApp-green button to brand orange */
   #pwaInstallBanner #pwaInstallBtn {
-    background: #f68b1e !important;
+    background: #ff8c00 !important;
   }
   #pwaInstallBanner #pwaInstallBtn:hover {
-    background: #e07b16 !important;
+    background: #e67e00 !important;
   }
 
   /* Cart drawer proper padding for safe area */
@@ -793,13 +793,13 @@ a[class*="bg-[#f68b1e]"][class*="hover:bg-orange-600"]:hover {
 
   /* Mobile menu drawer proper styling */
   #mobileMenuModal {
-    border-right: 2px solid #f68b1e !important;
+    border-right: 2px solid #ff8c00 !important;
   }
   #mobileMenuModal a, #mobileMenuModal button {
     color: #ffffff !important;
   }
   #mobileMenuModal a:hover, #mobileMenuModal button:hover {
-    color: #f68b1e !important;
+    color: #ff8c00 !important;
   }
 
   /* Improve touch targets on mobile */
