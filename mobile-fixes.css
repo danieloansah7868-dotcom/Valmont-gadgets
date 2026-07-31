@@ -312,14 +312,14 @@ html {
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--bg-primary);
-  border-top: 2px solid var(--accent);
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-around;
   padding: 6px 0;
   padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
   z-index: 9999;
-  box-shadow: 0 -2px 12px rgba(11,26,56,0.1);
+  box-shadow: 0 -2px 12px rgba(11,26,56,0.08);
 }
 .bottom-nav-item {
   display: flex;
@@ -437,19 +437,32 @@ html {
   transform: translateX(-50%) translateY(0);
 }
 
-/* ===== EXISTING PRODUCT GRID OVERRIDES ===== */
+/* ===== PRODUCT GRID OVERRIDES ===== */
 @media (max-width: 768px) {
   #productGrid, .product-grid {
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 12px !important;
-    padding: 12px !important;
+    gap: 8px !important;
+    padding: 8px !important;
     padding-bottom: 80px !important;
   }
   #productGrid > div > div:first-of-type,
   .product-card-image {
-    height: 140px !important;
-    min-height: 140px !important;
-    padding: 12px !important;
+    height: 110px !important;
+    min-height: 110px !important;
+    padding: 10px !important;
+  }
+  /* Make Add to Bag button pill-shaped on mobile */
+  #productGrid > div > .px-3 button {
+    border-radius: 999px !important;
+    font-size: 10px !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+    padding: 8px 4px !important;
+  }
+  /* Show Add to Bag button on mobile */
+  #productGrid > div > .px-3 {
+    display: block !important;
+    padding: 0 8px 8px !important;
   }
   #searchInput {
     min-height: 48px;
@@ -496,17 +509,22 @@ html {
 
 @media (max-width: 480px) {
   #productGrid, .product-grid {
-    gap: 8px !important;
-    padding: 8px !important;
+    gap: 6px !important;
+    padding: 6px !important;
   }
   #productGrid > div > div:first-of-type,
   .product-card-image {
-    height: 120px !important;
-    min-height: 120px !important;
+    height: 96px !important;
+    min-height: 96px !important;
   }
   .mobile-product-image {
     height: 130px;
   }
+  /* JS-generated cards on small phones */
+  .product-card .product-card-image { height:96px !important; }
+  .product-card .card-title { font-size:10px !important; }
+  .product-card .card-price { font-size:12px !important; }
+  .product-card .card-add-btn { padding:6px !important; font-size:9px !important; }
 }
 
 /* ===== CART PULSE ANIMATION ===== */
@@ -580,50 +598,7 @@ html {
 }
 
 
-/* ===== WCAG AA CONTRAST: white-on-#ff8c00 on light surfaces =====
- * Brand orange #ff8c00 behind white text scored only 2.43:1, failing WCAG AA
- * (4.5:1) on the primary "Add To Bag" CTAs and header search button, both
- * sitting on white/light card or page backgrounds.
- *
- * Darken those fills to #ad5900 (4.99:1 against #ffffff — passes AA on
- * normal text). Brand orange is preserved on navy (#0b1a38) surfaces where
- * #ff8c00 vs #0b1a38 = 7.08:1 (AAA), and for orange as text/icon/border
- * (which is the inverse pairing and already passes). Small decorative fills
- * (stock bars, badges, pills, ping dot) that don't carry body copy are not
- * targeted — they keep #ff8c00.
- *
- * Scoped CSS override only. No HTML/JS changed.
- */
-
-/* 1. Header search submit button (white toolbar). */
-#searchBtn {
-  background-color: #ad5900 !important;
-}
-#searchBtn:hover {
-  background-color: #924a00 !important;
-}
-
-/* 2. Any filled-orange + white-text <button> or <a> that is NOT inside a
- *    navy-chrome container. [class*=] substring matching avoids escaping
- *    Tailwind arbitrary-value class names like bg-[#ff8c00]. */
-button[class*="bg-[#ff8c00]"][class*="text-white"],
-a[class*="bg-[#ff8c00]"][class*="text-white"] {
-  background-color: #ad5900 !important;
-}
-button[class*="bg-[#ff8c00]"][class*="hover:bg-orange-600"]:hover,
-a[class*="bg-[#ff8c00]"][class*="hover:bg-orange-600"]:hover {
-  background-color: #924a00 !important;
-}
-
-/* 3. Restore brand orange for white-on-orange fills that live inside the
- *    navy-gradient flash-deal banner (#flash-clock timer chip). It's an
- *    11px numeric badge, not body copy; the surrounding surface is dark
- *    (from-[#0b1a38] to-[#1e355c]) so brand orange reads fine there and
- *    scores 7.08:1 against #0b1a38 as text. No other navy container in the
- *    page carries a white-on-orange filled CTA. */
-#flash-clock {
-  background-color: #ff8c00 !important;
-}
+/* WCAG contrast hack removed — brand orange #ff8c00 preserved */
 
 /* ===== PREMIUM MOBILE PRODUCT REFINEMENTS ===== */
 @media (max-width: 767px) {

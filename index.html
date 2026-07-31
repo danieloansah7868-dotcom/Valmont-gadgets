@@ -1658,43 +1658,146 @@
       outline-offset: 2px !important;
     }
 
-    /* Storefront reference layout: white navigation, navy flash-deals stage, and compact product cards. */
-    .reference-category-strip { max-width:1184px; margin:0 auto 0; padding:10px 16px; gap:10px; justify-content:center; background:#fff; border-bottom:1px solid #e5e7eb; }
-    .reference-category-strip .desktop-cat { width:auto; border:0; border-radius:999px; background:#0b1a38; color:#fff; padding:7px 20px; font-size:12px; font-weight:700; line-height:1.2; white-space:nowrap; }
-    .reference-category-strip .desktop-cat:hover, .reference-category-strip .desktop-cat.active { background:#ff8c00; color:#fff; }
-    #customer-store-view > .grid:first-of-type { display:none; }
-    #flashProductsRow { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); overflow:visible; gap:16px; }
+    /* ===== STOREFRONT REFERENCE LAYOUT ===== */
+    /* Desktop: navy pill strip, navy flash-deals stage, Jumia-style 6-col product grid. */
+    /* Mobile:  clean white body, navy header, pill category tabs, 2-col product grid. */
+
+    .reference-category-strip {
+      max-width:1184px; margin:0 auto; padding:10px 16px; gap:10px;
+      justify-content:center; background:#fff; border-bottom:1px solid #e5e7eb;
+    }
+    .reference-category-strip .desktop-cat {
+      width:auto; border:0; border-radius:999px; background:#0b1a38; color:#fff;
+      padding:7px 20px; font-size:12px; font-weight:700; line-height:1.2; white-space:nowrap;
+    }
+    .reference-category-strip .desktop-cat:hover,
+    .reference-category-strip .desktop-cat.active { background:#ff8c00; color:#fff; }
+
+    /* Flash Deals: 4-col grid on desktop, horizontal scroll on mobile */
+    @media (max-width:767px) {
+      .flash-deals-section {
+        border-radius:0 !important; border-left:0 !important;
+        margin-left:-8px; margin-right:-8px; margin-bottom:0 !important;
+      }
+    }
+    #flashProductsRow {
+      display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
+      overflow:visible; gap:16px;
+    }
     #flashProductsRow > div { width:auto; min-width:0; border-radius:10px; padding:12px; }
     #flashProductsRow > div > div { height:130px; }
     #flashProductsRow h5 { white-space:normal; min-height:32px; font-size:12px; }
-    #flashProductsRow .flash-add { display:flex; width:100%; margin-top:9px; align-items:center; justify-content:center; gap:6px; border:0; border-radius:7px; padding:9px; background:#ff8c00; color:#fff; font-size:10px; font-weight:800; text-transform:uppercase; }
+    #flashProductsRow .flash-add {
+      display:flex; width:100%; margin-top:9px; align-items:center;
+      justify-content:center; gap:6px; border:0; border-radius:7px;
+      padding:9px; background:#ff8c00; color:#fff; font-size:10px;
+      font-weight:800; text-transform:uppercase;
+    }
+
+    /* ===== MOBILE OVERRIDES (max-width: 767px) ===== */
     @media (max-width:767px) {
+      /* White body background on mobile */
       body { background:#fff; }
-      header { position:sticky; background:#0b1a38 !important; border:0 !important; padding:12px 14px !important; }
-      header .search-container { order:2; max-width:none; border:0; border-radius:999px; }
+
+      /* Navy header bar */
+      header {
+        position:sticky; background:#0b1a38 !important; border:0 !important;
+        padding:10px 12px !important;
+      }
+      header .search-container {
+        order:2; max-width:none; border:0; border-radius:999px;
+      }
       header .search-container input { font-size:15px; }
       header .search-container #searchBtn { display:none; }
-      header > div { flex-wrap:wrap; gap:10px !important; }
+      header > div { flex-wrap:wrap; gap:8px !important; }
       header > div > :first-child { order:1; }
       header > div > :last-child { order:3; margin-left:auto; }
       header a, header button { color:#fff !important; }
       header img { filter:brightness(0) invert(1); }
-      .category-filters { margin:0 !important; padding:10px 14px !important; border-bottom:1px solid #e5e7eb; background:#fff; gap:24px !important; }
-      .category-filters .mobile-chip { padding:8px 0 !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; background:transparent !important; color:#0b1a38 !important; font-size:13px !important; }
-      .category-filters .mobile-chip:first-child { color:#ff8c00 !important; border-bottom:3px solid #ff8c00 !important; }
-      #customer-store-view > .grid:first-of-type, #customer-store-view > .bg-gradient-to-r { display:none !important; }
-      #store-feed { padding:10px 9px 90px; border:0; border-radius:0; box-shadow:none; }
+
+      /* Category pills: horizontal scrollable pills on mobile */
+      .category-filters {
+        margin:0 !important; padding:10px 12px !important;
+        border-bottom:1px solid #e5e7eb; background:#fff; gap:8px !important;
+      }
+      .category-filters .mobile-chip {
+        padding:7px 14px !important; border:1px solid #e2e8f0 !important;
+        border-radius:999px !important; box-shadow:none !important;
+        background:#fff !important; color:#0b1a38 !important;
+        font-size:12px !important; font-weight:700 !important;
+        white-space:nowrap !important; flex-shrink:0;
+      }
+      .category-filters .mobile-chip.active,
+      .category-filters .mobile-chip:first-child {
+        background:#ff8c00 !important; color:#fff !important;
+        border-color:#ff8c00 !important;
+      }
+
+      /* Hide the hero sidebar + promo row on mobile (but NOT the Flash Deals) */
+      #customer-store-view > .grid:first-of-type { display:none !important; }
+
+      /* Flash Deals: horizontal scroll on mobile */
+      #flashProductsRow {
+        display:flex !important; overflow-x:auto; gap:12px;
+        padding-bottom:4px; scroll-snap-type:x mandatory;
+        -webkit-overflow-scrolling:touch;
+      }
+      #flashProductsRow > div {
+        min-width:155px; max-width:155px; flex-shrink:0;
+        scroll-snap-align:start;
+      }
+
+      /* Store feed: clean flat container */
+      #store-feed {
+        padding:8px 8px 90px; border:0; border-radius:0; box-shadow:none;
+      }
       #store-feed > div:first-child { display:none; }
-      #productGrid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
-      #productGrid > div { border-radius:15px; border-color:#e5e7eb; box-shadow:0 2px 7px rgba(11,26,56,.11); }
-      #productGrid > div > .p-3 { padding:9px; }
-      #productGrid > div .h-\[140px\] { height:128px; margin-bottom:7px; }
-      #productGrid h4 { min-height:34px; font-size:12px; font-weight:700; }
-      #productGrid p.text-\[10px\], #productGrid .mt-1\.5, #productGrid .mt-2\.5 { display:none; }
-      #productGrid .text-\[14px\] { font-size:15px; color:#0b1a38; }
-      #productGrid > div > .px-3 { display:block !important; padding:0 9px 10px; }
-      #productGrid > div > .px-3 button { border-radius:999px; padding:9px 4px; font-size:10px; letter-spacing:0; text-transform:none; }
-      #productGrid .absolute.top-2\.5 { top:7px; }
+
+      /* Product Grid: 2 columns on mobile */
+      #productGrid {
+        grid-template-columns:repeat(2,1fr) !important; gap:8px !important;
+      }
+
+      /* Product cards: compact on mobile */
+      #productGrid > div {
+        border-radius:12px; border-color:#e5e7eb;
+        box-shadow:0 1px 4px rgba(11,26,56,.08);
+      }
+      #productGrid > div > .p-3 { padding:8px; }
+      #productGrid > div .h-\[140px\] { height:110px; margin-bottom:5px; }
+      #productGrid h4 { min-height:28px; font-size:11px; font-weight:700; line-height:1.3; }
+      #productGrid p.text-\[10px\],
+      #productGrid .mt-1\.5,
+      #productGrid .mt-2\.5 { display:none; }
+      #productGrid .text-\[14px\] { font-size:13px; color:#0b1a38; font-weight:900; }
+      #productGrid > div > .px-3 {
+        display:block !important; padding:0 8px 8px;
+      }
+      #productGrid > div > .px-3 button {
+        border-radius:999px; padding:8px 4px; font-size:10px;
+        letter-spacing:0; text-transform:none;
+      }
+      #productGrid .absolute.top-2\.5 { top:6px; }
+    }
+
+    /* JS-generated product cards on mobile */
+    @media (max-width:767px) {
+      .product-card .product-card-image { height:110px; padding:10px; }
+      .product-card .product-card-body { padding:8px; gap:3px; }
+      .product-card .card-title { font-size:11px; min-height:24px; }
+      .product-card .card-specs { display:none; }
+      .product-card .card-category { display:none; }
+      .product-card .card-rating { display:none; }
+      .product-card .card-price { font-size:13px; }
+      .product-card .card-add-btn { padding:8px; font-size:10px; border-radius:999px; }
+      .product-card .badge-premium { top:6px; left:6px; font-size:8px; padding:3px 6px; }
+      .product-card .wishlist-heart { top:6px; right:6px; width:28px; height:28px; }
+    }
+
+    /* Extra-small phones */
+    @media (max-width:380px) {
+      #productGrid > div .h-\[140px\] { height:96px; }
+      #flashProductsRow > div { min-width:140px; max-width:140px; }
     }
   </style>
 
@@ -1834,7 +1937,7 @@
   </header>
 
   <!-- 3. JUMIA HOME CONTAINER LAYOUT -->
-  <main class="max-w-[1200px] mx-auto px-4 py-6 md:py-8 pb-20 md:pb-8">
+  <main class="max-w-[1200px] mx-auto px-2 md:px-4 py-4 md:py-8 pb-20 md:pb-8">
 
     <!-- CUSTOMER SHOP VIEW (DEFAULT) -->
     <div id="customer-store-view">
@@ -1971,47 +2074,46 @@
 
       <!-- Mobile Category Chips (hidden on desktop) -->
       <div class="category-filters md:hidden flex gap-2 overflow-x-auto pb-3 mb-4 no-scrollbar">
-        <button data-cat-filter="iphones" class="cat-pill mobile-chip bg-[#ff8c00] text-white text-[12px] font-bold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Mobiles</button>
-        <button data-cat-filter="laptops" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Laptops</button>
-        <button data-cat-filter="phone_acc" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Accessories</button>
-        <button data-cat-filter="audio" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Audio</button>
-        <button data-cat-filter="all" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Brands</button>
-        <button data-cat-filter="smartwatches" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Watches</button>
-        <button data-cat-filter="laptops" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Laptops</button>
-        <button data-cat-filter="laptop_acc" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Laptop Acc</button>
-        <button data-cat-filter="audio" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Audio</button>
-        <button data-cat-filter="gaming" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Gaming</button>
-        <button data-cat-filter="phone_acc" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Cases</button>
-        <button data-cat-filter="phone_parts" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Parts</button>
-        <button data-cat-filter="travel_acc" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Travel</button>
-        <button data-cat-filter="chargers" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Power</button>
+        <button data-cat-filter="all" class="cat-pill mobile-chip active text-[12px] font-bold px-4 py-2 rounded-full whitespace-nowrap">All</button>
+        <button data-cat-filter="iphones" class="cat-pill mobile-chip text-[12px] font-semibold px-4 py-2 rounded-full whitespace-nowrap">Phones</button>
+        <button data-cat-filter="laptops" class="cat-pill mobile-chip text-[12px] font-semibold px-4 py-2 rounded-full whitespace-nowrap">Laptops</button>
+        <button data-cat-filter="phone_acc" class="cat-pill mobile-chip text-[12px] font-semibold px-4 py-2 rounded-full whitespace-nowrap">Accessories</button>
+        <button data-cat-filter="audio" class="cat-pill mobile-chip text-[12px] font-semibold px-4 py-2 rounded-full whitespace-nowrap">Audio</button>
+        <button data-cat-filter="smartwatches" class="cat-pill mobile-chip text-[12px] font-semibold px-4 py-2 rounded-full whitespace-nowrap">Watches</button>
+        <button data-cat-filter="gaming" class="cat-pill mobile-chip text-[12px] font-semibold px-4 py-2 rounded-full whitespace-nowrap">Gaming</button>
+        <button data-cat-filter="phone_parts" class="cat-pill mobile-chip text-[12px] font-semibold px-4 py-2 rounded-full whitespace-nowrap">Parts</button>
+        <button data-cat-filter="chargers" class="cat-pill mobile-chip text-[12px] font-semibold px-4 py-2 rounded-full whitespace-nowrap">Power</button>
       </div>
 
       <!-- VALMONT PREMIUM FLASH SALES ROW -->
-      <div class="bg-gradient-to-r from-[#0b1a38] to-[#1e355c] rounded-[4px] p-4 text-white mb-6 card-shadow border-l-4 border-[#ff8c00]">
+      <div class="flash-deals-section bg-gradient-to-r from-[#0b1a38] to-[#1e355c] rounded-[4px] p-3 md:p-4 text-white mb-4 md:mb-6 card-shadow border-l-4 border-[#ff8c00]">
         <div class="flex items-center justify-between border-b border-gray-700/50 pb-2 mb-3">
           <div class="flex items-center gap-2">
-            <span class="font-extrabold text-[14px] md:text-[15px] uppercase tracking-wider text-[#ff8c00]"> FLASH DEALS</span>
+            <span class="font-extrabold text-[13px] md:text-[15px] uppercase tracking-wider text-[#ff8c00]">⚡ FLASH DEALS</span>
+            <a href="#store-feed" class="text-[10px] md:text-[11px] text-gray-300 hover:text-white font-bold uppercase tracking-wider ml-auto md:ml-2">See All →</a>
           </div>
           <!-- Countdown Clock -->
           <div class="flex items-center gap-1.5 font-bold text-[12px]">
-            <span class="text-[11px] text-gray-300 uppercase font-black tracking-wider">ENDS IN:</span>
-            <div id="flash-clock" class="bg-[#ff8c00] text-white px-2.5 py-0.5 rounded-[4px] text-[11px] font-black font-mono">04h : 23m : 11s</div>
+            <span class="text-[10px] md:text-[11px] text-gray-300 uppercase font-black tracking-wider">ENDS IN:</span>
+            <div id="flash-clock" class="bg-[#ff8c00] text-white px-2 py-0.5 rounded-[4px] text-[11px] font-black font-mono">04h : 23m : 11s</div>
           </div>
         </div>
-        <!-- Flash Sales Products Row (Horizontal Scroll) -->
-        <div id="flashProductsRow" class="flex gap-4 overflow-x-auto pb-1.5 no-scrollbar">
+        <!-- Flash Sales Products Row (Horizontal Scroll on mobile, Grid on desktop) -->
+        <div id="flashProductsRow" class="flex gap-3 md:gap-4 overflow-x-auto pb-1.5 no-scrollbar">
           <!-- Populated via Javascript dynamically -->
         </div>
       </div>
 
       <!-- JUMIA MAIN PRODUCT FEED SECTION -->
-      <div class="bg-white rounded-[4px] p-4 border border-gray-100 card-shadow mb-6" id="store-feed">
+      <div class="bg-white rounded-[4px] p-3 md:p-4 border border-gray-100 card-shadow mb-4 md:mb-6" id="store-feed">
         <div class="flex items-center justify-between border-b pb-3 mb-4">
-          <h3 class="font-extrabold text-[14px] uppercase tracking-wider text-gray-800" id="currentFeedTitle">
-            Verified Premium Stock
-          </h3>
-          <div class="flex flex-wrap items-center justify-end gap-2">
+          <div>
+            <h3 class="font-extrabold text-[13px] md:text-[14px] uppercase tracking-wider text-gray-800" id="currentFeedTitle">
+              Verified Premium Stock
+            </h3>
+            <span class="text-[10px] md:hidden font-black text-gray-400 uppercase tracking-widest" id="mobileItemCount">64 Products</span>
+          </div>
+          <div class="hidden md:flex flex-wrap items-center justify-end gap-2">
             <label for="sortSelector" class="sr-only">Sort products</label>
             <select id="sortSelector" aria-label="Sort products" class="border border-gray-200 rounded px-2 py-1.5 text-[11px] font-bold text-gray-700"><option value="popular">Most popular</option><option value="newest">Newest</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option></select>
             <label for="priceSelector" class="sr-only">Filter by price</label>
