@@ -77,18 +77,17 @@ document.addEventListener("keydown", function(e) {
         paymentCost: 280
       },
       {
-        id: 'VG-IP15P-128',
-        name: 'iPhone 15 Pro 128GB — Natural Titanium',
+        id: 'iphone-15-pro-128-uk-used-92',
+        name: 'iPhone 15 Pro 128GB Natural Titanium — UK Used',
         category: 'iphones',
-        retail: 14800,
-        compareAt: 16200,
-        badge: 'SEALED',
-        specs: 'A17 Pro • 6.1-inch Super Retina • 12m Warranty',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=800&auto=format&fit=crop',
-        wholesale: 12450,
-        deliveryCost: 120,
-        paymentCost: 251
+        retail: 11200, compareAt: 14500, badge: 'UK USED • BH 92%', stock: '1 in stock • UK Used • 12m Warranty',
+        specs: '128GB • Natural Titanium • BH 92% Original • Face ID & True Tone OK • Europe Standard',
+        description: 'Solid Europe-standard iPhone 15 Pro with a clean body, original 92% battery health, Face ID and True Tone working. Cable included. Grade A+ UK used—not brand-new sealed. Swap accepted.',
+        features: ['128GB', 'BH 92% Original', 'Natural Titanium', 'Face ID OK', 'Swap Allowed', 'Europe Standard'],
+        tags: ['iphone 15 pro', 'uk used', 'refurbished', '128gb', 'bh92'],
+        image: 'uploads/iphone_15_pro_128_clean.jpg',
+        images: ['uploads/iphone_15_pro_128_clean.jpg', 'uploads/iphone_15_pro_128_clean_1080.jpg', 'uploads/iphone_15_pro_front.jpg', 'uploads/iphone_15_pro_side.jpg'],
+        wholesale: 0, deliveryCost: 80, paymentCost: 224
       },
       {
         id: 'VG-IP14PM-256',
@@ -455,18 +454,17 @@ document.addEventListener("keydown", function(e) {
         paymentCost: 390
       },
       {
-        id: 'VG-AW-13PROMAX',
-        name: 'iPhone 13 Pro Max 128GB — UK Used',
+        id: 'iphone-13-pro-max-128-uk-used',
+        name: 'iPhone 13 Pro Max 128GB — UK Used Sierra Blue / Gold',
         category: 'iphones',
-        retail: 7900,
-        compareAt: 8800,
-        badge: 'UK USED',
-        specs: 'Sierra Blue / Gold • 128GB Storage • Solid Battery Health • Clean Body • Swapping Allowed',
-        stock: 'In stock • UK Used • 6m Store Warranty',
-        image: 'uploads/clean_13_promax.png',
-        wholesale: 6700,
-        deliveryCost: 80,
-        paymentCost: 132
+        retail: 7900, compareAt: 8800, badge: 'UK USED • SWAP ALLOWED', stock: '5 in stock • UK Used • 12m Warranty',
+        specs: '128GB • Sierra Blue / Gold • 85%+ Battery • Face ID & True Tone Active • Grade A',
+        description: 'Very solid Grade A UK-used iPhone 13 Pro Max with a clean body and no dents. Sierra Blue and Gold available. Battery health is 85%+, with True Tone and Face ID active. Not brand-new sealed; price reflects its used condition.',
+        features: ['128GB', 'Sierra Blue / Gold', 'UK Used', '85%+ Battery', 'Swap Allowed'],
+        tags: ['13 pro max', 'uk used', 'refurbished'],
+        image: 'uploads/iphone_13_pro_max_128_clean.jpg',
+        images: ['uploads/iphone_13_pro_max_128_clean.jpg', 'uploads/iphone_13_pro_max_128_clean_1080.jpg', 'uploads/iphone_13_pro_max_front.jpg', 'uploads/iphone_13_pro_max_side.jpg'],
+        wholesale: 6700, deliveryCost: 80, paymentCost: 132
       },
       {
         id: 'VG-AW-13',
@@ -917,18 +915,43 @@ document.addEventListener("keydown", function(e) {
         paymentCost: 66
       },
       {
-        id: 'VG-PS5-SLIM-1T',
-        name: 'PlayStation 5 Slim 1TB — Disc Edition',
+        id: 'ps5-1tb-new-sealed-slim',
+        name: 'PS5 1TB Slim — Brand New Sealed — Disc Edition',
         category: 'gaming',
-        retail: 7800,
-        compareAt: 8500,
-        badge: 'HOT',
-        specs: '1TB Custom SSD • 4K HDR • 120fps Support • 1x DualSense',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?q=80&w=800&auto=format&fit=crop',
-        wholesale: 6700,
-        deliveryCost: 150,
-        paymentCost: 132
+        retail: 7800, compareAt: 8500, badge: 'SEALED — NEW', stock: '4 in stock • Sealed • 12m Warranty',
+        specs: '1TB SSD Slim • Disc Edition • European Stock • Includes DualSense, cables & stand',
+        description: 'Brand-new sealed 2024 Slim model. Listing is for one console. Includes console, DualSense controller, cables and stand, with receipt and 12-month Valmont warranty.',
+        features: ['1TB SSD Slim', 'Disc Version', 'Sealed', '1 Year Warranty'],
+        tags: ['ps5', 'new', 'sealed', 'slim'],
+        image: 'uploads/ps5_4_boxes_clean.jpg',
+        images: ['uploads/ps5_4_boxes_clean.jpg', 'uploads/ps5_4_boxes_clean_1080.jpg', 'uploads/ps5_box_side.jpg', 'uploads/ps5_box_open.jpg'],
+        wholesale: 6700, deliveryCost: 150, paymentCost: 132
+      },
+      {
+        id: 'ps5-1tb-very-neat-used-001',
+        name: 'PS5 1TB — UK Used Very Neat — 1 Controller',
+        category: 'gaming',
+        retail: 5800, compareAt: 6800, badge: 'REFURBISHED • VERY NEAT', stock: '2 in stock • Refurbished • 12m Warranty',
+        specs: '1TB SSD • Original DualSense • Fully Tested • Clean Body • Europe Standard',
+        description: 'Very neat 9.5/10 UK-used Europe-standard PS5. This listing is for one fully tested console with clean body, one original DualSense controller, HDMI cable and power cable. Refurbished/used, not sealed new.',
+        features: ['1TB SSD', 'Includes DualSense', 'Tested 100%', '12mo warranty', 'Accra delivery', 'Not sealed — refurbished'],
+        tags: ['ps5', 'gaming', 'uk used', 'refurbished', 'very neat'],
+        image: 'uploads/ps5_2_consoles_clean.jpg',
+        images: ['uploads/ps5_2_consoles_clean.jpg', 'uploads/ps5_2_consoles_clean_1080.jpg', 'uploads/ps5_consoles_side.jpg', 'uploads/ps5_controller_close.jpg'],
+        wholesale: 0, deliveryCost: 150, paymentCost: 0
+      },
+      {
+        id: 'hp-elitebook-1030-g2-x360',
+        name: 'HP EliteBook 1030 G2 x360 — i7 7th Gen, 8GB / 256GB',
+        category: 'laptops',
+        retail: 3900, compareAt: 4500, badge: 'x360 TOUCH • REFURBISHED', stock: '3 in stock • Refurbished • Warranty Included',
+        specs: 'i7 7th Gen • 8GB RAM • 256GB SSD • 13.3-inch FHD Touch • Windows 11 Pro',
+        description: 'Very neat UK business-grade HP EliteBook 1030 G2 x360. This touchscreen convertible has a backlit keyboard, fingerprint reader, 360-degree hinge and activated Windows 11 Pro. Includes charger. Refurbished, not brand new.',
+        features: ['i7 7th Gen', '8GB / 256GB SSD', '13.3-inch Touch x360', 'Backlit Keyboard', 'Fingerprint', 'Windows 11 Pro'],
+        tags: ['laptop', 'hp', 'elitebook', 'x360', 'touch', 'refurbished'],
+        image: 'uploads/hp_elitebook_1030_g2_clean.jpg',
+        images: ['uploads/hp_elitebook_1030_g2_clean.jpg', 'uploads/hp_elitebook_1030_g2_clean_1080.jpg', 'uploads/hp_elitebook_keyboard.jpg', 'uploads/hp_elitebook_tablet.jpg'],
+        wholesale: 0, deliveryCost: 100, paymentCost: 0
       },
       {
         id: 'VG-NS-OLED',
@@ -1001,8 +1024,8 @@ document.addEventListener("keydown", function(e) {
     
     // === SUPABASE DATABASE INTEGRATION CONFIGURATION ===
     const VALMONT_SUPABASE = {
-      url: 'https://yrrqrvbkdziuyosedfx.supabase.co',
-      anonKey: 'sb_publishable_H3PK7UqMZcO2rsusl1_qQw_MypxJljs'
+      url: 'https://eydsoqnpetqczaeqrscc.supabase.co',
+      anonKey: 'sb_publishable_BHdfWG7G433xVJ93ZJTNIQ_q_jFBwso'
     };
 
     const hasSupabase = () => {
@@ -1281,9 +1304,20 @@ document.addEventListener("keydown", function(e) {
       }
     }
 
-    // Render Flash Sales row
+    // Render Flash Sales row. Keep the live inventory supplied by the store at
+    // the front of the homepage instead of showing older placeholder deals.
+    const FLASH_FEATURED_IDS = [
+      'iphone-15-pro-128-uk-used-92',
+      'iphone-13-pro-max-128-uk-used',
+      'hp-elitebook-1030-g2-x360',
+      'ps5-1tb-very-neat-used-001',
+      'ps5-1tb-new-sealed-slim'
+    ];
+
     function renderFlashSales() {
-      const flashItems = PRODUCTS.filter(p => p.badge === 'HOT' || p.badge === 'DEAL').slice(0, 6);
+      const flashItems = FLASH_FEATURED_IDS
+        .map(id => PRODUCTS.find(product => product.id === id))
+        .filter(Boolean);
       flashGrid.innerHTML = flashItems.map(p => {
         const discount = Math.round((1 - (p.retail / p.compareAt)) * 100);
         return `
@@ -2434,33 +2468,53 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       }
     }
 
+    // Starts a real OAuth flow with Google via Supabase. No account details are
+    // invented or stored until Google has authenticated the shopper.
     function handleGoogleSignIn() {
-      currentUser = {
-        name: "Daniel Kofi",
-        phone: "054 245 1578",
-        email: "daniel.kofi@gmail.com",
-        address: "Airport Residential, Accra"
-      };
-      localStorage.setItem('valmont_user', JSON.stringify(currentUser));
-      
-      // Register for account page compatibility
-      const users = JSON.parse(localStorage.getItem('valmont_registered_users') || '[]');
-      if (!users.find(u => u.email === currentUser.email)) {
-        users.push({ name: currentUser.name, email: currentUser.email, password: '', phone: currentUser.phone });
-        localStorage.setItem('valmont_registered_users', JSON.stringify(users));
+      if (!hasSupabase()) {
+        showValmontToast('Google sign-in is not configured yet. Please use email sign-in.');
+        return;
       }
-      
-      // Autofill forms
-      if (document.getElementById('shippingName')) document.getElementById('shippingName').value = "Daniel Kofi";
-      if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = "054 245 1578";
-      if (document.getElementById('shippingEmail')) document.getElementById('shippingEmail').value = "daniel@valmontgadgets.com";
-      if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = "Near Airport Residential Area";
-      if (document.getElementById('shippingCity')) document.getElementById('shippingCity').value = "Accra";
-      if (document.getElementById('shippingTown')) document.getElementById('shippingTown').value = "Airport Residential";
+      const returnTo = `${window.location.origin}${window.location.pathname}${window.location.search}`;
+      sessionStorage.setItem('valmont_oauth_return', returnTo);
+      const authorizeUrl = `${VALMONT_SUPABASE.url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(returnTo)}`;
+      window.location.assign(authorizeUrl);
+    }
 
-      updateUserUI();
-      closeLoginModal();
-      alert("Signed In Successfully with Google!");
+    // Supabase returns a real access token in the URL fragment after Google
+    // approves the account. Exchange it for the verified profile, then remove
+    // the sensitive fragment from the address bar.
+    async function completeGoogleSignIn() {
+      const params = new URLSearchParams(window.location.hash.slice(1));
+      const accessToken = params.get('access_token');
+      if (!accessToken) return;
+      try {
+        const response = await fetch(`${VALMONT_SUPABASE.url}/auth/v1/user`, {
+          headers: { apikey: VALMONT_SUPABASE.anonKey, Authorization: `Bearer ${accessToken}` }
+        });
+        if (!response.ok) throw new Error('Unable to verify Google account');
+        const account = await response.json();
+        currentUser = {
+          name: account.user_metadata?.full_name || account.user_metadata?.name || account.email.split('@')[0],
+          email: account.email,
+          phone: account.phone || '',
+          address: ''
+        };
+        localStorage.setItem('valmont_user', JSON.stringify(currentUser));
+        history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+        updateUserUI();
+        showValmontToast(`Welcome, ${currentUser.name}!`);
+      } catch (error) {
+        console.error('Google sign-in failed:', error);
+        history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+        showValmontToast('Google sign-in could not be completed. Please try again.');
+      }
+    }
+
+    completeGoogleSignIn();
+    if (new URLSearchParams(window.location.search).get('google_signin') === '1') {
+      history.replaceState(null, '', window.location.pathname);
+      handleGoogleSignIn();
     }
 
     // Consolidated closeLoginModal override (Unified)

@@ -595,12 +595,12 @@ html {
  * Scoped CSS override only. No HTML/JS changed.
  */
 
-/* 1. Header search submit button (white toolbar). */
+/* 1. Header search submit button — use the storefront CTA orange. */
 #searchBtn {
-  background-color: #ad5900 !important;
+  background-color: #ff8c00 !important;
 }
 #searchBtn:hover {
-  background-color: #924a00 !important;
+  background-color: #e67e00 !important;
 }
 
 /* 2. Any filled-orange + white-text <button> or <a> that is NOT inside a
@@ -829,3 +829,74 @@ a[class*="bg-[#ff8c00]"][class*="hover:bg-orange-600"]:hover {
     overflow: hidden !important;
   }
 }
+
+/* Reference mobile storefront: compact navy header, category tabs and a
+ * three-column catalogue. */
+@media (max-width: 767px) {
+  header, header.sticky, header.bg-white.sticky {
+    min-height: 78px;
+    padding: 11px 14px !important;
+    background: #0b1a38 !important;
+    border: 0 !important;
+  }
+  header > div { flex-wrap: nowrap !important; align-items: center !important; }
+  header > div > :first-child { flex: 0 0 142px; order: 1; }
+  header > div > :last-child { display: none !important; }
+  header .desktop-logo { display: none !important; }
+  .mobile-wordmark { display: block; color: #fff; font-size: 19px; line-height: .9; font-weight: 900; letter-spacing: -.6px; }
+  .mobile-wordmark span, .mobile-wordmark strong { display: block; }
+  .mobile-wordmark strong { color: #ff8c00; }
+  header > div > :first-child > button { display: none !important; }
+  header .search-container { order: 2; flex: 1 1 auto; flex-basis: auto; width: auto; margin: 0 !important; border: 0 !important; border-radius: 999px !important; background: #fff !important; }
+  header .search-container #searchInput { min-height: 46px; font-size: 14px !important; }
+  header .search-container #searchBtn { display: none !important; }
+  header .search-container > div { color: #0b1a38 !important; padding-left: 14px !important; }
+  header .search-container::after { content: '☰'; color: #fff; font-size: 30px; line-height: 1; margin-left: 15px; cursor: pointer; }
+
+  .category-filters { gap: 28px !important; padding: 14px 16px 0 !important; margin: 0 !important; height: 58px; background: #fff !important; border-bottom: 1px solid #e5e7eb !important; }
+  .category-filters .mobile-chip { display: none !important; padding: 0 0 14px !important; font-size: 14px !important; color: #111827 !important; }
+  .category-filters .mobile-chip:nth-child(-n+5) { display: block !important; }
+  .category-filters .mobile-chip:first-child { color: #0b1a38 !important; border-bottom: 3px solid #0b1a38 !important; }
+
+  /* Show the same featured Flash Deals selected for desktop; swipe sideways
+     to browse them without squeezing the mobile product grid. */
+  #customer-store-view > .bg-gradient-to-r { display: block !important; margin: 0 !important; border-radius: 0 !important; }
+  #flashProductsRow { display: flex !important; grid-template-columns: none !important; overflow-x: auto !important; gap: 10px !important; padding: 0 2px 6px !important; scroll-snap-type: x proximity; }
+  #flashProductsRow > div { flex: 0 0 150px !important; width: 150px !important; padding: 9px !important; scroll-snap-align: start; }
+  #flashProductsRow > div > div { height: 108px !important; }
+  #flashProductsRow h5 { white-space: normal !important; min-height: 30px; font-size: 11px !important; }
+  #store-feed { padding: 12px 8px 96px !important; }
+  #productGrid, .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px !important; }
+  #productGrid > div { border-radius: 14px !important; box-shadow: 0 1px 5px rgba(11,26,56,.15) !important; }
+  #productGrid > div > .p-3 { padding: 8px !important; }
+  #productGrid > div .h-\[140px\] { height: 110px !important; margin-bottom: 7px !important; }
+  #productGrid h4 { min-height: 38px !important; font-size: 11px !important; font-weight: 700 !important; }
+  #productGrid .text-\[14px\] { font-size: 13px !important; }
+  #productGrid .text-\[11px\] { display: none !important; }
+  #productGrid > div > .px-3 { padding: 0 8px 9px !important; }
+  #productGrid > div > .px-3 button { min-height: 38px; padding: 7px 2px !important; border-radius: 999px !important; font-size: 10px !important; }
+}
+@media (max-width: 767px) {
+  header > div > :first-child > button {
+    display: block !important;
+    position: fixed;
+    top: 22px;
+    right: 13px;
+    z-index: 101;
+    color: #fff !important;
+  }
+  header .search-container { margin-right: 40px !important; }
+  header .search-container::after { display: none; }
+}
+
+/* Hamburger drawer brand mark — designed for the navy drawer surface. */
+.mobile-drawer-wordmark {
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: .88;
+  letter-spacing: -.5px;
+}
+.mobile-drawer-wordmark strong { color: #ff8c00; }

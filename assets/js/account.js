@@ -109,14 +109,9 @@ function handlePasswordReset() {
 }
 
 function handleGoogleSignIn() {
-  currentUser = {
-    name: 'Daniel Kofi',
-    email: 'daniel.kofi@gmail.com',
-    phone: '054 245 1578'
-  };
-  localStorage.setItem('valmont_user', JSON.stringify(currentUser));
-  showAccountScreen();
-  showToast('Signed in with Google! Welcome, Daniel!');
+  // Google OAuth is handled by the storefront's Supabase integration. Redirect
+  // there rather than creating a pretend signed-in customer locally.
+  window.location.assign('/?google_signin=1');
 }
 
 function handleLogout() {
