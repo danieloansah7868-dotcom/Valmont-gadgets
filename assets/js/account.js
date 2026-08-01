@@ -122,6 +122,7 @@ function handleLogout() {
 function loadAllSections() {
   loadProfile();
   loadAddresses();
+  loadPaymentPreference();
   loadOrders();
   loadWishlist();
   loadHistory();
@@ -277,6 +278,31 @@ function setDefaultAddress(id) {
 }
 
 // ===== ORDERS =====
+function loadPaymentPreference() {
+  const preference = JSON.parse(localStorage.getItem('valmont_payment_preference') || 'null');
+  if (!preference) return;
+  const method = document.getElementById('savedPaymentMethod');
+  const network = document.getElementById('savedMomoNetwork');
+  const phone = document.getElementById('savedMomoPhone');
+  if (method) method.value = preference.method || 'momo';
+  if (network) network.value = preference.network || 'mtn';
+  if (phone) phone.value = preference.phone || '';
+  const status = document.getElementById('paymentPreferenceStatus');
+  if (status) status.textContent = preference.method === 'card' ? 'Card will be entered securely on Valmont-Pay.' : `Saved ${preference.network?.toUpperCase() || 'MoMo'} number ending ${String(preference.phone || '').slice(-4)}.`;
+}
+
+function savePaymentPreference(event) {
+  event.preventDefault();
+  const method = document.getElementById('savedPaymentMethod').value;
+  const network = document.getElementById('savedMomoNetwork').value;
+  const phone = document.getElementById('savedMomoPhone').value.trim();
+  if (method === 'momo' && !phone) { showToast('Enter your Mobile Money phone number.'); return; }
+  const preference = { method, network, phone };
+  localStorage.setItem('valmont_payment_preference', JSON.stringify(preference));
+  loadPaymentPreference();
+  showToast('Payment preference saved securely.');
+}
+
 function loadOrders() {
   const allOrders = JSON.parse(localStorage.getItem('valmont_orders') || '[]');
   customerOrders = allOrders.filter(o => {

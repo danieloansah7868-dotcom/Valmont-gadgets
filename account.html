@@ -903,6 +903,30 @@
       </div>
     </section>
 
+    <!-- Saved Payment Preferences -->
+    <section class="account-section">
+      <h2><span>💳 Payment Preferences</span></h2>
+      <p style="font-size:12px;color:var(--text-secondary);margin:-8px 0 14px;">Save your Mobile Money details for faster checkout. Card numbers are never stored here.</p>
+      <form onsubmit="savePaymentPreference(event)" class="profile-grid">
+        <div class="profile-field">
+          <label>Preferred Method</label>
+          <select id="savedPaymentMethod"><option value="momo">Mobile Money</option><option value="card">Card at Valmont-Pay</option></select>
+        </div>
+        <div class="profile-field">
+          <label>MoMo Network</label>
+          <select id="savedMomoNetwork"><option value="mtn">MTN MoMo</option><option value="telecel">Telecel Cash</option><option value="at">AT Money</option></select>
+        </div>
+        <div class="profile-field">
+          <label>MoMo Phone Number</label>
+          <input type="tel" id="savedMomoPhone" placeholder="054 245 1578">
+        </div>
+        <div style="display:flex;align-items:end;">
+          <button type="submit" class="profile-edit-btn">💾 Save Preference</button>
+        </div>
+      </form>
+      <div id="paymentPreferenceStatus" style="font-size:12px;color:var(--text-secondary);margin-top:10px;"></div>
+    </section>
+
     <!-- Wishlist -->
     <section class="account-section">
       <h2><span>❤️ Wishlist</span></h2>

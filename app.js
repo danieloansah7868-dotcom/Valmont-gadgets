@@ -2942,11 +2942,28 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
     // Merge products added via admin panel (async, re-renders on completion)
     syncProductsFromSupabase();
 
-    // Auto-fill checkout fields if user exists
+    // Auto-fill checkout fields from the authenticated profile and saved default address.
     if (currentUser) {
       document.getElementById('shippingName').value = currentUser.name;
       document.getElementById('shippingPhone').value = currentUser.phone;
       if (currentUser.email && document.getElementById('shippingEmail')) document.getElementById('shippingEmail').value = currentUser.email;
+      try {
+        const savedAddresses = JSON.parse(localStorage.getItem('valmont_customer_addresses') || '[]');
+        const address = savedAddresses.find(item => item.is_default) || savedAddresses[0];
+        if (address) {
+          const city = document.getElementById('shippingCity');
+          const town = document.getElementById('shippingTown');
+          const street = document.getElementById('shippingStreet');
+          if (city) city.value = address.zone || '';
+          if (town) town.value = address.name || '';
+          if (street) street.value = [address.street, address.landmark].filter(Boolean).join(', ');
+        }
+        const preference = JSON.parse(localStorage.getItem('valmont_payment_preference') || 'null');
+        if (preference?.method) {
+          const paymentRadio = document.querySelector(`input[name="paymentOption"][value="${preference.method}"]`);
+          if (paymentRadio) paymentRadio.checked = true;
+        }
+      } catch (error) { console.warn('Saved checkout data could not be loaded:', error); }
     }
   
 
