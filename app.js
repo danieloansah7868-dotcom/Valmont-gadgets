@@ -85,8 +85,8 @@ document.addEventListener("keydown", function(e) {
         description: 'Solid Europe-standard iPhone 15 Pro with a clean body, original 92% battery health, Face ID and True Tone working. Cable included. Grade A+ UK used—not brand-new sealed. Swap accepted.',
         features: ['128GB', 'BH 92% Original', 'Natural Titanium', 'Face ID OK', 'Swap Allowed', 'Europe Standard'],
         tags: ['iphone 15 pro', 'uk used', 'refurbished', '128gb', 'bh92'],
-        image: 'uploads/iphone_15_pro_128_clean.jpg',
-        images: ['uploads/iphone_15_pro_128_clean.jpg', 'uploads/iphone_15_pro_128_clean_1080.jpg', 'uploads/iphone_15_pro_front.jpg', 'uploads/iphone_15_pro_side.jpg'],
+        image: 'uploads/clean_15_pro.png',
+        images: ['uploads/clean_15_pro.png'],
         wholesale: 0, deliveryCost: 80, paymentCost: 224
       },
       {
@@ -462,8 +462,8 @@ document.addEventListener("keydown", function(e) {
         description: 'Very solid Grade A UK-used iPhone 13 Pro Max with a clean body and no dents. Sierra Blue and Gold available. Battery health is 85%+, with True Tone and Face ID active. Not brand-new sealed; price reflects its used condition.',
         features: ['128GB', 'Sierra Blue / Gold', 'UK Used', '85%+ Battery', 'Swap Allowed'],
         tags: ['13 pro max', 'uk used', 'refurbished'],
-        image: 'uploads/iphone_13_pro_max_128_clean.jpg',
-        images: ['uploads/iphone_13_pro_max_128_clean.jpg', 'uploads/iphone_13_pro_max_128_clean_1080.jpg', 'uploads/iphone_13_pro_max_front.jpg', 'uploads/iphone_13_pro_max_side.jpg'],
+        image: 'uploads/clean_13_promax.png',
+        images: ['uploads/clean_13_promax.png'],
         wholesale: 6700, deliveryCost: 80, paymentCost: 132
       },
       {
@@ -923,8 +923,8 @@ document.addEventListener("keydown", function(e) {
         description: 'Brand-new sealed 2024 Slim model. Listing is for one console. Includes console, DualSense controller, cables and stand, with receipt and 12-month Valmont warranty.',
         features: ['1TB SSD Slim', 'Disc Version', 'Sealed', '1 Year Warranty'],
         tags: ['ps5', 'new', 'sealed', 'slim'],
-        image: 'uploads/ps5_4_boxes_clean.jpg',
-        images: ['uploads/ps5_4_boxes_clean.jpg', 'uploads/ps5_4_boxes_clean_1080.jpg', 'uploads/ps5_box_side.jpg', 'uploads/ps5_box_open.jpg'],
+        image: 'uploads/clean_ps5.png',
+        images: ['uploads/clean_ps5.png'],
         wholesale: 6700, deliveryCost: 150, paymentCost: 132
       },
       {
@@ -936,8 +936,8 @@ document.addEventListener("keydown", function(e) {
         description: 'Very neat 9.5/10 UK-used Europe-standard PS5. This listing is for one fully tested console with clean body, one original DualSense controller, HDMI cable and power cable. Refurbished/used, not sealed new.',
         features: ['1TB SSD', 'Includes DualSense', 'Tested 100%', '12mo warranty', 'Accra delivery', 'Not sealed — refurbished'],
         tags: ['ps5', 'gaming', 'uk used', 'refurbished', 'very neat'],
-        image: 'uploads/ps5_2_consoles_clean.jpg',
-        images: ['uploads/ps5_2_consoles_clean.jpg', 'uploads/ps5_2_consoles_clean_1080.jpg', 'uploads/ps5_consoles_side.jpg', 'uploads/ps5_controller_close.jpg'],
+        image: 'uploads/clean_ps5.png',
+        images: ['uploads/clean_ps5.png'],
         wholesale: 0, deliveryCost: 150, paymentCost: 0
       },
       {
@@ -949,8 +949,8 @@ document.addEventListener("keydown", function(e) {
         description: 'Very neat UK business-grade HP EliteBook 1030 G2 x360. This touchscreen convertible has a backlit keyboard, fingerprint reader, 360-degree hinge and activated Windows 11 Pro. Includes charger. Refurbished, not brand new.',
         features: ['i7 7th Gen', '8GB / 256GB SSD', '13.3-inch Touch x360', 'Backlit Keyboard', 'Fingerprint', 'Windows 11 Pro'],
         tags: ['laptop', 'hp', 'elitebook', 'x360', 'touch', 'refurbished'],
-        image: 'uploads/hp_elitebook_1030_g2_clean.jpg',
-        images: ['uploads/hp_elitebook_1030_g2_clean.jpg', 'uploads/hp_elitebook_1030_g2_clean_1080.jpg', 'uploads/hp_elitebook_keyboard.jpg', 'uploads/hp_elitebook_tablet.jpg'],
+        image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=800&auto=format&fit=crop',
+        images: ['https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=800&auto=format&fit=crop'],
         wholesale: 0, deliveryCost: 100, paymentCost: 0
       },
       {
