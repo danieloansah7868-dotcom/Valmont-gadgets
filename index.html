@@ -1746,16 +1746,19 @@
   <!-- Explicit Jumia-style Favicons -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="apple-touch-icon" href="favicon.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="/favicon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="stylesheet" href="mobile-fixes.css">
 
 
   <!-- PWA Manifest & Service Worker Registration -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0b1a38">
-  <!-- Real Live Paystack Inline Integration -->
+  <!-- Valmont-Pay checkout integration -->
     <script src="assets/js/analytics.js" defer></script>
-    <script src="shop.min.js" defer></script>
+    <script src="app.js" defer></script>
 </head>
 <body class="bg-[#f1f1f2] text-[#333333] pb-20 md:pb-0">
 
@@ -1945,6 +1948,15 @@
               <button data-cat-filter="chargers" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#ff8c00]">
                 Power & Chargers
               </button>
+              <button data-cat-filter="smart_home" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#ff8c00]">
+                Smart Home & Security
+              </button>
+              <button data-cat-filter="networking" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#ff8c00]">
+                Wi-Fi & Networking
+              </button>
+              <button data-cat-filter="cameras" class="cat-pill desktop-cat w-full text-left px-3 py-1.5 text-[12.5px] font-medium rounded-[4px] transition hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-[#ff8c00]">
+                Cameras & Creator Gear
+              </button>
             </nav>
           </div>
         </aside>
@@ -2028,6 +2040,9 @@
         <button data-cat-filter="phone_parts" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Parts</button>
         <button data-cat-filter="travel_acc" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Travel</button>
         <button data-cat-filter="chargers" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Power</button>
+        <button data-cat-filter="smart_home" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Smart Home</button>
+        <button data-cat-filter="networking" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Wi-Fi</button>
+        <button data-cat-filter="cameras" class="cat-pill mobile-chip bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold px-4 py-2 rounded-[4px] whitespace-nowrap shadow-sm">Creator Gear</button>
       </div>
 
       <!-- VALMONT PREMIUM FLASH SALES ROW -->
@@ -3031,7 +3046,7 @@
             <input id="shippingName" type="text" placeholder="John Mensah" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
           </div>
           <div>
-            <label for="shippingPhone" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Phone Number (MoMo / WhatsApp) *</label>
+            <label for="shippingPhone" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Phone Number (for payment and delivery) *</label>
             <input id="shippingPhone" type="tel" placeholder="054 245 1578" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
           </div>
           <div>
@@ -3065,31 +3080,27 @@
       <div id="checkoutStep3" class="hidden">
         <h4 class="font-extrabold text-[12px] uppercase text-gray-800 tracking-wider mb-4 border-b pb-1.5">Select Payment Method</h4>
         <div class="space-y-3">
-          <label class="flex items-center gap-3 border p-3.5 rounded-lg cursor-pointer hover:bg-gray-50 select-none">
+          <label class="checkout-payment-option flex items-center gap-3 border p-3.5 rounded-xl cursor-pointer hover:bg-orange-50 select-none">
+            <span class="checkout-payment-icon">₵</span>
             <input type="radio" name="paymentOption" value="momo" class="accent-[#ff8c00]" checked />
-            <div class="leading-tight">
-              <span class="block font-bold text-[13px]">Mobile Money (MTN MoMo, Telecel Cash)</span>
-              <span class="block text-[11px] text-gray-500 font-medium mt-0.5">Secure pay upon invoice before dispatch.</span>
+            <div class="leading-tight flex-1">
+              <span class="block font-bold text-[13px]">Mobile Money</span>
+              <span class="block text-[11px] text-gray-500 font-medium mt-0.5">MTN MoMo, Telecel Cash or AT Money</span>
             </div>
+            <span class="text-gray-400 text-lg">›</span>
           </label>
-          <label class="flex items-center gap-3 border p-3.5 rounded-lg cursor-pointer hover:bg-gray-50 select-none">
-            <input type="radio" name="paymentOption" value="cod" class="accent-[#ff8c00]" />
-            <div class="leading-tight">
-              <span class="block font-bold text-[13px]">Pay on Delivery (Accra Only)</span>
-              <span class="block text-[11px] text-gray-500 font-medium mt-0.5">Verify your product and pay with MoMo on delivery.</span>
-            </div>
-          </label>
-          <label class="flex items-center gap-3 border p-3.5 rounded-lg cursor-pointer hover:bg-gray-50 select-none">
+          <label class="checkout-payment-option flex items-center gap-3 border p-3.5 rounded-xl cursor-pointer hover:bg-orange-50 select-none">
+            <span class="checkout-payment-icon cards">▣</span>
             <input type="radio" name="paymentOption" value="card" class="accent-[#ff8c00]" />
-            <div class="leading-tight">
-              <span class="block font-bold text-[13px]">Credit / Debit Card (Visa, Mastercard)</span>
-              <span class="block text-[11px] text-gray-500 font-medium mt-0.5">Secure payment via Valmont-Pay gateway.</span>
+            <div class="leading-tight flex-1">
+              <span class="block font-bold text-[13px]">Bank Cards</span>
+              <span class="block text-[11px] text-gray-500 font-medium mt-0.5">Visa and Mastercard via Valmont-Pay</span>
             </div>
+            <span class="text-gray-400 text-lg">›</span>
           </label>
         </div>
-        <div class="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-center">
-          <p class="text-[12px] font-bold text-green-800">After sending your payment, tap the button below so we can confirm and prepare your order.</p>
-          <button id="paymentSentBtn" type="button" class="mt-3 w-full bg-green-600 hover:bg-green-700 text-white font-black text-[13px] tracking-wide py-3 rounded-lg shadow-lg animate-pulse">I’VE SENT PAYMENT</button>
+        <div class="mt-5 rounded-xl border border-orange-200 bg-orange-50 p-4 text-center">
+          <p class="text-[12px] font-bold text-orange-900">Your payment will open securely on Valmont-Pay. You will return here after payment to view your order confirmation.</p>
         </div>
       </div>
 
@@ -3331,7 +3342,8 @@
           </div>
           <div>
             <label for="loginPassword" class="block text-[10px] font-black uppercase text-gray-500 mb-1">Password *</label>
-            <input id="loginPassword" type="password" placeholder="••••••••" class="w-full border border-gray-300 p-3.5 rounded-[4px] text-[16px] md:text-[13px] outline-none font-semibold focus:border-[#ff8c00]" required />
+            <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••" class="w-full border border-gray-300 p-3.5 rounded-[4px] text-[16px] md:text-[13px] outline-none font-semibold focus:border-[#ff8c00]" required />
+            <button type="button" onclick="handlePasswordReset();" class="text-[10px] font-bold text-[#ff8c00] mt-1 hover:underline">Forgot password?</button>
           </div>
         </div>
 
@@ -3346,7 +3358,7 @@
             <input id="signUpEmail" type="email" placeholder="customer@valmontgadgets.com" class="w-full border border-gray-300 p-3 rounded-[4px] text-[16px] md:text-[13px] outline-none font-semibold focus:border-[#ff8c00]" />
           </div>
           <div>
-            <label for="signUpPhone" class="block text-[10px] font-black uppercase text-gray-500 mb-1">Phone / WhatsApp Number *</label>
+            <label for="signUpPhone" class="block text-[10px] font-black uppercase text-gray-500 mb-1">Phone Number *</label>
             <input id="signUpPhone" type="tel" placeholder="054 245 1578" class="w-full border border-gray-300 p-3 rounded-[4px] text-[16px] md:text-[13px] outline-none font-semibold focus:border-[#ff8c00]" />
           </div>
           <div>
@@ -3381,57 +3393,7 @@
 
   <!-- Javascript Logic containing real products and layout engines -->
   <!-- RESELLER VIEW CODE INJECTOR -->
-  <!-- 9. VALMONT-PAY SECURE PAYMENT MODAL -->
-  <div id="paystackOverlay" class="fixed inset-0 bg-black/70 z-[10001] hidden transition-opacity"></div>
-  <div id="paystackModal" class="fixed inset-y-20 inset-x-4 md:inset-y-32 md:inset-x-32 bg-white z-[10002] rounded-xl shadow-2xl overflow-y-auto hidden no-scrollbar max-w-[400px] mx-auto p-5 border border-gray-100 flex flex-col justify-between">
-
-    <!-- Paystack Header -->
-    <div class="flex items-center justify-between border-b pb-3 mb-4 shrink-0">
-      <div class="flex items-center gap-1.5">
-        <div class="h-2.5 w-2.5 rounded-full bg-[#ff8c00] animate-ping"></div>
-        <span class="font-bold text-[11px] text-[#ff8c00] uppercase tracking-wider">Valmont-Pay Secured Checkout</span>
-      </div>
-      <button onclick="closePaystackModal();" class="text-gray-400 hover:text-black text-xs font-bold">x Cancel</button>
-    </div>
-
-    <!-- Paystack Main Body -->
-    <div class="flex-1 flex flex-col justify-center text-center py-4">
-      <div class="bg-[#fcfdfd] border rounded-lg p-3.5 mb-5 text-left">
-        <span class="text-[10px] uppercase font-black tracking-widest text-gray-400 block">Merchant</span>
-        <span class="text-[13px] font-black text-gray-800 block">VALMONT GADGETS GHANA</span>
-        <span class="text-[10px] uppercase font-black tracking-widest text-gray-400 block mt-3">Total Amount</span>
-        <span id="paystackAmount" class="text-xl font-black text-gray-900 block">GH₵ 0</span>
-      </div>
-
-      <!-- Valmont-Pay redirect container -->
-      <div id="paystackFormContainer" class="space-y-4 text-left">
-        <!-- Injected via JS based on selected payment method (momo or card) -->
-      </div>
-
-      <!-- Loader state (hidden by default) -->
-      <div id="paystackLoader" class="hidden flex-col items-center justify-center py-6 text-center">
-        <div class="h-10 w-10 border-4 border-[#ff8c00] border-t-transparent rounded-full animate-spin mb-4"></div>
-        <h4 class="font-extrabold text-[13px] text-gray-800" id="paystackLoaderStatus">Redirecting to Valmont-Pay...</h4>
-        <p class="text-[11px] text-gray-500 font-medium mt-1">Please do not refresh this page or close your browser.</p>
-      </div>
-
-      <!-- Success state (hidden by default) -->
-      <div id="paystackSuccess" class="hidden flex-col items-center justify-center py-6 text-center">
-        <div class="h-14 w-14 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-3xl mb-4 font-bold shadow-sm">✓</div>
-        <h4 class="font-black text-[15px] text-gray-900">Payment Successful!</h4>
-        <p class="text-[11px] text-gray-500 font-medium mt-1">Generating order receipt code and opening WhatsApp support desk...</p>
-      </div>
-    </div>
-
-    <!-- Paystack Button footer -->
-    <div class="bg-gray-50 border-t p-3 mt-5 shrink-0 rounded-b-xl" id="paystackFooter">
-      <button id="paystackPayBtn" onclick="processSimulatedPayment();" class="w-full bg-[#ff8c00] hover:bg-orange-600 text-white font-extrabold text-[12px] tracking-widest uppercase py-3 rounded-lg transition shadow flex items-center justify-center gap-1.5">
-         Pay Securely via Valmont-Pay
-      </button>
-    </div>
-
-  </div>
-
+  <!-- Online payments are handled by the Valmont-Pay redirect at checkout. -->
 
   <!-- 10. DEALER REGISTRATION & PORTAL MODAL -->
   <div id="dealerOverlay" class="fixed inset-0 bg-black/60 z-[10001] hidden transition-opacity" onclick="closeDealerModal();"></div>
@@ -3453,7 +3415,7 @@
 
       <div class="border rounded-lg p-4 space-y-2 text-[13px] bg-gray-50">
         <div class="flex justify-between border-b pb-1.5"><span class="font-bold text-gray-500">Business Name:</span> <span id="dlProfileName" class="font-black">--</span></div>
-        <div class="flex justify-between border-b pb-1.5"><span class="font-bold text-gray-500">WhatsApp:</span> <span id="dlProfilePhone" class="font-black">--</span></div>
+        <div class="flex justify-between border-b pb-1.5"><span class="font-bold text-gray-500">Phone:</span> <span id="dlProfilePhone" class="font-black">--</span></div>
         <div class="flex justify-between"><span class="font-bold text-gray-500">Email:</span> <span id="dlProfileEmail" class="font-black">--</span></div>
       </div>
 
@@ -3480,19 +3442,23 @@
 
     <!-- Dealer Registration Form (If inactive) -->
     <form id="dealerRegForm" class="space-y-4">
-      <p class="text-[12px] text-gray-500 font-medium">Are you a bulk buyer, retailer, or independent distributor in Ghana? Register for a free Authorized Dealer account to instantly lock in **wholesale prices** for all products across our catalog.</p>
+      <p class="text-[12px] text-gray-500 font-medium">Dealer accounts are for retailers and bulk buyers. Customers shop at retail prices; dealer accounts unlock wholesale pricing and the private reseller desk.</p>
 
       <div>
         <label for="dlNameInput" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Business / Dealer Name *</label>
-        <input id="dlNameInput" type="text" placeholder="Valmont Retailers East" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
+        <input id="dlNameInput" type="text" autocomplete="organization" placeholder="Valmont Retailers East" pattern="[A-Za-zÀ-ÖØ-öø-ÿ .&'\-]{2,80}" title="Enter a business name only" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
       </div>
       <div>
-        <label for="dlPhoneInput" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">WhatsApp / Phone Number *</label>
-        <input id="dlPhoneInput" type="tel" placeholder="054 245 1578" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
+        <label for="dlPhoneInput" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Phone Number *</label>
+        <input id="dlPhoneInput" type="tel" inputmode="tel" autocomplete="tel" placeholder="054 245 1578" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
       </div>
       <div>
-        <label for="dlEmailInput" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Email Address *</label>
-        <input id="dlEmailInput" type="email" placeholder="dealer@valmontgadgets.com" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
+        <label for="dlEmailInput" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Email *</label>
+        <input id="dlEmailInput" type="email" autocomplete="email" placeholder="you@example.com" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
+      </div>
+      <div>
+        <label for="dlPasswordInput" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Password *</label>
+        <input id="dlPasswordInput" type="password" autocomplete="new-password" minlength="6" placeholder="At least 6 characters" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
       </div>
 
       <button type="submit" class="w-full bg-[#ff8c00] hover:bg-orange-600 text-white font-bold text-[12px] tracking-widest uppercase py-3.5 rounded-[4px] transition shadow-sm">
@@ -3529,6 +3495,7 @@
     <a href="account.html" class="bottom-nav-item" id="navAccount">
       <span class="icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg></span>
       <span id="mobileAccountLabel">Account</span>
+      <span class="account-signed-check" aria-hidden="true">✓</span>
     </a>
 
     <!-- Bag -->
@@ -3542,22 +3509,33 @@
 
   <!-- 12. JUMIA-STYLE MOBILE CATEGORIES POP-UP DRAWER -->
   <div id="mobileCategoriesOverlay" class="fixed inset-0 bg-black/60 z-[9990] hidden transition-opacity" onclick="closeMobileCategoriesModal();"></div>
-  <div id="mobileCategoriesModal" class="fixed bottom-[64px] left-0 right-0 max-h-[70vh] bg-white rounded-t-2xl z-[9991] shadow-2xl overflow-y-auto hidden no-scrollbar transition-transform duration-300 translate-y-full p-4 border-t-2 border-[#ff8c00]">
-    <div class="flex justify-between items-center border-b pb-3 mb-4 shrink-0">
-      <h3 class="font-black text-[13px] uppercase tracking-wider text-[#0b1a38]">
-        Browse Categories
-      </h3>
-      <button onclick="closeMobileCategoriesModal();" class="text-gray-500 hover:text-black text-sm font-bold border px-3 py-1 rounded-[4px] hover:bg-gray-50">x Close</button>
+  <div id="mobileCategoriesModal" class="mobile-category-sheet fixed inset-0 bg-white z-[9991] shadow-2xl overflow-hidden hidden no-scrollbar transition-transform duration-300 translate-y-full">
+    <div class="flex justify-between items-center border-b px-4 py-4 shrink-0">
+      <h3 class="font-black text-[14px] uppercase tracking-wider text-[#0b1a38]">Categories</h3>
+      <button onclick="closeMobileCategoriesModal();" class="text-gray-500 hover:text-black text-sm font-bold border px-3 py-1.5 rounded-lg">Close</button>
     </div>
-    <div class="grid grid-cols-2 gap-3 pb-6" id="mobileCategoryGrid">
-      <!-- Injected via JS dynamically -->
+    <div class="mobile-category-layout">
+      <aside class="mobile-category-sidebar" aria-label="Category groups">
+        <button class="mobile-category-side-item active" type="button">All Categories</button>
+        <button class="mobile-category-side-item" type="button">Phones & Tablets</button>
+        <button class="mobile-category-side-item" type="button">Computing</button>
+        <button class="mobile-category-side-item" type="button">Audio & Gaming</button>
+        <button class="mobile-category-side-item" type="button">Accessories</button>
+        <button class="mobile-category-side-item" type="button">Smart Home</button>
+      </aside>
+      <main class="mobile-category-content">
+        <p class="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-3">Shop by category</p>
+        <div class="grid grid-cols-2 gap-3 pb-8" id="mobileCategoryGrid">
+          <!-- Injected via JS dynamically -->
+        </div>
+      </main>
     </div>
   </div>
 
 
   <!-- MOBILE HAMBURGER MENU / SETTINGS DRAWER (Slide from left!) -->
   <div id="mobileMenuOverlay" class="fixed inset-0 bg-black/60 z-50 hidden transition-opacity" onclick="closeMobileMenuModal();"></div>
-  <div id="mobileMenuModal" class="fixed top-0 bottom-0 left-0 w-[280px] bg-[#0b1a38] text-white z-50 shadow-2xl transition-transform duration-300 -translate-x-full flex flex-col justify-between">
+  <div id="mobileMenuModal" class="mobile-account-menu fixed top-0 bottom-0 left-0 w-[300px] bg-[#0b1a38] text-white z-50 shadow-2xl transition-transform duration-300 -translate-x-full flex flex-col justify-between">
     <!-- Header -->
     <div class="p-4 border-b border-gray-800 flex items-center justify-between">
       <div class="mobile-drawer-wordmark" aria-label="Valmont Gadgets">

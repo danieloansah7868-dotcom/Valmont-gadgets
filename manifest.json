@@ -1,19 +1,18 @@
 {
-  "short_name": "Valmont Tech",
+  "id": "/",
+  "short_name": "Valmont Gadgets",
   "name": "Valmont Gadgets Ghana",
+  "description": "Shop genuine phones, laptops, audio and accessories in Ghana.",
   "icons": [
     {
-      "src": "favicon.png",
+      "src": "/favicon.png",
       "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "favicon.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": "./index.html",
+  "start_url": "/",
+  "scope": "/",
   "background_color": "#0b1a38",
   "theme_color": "#0b1a38",
   "display": "standalone",

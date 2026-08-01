@@ -30,7 +30,7 @@ const DEFAULT_SETTINGS = {
     { name: "Greater Accra", delivery_fee: 50, estimated_days: "1-2 days" },
     { name: "Outside Accra", delivery_fee: 100, estimated_days: "2-4 days" }
   ],
-  payment_methods: { momo: true, card: true, cod: true },
+  payment_methods: { momo: true, card: true },
   faq: [
     { question: "Are your devices genuine?", answer: "Yes. Every product is inspected and sold with original packaging where stated." },
     { question: "Do you offer delivery?", answer: "Yes. Delivery fees depend on the zone and may be free above the configured threshold." }
@@ -1056,7 +1056,6 @@ function renderSettingsForm() {
   document.getElementById("settingFreeDelivery").value = state.settings.free_delivery_threshold || 0;
   document.getElementById("payMomo").checked = Boolean(state.settings.payment_methods?.momo);
   document.getElementById("payCard").checked = Boolean(state.settings.payment_methods?.card);
-  document.getElementById("payCod").checked = Boolean(state.settings.payment_methods?.cod);
   document.getElementById("logoPreview").innerHTML = state.settings.logo_url ? `<img src="${escapeAttr(state.settings.logo_url)}" alt="Store logo" class="max-h-16 rounded-lg bg-white/5 object-contain" />` : "No logo uploaded.";
   renderShippingZoneRows();
 }
@@ -1098,8 +1097,7 @@ async function saveSettingsForm(event) {
     free_delivery_threshold: Number(document.getElementById("settingFreeDelivery").value || 0),
     payment_methods: {
       momo: document.getElementById("payMomo").checked,
-      card: document.getElementById("payCard").checked,
-      cod: document.getElementById("payCod").checked
+      card: document.getElementById("payCard").checked
     },
     shipping_zones: state.settings.shipping_zones.filter(zone => zone.name)
   });

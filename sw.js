@@ -1,7 +1,11 @@
-const CACHE_NAME = 'valmont-v3';
+const CACHE_NAME = 'valmont-v4';
 const ASSETS = [
   '/',
   '/index.html',
+  '/manifest.json',
+  '/app.js',
+  '/tailwind.min.css',
+  '/mobile-fixes.css',
   '/logo.svg',
   '/logo.png',
   '/favicon.svg',

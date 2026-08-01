@@ -1753,7 +1753,7 @@
   <!-- PWA Manifest & Service Worker Registration -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0b1a38">
-  <!-- Real Live Paystack Inline Integration -->
+  <!-- Valmont-Pay checkout integration -->
     <script src="assets/js/analytics.js" defer></script>
     <script src="shop.min.js" defer></script>
 </head>
@@ -3031,7 +3031,7 @@
             <input id="shippingName" type="text" placeholder="John Mensah" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
           </div>
           <div>
-            <label for="shippingPhone" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Phone Number (MoMo / WhatsApp) *</label>
+            <label for="shippingPhone" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Phone Number (for payment and delivery) *</label>
             <input id="shippingPhone" type="tel" placeholder="054 245 1578" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
           </div>
           <div>
@@ -3070,13 +3070,6 @@
             <div class="leading-tight">
               <span class="block font-bold text-[13px]">Mobile Money (MTN MoMo, Telecel Cash)</span>
               <span class="block text-[11px] text-gray-500 font-medium mt-0.5">Secure pay upon invoice before dispatch.</span>
-            </div>
-          </label>
-          <label class="flex items-center gap-3 border p-3.5 rounded-lg cursor-pointer hover:bg-gray-50 select-none">
-            <input type="radio" name="paymentOption" value="cod" class="accent-[#ff8c00]" />
-            <div class="leading-tight">
-              <span class="block font-bold text-[13px]">Pay on Delivery (Accra Only)</span>
-              <span class="block text-[11px] text-gray-500 font-medium mt-0.5">Verify your product and pay with MoMo on delivery.</span>
             </div>
           </label>
           <label class="flex items-center gap-3 border p-3.5 rounded-lg cursor-pointer hover:bg-gray-50 select-none">
@@ -3346,7 +3339,7 @@
             <input id="signUpEmail" type="email" placeholder="customer@valmontgadgets.com" class="w-full border border-gray-300 p-3 rounded-[4px] text-[16px] md:text-[13px] outline-none font-semibold focus:border-[#ff8c00]" />
           </div>
           <div>
-            <label for="signUpPhone" class="block text-[10px] font-black uppercase text-gray-500 mb-1">Phone / WhatsApp Number *</label>
+            <label for="signUpPhone" class="block text-[10px] font-black uppercase text-gray-500 mb-1">Phone Number *</label>
             <input id="signUpPhone" type="tel" placeholder="054 245 1578" class="w-full border border-gray-300 p-3 rounded-[4px] text-[16px] md:text-[13px] outline-none font-semibold focus:border-[#ff8c00]" />
           </div>
           <div>
@@ -3381,57 +3374,7 @@
 
   <!-- Javascript Logic containing real products and layout engines -->
   <!-- RESELLER VIEW CODE INJECTOR -->
-  <!-- 9. VALMONT-PAY SECURE PAYMENT MODAL -->
-  <div id="paystackOverlay" class="fixed inset-0 bg-black/70 z-[10001] hidden transition-opacity"></div>
-  <div id="paystackModal" class="fixed inset-y-20 inset-x-4 md:inset-y-32 md:inset-x-32 bg-white z-[10002] rounded-xl shadow-2xl overflow-y-auto hidden no-scrollbar max-w-[400px] mx-auto p-5 border border-gray-100 flex flex-col justify-between">
-
-    <!-- Paystack Header -->
-    <div class="flex items-center justify-between border-b pb-3 mb-4 shrink-0">
-      <div class="flex items-center gap-1.5">
-        <div class="h-2.5 w-2.5 rounded-full bg-[#ff8c00] animate-ping"></div>
-        <span class="font-bold text-[11px] text-[#ff8c00] uppercase tracking-wider">Valmont-Pay Secured Checkout</span>
-      </div>
-      <button onclick="closePaystackModal();" class="text-gray-400 hover:text-black text-xs font-bold">x Cancel</button>
-    </div>
-
-    <!-- Paystack Main Body -->
-    <div class="flex-1 flex flex-col justify-center text-center py-4">
-      <div class="bg-[#fcfdfd] border rounded-lg p-3.5 mb-5 text-left">
-        <span class="text-[10px] uppercase font-black tracking-widest text-gray-400 block">Merchant</span>
-        <span class="text-[13px] font-black text-gray-800 block">VALMONT GADGETS GHANA</span>
-        <span class="text-[10px] uppercase font-black tracking-widest text-gray-400 block mt-3">Total Amount</span>
-        <span id="paystackAmount" class="text-xl font-black text-gray-900 block">GH₵ 0</span>
-      </div>
-
-      <!-- Valmont-Pay redirect container -->
-      <div id="paystackFormContainer" class="space-y-4 text-left">
-        <!-- Injected via JS based on selected payment method (momo or card) -->
-      </div>
-
-      <!-- Loader state (hidden by default) -->
-      <div id="paystackLoader" class="hidden flex-col items-center justify-center py-6 text-center">
-        <div class="h-10 w-10 border-4 border-[#ff8c00] border-t-transparent rounded-full animate-spin mb-4"></div>
-        <h4 class="font-extrabold text-[13px] text-gray-800" id="paystackLoaderStatus">Redirecting to Valmont-Pay...</h4>
-        <p class="text-[11px] text-gray-500 font-medium mt-1">Please do not refresh this page or close your browser.</p>
-      </div>
-
-      <!-- Success state (hidden by default) -->
-      <div id="paystackSuccess" class="hidden flex-col items-center justify-center py-6 text-center">
-        <div class="h-14 w-14 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-3xl mb-4 font-bold shadow-sm">✓</div>
-        <h4 class="font-black text-[15px] text-gray-900">Payment Successful!</h4>
-        <p class="text-[11px] text-gray-500 font-medium mt-1">Generating order receipt code and opening WhatsApp support desk...</p>
-      </div>
-    </div>
-
-    <!-- Paystack Button footer -->
-    <div class="bg-gray-50 border-t p-3 mt-5 shrink-0 rounded-b-xl" id="paystackFooter">
-      <button id="paystackPayBtn" onclick="processSimulatedPayment();" class="w-full bg-[#ff8c00] hover:bg-orange-600 text-white font-extrabold text-[12px] tracking-widest uppercase py-3 rounded-lg transition shadow flex items-center justify-center gap-1.5">
-         Pay Securely via Valmont-Pay
-      </button>
-    </div>
-
-  </div>
-
+  <!-- Online payments are handled by the Valmont-Pay redirect at checkout. -->
 
   <!-- 10. DEALER REGISTRATION & PORTAL MODAL -->
   <div id="dealerOverlay" class="fixed inset-0 bg-black/60 z-[10001] hidden transition-opacity" onclick="closeDealerModal();"></div>
@@ -3453,7 +3396,7 @@
 
       <div class="border rounded-lg p-4 space-y-2 text-[13px] bg-gray-50">
         <div class="flex justify-between border-b pb-1.5"><span class="font-bold text-gray-500">Business Name:</span> <span id="dlProfileName" class="font-black">--</span></div>
-        <div class="flex justify-between border-b pb-1.5"><span class="font-bold text-gray-500">WhatsApp:</span> <span id="dlProfilePhone" class="font-black">--</span></div>
+        <div class="flex justify-between border-b pb-1.5"><span class="font-bold text-gray-500">Phone:</span> <span id="dlProfilePhone" class="font-black">--</span></div>
         <div class="flex justify-between"><span class="font-bold text-gray-500">Email:</span> <span id="dlProfileEmail" class="font-black">--</span></div>
       </div>
 
@@ -3480,19 +3423,19 @@
 
     <!-- Dealer Registration Form (If inactive) -->
     <form id="dealerRegForm" class="space-y-4">
-      <p class="text-[12px] text-gray-500 font-medium">Are you a bulk buyer, retailer, or independent distributor in Ghana? Register for a free Authorized Dealer account to instantly lock in **wholesale prices** for all products across our catalog.</p>
+      <p class="text-[12px] text-gray-500 font-medium">Dealer accounts are for retailers and bulk buyers. Customers shop at retail prices; dealer accounts unlock wholesale pricing and the private reseller desk.</p>
 
       <div>
         <label for="dlNameInput" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Business / Dealer Name *</label>
         <input id="dlNameInput" type="text" placeholder="Valmont Retailers East" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
       </div>
       <div>
-        <label for="dlPhoneInput" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">WhatsApp / Phone Number *</label>
+        <label for="dlPhoneInput" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Phone Number *</label>
         <input id="dlPhoneInput" type="tel" placeholder="054 245 1578" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
       </div>
       <div>
         <label for="dlEmailInput" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Email Address *</label>
-        <input id="dlEmailInput" type="email" placeholder="dealer@valmontgadgets.com" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
+        <input id="dlEmailInput" type="email" placeholder="you@example.com" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
       </div>
 
       <button type="submit" class="w-full bg-[#ff8c00] hover:bg-orange-600 text-white font-bold text-[12px] tracking-widest uppercase py-3.5 rounded-[4px] transition shadow-sm">

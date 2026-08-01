@@ -340,6 +340,130 @@ html {
 .bottom-nav-item .icon {
   font-size: 20px;
 }
+
+/* Jumia-style payment method rows. */
+.checkout-payment-option {
+  min-height: 76px;
+  background: #fff;
+  border-color: #edf0f3;
+  box-shadow: 0 2px 8px rgba(11,26,56,.05);
+}
+.checkout-payment-option:has(input:checked) {
+  border-color: #ff8c00;
+  background: #fffaf2;
+  box-shadow: 0 0 0 1px #ff8c00;
+}
+.checkout-payment-icon {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: #fff0d9;
+  color: #ff8c00;
+  font-size: 20px;
+  font-weight: 900;
+}
+.checkout-payment-icon.cards { background: #eef3ff; color: #2563eb; font-size: 17px; }
+
+/* Jumia-style full-screen mobile category browser. */
+.mobile-category-sheet {
+  padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+}
+.mobile-category-layout {
+  display: flex;
+  height: calc(100% - 69px);
+  overflow: hidden;
+}
+.mobile-category-sidebar {
+  width: 34%;
+  flex: 0 0 34%;
+  overflow-y: auto;
+  background: #f7f8fa;
+  border-right: 1px solid #e5e7eb;
+}
+.mobile-category-side-item {
+  display: block;
+  width: 100%;
+  min-height: 62px;
+  padding: 12px 10px;
+  border: 0;
+  border-left: 3px solid transparent;
+  background: transparent;
+  color: #374151;
+  font: 700 11px/1.25 Inter, sans-serif;
+  text-align: left;
+}
+.mobile-category-side-item.active {
+  border-left-color: #ff8c00;
+  background: #fff;
+  color: #ff8c00;
+}
+.mobile-category-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 14px;
+  background: #fff;
+}
+.mobile-category-content .cat-pill {
+  min-height: 82px;
+  padding: 14px 8px;
+  border: 1px solid #edf0f3;
+  border-radius: 10px;
+  background: #fff;
+  color: #1f2937;
+  box-shadow: 0 2px 8px rgba(11,26,56,.06);
+  font-size: 11px;
+  white-space: normal;
+  text-transform: none;
+}
+.mobile-category-content .cat-pill:hover,
+.mobile-category-content .cat-pill:active {
+  border-color: #ff8c00;
+  color: #ff8c00;
+}
+
+/* Product photos with built-in white margins should still fill their card. */
+.product-image-frame img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+  transform: scale(1.24);
+  transform-origin: center;
+}
+.product-image-frame img:hover {
+  transform: scale(1.3);
+}
+.product-image-frame img.product-media-local {
+  object-fit: cover;
+  transform: none;
+}
+.product-image-frame img.product-media-local:hover {
+  transform: scale(1.03);
+}
+.bottom-nav-item .account-signed-check {
+  display: none;
+}
+.bottom-nav-item.signed-in .account-signed-check {
+  display: flex;
+  position: absolute;
+  top: -2px;
+  right: 17px;
+  width: 14px;
+  height: 14px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #16a34a;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
 .bottom-nav-item .badge {
   position: absolute;
   top: -4px;
@@ -800,14 +924,18 @@ a[class*="bg-[#ff8c00]"][class*="hover:bg-orange-600"]:hover {
 
   /* Mobile menu drawer proper styling */
   #mobileMenuModal {
+    background: #0b1a38 !important;
+    color: #ffffff !important;
     border-right: 2px solid #ff8c00 !important;
   }
-  #mobileMenuModal a, #mobileMenuModal button {
-    color: #ffffff !important;
-  }
+  #mobileMenuModal .border-gray-800 { border-color: #1e355c !important; }
+  #mobileMenuModal a, #mobileMenuModal button { color: #ffffff !important; }
   #mobileMenuModal a:hover, #mobileMenuModal button:hover {
     color: #ff8c00 !important;
+    background: #13264a !important;
   }
+  #mobileMenuModal .text-gray-400 { color: #cbd5e1 !important; }
+  #mobileMenuModal .bg\[\#0b1a38\] { background: #13264a !important; }
 
   /* Improve touch targets on mobile */
   button, a, [role="button"] {
@@ -912,7 +1040,7 @@ a[class*="bg-[#ff8c00]"][class*="hover:bg-orange-600"]:hover {
   }
 }
 
-/* Hamburger drawer brand mark — designed for the navy drawer surface. */
+/* Navy hamburger drawer brand mark. */
 .mobile-drawer-wordmark {
   display: flex;
   flex-direction: column;

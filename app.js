@@ -50,8 +50,11 @@ document.addEventListener("keydown", function(e) {
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('Service Worker registered successfully!', reg.scope))
+        navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
+          .then(reg => {
+            console.log('Service Worker registered successfully!', reg.scope);
+            reg.update().catch(() => {});
+          })
           .catch(err => console.log('Service Worker registration failed:', err));
       });
     }
@@ -968,6 +971,66 @@ document.addEventListener("keydown", function(e) {
         paymentCost: 71
       },
       {
+        id: 'VG-SH-BULB-01',
+        name: 'TP-Link Tapo Smart Wi-Fi Bulb — Colour',
+        category: 'smart_home',
+        retail: 380, compareAt: 500, badge: 'NEW',
+        specs: 'Wi-Fi Control • 16 Million Colours • Voice Assistant Compatible',
+        stock: 'In stock • Sealed • 12m Warranty',
+        image: 'https://images.unsplash.com/photo-1550985543-f47f8d7a8c8e?q=80&w=800&auto=format&fit=crop',
+        wholesale: 290, deliveryCost: 20, paymentCost: 6
+      },
+      {
+        id: 'VG-SH-CAM-01',
+        name: 'TP-Link Tapo C210 Indoor Security Camera',
+        category: 'smart_home',
+        retail: 950, compareAt: 1200, badge: 'DEAL',
+        specs: '2K Pan/Tilt • Night Vision • Motion Alerts • Two-Way Audio',
+        stock: 'In stock • Sealed • 12m Warranty',
+        image: 'https://images.unsplash.com/photo-1557597774-9d273605dfa9?q=80&w=800&auto=format&fit=crop',
+        wholesale: 760, deliveryCost: 30, paymentCost: 15
+      },
+      {
+        id: 'VG-NET-AX1500',
+        name: 'TP-Link Archer AX1500 Wi-Fi 6 Router',
+        category: 'networking',
+        retail: 1450, compareAt: 1750, badge: 'HOT',
+        specs: 'Wi-Fi 6 • Dual Band • Gigabit Ports • Home Coverage',
+        stock: 'In stock • Sealed • 12m Warranty',
+        image: 'https://images.unsplash.com/photo-1647427060118-4911c9821b82?q=80&w=800&auto=format&fit=crop',
+        wholesale: 1150, deliveryCost: 40, paymentCost: 23
+      },
+      {
+        id: 'VG-NET-MESH-02',
+        name: 'TP-Link Deco Mesh Wi-Fi System — 2 Pack',
+        category: 'networking',
+        retail: 2850, compareAt: 3300, badge: 'DEAL',
+        specs: 'Whole-Home Mesh • Dual Band • Easy App Setup • 2 Units',
+        stock: 'In stock • Sealed • 12m Warranty',
+        image: 'https://images.unsplash.com/photo-1606904825846-647eb07f5be2?q=80&w=800&auto=format&fit=crop',
+        wholesale: 2300, deliveryCost: 50, paymentCost: 46
+      },
+      {
+        id: 'VG-CAM-RING-01',
+        name: 'LED Ring Light with Tripod — Creator Kit',
+        category: 'cameras',
+        retail: 650, compareAt: 850, badge: 'DEAL',
+        specs: '12-inch LED • 3 Light Modes • Phone Holder • Adjustable Tripod',
+        stock: 'In stock • 6m Store Warranty',
+        image: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?q=80&w=800&auto=format&fit=crop',
+        wholesale: 480, deliveryCost: 30, paymentCost: 10
+      },
+      {
+        id: 'VG-CAM-MIC-01',
+        name: 'Wireless Lavalier Microphone — USB-C',
+        category: 'cameras',
+        retail: 780, compareAt: 1000, badge: 'HOT',
+        specs: 'Noise Reduction • Plug & Play • 2 Transmitters • Charging Case',
+        stock: 'In stock • Sealed • 6m Store Warranty',
+        image: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=800&auto=format&fit=crop',
+        wholesale: 590, deliveryCost: 25, paymentCost: 12
+      },
+      {
         id: 'VG-ANKER-735-65W',
         name: 'Anker 735 65W GaN Charger — 3 Port',
         category: 'chargers',
@@ -988,7 +1051,7 @@ document.addEventListener("keydown", function(e) {
       const name = p.name.toLowerCase();
       const isPopular = name.includes('iphone 15 pro max') || name.includes('s24 ultra');
       const isMidRange = name.includes('iphone 13') || name.includes('a55');
-      const isAccessory = ['chargers','phone_acc','phone_parts','travel_acc','laptop_acc'].includes(p.category);
+      const isAccessory = ['chargers','phone_acc','phone_parts','travel_acc','laptop_acc','smart_home','networking','cameras'].includes(p.category);
       const isNew = p.badge === 'NEW';
       p.reviews_count = isPopular ? 42 + (index % 27) : isMidRange ? 18 + (index % 15) : isNew ? index % 6 : isAccessory ? 8 + (index % 8) : 12 + (index % 18);
       p.stock_quantity = isPopular ? 3 + (index % 6) : p.category === 'samsung' ? 5 + (index % 8) : isAccessory ? 15 + (index % 16) : 6 + (index % 12);
@@ -1003,7 +1066,8 @@ document.addEventListener("keydown", function(e) {
      */
     function productImg(src, alt, size, opts) {
       const o = opts || {};
-      const cls = o.className || 'max-h-full object-contain';
+      const isLocalProductPhoto = /^uploads\//.test(src || '');
+      const cls = `${o.className || 'max-h-full object-contain'}${isLocalProductPhoto ? ' product-media-local' : ''}`;
       const lazy = o.eager ? '' : ' loading="lazy"';
       const prio = o.eager ? ' fetchpriority="high"' : '';
       const sizes = o.sizes || `${size}px`;
@@ -1155,7 +1219,9 @@ document.addEventListener("keydown", function(e) {
     let cart = JSON.parse(localStorage.getItem('valmont_cart') || '[]');
     let wishlist = JSON.parse(localStorage.getItem('valmont_wishlist') || '[]');
     let recentlyViewed = JSON.parse(localStorage.getItem('valmont_recently_viewed') || '[]');
-    let currentUser = JSON.parse(localStorage.getItem('valmont_user') || 'null');
+    let currentUser = localStorage.getItem('valmont_access_token') ? JSON.parse(localStorage.getItem('valmont_user') || 'null') : null;
+    // Legacy local-only profiles were not authenticated accounts; do not treat them as signed in.
+    if (!localStorage.getItem('valmont_access_token')) localStorage.removeItem('valmont_user');
     let isResellerMode = false;
     let selectedDetailProduct = null;
     let isDealerMode = false;
@@ -1183,7 +1249,10 @@ document.addEventListener("keydown", function(e) {
       phone_acc: 'Phone Cases & Accessories',
       phone_parts: 'Phone Parts & Spares',
       travel_acc: 'Smart Travel & Car Accessories',
-      chargers: 'Power & Chargers'
+      chargers: 'Power & Chargers',
+      smart_home: 'Smart Home & Security',
+      networking: 'Wi-Fi & Networking',
+      cameras: 'Cameras & Creator Gear'
     };
     
     
@@ -1237,11 +1306,14 @@ document.addEventListener("keydown", function(e) {
     // Update mobile account label to show user name if logged in
     function updateMobileAccountLabel() {
       const label = document.getElementById('mobileAccountLabel');
-      const user = JSON.parse(localStorage.getItem('valmont_user') || 'null');
+      const navAccount = document.getElementById('navAccount');
+      const user = localStorage.getItem('valmont_access_token') ? JSON.parse(localStorage.getItem('valmont_user') || 'null') : null;
       if (label && user) {
         label.textContent = user.name.split(' ')[0];
-      } else if (label) {
-        label.textContent = 'Account';
+        if (navAccount) { navAccount.classList.add('signed-in'); navAccount.setAttribute('aria-label', `Signed in as ${user.name}`); }
+      } else {
+        if (label) label.textContent = 'Account';
+        if (navAccount) { navAccount.classList.remove('signed-in'); navAccount.setAttribute('aria-label', 'Account sign in'); }
       }
     }
 
@@ -1281,7 +1353,9 @@ document.addEventListener("keydown", function(e) {
       document.querySelector('.product-pagination')?.remove();
       let filtered = PRODUCTS.filter(p => {
         const matchesCategory = activeFilter === 'all' || p.category === activeFilter;
-        const matchesSearch = searchQuery === '' || p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.specs.toLowerCase().includes(searchQuery.toLowerCase());
+        const normalizedSearch = searchQuery.trim().toLowerCase().replace(/\biphones\b/g, 'iphone').replace(/\bmacbooks\b/g, 'macbook').replace(/\bairpods\b/g, 'airpod').replace(/\blaptops\b/g, 'laptop').replace(/\baccessories\b/g, 'accessory');
+        const categoryMatch = (normalizedSearch === 'iphone' && p.category === 'iphones') || (normalizedSearch === 'laptop' && p.category === 'laptops') || (normalizedSearch === 'accessory' && ['chargers', 'phone_acc', 'laptop_acc', 'travel_acc'].includes(p.category)) || (normalizedSearch === 'audio' && p.category === 'audio');
+        const matchesSearch = normalizedSearch === '' || p.name.toLowerCase().includes(normalizedSearch) || p.specs.toLowerCase().includes(normalizedSearch) || categoryMatch;
         const price = Number(p.retail || 0);
         const matchesPrice = activePriceFilter === 'all' || (activePriceFilter === 'under-5000' && price < 5000) || (activePriceFilter === '5000-15000' && price >= 5000 && price <= 15000) || (activePriceFilter === 'above-15000' && price > 15000);
         return matchesCategory && matchesSearch && matchesPrice;
@@ -1321,7 +1395,7 @@ document.addEventListener("keydown", function(e) {
               </button>
 
               <div class="p-3">
-                <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
+                <div class="product-image-frame h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   ${productImg(p.image, p.name, 140, {className: 'max-h-full object-contain group-hover:scale-105 transition duration-200', sizes: '(max-width: 640px) 45vw, 140px'})}
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">${p.name}</h4>
@@ -1389,7 +1463,7 @@ document.addEventListener("keydown", function(e) {
         const discount = Math.round((1 - (p.retail / p.compareAt)) * 100);
         return `
           <div class="bg-white rounded-[4px] p-2.5 border border-gray-100 hover:border-orange-200/50 shrink-0 w-[145px] hover:shadow transition relative cursor-pointer" onclick="openProductDetail('${p.id}')">
-            <div class="h-[100px] w-full flex items-center justify-center overflow-hidden mb-1 bg-gray-50 rounded-[4px]">
+            <div class="product-image-frame h-[100px] w-full flex items-center justify-center overflow-hidden mb-1 bg-gray-50 rounded-[4px]">
               ${productImg(p.image, p.name, 100)}
             </div>
             <h5 class="text-[11px] text-gray-800 font-bold truncate">${p.name}</h5>
@@ -1782,7 +1856,8 @@ document.addEventListener("keydown", function(e) {
         document.getElementById('stepTab3').className = "text-[#ff8c00] border-b-2 border-[#ff8c00] pb-0.5";
         checkoutActionBtn.querySelector('span').textContent = "Submit Secure Order";
       } else if (checkoutStep === 3) {
-        triggerWhatsAppOrder();
+        // Send all prepaid methods to the single Valmont-Pay checkout.
+        triggerPaymentCheckout();
       }
     });
 
@@ -1809,7 +1884,7 @@ document.addEventListener("keydown", function(e) {
 
     
     document.getElementById('paymentSentBtn')?.addEventListener('click', () => {
-      triggerWhatsAppOrder(true);
+      triggerPaymentCheckout(true);
     });
 
     // Global variables for paystack tracking
@@ -1818,11 +1893,12 @@ document.addEventListener("keydown", function(e) {
     let paystackSavedName = '';
     let paystackSavedPayment = '';
 
-    function triggerWhatsAppOrder(paymentConfirmed = false) {
+    function triggerPaymentCheckout(paymentConfirmed = false) {
       const name = document.getElementById('shippingName').value.trim();
       const phone = document.getElementById('shippingPhone').value.trim();
       const city = document.getElementById('shippingCity').value.trim();
       const town = document.getElementById('shippingTown').value.trim();
+      const area = city;
       const gps = document.getElementById('shippingGPS').value.trim();
       const street = document.getElementById('shippingStreet').value.trim();
       const fullAddress = `${street}, ${town}, ${city} ${gps ? '(' + gps + ')' : ''}`;
@@ -1832,7 +1908,7 @@ document.addEventListener("keydown", function(e) {
       const ref = `VG-${Date.now().toString().slice(-6)}`;
       const itemsString = cart.map(item => `• ${item.name} (Qty ${item.qty} - ${money(item.retail * item.qty)})`).join('\n');
       
-      const paymentNames = { momo: 'Mobile Money', cod: 'Cash on Delivery', card: 'Credit/Debit Card' };
+      const paymentNames = { momo: 'Mobile Money', card: 'Credit/Debit Card' };
       paystackSavedRef = ref;
       paystackSavedName = name;
       paystackSavedPayment = paymentNames[paymentOpt];
@@ -1845,7 +1921,7 @@ Ref Code: *#${ref}*
 ${itemsString}
 
 *TOTAL BILL:* ${money(subtotal)}
-*PAYMENT:* ${paymentNames[paymentOpt]} (${paymentOpt === 'cod' ? 'Pending' : 'Paid'})
+*PAYMENT:* ${paymentNames[paymentOpt]} (Paid)
 
 *SHIPPING TO:*
 Name: ${name}
@@ -1853,14 +1929,10 @@ Contact: ${phone}
 Region: ${area}
 Street: ${street || 'To be provided'}
 
-_Stock is verified before dispatch. We will reach out on WhatsApp to finalize your delivery. Thank you for choosing Valmont Gadgets Ghana!_`;
+_Stock is verified before dispatch. We will contact you to finalize your delivery. Thank you for choosing Valmont Gadgets Ghana!_`;
 
-      if (paymentOpt === 'cod') {
-        // Cash on delivery goes straight to WhatsApp!
-        finalizeCheckout();
-      } else if (paymentOpt === 'card') {
-        // Card payments redirect straight to the Valmont-Pay secure gateway.
-        redirectToValmontPay({
+      // Both card and Mobile Money use the same secure Valmont-Pay checkout.
+      redirectToValmontPay({
           subtotal: subtotal,
           reference: ref,
           name: name,
@@ -1879,10 +1951,6 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
             };
           })
         });
-      } else {
-        // Mobile Money continues to use the in-page payment modal.
-        openPaystackModal(subtotal, paymentOpt, phone);
-      }
     }
 
     function redirectToValmontPay(ctx) {
@@ -1976,7 +2044,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       // through redirectToValmontPay() and MoMo through the existing
       // finalizeCheckout / WhatsApp handoff.
       closePaystackModal();
-      try { triggerWhatsAppOrder(false); } catch (e) { console.error('Checkout handoff failed:', e); }
+      try { triggerPaymentCheckout(false); } catch (e) { console.error('Checkout handoff failed:', e); }
     }
 
     async function finalizeCheckout() {
@@ -2020,16 +2088,12 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       // 2. Save order to local storage (Reseller Desk Order list)
       saveOrderToLog(paystackSavedRef, paystackSavedName, cart.map(i => i.name).join(', '), paystackSavedPayment);
 
-      // 3. Open WhatsApp
-      const waUrl = `https://wa.me/233542451578?text=${encodeURIComponent(paystackSavedReceipt)}`;
-      window.open(waUrl, '_blank');
-      
-      // 4. Clear Cart and close UI
+      // Clear cart and close UI. Checkout no longer opens WhatsApp.
       cart = [];
       localStorage.setItem('valmont_cart', JSON.stringify(cart));
       updateCartCount();
       closeCart();
-      alert(`Order #${paystackSavedRef} processed successfully! Connecting with Valmont dispatch rider on WhatsApp...`);
+      alert(`Order #${paystackSavedRef} processed successfully!`);
     }
 
     function saveOrderToLog(ref, name, itemNames, payment) {
@@ -2472,69 +2536,64 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       loginModal.classList.add('hidden');
     }
 
-    function handleLoginSubmit(event) {
-      event.preventDefault();
-      if (currentLoginTab === 'signin') {
-        const email = document.getElementById('loginEmail').value.trim();
-        const pass = document.getElementById('loginPassword').value.trim();
-        
-        // Check registered users first, fall back to mock profile
-        const users = JSON.parse(localStorage.getItem('valmont_registered_users') || '[]');
-        const found = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-        
-        if (found && found.password === pass) {
-          currentUser = { name: found.name, phone: found.phone, email: found.email, address: found.address || 'East Legon, Accra' };
-        } else {
-          const baseName = email.split('@')[0];
-          const formattedName = baseName.charAt(0).toUpperCase() + baseName.slice(1).replace(/[._]/g, ' ');
-          currentUser = { name: formattedName, phone: '054 245 1578', email: email, address: 'East Legon, Accra' };
-          // Auto-register
-          if (!found) {
-            users.push({ name: formattedName, email: email, password: pass, phone: '054 245 1578' });
-            localStorage.setItem('valmont_registered_users', JSON.stringify(users));
-          }
-        }
-        localStorage.setItem('valmont_user', JSON.stringify(currentUser));
-        
-        // Autofill forms
-        if (document.getElementById('shippingName')) document.getElementById('shippingName').value = currentUser.name;
-        if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = currentUser.phone;
-        if (document.getElementById('shippingEmail') && currentUser.email) document.getElementById('shippingEmail').value = currentUser.email;
-        if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = currentUser.address || 'Near East Legon Police Station';
-        if (document.getElementById('shippingCity')) document.getElementById('shippingCity').value = 'Accra';
-        if (document.getElementById('shippingTown')) document.getElementById('shippingTown').value = 'East Legon';
+    async function authRequest(path, body) {
+      const response = await fetch(`${VALMONT_SUPABASE.url}/auth/v1/${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: VALMONT_SUPABASE.anonKey },
+        body: JSON.stringify(body)
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error_description || data.msg || data.message || 'Authentication failed');
+      return data;
+    }
 
-        updateUserUI();
-        closeLoginModal();
-        alert(`Welcome back to Valmont, ${currentUser.name}!`);
-      } else {
-        const name = document.getElementById('signUpName').value.trim();
-        const email = document.getElementById('signUpEmail').value.trim();
-        const phone = document.getElementById('signUpPhone').value.trim();
-        const address = document.getElementById('signUpAddress').value.trim();
-        
-        // Register for account page compatibility
-        const users = JSON.parse(localStorage.getItem('valmont_registered_users') || '[]');
-        if (!users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
-          users.push({ name, email, password: '', phone, address });
-          localStorage.setItem('valmont_registered_users', JSON.stringify(users));
-        }
-        
-        currentUser = { name, phone, email, address };
-        localStorage.setItem('valmont_user', JSON.stringify(currentUser));
-        
-        // Autofill forms
-        if (document.getElementById('shippingName')) document.getElementById('shippingName').value = name;
-        if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = phone;
-        if (document.getElementById('shippingEmail') && email) document.getElementById('shippingEmail').value = email;
-        if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = address;
-        if (document.getElementById('shippingCity')) document.getElementById('shippingCity').value = 'Accra';
-        if (document.getElementById('shippingTown')) document.getElementById('shippingTown').value = address;
+    async function handlePasswordReset() {
+      const email = window.prompt('Enter your account email:');
+      if (!email || !email.includes('@')) return;
+      try {
+        await authRequest('recover', { email: email.trim().toLowerCase() });
+        showValmontToast('If an account exists, a password reset email has been sent.');
+      } catch (error) { showValmontToast('Unable to send the reset email. Please try again.'); }
+    }
 
-        updateUserUI();
-        closeLoginModal();
-        alert(`Account Created Successfully! Welcome to Valmont, ${name}!`);
+    function setAuthenticatedUser(account, accessToken) {
+        const metadata = account.user_metadata || {};
+      currentUser = { id: account.id, name: metadata.full_name || metadata.name || account.email.split('@')[0], email: account.email, phone: metadata.phone || account.phone || '', address: metadata.address || '', role: metadata.role || 'customer' };
+      localStorage.setItem('valmont_user', JSON.stringify(currentUser));
+      if (currentUser.role === 'dealer') {
+        isDealerMode = true;
+        dealerProfile = { id: account.id, name: currentUser.name, phone: currentUser.phone, email: currentUser.email, role: 'dealer' };
+        localStorage.setItem('valmont_is_dealer', 'true');
+        localStorage.setItem('valmont_dealer_profile', JSON.stringify(dealerProfile));
       }
+      if (accessToken) localStorage.setItem('valmont_access_token', accessToken);
+    }
+
+    async function handleLoginSubmit(event) {
+      event.preventDefault();
+      const submitBtn = document.getElementById('loginSubmitBtn');
+      if (submitBtn) submitBtn.disabled = true;
+      try {
+        if (currentLoginTab === 'signin') {
+          const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+          const password = document.getElementById('loginPassword').value;
+          const result = await authRequest('token?grant_type=password', { email, password });
+          setAuthenticatedUser(result.user, result.access_token);
+          if (currentUser.role === 'dealer') { showDealerAnnouncementBanner(); updateDealerUI(); renderProducts(); renderFlashSales(); }
+          updateUserUI(); closeLoginModal(); showValmontToast(`Welcome back, ${currentUser.name}!`);
+        } else {
+          const name = document.getElementById('signUpName').value.trim();
+          const email = document.getElementById('signUpEmail').value.trim().toLowerCase();
+          const phone = document.getElementById('signUpPhone').value.trim();
+          const password = document.getElementById('signUpPassword').value;
+          const address = document.getElementById('signUpAddress').value.trim();
+          const result = await authRequest('signup', { email, password, data: { full_name: name, phone, address, role: 'customer' } });
+          if (result.session && result.user) {
+            setAuthenticatedUser(result.user, result.session.access_token); updateUserUI(); closeLoginModal(); showValmontToast(`Account created. Welcome, ${name}!`);
+          } else { setLoginTab('signin'); showValmontToast('Account created. Check your email to confirm it, then sign in.'); }
+        }
+      } catch (error) { console.error('Authentication error:', error); showValmontToast(error.message || 'Unable to authenticate. Please try again.'); }
+      finally { if (submitBtn) submitBtn.disabled = false; }
     }
 
     // Starts a real OAuth flow with Google via Supabase. No account details are
@@ -2564,12 +2623,15 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
         if (!response.ok) throw new Error('Unable to verify Google account');
         const account = await response.json();
         currentUser = {
+          id: account.id,
           name: account.user_metadata?.full_name || account.user_metadata?.name || account.email.split('@')[0],
           email: account.email,
           phone: account.phone || '',
-          address: ''
+          address: '',
+          role: account.user_metadata?.role || 'customer'
         };
         localStorage.setItem('valmont_user', JSON.stringify(currentUser));
+        localStorage.setItem('valmont_access_token', accessToken);
         history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
         updateUserUI();
         showValmontToast(`Welcome, ${currentUser.name}!`);
@@ -2601,7 +2663,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       const mobileHeaderBtn = document.getElementById('mobileHeaderAccountBtn');
       const mobileHeaderLabel = document.getElementById('mobileHeaderAccountLabel');
       if (currentUser) {
-        accountLabel.textContent = `Hi, ${currentUser.name.split(' ')[0]}`;
+        accountLabel.textContent = currentUser.name.split(' ')[0];
         if (logoutBtn) logoutBtn.classList.remove('hidden');
         if (mobileHeaderBtn) mobileHeaderBtn.classList.add('signed-in');
         if (mobileHeaderLabel) mobileHeaderLabel.textContent = currentUser.name.split(' ')[0];
@@ -2617,6 +2679,11 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     function handleLogout() {
       currentUser = null;
       localStorage.removeItem('valmont_user');
+      localStorage.removeItem('valmont_access_token');
+      localStorage.removeItem('valmont_is_dealer');
+      localStorage.removeItem('valmont_dealer_profile');
+      isDealerMode = false;
+      dealerProfile = null;
       updateUserUI();
       closeLoginModal();
       alert("Logged out of your customer profile successfully.");
@@ -2875,11 +2942,28 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     // Merge products added via admin panel (async, re-renders on completion)
     syncProductsFromSupabase();
 
-    // Auto-fill checkout fields if user exists
+    // Auto-fill checkout fields from the authenticated profile and saved default address.
     if (currentUser) {
       document.getElementById('shippingName').value = currentUser.name;
       document.getElementById('shippingPhone').value = currentUser.phone;
       if (currentUser.email && document.getElementById('shippingEmail')) document.getElementById('shippingEmail').value = currentUser.email;
+      try {
+        const savedAddresses = JSON.parse(localStorage.getItem('valmont_customer_addresses') || '[]');
+        const address = savedAddresses.find(item => item.is_default) || savedAddresses[0];
+        if (address) {
+          const city = document.getElementById('shippingCity');
+          const town = document.getElementById('shippingTown');
+          const street = document.getElementById('shippingStreet');
+          if (city) city.value = address.zone || '';
+          if (town) town.value = address.name || '';
+          if (street) street.value = [address.street, address.landmark].filter(Boolean).join(', ');
+        }
+        const preference = JSON.parse(localStorage.getItem('valmont_payment_preference') || 'null');
+        if (preference?.method) {
+          const paymentRadio = document.querySelector(`input[name="paymentOption"][value="${preference.method}"]`);
+          if (paymentRadio) paymentRadio.checked = true;
+        }
+      } catch (error) { console.warn('Saved checkout data could not be loaded:', error); }
     }
   
 
@@ -3200,8 +3284,9 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     setupResellerFAQs();
   
   // === INTEGRATED DEALER ACCESS & WHOLESALE PRICING LOGIC ===
-  isDealerMode = localStorage.getItem('valmont_is_dealer') === 'true';
-  dealerProfile = JSON.parse(localStorage.getItem('valmont_dealer_profile') || 'null');
+  isDealerMode = Boolean(localStorage.getItem('valmont_access_token')) && localStorage.getItem('valmont_is_dealer') === 'true';
+  dealerProfile = isDealerMode ? JSON.parse(localStorage.getItem('valmont_dealer_profile') || 'null') : null;
+  if (!isDealerMode) { localStorage.removeItem('valmont_is_dealer'); localStorage.removeItem('valmont_dealer_profile'); }
 
   let dealerOverlay = document.getElementById('dealerOverlay');
   let dealerModal = document.getElementById('dealerModal');
@@ -3234,29 +3319,28 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     dealerModal.classList.add('hidden');
   }
 
-  // Handle Dealer Registration
-  if (dealerRegForm) {
-    dealerRegForm.addEventListener('submit', event => {
-      event.preventDefault();
-      const name = document.getElementById('dlNameInput').value.trim();
-      const phone = document.getElementById('dlPhoneInput').value.trim();
-      const email = document.getElementById('dlEmailInput').value.trim();
-
-      if (name && phone && email) {
-        isDealerMode = true;
-        dealerProfile = { name, phone, email };
-        localStorage.setItem('valmont_is_dealer', 'true');
-        localStorage.setItem('valmont_dealer_profile', JSON.stringify(dealerProfile));
-
-        // Inject high-end Dealer Announcement Banner at top of page
-        showDealerAnnouncementBanner();
-        updateDealerUI();
-        renderProducts();
-        renderFlashSales();
-        closeDealerModal();
-        alert(`Congratulations ${name}! Authorized Dealer Access activated. Wholesale prices are now applied directly across our entire catalog.`);
-      }
-    });
+  async function registerDealerAccount(event) {
+    event.preventDefault();
+    const name = document.getElementById('dlNameInput').value.trim();
+    const phone = document.getElementById('dlPhoneInput').value.trim();
+    const email = document.getElementById('dlEmailInput').value.trim().toLowerCase();
+    const password = document.getElementById('dlPasswordInput').value;
+    const normalizedPhone = phone.replace(/[\s()-]/g, '');
+    if (!/^[\p{L}][\p{L} .&'\-]{1,79}$/u.test(name)) return showValmontToast('Enter a valid business name only.');
+    if (!/^\+233\d{9}$/.test(normalizedPhone) && !/^0\d{9}$/.test(normalizedPhone)) return showValmontToast('Enter a valid Ghana phone number.');
+    if (password.length < 6) return showValmontToast('Password must be at least 6 characters.');
+    const button = event.currentTarget.querySelector('button[type="submit"]');
+    if (button) button.disabled = true;
+    try {
+      const result = await authRequest('signup', { email, password, data: { full_name: name, phone, role: 'dealer' } });
+      if (result.session && result.user) {
+        setAuthenticatedUser(result.user, result.session.access_token); isDealerMode = true;
+        dealerProfile = { id: result.user.id, name, phone, email, role: 'dealer' };
+        localStorage.setItem('valmont_is_dealer', 'true'); localStorage.setItem('valmont_dealer_profile', JSON.stringify(dealerProfile));
+        showDealerAnnouncementBanner(); updateDealerUI(); renderProducts(); renderFlashSales(); closeDealerModal(); showValmontToast(`Dealer account created for ${name}. Wholesale pricing is active.`);
+      } else showValmontToast('Dealer account created. Check your email to confirm it, then sign in.');
+    } catch (error) { console.error('Dealer registration error:', error); showValmontToast(error.message || 'Dealer registration failed.'); }
+    finally { if (button) button.disabled = false; }
   }
 
   function deactivateDealerMode() {
@@ -3510,34 +3594,12 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     mobileCategoriesModal = document.getElementById('mobileCategoriesModal');
     mobileCategoryGrid = document.getElementById('mobileCategoryGrid');
 
-    // Re-bind submit listener since dealerRegForm is now parsed
-    if (dealerRegForm) {
-      dealerRegForm.addEventListener('submit', event => {
-        event.preventDefault();
-        const name = document.getElementById('dlNameInput').value.trim();
-        const phone = document.getElementById('dlPhoneInput').value.trim();
-        const email = document.getElementById('dlEmailInput').value.trim();
-
-        if (name && phone && email) {
-          isDealerMode = true;
-          dealerProfile = { name, phone, email };
-          localStorage.setItem('valmont_is_dealer', 'true');
-          localStorage.setItem('valmont_dealer_profile', JSON.stringify(dealerProfile));
-
-          showDealerAnnouncementBanner();
-          updateDealerUI();
-          closeDealerRegistrationPopup();
-          renderProducts();
-
-          alert("Authorized Dealer Access Activated Successfully!");
-        }
-      });
-    }
+    if (dealerRegForm) dealerRegForm.addEventListener('submit', registerDealerAccount);
   });
 
 
 (function(){
-  const groups={phones:['iphones','samsung','android','tablets','smartwatches'],audio:['audio','gaming'],computing:['laptops','laptop_acc','tablets','smartwatches'],accessories:['phone_acc','phone_parts','travel_acc','chargers']};
+  const groups={phones:['iphones','samsung','android','tablets','smartwatches'],audio:['audio','gaming'],computing:['laptops','laptop_acc','tablets','smartwatches'],accessories:['phone_acc','phone_parts','travel_acc','chargers','smart_home','networking','cameras']};
   const chips=[...document.querySelectorAll('.category-filters [data-cat-filter]')];
   const groupButtons=[...document.querySelectorAll('.category-group-btn')];
   const toggle=document.querySelector('.category-group-toggle');
@@ -3546,4 +3608,3 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
   if(toggle) toggle.addEventListener('click',()=>{ const expanded=toggle.getAttribute('aria-expanded')==='true'; toggle.setAttribute('aria-expanded',String(!expanded)); toggle.textContent=expanded?'Show All Categories':'Hide Categories'; applyGroup(expanded?'all':'phones'); });
   applyGroup('all');
 })();
-
