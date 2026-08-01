@@ -357,6 +357,11 @@ html {
   padding: 0 4px;
   border: 2px solid var(--bg-primary);
 }
+/* Empty state — never show "0" on Saved/Bag like Jumia; the badge only
+   appears once there is something in the cart or wishlist. */
+.bottom-nav-item .badge.hidden {
+  display: none !important;
+}
 
 /* ===== FLOATING WHATSAPP BUTTON ===== */
 .whatsapp-float {
@@ -445,7 +450,7 @@ html {
     padding: 12px !important;
     padding-bottom: 80px !important;
   }
-  #productGrid > div > div:first-of-type,
+  #productGrid > div > .p-3 > div:first-of-type,
   .product-card-image {
     height: 140px !important;
     min-height: 140px !important;
@@ -454,7 +459,7 @@ html {
   #searchInput {
     min-height: 48px;
     padding: 12px 16px !important;
-    font-size: 15px !important;
+    font-size: 16px !important;
   }
   #searchBtn {
     min-height: 48px;
@@ -499,7 +504,7 @@ html {
     gap: 8px !important;
     padding: 8px !important;
   }
-  #productGrid > div > div:first-of-type,
+  #productGrid > div > .p-3 > div:first-of-type,
   .product-card-image {
     height: 120px !important;
     min-height: 120px !important;
@@ -639,44 +644,45 @@ a[class*="bg-[#ff8c00]"][class*="hover:bg-orange-600"]:hover {
 @keyframes flipRotate { 0%,100% { transform: rotateY(0deg); } 50% { transform: rotateY(180deg); } }
 .animate-flip { animation: flipRotate 8s infinite ease-in-out; transform-style: preserve-3d; }
 
-/* ===== PREMIUM MOBILE UPGRADES — NAVY/ORANGE/WHITE THEME ===== */
+/* ===== PREMIUM MOBILE UPGRADES — WHITE HEADER (JUMIA-STYLE) ===== */
 
-/* 1. Mobile Header — Navy with Gold Accent */
+/* 1. Mobile Header — white like Jumia with dark icons */
 @media (max-width: 767px) {
   body { padding-bottom: 92px; }
 
-  /* Header styling — navy background with white text */
+  /* Header styling — white background with dark text */
   header.sticky, header.bg-white.sticky {
-    background: #0b1a38 !important;
-    border-bottom-color: #1e293b !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #e5e7eb !important;
   }
 
-  /* Header text/icons turn white on navy */
+  /* Header text/icons dark on white */
   header.sticky button, header.sticky a:not(.search-container) {
-    color: #ffffff !important;
+    color: #0b1a38 !important;
   }
   header.sticky button:hover, header.sticky a:hover {
     color: #ff8c00 !important;
   }
 
-  /* Search bar on navy header */
+  /* Search bar on white header */
   header.sticky .search-container {
-    background: #1e293b !important;
-    border-color: #334155 !important;
+    background: #f1f5f9 !important;
+    border-color: #e2e8f0 !important;
   }
   header.sticky #searchInput {
-    background: #1e293b !important;
-    color: #ffffff !important;
-    font-size: 13px !important;
+    background: transparent !important;
+    color: #0b1a38 !important;
+    font-size: 15px !important;
   }
   header.sticky #searchInput::placeholder {
     color: #94a3b8 !important;
   }
   header.sticky .search-container svg {
-    color: #94a3b8 !important;
+    color: #0b1a38 !important;
   }
   header.sticky #searchBtn {
     background: #ff8c00 !important;
+    color: #ffffff !important;
   }
   header.sticky #searchBtn:hover {
     background: #e67e00 !important;
@@ -684,17 +690,17 @@ a[class*="bg-[#ff8c00]"][class*="hover:bg-orange-600"]:hover {
 
   /* Hamburger menu on mobile */
   header.sticky button[aria-label="Menu"] {
-    color: #ffffff !important;
+    color: #0b1a38 !important;
   }
 
   /* Mobile account icon in header */
   header.sticky a[aria-label="My Account"] {
-    color: #ffffff !important;
+    color: #0b1a38 !important;
   }
 
   /* Wishlist/cart icons in header */
   header.sticky .flex.items-center.gap-2 button {
-    color: #ffffff !important;
+    color: #0b1a38 !important;
   }
 
   /* Active bottom nav item indicator bar */
@@ -824,35 +830,53 @@ a[class*="bg-[#ff8c00]"][class*="hover:bg-orange-600"]:hover {
   }
 
   /* Improve product card shadow on mobile */
-  #productGrid > div > div {
+  #productGrid > div > .p-3 > div:first-of-type {
     box-shadow: 0 1px 4px rgba(11,26,56,0.06) !important;
     border-radius: 12px !important;
     overflow: hidden !important;
   }
 }
 
-/* Reference mobile storefront: compact navy header, category tabs and a
+/* Reference mobile storefront: compact white header, category tabs and a
  * three-column catalogue. */
 @media (max-width: 767px) {
   header, header.sticky, header.bg-white.sticky {
-    min-height: 78px;
-    padding: 11px 14px !important;
-    background: #0b1a38 !important;
+    min-height: 62px;
+    padding: 9px 12px !important;
+    background: #ffffff !important;
     border: 0 !important;
+    border-bottom: 1px solid #e5e7eb !important;
   }
-  header > div { flex-wrap: nowrap !important; align-items: center !important; }
-  header > div > :first-child { flex: 0 0 142px; order: 1; }
-  header > div > :last-child { display: none !important; }
+  header > div { flex-wrap: wrap !important; align-items: center !important; gap: 8px 0 !important; }
+  header > div > :first-child { flex: 1 1 auto; order: 1; }
+  header > div > :last-child { display: flex !important; order: 2; margin-left: auto; gap: 2px; }
   header .desktop-logo { display: none !important; }
-  .mobile-wordmark { display: block; color: #fff; font-size: 19px; line-height: .9; font-weight: 900; letter-spacing: -.6px; }
+  .mobile-wordmark { display: block; color: #0b1a38; font-size: 17px; line-height: .9; font-weight: 900; letter-spacing: -.6px; }
   .mobile-wordmark span, .mobile-wordmark strong { display: block; }
   .mobile-wordmark strong { color: #ff8c00; }
-  header > div > :first-child > button { display: none !important; }
-  header .search-container { order: 2; flex: 1 1 auto; flex-basis: auto; width: auto; margin: 0 !important; border: 0 !important; border-radius: 999px !important; background: #fff !important; }
-  header .search-container #searchInput { min-height: 46px; font-size: 14px !important; }
-  header .search-container #searchBtn { display: none !important; }
+  header > div > :first-child > button { display: block !important; color: #0b1a38 !important; }
+  /* Search bar sits on its own full-width row below the logo/account row. */
+  header .search-container { order: 3; flex: 0 0 100% !important; max-width: 100% !important; min-width: 0; width: 100% !important; margin: 0 !important; border: 0 !important; border-radius: 999px !important; background: #f1f5f9 !important; }
+  header .search-container #searchInput { min-height: 44px; font-size: 16px !important; }
+  /* Keep a tappable round search button inside the pill so mobile shoppers
+     can submit a search by tapping instead of only via the keyboard. */
+  header .search-container #searchBtn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    margin-right: 5px;
+    padding: 0 !important;
+    border-radius: 999px !important;
+    background-color: #ff8c00 !important;
+    color: #fff !important;
+    flex-shrink: 0;
+  }
+  header .search-container #searchBtn svg { width: 16px; height: 16px; }
+  header .search-container #searchBtn:hover { background-color: #e67e00 !important; }
   header .search-container > div { color: #0b1a38 !important; padding-left: 14px !important; }
-  header .search-container::after { content: '☰'; color: #fff; font-size: 30px; line-height: 1; margin-left: 15px; cursor: pointer; }
+  header .search-container::after { display: none; }
 
   .category-filters { gap: 28px !important; padding: 14px 16px 0 !important; margin: 0 !important; height: 58px; background: #fff !important; border-bottom: 1px solid #e5e7eb !important; }
   .category-filters .mobile-chip { display: none !important; padding: 0 0 14px !important; font-size: 14px !important; color: #111827 !important; }
@@ -864,30 +888,28 @@ a[class*="bg-[#ff8c00]"][class*="hover:bg-orange-600"]:hover {
   #customer-store-view > .bg-gradient-to-r { display: block !important; margin: 0 !important; border-radius: 0 !important; }
   #flashProductsRow { display: flex !important; grid-template-columns: none !important; overflow-x: auto !important; gap: 10px !important; padding: 0 2px 6px !important; scroll-snap-type: x proximity; }
   #flashProductsRow > div { flex: 0 0 150px !important; width: 150px !important; padding: 9px !important; scroll-snap-align: start; }
-  #flashProductsRow > div > div { height: 108px !important; }
+  #flashProductsRow > div > div:first-of-type { height: 108px !important; }
   #flashProductsRow h5 { white-space: normal !important; min-height: 30px; font-size: 11px !important; }
   #store-feed { padding: 12px 8px 96px !important; }
-  #productGrid, .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px !important; }
+  #productGrid, .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
   #productGrid > div { border-radius: 14px !important; box-shadow: 0 1px 5px rgba(11,26,56,.15) !important; }
-  #productGrid > div > .p-3 { padding: 8px !important; }
-  #productGrid > div .h-\[140px\] { height: 110px !important; margin-bottom: 7px !important; }
+  #productGrid > div > .p-3 { padding: 9px !important; }
+  #productGrid > div .h-\[140px\] { height: 132px !important; margin-bottom: 7px !important; }
   #productGrid h4 { min-height: 38px !important; font-size: 11px !important; font-weight: 700 !important; }
   #productGrid .text-\[14px\] { font-size: 13px !important; }
   #productGrid .text-\[11px\] { display: none !important; }
   #productGrid > div > .px-3 { padding: 0 8px 9px !important; }
   #productGrid > div > .px-3 button { min-height: 38px; padding: 7px 2px !important; border-radius: 999px !important; font-size: 10px !important; }
 }
+/* Signed-in account state in the mobile header turns the person icon and
+   label orange, just like Jumia highlights the logged-in shopper. */
 @media (max-width: 767px) {
-  header > div > :first-child > button {
-    display: block !important;
-    position: fixed;
-    top: 22px;
-    right: 13px;
-    z-index: 101;
-    color: #fff !important;
+  #mobileHeaderAccountBtn.signed-in {
+    color: #ff8c00 !important;
   }
-  header .search-container { margin-right: 40px !important; }
-  header .search-container::after { display: none; }
+  #mobileHeaderAccountBtn.signed-in #mobileHeaderAccountLabel {
+    color: #ff8c00 !important;
+  }
 }
 
 /* Hamburger drawer brand mark — designed for the navy drawer surface. */
