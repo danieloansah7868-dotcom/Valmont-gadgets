@@ -971,6 +971,66 @@ document.addEventListener("keydown", function(e) {
         paymentCost: 71
       },
       {
+        id: 'VG-SH-BULB-01',
+        name: 'TP-Link Tapo Smart Wi-Fi Bulb — Colour',
+        category: 'smart_home',
+        retail: 380, compareAt: 500, badge: 'NEW',
+        specs: 'Wi-Fi Control • 16 Million Colours • Voice Assistant Compatible',
+        stock: 'In stock • Sealed • 12m Warranty',
+        image: 'https://images.unsplash.com/photo-1550985543-f47f8d7a8c8e?q=80&w=800&auto=format&fit=crop',
+        wholesale: 290, deliveryCost: 20, paymentCost: 6
+      },
+      {
+        id: 'VG-SH-CAM-01',
+        name: 'TP-Link Tapo C210 Indoor Security Camera',
+        category: 'smart_home',
+        retail: 950, compareAt: 1200, badge: 'DEAL',
+        specs: '2K Pan/Tilt • Night Vision • Motion Alerts • Two-Way Audio',
+        stock: 'In stock • Sealed • 12m Warranty',
+        image: 'https://images.unsplash.com/photo-1557597774-9d273605dfa9?q=80&w=800&auto=format&fit=crop',
+        wholesale: 760, deliveryCost: 30, paymentCost: 15
+      },
+      {
+        id: 'VG-NET-AX1500',
+        name: 'TP-Link Archer AX1500 Wi-Fi 6 Router',
+        category: 'networking',
+        retail: 1450, compareAt: 1750, badge: 'HOT',
+        specs: 'Wi-Fi 6 • Dual Band • Gigabit Ports • Home Coverage',
+        stock: 'In stock • Sealed • 12m Warranty',
+        image: 'https://images.unsplash.com/photo-1647427060118-4911c9821b82?q=80&w=800&auto=format&fit=crop',
+        wholesale: 1150, deliveryCost: 40, paymentCost: 23
+      },
+      {
+        id: 'VG-NET-MESH-02',
+        name: 'TP-Link Deco Mesh Wi-Fi System — 2 Pack',
+        category: 'networking',
+        retail: 2850, compareAt: 3300, badge: 'DEAL',
+        specs: 'Whole-Home Mesh • Dual Band • Easy App Setup • 2 Units',
+        stock: 'In stock • Sealed • 12m Warranty',
+        image: 'https://images.unsplash.com/photo-1606904825846-647eb07f5be2?q=80&w=800&auto=format&fit=crop',
+        wholesale: 2300, deliveryCost: 50, paymentCost: 46
+      },
+      {
+        id: 'VG-CAM-RING-01',
+        name: 'LED Ring Light with Tripod — Creator Kit',
+        category: 'cameras',
+        retail: 650, compareAt: 850, badge: 'DEAL',
+        specs: '12-inch LED • 3 Light Modes • Phone Holder • Adjustable Tripod',
+        stock: 'In stock • 6m Store Warranty',
+        image: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?q=80&w=800&auto=format&fit=crop',
+        wholesale: 480, deliveryCost: 30, paymentCost: 10
+      },
+      {
+        id: 'VG-CAM-MIC-01',
+        name: 'Wireless Lavalier Microphone — USB-C',
+        category: 'cameras',
+        retail: 780, compareAt: 1000, badge: 'HOT',
+        specs: 'Noise Reduction • Plug & Play • 2 Transmitters • Charging Case',
+        stock: 'In stock • Sealed • 6m Store Warranty',
+        image: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=800&auto=format&fit=crop',
+        wholesale: 590, deliveryCost: 25, paymentCost: 12
+      },
+      {
         id: 'VG-ANKER-735-65W',
         name: 'Anker 735 65W GaN Charger — 3 Port',
         category: 'chargers',
@@ -991,7 +1051,7 @@ document.addEventListener("keydown", function(e) {
       const name = p.name.toLowerCase();
       const isPopular = name.includes('iphone 15 pro max') || name.includes('s24 ultra');
       const isMidRange = name.includes('iphone 13') || name.includes('a55');
-      const isAccessory = ['chargers','phone_acc','phone_parts','travel_acc','laptop_acc'].includes(p.category);
+      const isAccessory = ['chargers','phone_acc','phone_parts','travel_acc','laptop_acc','smart_home','networking','cameras'].includes(p.category);
       const isNew = p.badge === 'NEW';
       p.reviews_count = isPopular ? 42 + (index % 27) : isMidRange ? 18 + (index % 15) : isNew ? index % 6 : isAccessory ? 8 + (index % 8) : 12 + (index % 18);
       p.stock_quantity = isPopular ? 3 + (index % 6) : p.category === 'samsung' ? 5 + (index % 8) : isAccessory ? 15 + (index % 16) : 6 + (index % 12);
@@ -1189,7 +1249,10 @@ document.addEventListener("keydown", function(e) {
       phone_acc: 'Phone Cases & Accessories',
       phone_parts: 'Phone Parts & Spares',
       travel_acc: 'Smart Travel & Car Accessories',
-      chargers: 'Power & Chargers'
+      chargers: 'Power & Chargers',
+      smart_home: 'Smart Home & Security',
+      networking: 'Wi-Fi & Networking',
+      cameras: 'Cameras & Creator Gear'
     };
     
     
@@ -3519,7 +3582,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
 
 
 (function(){
-  const groups={phones:['iphones','samsung','android','tablets','smartwatches'],audio:['audio','gaming'],computing:['laptops','laptop_acc','tablets','smartwatches'],accessories:['phone_acc','phone_parts','travel_acc','chargers']};
+  const groups={phones:['iphones','samsung','android','tablets','smartwatches'],audio:['audio','gaming'],computing:['laptops','laptop_acc','tablets','smartwatches'],accessories:['phone_acc','phone_parts','travel_acc','chargers','smart_home','networking','cameras']};
   const chips=[...document.querySelectorAll('.category-filters [data-cat-filter]')];
   const groupButtons=[...document.querySelectorAll('.category-group-btn')];
   const toggle=document.querySelector('.category-group-toggle');
