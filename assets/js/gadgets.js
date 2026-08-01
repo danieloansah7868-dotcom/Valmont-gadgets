@@ -574,24 +574,21 @@ async function submitCheckoutOrder(){
   const subtotalValue = cart.reduce((sum, item) => sum + (item.price + (item.price_adjustment || 0)) * item.qty, 0); const deliveryValue = subtotalValue >= 5000 ? 0 : 150; const totalAmount = subtotalValue + deliveryValue;
   const referenceCode = "VG-" + Date.now().toString().slice(-6);
   const orderData = { reference_code: referenceCode, customer_name: name, customer_phone: phone, customer_email: emailInput, email: emailInput, customer_area: area, customer_street: street, payment_method: paymentMethod, total_amount: totalAmount, items: cart.map(i => ({ id: i.id, name: i.name, image_url: i.image_url, qty: i.qty, price: i.price + (i.price_adjustment || 0), selected_color: i.selected_color, selected_storage: i.selected_storage })) };
-  if (paymentMethod !== "cod") {
-    // Mobile Money and card payments use the single secure Valmont-Pay checkout.
-    try { localStorage.setItem("valmont_pending_order", JSON.stringify(orderData)); } catch (e) { console.warn("Unable to persist pending order", e); }
-    const gatewayUrl = new URL("https://valmontpay.app/pay.html");
-    gatewayUrl.searchParams.set("merchant", "Valmont Gadgets");
-    gatewayUrl.searchParams.set("amount", Number(orderData.total_amount).toFixed(2));
-    gatewayUrl.searchParams.set("email", orderData.email || orderData.customer_email || "sales@valmontgadgets.com");
-    gatewayUrl.searchParams.set("reference", orderData.reference_code);
-    gatewayUrl.searchParams.set("callback_url", "https://valmontgadgets.com/order-confirmed.html");
-    window.location.href = gatewayUrl.toString();
-    return;
-  }
-  const success = await db.createOrder(orderData);
+  // Mobile Money and card payments use the single secure Valmont-Pay checkout.
+  try { localStorage.setItem("valmont_pending_order", JSON.stringify(orderData)); } catch (e) { console.warn("Unable to persist pending order", e); }
+  const gatewayUrl = new URL("https://valmontpay.app/pay.html");
+  gatewayUrl.searchParams.set("merchant", "Valmont Gadgets");
+  gatewayUrl.searchParams.set("amount", Number(orderData.total_amount).toFixed(2));
+  gatewayUrl.searchParams.set("email", orderData.email || orderData.customer_email || "sales@valmontgadgets.com");
+  gatewayUrl.searchParams.set("reference", orderData.reference_code);
+  gatewayUrl.searchParams.set("callback_url", "https://valmontgadgets.com/order-confirmed.html");
+  window.location.href = gatewayUrl.toString();
+  return;
   if (success) finalizeSuccessfulOrder(orderData); else showToast("Failed to record order. Please try again.");
 }
 function finalizeSuccessfulOrder(order){
   const itemsText = order.items.map(i => { const variants = [i.selected_color, i.selected_storage].filter(Boolean).join("/"); return `* ${i.name} ${variants ? `(${variants})` : ""} - Qty ${i.qty} - GH₵ ${(i.price * i.qty).toLocaleString()}`; }).join("\\n");
-  const paymentNames = { momo: "Mobile Money Invoice", cod: "Cash on Delivery", card: "Paid via Valmont-Pay" };
+  const paymentNames = { momo: "Mobile Money Invoice", card: "Paid via Valmont-Pay" };
   const textReceipt = `*VALMONT GADGETS - NEW ORDER*\\nReference Code: *#${order.reference_code}*\\n\\n*ITEMS:*\\n${itemsText}\\n\\n*SHIPPING SUMMARY:*\\nSubtotal: GH₵ ${(order.total_amount - (order.total_amount >= 5000 ? 0 : 150)).toLocaleString()}\\nDelivery Fee: ${order.total_amount >= 5000 ? "FREE" : "GH₵ 150"}\\n*TOTAL BILL: GH₵ ${order.total_amount.toLocaleString()}*\\n\\n*PAYMENT METHOD:* ${paymentNames[order.payment_method]}\\n\\n*DELIVERY DETAILS:*\\nRecipient: ${order.customer_name}\\nPhone: ${order.customer_phone}\\nRegion/Area: ${order.customer_area}\\nAddress/Landmark: ${order.customer_street || "To be provided via chat"}\\n\\n_Thank you for choosing Valmont Gadgets Ghana. We are preparing your shipment!_`;
   cart = []; localStorage.setItem("valmont_cart", JSON.stringify(cart)); updateCartBadge(); closeCartDrawer();
   showToast(`Order #${order.reference_code} submitted successfully.`);

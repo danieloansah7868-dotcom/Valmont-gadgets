@@ -1783,7 +1783,6 @@ document.addEventListener("keydown", function(e) {
         checkoutActionBtn.querySelector('span').textContent = "Submit Secure Order";
       } else if (checkoutStep === 3) {
         // Send all prepaid methods to the single Valmont-Pay checkout.
-        // Cash on delivery is recorded locally without opening a chat window.
         triggerPaymentCheckout();
       }
     });
@@ -1835,7 +1834,7 @@ document.addEventListener("keydown", function(e) {
       const ref = `VG-${Date.now().toString().slice(-6)}`;
       const itemsString = cart.map(item => `• ${item.name} (Qty ${item.qty} - ${money(item.retail * item.qty)})`).join('\n');
       
-      const paymentNames = { momo: 'Mobile Money', cod: 'Cash on Delivery', card: 'Credit/Debit Card' };
+      const paymentNames = { momo: 'Mobile Money', card: 'Credit/Debit Card' };
       paystackSavedRef = ref;
       paystackSavedName = name;
       paystackSavedPayment = paymentNames[paymentOpt];
@@ -1848,7 +1847,7 @@ Ref Code: *#${ref}*
 ${itemsString}
 
 *TOTAL BILL:* ${money(subtotal)}
-*PAYMENT:* ${paymentNames[paymentOpt]} (${paymentOpt === 'cod' ? 'Pending' : 'Paid'})
+*PAYMENT:* ${paymentNames[paymentOpt]} (Paid)
 
 *SHIPPING TO:*
 Name: ${name}
@@ -1858,12 +1857,8 @@ Street: ${street || 'To be provided'}
 
 _Stock is verified before dispatch. We will contact you to finalize your delivery. Thank you for choosing Valmont Gadgets Ghana!_`;
 
-      if (paymentOpt === 'cod') {
-        // Cash on delivery does not need an online payment redirect.
-        finalizeCheckout();
-      } else {
-        // Both card and Mobile Money use the same secure Valmont-Pay checkout.
-        redirectToValmontPay({
+      // Both card and Mobile Money use the same secure Valmont-Pay checkout.
+      redirectToValmontPay({
           subtotal: subtotal,
           reference: ref,
           name: name,
@@ -1882,7 +1877,6 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
             };
           })
         });
-      }
     }
 
     function redirectToValmontPay(ctx) {

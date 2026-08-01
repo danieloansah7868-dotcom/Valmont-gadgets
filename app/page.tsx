@@ -593,7 +593,7 @@ export default function Page() {
 
         <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className={`border rounded-xl p-4 ${cardBg}`}><p className="text-[11px] font-extrabold tracking-widest uppercase mb-1">12-Month Warranty</p><p className="text-[12px] text-gray-600 leading-relaxed font-medium">Every device sealed, verified IMEI, with official Valmont warranty card and receipt.</p></div>
-          <div className={`border rounded-xl p-4 ${cardBg}`}><p className="text-[11px] font-extrabold tracking-widest uppercase mb-1">Express Accra Delivery</p><p className="text-[12px] text-gray-600 leading-relaxed font-medium">Same-day delivery in Accra. Pay on delivery available. Inter-regional dispatch within 24 hours.</p></div>
+          <div className={`border rounded-xl p-4 ${cardBg}`}><p className="text-[11px] font-extrabold tracking-widest uppercase mb-1">Express Accra Delivery</p><p className="text-[12px] text-gray-600 leading-relaxed font-medium">Same-day delivery in Accra. Secure payment before dispatch. Inter-regional dispatch within 24 hours.</p></div>
           <div className={`border rounded-xl p-4 ${cardBg}`}><p className="text-[11px] font-extrabold tracking-widest uppercase mb-1">Swap & Trade-In</p><p className="text-[12px] text-gray-600 leading-relaxed font-medium">Trade your old phone or laptop for instant value. MoMo, Bank Transfer, and Card accepted.</p></div>
         </div>
       </main>
