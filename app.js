@@ -2528,12 +2528,18 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     };
 
     function updateUserUI() {
+      const mobileHeaderBtn = document.getElementById('mobileHeaderAccountBtn');
+      const mobileHeaderLabel = document.getElementById('mobileHeaderAccountLabel');
       if (currentUser) {
         accountLabel.textContent = `Hi, ${currentUser.name.split(' ')[0]}`;
         if (logoutBtn) logoutBtn.classList.remove('hidden');
+        if (mobileHeaderBtn) mobileHeaderBtn.classList.add('signed-in');
+        if (mobileHeaderLabel) mobileHeaderLabel.textContent = currentUser.name.split(' ')[0];
       } else {
         accountLabel.textContent = "Sign In";
         if (logoutBtn) logoutBtn.classList.add('hidden');
+        if (mobileHeaderBtn) mobileHeaderBtn.classList.remove('signed-in');
+        if (mobileHeaderLabel) mobileHeaderLabel.textContent = 'Sign In';
       }
       updateMobileAccountLabel();
     }

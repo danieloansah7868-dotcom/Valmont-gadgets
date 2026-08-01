@@ -1716,14 +1716,13 @@
     #flashProductsRow .flash-add { display:flex; width:100%; margin-top:9px; align-items:center; justify-content:center; gap:6px; border:0; border-radius:7px; padding:9px; background:#ff8c00; color:#fff; font-size:10px; font-weight:800; text-transform:uppercase; }
     @media (max-width:767px) {
       body { background:#fff; }
-      header { position:sticky; background:#0b1a38 !important; border:0 !important; padding:12px 14px !important; }
+      header { position:sticky; background:#fff !important; border-bottom:1px solid #e5e7eb !important; box-shadow:0 2px 8px rgba(0,0,0,.05); padding:9px 12px !important; }
       header .search-container { order:2; max-width:none; border:0; border-radius:999px; }
       header .search-container input { font-size:16px; }
-      header > div { flex-wrap:wrap; gap:10px !important; }
+      header > div { flex-wrap:nowrap; gap:8px !important; }
       header > div > :first-child { order:1; }
       header > div > :last-child { order:3; margin-left:auto; }
-      header a, header button { color:#fff !important; }
-      header img { filter:brightness(0) invert(1); }
+      header a, header button { color:#0b1a38 !important; }
       .category-filters { margin:0 !important; padding:10px 14px !important; border-bottom:1px solid #e5e7eb; background:#fff; gap:24px !important; }
       .category-filters .mobile-chip { padding:8px 0 !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; background:transparent !important; color:#0b1a38 !important; font-size:13px !important; }
       .category-filters .mobile-chip:first-child { color:#ff8c00 !important; border-bottom:3px solid #ff8c00 !important; }
@@ -1811,8 +1810,9 @@
       <div class="flex items-center gap-2 md:gap-5 lg:gap-8 shrink-0">
 
         <!-- Mobile Account Button (links to /account.html) -->
-        <a href="account.html" class="flex items-center text-gray-700 hover:text-[#ff8c00] md:hidden p-1.5 shrink-0" aria-label="My Account">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5.5 h-5.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+        <a id="mobileHeaderAccountBtn" href="account.html" class="flex flex-col items-center justify-center text-gray-700 hover:text-[#ff8c00] md:hidden p-1 shrink-0 transition" aria-label="My Account">
+          <svg id="mobileHeaderAccountIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5.5 h-5.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+          <span id="mobileHeaderAccountLabel" class="text-[9px] font-extrabold leading-none mt-0.5 max-w-[64px] truncate uppercase tracking-wide">Sign In</span>
         </a>
 
         <!-- Desktop Account Dropdown -->
@@ -1865,7 +1865,7 @@
         </button>
 
         <!-- Desktop Bag Trigger Button -->
-        <button id="cartBtn" class="cart-icon" class="relative flex items-center gap-1.5 font-semibold text-[14px] text-gray-700 hover:text-[#ff8c00] py-1 transition hidden md:flex">
+        <button id="cartBtn" class="cart-icon relative flex items-center gap-1.5 font-semibold text-[14px] text-gray-700 hover:text-[#ff8c00] py-1 transition hidden md:flex">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-6 h-6 text-gray-700"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
           <span class="tracking-wide">Bag</span>
           <span id="cartBadgeCount" class="absolute -top-1.5 -right-2 bg-[#ff8c00] text-white text-[9px] font-black rounded-full h-4.5 w-4.5 flex items-center justify-center hidden">0</span>
