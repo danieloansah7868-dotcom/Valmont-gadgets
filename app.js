@@ -1815,6 +1815,18 @@ document.addEventListener("keydown", function(e) {
       checkoutActionBtn.querySelector('span').textContent = "Proceed to Shipping";
     }
 
+    // Clear inline shipping errors on user input
+    ['shippingName', 'shippingPhone', 'shippingEmail', 'shippingCity', 'shippingTown', 'shippingGPS', 'shippingStreet'].forEach(function(fieldId) {
+      var fieldEl = document.getElementById(fieldId);
+      if (fieldEl) {
+        fieldEl.addEventListener('input', function() {
+          this.style.borderColor = '';
+          var errEl = this.parentElement.querySelector('.shipping-field-error');
+          if (errEl) errEl.remove();
+        });
+      }
+    });
+
     checkoutActionBtn.addEventListener('click', () => {
       if (checkoutStep === 1) {
         var checkoutOrderData = {
@@ -1836,17 +1848,96 @@ document.addEventListener("keydown", function(e) {
         document.getElementById('stepTab2').className = "text-[#ff8c00] border-b-2 border-[#ff8c00] pb-0.5";
         checkoutActionBtn.querySelector('span').textContent = "Proceed to Payment";
       } else if (checkoutStep === 2) {
+        // --- Inline field validation for Shipping step ---
+        const fieldIds = ['shippingName', 'shippingPhone', 'shippingEmail', 'shippingCity', 'shippingTown', 'shippingGPS', 'shippingStreet'];
+        let hasError = false;
+
+        // Helper: show inline error under a field
+        function showFieldError(id, msg) {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.style.borderColor = '#ef4444';
+          let errEl = el.parentElement.querySelector('.shipping-field-error');
+          if (!errEl) {
+            errEl = document.createElement('div');
+            errEl.className = 'shipping-field-error';
+            errEl.style.cssText = 'color:#ef4444;font-size:11px;margin-top:3px;';
+            el.parentElement.appendChild(errEl);
+          }
+          errEl.textContent = msg;
+        }
+
+        // Helper: clear inline error for a field
+        function clearFieldError(id) {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.style.borderColor = '';
+          const errEl = el.parentElement.querySelector('.shipping-field-error');
+          if (errEl) errEl.remove();
+        }
+
+        // Clear all previous errors
+        fieldIds.forEach(function(id) { clearFieldError(id); });
+
+        // Read values
         const name = document.getElementById('shippingName').value.trim();
         const phone = document.getElementById('shippingPhone').value.trim();
+        const email = document.getElementById('shippingEmail').value.trim();
         const city = document.getElementById('shippingCity').value.trim();
         const town = document.getElementById('shippingTown').value.trim();
         const gps = document.getElementById('shippingGPS').value.trim();
         const street = document.getElementById('shippingStreet').value.trim();
-        
-        if (!name || !phone || !city || !town || !street) {
-          alert("Please fill out your Name, Phone, City, Town, and Street Address to continue.");
-          return;
+
+        // Name: required, at least 2 chars, must contain a letter
+        if (!name || name.length < 2 || !/[a-zA-Z]/.test(name)) {
+          showFieldError('shippingName', 'Please enter a valid name (at least 2 characters, must contain a letter).');
+          hasError = true;
         }
+
+        // Phone: Ghana number validation
+        // Accepts 0XXXXXXXXX, +233XXXXXXXXX, 233XXXXXXXXX (ignoring spaces/parens/dashes)
+        var phoneDigits = phone.replace(/[\s()\-]/g, '');
+        var ghanaPhoneValid = false;
+        if (/^0\d{9}$/.test(phoneDigits)) ghanaPhoneValid = true;
+        else if (/^\+?233\d{9}$/.test(phoneDigits)) ghanaPhoneValid = true;
+        if (!ghanaPhoneValid) {
+          showFieldError('shippingPhone', 'Please enter a valid Ghana phone number (e.g. 054 245 1578 or +233 54 245 1578).');
+          hasError = true;
+        }
+
+        // Email: standard pattern
+        var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailPattern.test(email)) {
+          showFieldError('shippingEmail', 'Please enter a valid email address.');
+          hasError = true;
+        }
+
+        // City: required
+        if (!city) {
+          showFieldError('shippingCity', 'City is required.');
+          hasError = true;
+        }
+
+        // Town/Suburb: required
+        if (!town) {
+          showFieldError('shippingTown', 'Town or suburb is required.');
+          hasError = true;
+        }
+
+        // Ghana Post GPS: optional, but if filled must match XX-###-####
+        if (gps && !/^[A-Za-z]{2}-\d{3}-\d{4}$/.test(gps)) {
+          showFieldError('shippingGPS', 'Ghana Post GPS must be in the format XX-###-#### (e.g. GA-123-4567).');
+          hasError = true;
+        }
+
+        // Street address: required
+        if (!street) {
+          showFieldError('shippingStreet', 'Street address is required.');
+          hasError = true;
+        }
+
+        if (hasError) return;
+        // --- End inline validation ---
         
         checkoutStep = 3;
         document.getElementById('checkoutStep2').classList.add('hidden');
