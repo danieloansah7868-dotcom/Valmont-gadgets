@@ -3326,7 +3326,8 @@
           </div>
           <div>
             <label for="loginPassword" class="block text-[10px] font-black uppercase text-gray-500 mb-1">Password *</label>
-            <input id="loginPassword" type="password" placeholder="••••••••" class="w-full border border-gray-300 p-3.5 rounded-[4px] text-[16px] md:text-[13px] outline-none font-semibold focus:border-[#ff8c00]" required />
+            <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••" class="w-full border border-gray-300 p-3.5 rounded-[4px] text-[16px] md:text-[13px] outline-none font-semibold focus:border-[#ff8c00]" required />
+            <button type="button" onclick="handlePasswordReset();" class="text-[10px] font-bold text-[#ff8c00] mt-1 hover:underline">Forgot password?</button>
           </div>
         </div>
 
@@ -3341,7 +3342,7 @@
             <input id="signUpEmail" type="email" placeholder="customer@valmontgadgets.com" class="w-full border border-gray-300 p-3 rounded-[4px] text-[16px] md:text-[13px] outline-none font-semibold focus:border-[#ff8c00]" />
           </div>
           <div>
-            <label for="signUpPhone" class="block text-[10px] font-black uppercase text-gray-500 mb-1">Phone / WhatsApp Number *</label>
+            <label for="signUpPhone" class="block text-[10px] font-black uppercase text-gray-500 mb-1">Phone Number *</label>
             <input id="signUpPhone" type="tel" placeholder="054 245 1578" class="w-full border border-gray-300 p-3 rounded-[4px] text-[16px] md:text-[13px] outline-none font-semibold focus:border-[#ff8c00]" />
           </div>
           <div>
@@ -3398,7 +3399,7 @@
 
       <div class="border rounded-lg p-4 space-y-2 text-[13px] bg-gray-50">
         <div class="flex justify-between border-b pb-1.5"><span class="font-bold text-gray-500">Business Name:</span> <span id="dlProfileName" class="font-black">--</span></div>
-        <div class="flex justify-between border-b pb-1.5"><span class="font-bold text-gray-500">WhatsApp:</span> <span id="dlProfilePhone" class="font-black">--</span></div>
+        <div class="flex justify-between border-b pb-1.5"><span class="font-bold text-gray-500">Phone:</span> <span id="dlProfilePhone" class="font-black">--</span></div>
         <div class="flex justify-between"><span class="font-bold text-gray-500">Email:</span> <span id="dlProfileEmail" class="font-black">--</span></div>
       </div>
 
@@ -3425,19 +3426,23 @@
 
     <!-- Dealer Registration Form (If inactive) -->
     <form id="dealerRegForm" class="space-y-4">
-      <p class="text-[12px] text-gray-500 font-medium">Are you a bulk buyer, retailer, or independent distributor in Ghana? Register for a free Authorized Dealer account to instantly lock in **wholesale prices** for all products across our catalog.</p>
+      <p class="text-[12px] text-gray-500 font-medium">Dealer accounts are for retailers and bulk buyers. Customers shop at retail prices; dealer accounts unlock wholesale pricing and the private reseller desk.</p>
 
       <div>
         <label for="dlNameInput" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Business / Dealer Name *</label>
-        <input id="dlNameInput" type="text" placeholder="Valmont Retailers East" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
+        <input id="dlNameInput" type="text" autocomplete="organization" placeholder="Valmont Retailers East" pattern="[A-Za-zÀ-ÖØ-öø-ÿ .&'\-]{2,80}" title="Enter a business name only" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
       </div>
       <div>
-        <label for="dlPhoneInput" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">WhatsApp / Phone Number *</label>
-        <input id="dlPhoneInput" type="tel" placeholder="054 245 1578" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
+        <label for="dlPhoneInput" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Phone Number *</label>
+        <input id="dlPhoneInput" type="tel" inputmode="tel" autocomplete="tel" placeholder="054 245 1578" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
       </div>
       <div>
-        <label for="dlEmailInput" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Email Address *</label>
-        <input id="dlEmailInput" type="email" placeholder="dealer@valmontgadgets.com" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
+        <label for="dlEmailInput" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Email *</label>
+        <input id="dlEmailInput" type="email" autocomplete="email" placeholder="you@example.com" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
+      </div>
+      <div>
+        <label for="dlPasswordInput" class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Password *</label>
+        <input id="dlPasswordInput" type="password" autocomplete="new-password" minlength="6" placeholder="At least 6 characters" class="w-full border p-2.5 rounded-lg text-[16px] md:text-[13px] outline-none focus:border-[#ff8c00]" required />
       </div>
 
       <button type="submit" class="w-full bg-[#ff8c00] hover:bg-orange-600 text-white font-bold text-[12px] tracking-widest uppercase py-3.5 rounded-[4px] transition shadow-sm">

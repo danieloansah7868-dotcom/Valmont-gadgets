@@ -9,10 +9,32 @@ let userWishlist = [];
 let editingProfile = false;
 let allProducts = [];
 
+const VALMONT_AUTH = {
+  url: 'https://eydsoqnpetqczaeqrscc.supabase.co',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwiaWF0IjoxNzg0ODg3NTY2LCJleHAiOjIxMDA0NjM1Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc'
+};
+
+async function authRequest(path, body) {
+  const response = await fetch(`${VALMONT_AUTH.url}/auth/v1/${path}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', apikey: VALMONT_AUTH.anonKey }, body: JSON.stringify(body)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error_description || data.msg || data.message || 'Authentication failed');
+  return data;
+}
+
+function saveAuthUser(account, accessToken) {
+  const metadata = account.user_metadata || {};
+  currentUser = { id: account.id, name: metadata.full_name || metadata.name || account.email.split('@')[0], email: account.email, phone: metadata.phone || account.phone || '' };
+  localStorage.setItem('valmont_user', JSON.stringify(currentUser));
+  if (accessToken) localStorage.setItem('valmont_access_token', accessToken);
+}
+
 window.addEventListener('DOMContentLoaded', initAccount);
 
 function initAccount() {
-  currentUser = JSON.parse(localStorage.getItem('valmont_user') || 'null');
+  currentUser = localStorage.getItem('valmont_access_token') ? JSON.parse(localStorage.getItem('valmont_user') || 'null') : null;
+  if (!localStorage.getItem('valmont_access_token')) localStorage.removeItem('valmont_user');
   allProducts = JSON.parse(localStorage.getItem('valmont_products') || '[]');
   // Also try from inline PRODUCTS if available
   if (allProducts.length === 0 && typeof PRODUCTS !== 'undefined') {
@@ -45,67 +67,40 @@ function switchAuthTab(tab) {
   document.getElementById('formSignUp').classList.toggle('hidden', tab !== 'signup');
 }
 
-function handleSignIn(e) {
+async function handleSignIn(e) {
   e.preventDefault();
-  const email = document.getElementById('signInEmail').value.trim();
-  const password = document.getElementById('signInPassword').value.trim();
+  const email = document.getElementById('signInEmail').value.trim().toLowerCase();
+  const password = document.getElementById('signInPassword').value;
   if (!email || !password) { showToast('Please enter email and password'); return; }
-
-  // Check localStorage for existing users
-  const users = JSON.parse(localStorage.getItem('valmont_registered_users') || '[]');
-  const found = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-  
-  if (found && found.password === password) {
-    currentUser = { name: found.name, email: found.email, phone: found.phone || '' };
-  } else {
-    // Auto-create profile for any email
-    const baseName = email.split('@')[0];
-    const formattedName = baseName.charAt(0).toUpperCase() + baseName.slice(1).replace(/[._]/g, ' ');
-    currentUser = { name: formattedName, email: email, phone: '' };
-    
-    // Register if not found
-    if (!found) {
-      users.push({ name: formattedName, email: email, password: password, phone: '' });
-      localStorage.setItem('valmont_registered_users', JSON.stringify(users));
-    }
-  }
-
-  localStorage.setItem('valmont_user', JSON.stringify(currentUser));
-  showAccountScreen();
-  showToast('Welcome back, ' + currentUser.name.split(' ')[0] + '!');
+  try {
+    const result = await authRequest('token?grant_type=password', { email, password });
+    saveAuthUser(result.user, result.access_token);
+    showAccountScreen(); showToast('Welcome back, ' + currentUser.name.split(' ')[0] + '!');
+  } catch (error) { console.error('Sign-in error:', error); showToast(error.message || 'Invalid email or password.'); }
 }
 
-function handleSignUp(e) {
+async function handleSignUp(e) {
   e.preventDefault();
   const name = document.getElementById('signUpName').value.trim();
-  const email = document.getElementById('signUpEmail').value.trim();
+  const email = document.getElementById('signUpEmail').value.trim().toLowerCase();
   const phone = document.getElementById('signUpPhone').value.trim();
-  const password = document.getElementById('signUpPassword').value.trim();
-
+  const password = document.getElementById('signUpPassword').value;
   if (!name || !email || !phone || !password) { showToast('Please fill all fields'); return; }
   if (password.length < 6) { showToast('Password must be at least 6 characters'); return; }
-
-  const users = JSON.parse(localStorage.getItem('valmont_registered_users') || '[]');
-  if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
-    showToast('This email is already registered. Please sign in.');
-    switchAuthTab('signin');
-    return;
-  }
-
-  users.push({ name, email, password, phone });
-  localStorage.setItem('valmont_registered_users', JSON.stringify(users));
-
-  currentUser = { name, email, phone };
-  localStorage.setItem('valmont_user', JSON.stringify(currentUser));
-  showAccountScreen();
-  showToast('Account created! Welcome, ' + name + '!');
+  try {
+    const result = await authRequest('signup', { email, password, data: { full_name: name, phone, role: 'customer' } });
+    if (result.session && result.user) { saveAuthUser(result.user, result.session.access_token); showAccountScreen(); showToast('Account created! Welcome, ' + name + '!'); }
+    else { switchAuthTab('signin'); showToast('Account created. Check your email to confirm it, then sign in.'); }
+  } catch (error) { console.error('Sign-up error:', error); showToast(error.message || 'Unable to create account.'); }
 }
 
 function handlePasswordReset() {
   const email = prompt('Enter your email address to receive a password reset link:');
   if (!email) return;
   if (!email.includes('@')) { showToast('Please enter a valid email'); return; }
-  showToast('If an account exists for ' + email + ', a reset link has been sent.');
+  authRequest('recover', { email }).then(() => {
+    showToast('If an account exists for ' + email + ', a password reset email has been sent.');
+  }).catch(() => showToast('Unable to send the reset email. Please try again.'));
 }
 
 function handleGoogleSignIn() {
@@ -117,6 +112,7 @@ function handleGoogleSignIn() {
 function handleLogout() {
   if (confirm('Sign out of your account?')) {
     localStorage.removeItem('valmont_user');
+    localStorage.removeItem('valmont_access_token');
     currentUser = null;
     showAuthScreen();
   }
@@ -572,20 +568,22 @@ function updateToggle(elId, isOn) {
   else el.classList.remove('on');
 }
 
-function changePassword(e) {
+async function changePassword(e) {
   e.preventDefault();
   const newPass = document.getElementById('newPassword').value.trim();
   if (!newPass || newPass.length < 6) { showToast('Password must be at least 6 characters'); return; }
 
-  // Update in registered users
-  const users = JSON.parse(localStorage.getItem('valmont_registered_users') || '[]');
-  const idx = users.findIndex(u => u.email === currentUser.email);
-  if (idx !== -1) {
-    users[idx].password = newPass;
-    localStorage.setItem('valmont_registered_users', JSON.stringify(users));
-  }
-  document.getElementById('newPassword').value = '';
-  showToast('Password changed successfully!');
+  const token = localStorage.getItem('valmont_access_token');
+  try {
+    const response = await fetch(`${VALMONT_AUTH.url}/auth/v1/user`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', apikey: VALMONT_AUTH.anonKey, Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ password: newPass })
+    });
+    if (!response.ok) throw new Error('Password update failed');
+    document.getElementById('newPassword').value = '';
+    showToast('Password changed successfully!');
+  } catch (error) { showToast('Unable to change password. Please sign in again.'); }
 }
 
 // ===== TOAST =====

@@ -1158,7 +1158,9 @@ document.addEventListener("keydown", function(e) {
     let cart = JSON.parse(localStorage.getItem('valmont_cart') || '[]');
     let wishlist = JSON.parse(localStorage.getItem('valmont_wishlist') || '[]');
     let recentlyViewed = JSON.parse(localStorage.getItem('valmont_recently_viewed') || '[]');
-    let currentUser = JSON.parse(localStorage.getItem('valmont_user') || 'null');
+    let currentUser = localStorage.getItem('valmont_access_token') ? JSON.parse(localStorage.getItem('valmont_user') || 'null') : null;
+    // Legacy local-only profiles were not authenticated accounts; do not treat them as signed in.
+    if (!localStorage.getItem('valmont_access_token')) localStorage.removeItem('valmont_user');
     let isResellerMode = false;
     let selectedDetailProduct = null;
     let isDealerMode = false;
@@ -2465,69 +2467,64 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
       loginModal.classList.add('hidden');
     }
 
-    function handleLoginSubmit(event) {
-      event.preventDefault();
-      if (currentLoginTab === 'signin') {
-        const email = document.getElementById('loginEmail').value.trim();
-        const pass = document.getElementById('loginPassword').value.trim();
-        
-        // Check registered users first, fall back to mock profile
-        const users = JSON.parse(localStorage.getItem('valmont_registered_users') || '[]');
-        const found = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-        
-        if (found && found.password === pass) {
-          currentUser = { name: found.name, phone: found.phone, email: found.email, address: found.address || 'East Legon, Accra' };
-        } else {
-          const baseName = email.split('@')[0];
-          const formattedName = baseName.charAt(0).toUpperCase() + baseName.slice(1).replace(/[._]/g, ' ');
-          currentUser = { name: formattedName, phone: '054 245 1578', email: email, address: 'East Legon, Accra' };
-          // Auto-register
-          if (!found) {
-            users.push({ name: formattedName, email: email, password: pass, phone: '054 245 1578' });
-            localStorage.setItem('valmont_registered_users', JSON.stringify(users));
-          }
-        }
-        localStorage.setItem('valmont_user', JSON.stringify(currentUser));
-        
-        // Autofill forms
-        if (document.getElementById('shippingName')) document.getElementById('shippingName').value = currentUser.name;
-        if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = currentUser.phone;
-        if (document.getElementById('shippingEmail') && currentUser.email) document.getElementById('shippingEmail').value = currentUser.email;
-        if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = currentUser.address || 'Near East Legon Police Station';
-        if (document.getElementById('shippingCity')) document.getElementById('shippingCity').value = 'Accra';
-        if (document.getElementById('shippingTown')) document.getElementById('shippingTown').value = 'East Legon';
+    async function authRequest(path, body) {
+      const response = await fetch(`${VALMONT_SUPABASE.url}/auth/v1/${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: VALMONT_SUPABASE.anonKey },
+        body: JSON.stringify(body)
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error_description || data.msg || data.message || 'Authentication failed');
+      return data;
+    }
 
-        updateUserUI();
-        closeLoginModal();
-        alert(`Welcome back to Valmont, ${currentUser.name}!`);
-      } else {
-        const name = document.getElementById('signUpName').value.trim();
-        const email = document.getElementById('signUpEmail').value.trim();
-        const phone = document.getElementById('signUpPhone').value.trim();
-        const address = document.getElementById('signUpAddress').value.trim();
-        
-        // Register for account page compatibility
-        const users = JSON.parse(localStorage.getItem('valmont_registered_users') || '[]');
-        if (!users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
-          users.push({ name, email, password: '', phone, address });
-          localStorage.setItem('valmont_registered_users', JSON.stringify(users));
-        }
-        
-        currentUser = { name, phone, email, address };
-        localStorage.setItem('valmont_user', JSON.stringify(currentUser));
-        
-        // Autofill forms
-        if (document.getElementById('shippingName')) document.getElementById('shippingName').value = name;
-        if (document.getElementById('shippingPhone')) document.getElementById('shippingPhone').value = phone;
-        if (document.getElementById('shippingEmail') && email) document.getElementById('shippingEmail').value = email;
-        if (document.getElementById('shippingStreet')) document.getElementById('shippingStreet').value = address;
-        if (document.getElementById('shippingCity')) document.getElementById('shippingCity').value = 'Accra';
-        if (document.getElementById('shippingTown')) document.getElementById('shippingTown').value = address;
+    async function handlePasswordReset() {
+      const email = window.prompt('Enter your account email:');
+      if (!email || !email.includes('@')) return;
+      try {
+        await authRequest('recover', { email: email.trim().toLowerCase() });
+        showValmontToast('If an account exists, a password reset email has been sent.');
+      } catch (error) { showValmontToast('Unable to send the reset email. Please try again.'); }
+    }
 
-        updateUserUI();
-        closeLoginModal();
-        alert(`Account Created Successfully! Welcome to Valmont, ${name}!`);
+    function setAuthenticatedUser(account, accessToken) {
+        const metadata = account.user_metadata || {};
+      currentUser = { id: account.id, name: metadata.full_name || metadata.name || account.email.split('@')[0], email: account.email, phone: metadata.phone || account.phone || '', address: metadata.address || '', role: metadata.role || 'customer' };
+      localStorage.setItem('valmont_user', JSON.stringify(currentUser));
+      if (currentUser.role === 'dealer') {
+        isDealerMode = true;
+        dealerProfile = { id: account.id, name: currentUser.name, phone: currentUser.phone, email: currentUser.email, role: 'dealer' };
+        localStorage.setItem('valmont_is_dealer', 'true');
+        localStorage.setItem('valmont_dealer_profile', JSON.stringify(dealerProfile));
       }
+      if (accessToken) localStorage.setItem('valmont_access_token', accessToken);
+    }
+
+    async function handleLoginSubmit(event) {
+      event.preventDefault();
+      const submitBtn = document.getElementById('loginSubmitBtn');
+      if (submitBtn) submitBtn.disabled = true;
+      try {
+        if (currentLoginTab === 'signin') {
+          const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+          const password = document.getElementById('loginPassword').value;
+          const result = await authRequest('token?grant_type=password', { email, password });
+          setAuthenticatedUser(result.user, result.access_token);
+          if (currentUser.role === 'dealer') { showDealerAnnouncementBanner(); updateDealerUI(); renderProducts(); renderFlashSales(); }
+          updateUserUI(); closeLoginModal(); showValmontToast(`Welcome back, ${currentUser.name}!`);
+        } else {
+          const name = document.getElementById('signUpName').value.trim();
+          const email = document.getElementById('signUpEmail').value.trim().toLowerCase();
+          const phone = document.getElementById('signUpPhone').value.trim();
+          const password = document.getElementById('signUpPassword').value;
+          const address = document.getElementById('signUpAddress').value.trim();
+          const result = await authRequest('signup', { email, password, data: { full_name: name, phone, address, role: 'customer' } });
+          if (result.session && result.user) {
+            setAuthenticatedUser(result.user, result.session.access_token); updateUserUI(); closeLoginModal(); showValmontToast(`Account created. Welcome, ${name}!`);
+          } else { setLoginTab('signin'); showValmontToast('Account created. Check your email to confirm it, then sign in.'); }
+        }
+      } catch (error) { console.error('Authentication error:', error); showValmontToast(error.message || 'Unable to authenticate. Please try again.'); }
+      finally { if (submitBtn) submitBtn.disabled = false; }
     }
 
     // Starts a real OAuth flow with Google via Supabase. No account details are
@@ -2557,12 +2554,15 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         if (!response.ok) throw new Error('Unable to verify Google account');
         const account = await response.json();
         currentUser = {
+          id: account.id,
           name: account.user_metadata?.full_name || account.user_metadata?.name || account.email.split('@')[0],
           email: account.email,
           phone: account.phone || '',
-          address: ''
+          address: '',
+          role: account.user_metadata?.role || 'customer'
         };
         localStorage.setItem('valmont_user', JSON.stringify(currentUser));
+        localStorage.setItem('valmont_access_token', accessToken);
         history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
         updateUserUI();
         showValmontToast(`Welcome, ${currentUser.name}!`);
@@ -2610,6 +2610,11 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
     function handleLogout() {
       currentUser = null;
       localStorage.removeItem('valmont_user');
+      localStorage.removeItem('valmont_access_token');
+      localStorage.removeItem('valmont_is_dealer');
+      localStorage.removeItem('valmont_dealer_profile');
+      isDealerMode = false;
+      dealerProfile = null;
       updateUserUI();
       closeLoginModal();
       alert("Logged out of your customer profile successfully.");
@@ -3193,8 +3198,9 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
     setupResellerFAQs();
   
   // === INTEGRATED DEALER ACCESS & WHOLESALE PRICING LOGIC ===
-  isDealerMode = localStorage.getItem('valmont_is_dealer') === 'true';
-  dealerProfile = JSON.parse(localStorage.getItem('valmont_dealer_profile') || 'null');
+  isDealerMode = Boolean(localStorage.getItem('valmont_access_token')) && localStorage.getItem('valmont_is_dealer') === 'true';
+  dealerProfile = isDealerMode ? JSON.parse(localStorage.getItem('valmont_dealer_profile') || 'null') : null;
+  if (!isDealerMode) { localStorage.removeItem('valmont_is_dealer'); localStorage.removeItem('valmont_dealer_profile'); }
 
   let dealerOverlay = document.getElementById('dealerOverlay');
   let dealerModal = document.getElementById('dealerModal');
@@ -3227,29 +3233,28 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
     dealerModal.classList.add('hidden');
   }
 
-  // Handle Dealer Registration
-  if (dealerRegForm) {
-    dealerRegForm.addEventListener('submit', event => {
-      event.preventDefault();
-      const name = document.getElementById('dlNameInput').value.trim();
-      const phone = document.getElementById('dlPhoneInput').value.trim();
-      const email = document.getElementById('dlEmailInput').value.trim();
-
-      if (name && phone && email) {
-        isDealerMode = true;
-        dealerProfile = { name, phone, email };
-        localStorage.setItem('valmont_is_dealer', 'true');
-        localStorage.setItem('valmont_dealer_profile', JSON.stringify(dealerProfile));
-
-        // Inject high-end Dealer Announcement Banner at top of page
-        showDealerAnnouncementBanner();
-        updateDealerUI();
-        renderProducts();
-        renderFlashSales();
-        closeDealerModal();
-        alert(`Congratulations ${name}! Authorized Dealer Access activated. Wholesale prices are now applied directly across our entire catalog.`);
-      }
-    });
+  async function registerDealerAccount(event) {
+    event.preventDefault();
+    const name = document.getElementById('dlNameInput').value.trim();
+    const phone = document.getElementById('dlPhoneInput').value.trim();
+    const email = document.getElementById('dlEmailInput').value.trim().toLowerCase();
+    const password = document.getElementById('dlPasswordInput').value;
+    const normalizedPhone = phone.replace(/[\s()-]/g, '');
+    if (!/^[\p{L}][\p{L} .&'\-]{1,79}$/u.test(name)) return showValmontToast('Enter a valid business name only.');
+    if (!/^\+233\d{9}$/.test(normalizedPhone) && !/^0\d{9}$/.test(normalizedPhone)) return showValmontToast('Enter a valid Ghana phone number.');
+    if (password.length < 6) return showValmontToast('Password must be at least 6 characters.');
+    const button = event.currentTarget.querySelector('button[type="submit"]');
+    if (button) button.disabled = true;
+    try {
+      const result = await authRequest('signup', { email, password, data: { full_name: name, phone, role: 'dealer' } });
+      if (result.session && result.user) {
+        setAuthenticatedUser(result.user, result.session.access_token); isDealerMode = true;
+        dealerProfile = { id: result.user.id, name, phone, email, role: 'dealer' };
+        localStorage.setItem('valmont_is_dealer', 'true'); localStorage.setItem('valmont_dealer_profile', JSON.stringify(dealerProfile));
+        showDealerAnnouncementBanner(); updateDealerUI(); renderProducts(); renderFlashSales(); closeDealerModal(); showValmontToast(`Dealer account created for ${name}. Wholesale pricing is active.`);
+      } else showValmontToast('Dealer account created. Check your email to confirm it, then sign in.');
+    } catch (error) { console.error('Dealer registration error:', error); showValmontToast(error.message || 'Dealer registration failed.'); }
+    finally { if (button) button.disabled = false; }
   }
 
   function deactivateDealerMode() {
@@ -3503,29 +3508,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
     mobileCategoriesModal = document.getElementById('mobileCategoriesModal');
     mobileCategoryGrid = document.getElementById('mobileCategoryGrid');
 
-    // Re-bind submit listener since dealerRegForm is now parsed
-    if (dealerRegForm) {
-      dealerRegForm.addEventListener('submit', event => {
-        event.preventDefault();
-        const name = document.getElementById('dlNameInput').value.trim();
-        const phone = document.getElementById('dlPhoneInput').value.trim();
-        const email = document.getElementById('dlEmailInput').value.trim();
-
-        if (name && phone && email) {
-          isDealerMode = true;
-          dealerProfile = { name, phone, email };
-          localStorage.setItem('valmont_is_dealer', 'true');
-          localStorage.setItem('valmont_dealer_profile', JSON.stringify(dealerProfile));
-
-          showDealerAnnouncementBanner();
-          updateDealerUI();
-          closeDealerRegistrationPopup();
-          renderProducts();
-
-          alert("Authorized Dealer Access Activated Successfully!");
-        }
-      });
-    }
+    if (dealerRegForm) dealerRegForm.addEventListener('submit', registerDealerAccount);
   });
 
 
