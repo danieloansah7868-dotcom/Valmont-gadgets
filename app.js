@@ -1782,7 +1782,9 @@ document.addEventListener("keydown", function(e) {
         document.getElementById('stepTab3').className = "text-[#ff8c00] border-b-2 border-[#ff8c00] pb-0.5";
         checkoutActionBtn.querySelector('span').textContent = "Submit Secure Order";
       } else if (checkoutStep === 3) {
-        triggerWhatsAppOrder();
+        // Send all prepaid methods to the single Valmont-Pay checkout.
+        // Cash on delivery is recorded locally without opening a chat window.
+        triggerPaymentCheckout();
       }
     });
 
@@ -1809,7 +1811,7 @@ document.addEventListener("keydown", function(e) {
 
     
     document.getElementById('paymentSentBtn')?.addEventListener('click', () => {
-      triggerWhatsAppOrder(true);
+      triggerPaymentCheckout(true);
     });
 
     // Global variables for paystack tracking
@@ -1818,11 +1820,12 @@ document.addEventListener("keydown", function(e) {
     let paystackSavedName = '';
     let paystackSavedPayment = '';
 
-    function triggerWhatsAppOrder(paymentConfirmed = false) {
+    function triggerPaymentCheckout(paymentConfirmed = false) {
       const name = document.getElementById('shippingName').value.trim();
       const phone = document.getElementById('shippingPhone').value.trim();
       const city = document.getElementById('shippingCity').value.trim();
       const town = document.getElementById('shippingTown').value.trim();
+      const area = city;
       const gps = document.getElementById('shippingGPS').value.trim();
       const street = document.getElementById('shippingStreet').value.trim();
       const fullAddress = `${street}, ${town}, ${city} ${gps ? '(' + gps + ')' : ''}`;
@@ -1853,13 +1856,13 @@ Contact: ${phone}
 Region: ${area}
 Street: ${street || 'To be provided'}
 
-_Stock is verified before dispatch. We will reach out on WhatsApp to finalize your delivery. Thank you for choosing Valmont Gadgets Ghana!_`;
+_Stock is verified before dispatch. We will contact you to finalize your delivery. Thank you for choosing Valmont Gadgets Ghana!_`;
 
       if (paymentOpt === 'cod') {
-        // Cash on delivery goes straight to WhatsApp!
+        // Cash on delivery does not need an online payment redirect.
         finalizeCheckout();
-      } else if (paymentOpt === 'card') {
-        // Card payments redirect straight to the Valmont-Pay secure gateway.
+      } else {
+        // Both card and Mobile Money use the same secure Valmont-Pay checkout.
         redirectToValmontPay({
           subtotal: subtotal,
           reference: ref,
@@ -1879,9 +1882,6 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
             };
           })
         });
-      } else {
-        // Mobile Money continues to use the in-page payment modal.
-        openPaystackModal(subtotal, paymentOpt, phone);
       }
     }
 
@@ -1976,7 +1976,7 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       // through redirectToValmontPay() and MoMo through the existing
       // finalizeCheckout / WhatsApp handoff.
       closePaystackModal();
-      try { triggerWhatsAppOrder(false); } catch (e) { console.error('Checkout handoff failed:', e); }
+      try { triggerPaymentCheckout(false); } catch (e) { console.error('Checkout handoff failed:', e); }
     }
 
     async function finalizeCheckout() {
@@ -2020,16 +2020,12 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
       // 2. Save order to local storage (Reseller Desk Order list)
       saveOrderToLog(paystackSavedRef, paystackSavedName, cart.map(i => i.name).join(', '), paystackSavedPayment);
 
-      // 3. Open WhatsApp
-      const waUrl = `https://wa.me/233542451578?text=${encodeURIComponent(paystackSavedReceipt)}`;
-      window.open(waUrl, '_blank');
-      
-      // 4. Clear Cart and close UI
+      // Clear cart and close UI. Checkout no longer opens WhatsApp.
       cart = [];
       localStorage.setItem('valmont_cart', JSON.stringify(cart));
       updateCartCount();
       closeCart();
-      alert(`Order #${paystackSavedRef} processed successfully! Connecting with Valmont dispatch rider on WhatsApp...`);
+      alert(`Order #${paystackSavedRef} processed successfully!`);
     }
 
     function saveOrderToLog(ref, name, itemNames, payment) {

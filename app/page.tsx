@@ -483,14 +483,16 @@ export default function Page() {
     return `https://wa.me/233542451578?text=${text}`;
   };
 
-  const checkoutText = useMemo(() => {
-    const summary = cart
-      .map((c) => {
-        const p = PRODUCTS.find((x) => x.id === c.id);
-        return p ? `${p.name} x${c.qty} (${formatGH(p.retail * c.qty)})` : "";
-      })
-      .join(", ");
-    return encodeURIComponent(`Hello Valmont Gadgets, I want to order: ${summary}. Total ${formatGH(subtotal)}. Please confirm stock and express Accra delivery! My location is Accra.`);
+  const valmontPayUrl = useMemo(() => {
+    if (!cart.length) return "#";
+    const params = new URLSearchParams({
+      merchant: "Valmont Gadgets",
+      amount: subtotal.toFixed(2),
+      email: "sales@valmontgadgets.com",
+      reference: `VG-${Date.now().toString().slice(-6)}`,
+      callback_url: "https://valmontgadgets.com/order-confirmed.html",
+    });
+    return `https://valmontpay.app/pay.html?${params.toString()}`;
   }, [cart, subtotal]);
 
   return (
@@ -606,7 +608,7 @@ export default function Page() {
           <div className={`absolute right-0 top-0 h-full w-full max-w-[420px] shadow-2xl flex flex-col ${theme === "navy" ? "bg-[#0b1a38] text-white" : "bg-white"}`}>
             <div className="p-5 border-b border-gray-200 flex items-center justify-between"><h2 className="font-black text-[14px] tracking-widest uppercase">Your Cart</h2><button onClick={() => setDrawerOpen(false)} className="text-[11px] font-bold tracking-widest uppercase px-3 py-1.5 border border-gray-300 rounded-lg">Close</button></div>
             <div className="flex-1 overflow-auto p-4 space-y-3">
-              {cart.length === 0 ? <div className="py-16 text-center"><p className="text-[12px] font-bold uppercase tracking-widest">Your cart is empty</p><p className="text-[11px] text-gray-500 mt-2">Add 2-column verified gadgets to checkout via WhatsApp</p></div> : cart.map((item) => {
+              {cart.length === 0 ? <div className="py-16 text-center"><p className="text-[12px] font-bold uppercase tracking-widest">Your cart is empty</p><p className="text-[11px] text-gray-500 mt-2">Add verified gadgets to begin secure checkout</p></div> : cart.map((item) => {
                 const prod = PRODUCTS.find((p) => p.id === item.id)!;
                 return (
                   <div key={item.id} className="bg-[#fcfcfd] border border-gray-200 rounded-xl p-3 flex gap-3">
@@ -633,7 +635,7 @@ export default function Page() {
               <div className="flex justify-between mb-2 text-[12px] font-semibold text-gray-500 uppercase tracking-wide"><span>Subtotal</span><span>{formatGH(subtotal)}</span></div>
               <div className="flex justify-between mb-4 text-[14px] font-black text-[#0b1a38]"><span>Total Retail</span><span>{formatGH(subtotal)}</span></div>
               <p className="text-[10px] font-medium text-gray-500 mb-4 leading-relaxed uppercase tracking-wide">12-month warranty included. Free Accra delivery above GH₵ 5,000. MoMo & Card accepted.</p>
-              <a href={`https://wa.me/233542451578?text=${checkoutText}`} target="_blank" rel="noopener noreferrer" className="block w-full bg-[#ff8c00] hover:bg-[#e67e00] text-white text-center font-extrabold text-[12px] tracking-widest uppercase rounded-xl py-4 transition">Checkout via WhatsApp</a>
+              <a href={valmontPayUrl} target="_self" rel="noopener noreferrer" aria-disabled={!cart.length} className={`block w-full bg-[#ff8c00] hover:bg-[#e67e00] text-white text-center font-extrabold text-[12px] tracking-widest uppercase rounded-xl py-4 transition ${!cart.length ? "pointer-events-none opacity-50" : ""}`}>Pay securely with Valmont-Pay</a>
               <button onClick={() => setCart([])} className="w-full mt-2 text-[11px] font-bold tracking-widest uppercase text-gray-500 py-2">Clear Cart</button>
               {/* Private profit summary - console only, not rendered publicly. Ledger accessible only in backend. */}
               <div className="hidden">
