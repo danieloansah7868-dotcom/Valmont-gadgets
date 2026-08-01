@@ -1242,11 +1242,14 @@ document.addEventListener("keydown", function(e) {
     // Update mobile account label to show user name if logged in
     function updateMobileAccountLabel() {
       const label = document.getElementById('mobileAccountLabel');
-      const user = JSON.parse(localStorage.getItem('valmont_user') || 'null');
+      const navAccount = document.getElementById('navAccount');
+      const user = localStorage.getItem('valmont_access_token') ? JSON.parse(localStorage.getItem('valmont_user') || 'null') : null;
       if (label && user) {
         label.textContent = user.name.split(' ')[0];
-      } else if (label) {
-        label.textContent = 'Account';
+        if (navAccount) { navAccount.classList.add('signed-in'); navAccount.setAttribute('aria-label', `Signed in as ${user.name}`); }
+      } else {
+        if (label) label.textContent = 'Account';
+        if (navAccount) { navAccount.classList.remove('signed-in'); navAccount.setAttribute('aria-label', 'Account sign in'); }
       }
     }
 
@@ -2594,7 +2597,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
       const mobileHeaderBtn = document.getElementById('mobileHeaderAccountBtn');
       const mobileHeaderLabel = document.getElementById('mobileHeaderAccountLabel');
       if (currentUser) {
-        accountLabel.textContent = `Hi, ${currentUser.name.split(' ')[0]}`;
+        accountLabel.textContent = currentUser.name.split(' ')[0];
         if (logoutBtn) logoutBtn.classList.remove('hidden');
         if (mobileHeaderBtn) mobileHeaderBtn.classList.add('signed-in');
         if (mobileHeaderLabel) mobileHeaderLabel.textContent = currentUser.name.split(' ')[0];
@@ -3522,4 +3525,3 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
   if(toggle) toggle.addEventListener('click',()=>{ const expanded=toggle.getAttribute('aria-expanded')==='true'; toggle.setAttribute('aria-expanded',String(!expanded)); toggle.textContent=expanded?'Show All Categories':'Hide Categories'; applyGroup(expanded?'all':'phones'); });
   applyGroup('all');
 })();
-
