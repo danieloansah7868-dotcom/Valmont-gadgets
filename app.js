@@ -1290,7 +1290,9 @@ document.addEventListener("keydown", function(e) {
       document.querySelector('.product-pagination')?.remove();
       let filtered = PRODUCTS.filter(p => {
         const matchesCategory = activeFilter === 'all' || p.category === activeFilter;
-        const matchesSearch = searchQuery === '' || p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.specs.toLowerCase().includes(searchQuery.toLowerCase());
+        const normalizedSearch = searchQuery.trim().toLowerCase().replace(/\biphones\b/g, 'iphone').replace(/\bmacbooks\b/g, 'macbook').replace(/\bairpods\b/g, 'airpod').replace(/\blaptops\b/g, 'laptop').replace(/\baccessories\b/g, 'accessory');
+        const categoryMatch = (normalizedSearch === 'iphone' && p.category === 'iphones') || (normalizedSearch === 'laptop' && p.category === 'laptops') || (normalizedSearch === 'accessory' && ['chargers', 'phone_acc', 'laptop_acc', 'travel_acc'].includes(p.category)) || (normalizedSearch === 'audio' && p.category === 'audio');
+        const matchesSearch = normalizedSearch === '' || p.name.toLowerCase().includes(normalizedSearch) || p.specs.toLowerCase().includes(normalizedSearch) || categoryMatch;
         const price = Number(p.retail || 0);
         const matchesPrice = activePriceFilter === 'all' || (activePriceFilter === 'under-5000' && price < 5000) || (activePriceFilter === '5000-15000' && price >= 5000 && price <= 15000) || (activePriceFilter === 'above-15000' && price > 15000);
         return matchesCategory && matchesSearch && matchesPrice;
