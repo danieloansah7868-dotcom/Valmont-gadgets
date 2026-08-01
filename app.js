@@ -1329,7 +1329,7 @@ document.addEventListener("keydown", function(e) {
               </button>
 
               <div class="p-3">
-                <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
+                <div class="product-image-frame h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   ${productImg(p.image, p.name, 140, {className: 'max-h-full object-contain group-hover:scale-105 transition duration-200', sizes: '(max-width: 640px) 45vw, 140px'})}
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">${p.name}</h4>
@@ -1397,7 +1397,7 @@ document.addEventListener("keydown", function(e) {
         const discount = Math.round((1 - (p.retail / p.compareAt)) * 100);
         return `
           <div class="bg-white rounded-[4px] p-2.5 border border-gray-100 hover:border-orange-200/50 shrink-0 w-[145px] hover:shadow transition relative cursor-pointer" onclick="openProductDetail('${p.id}')">
-            <div class="h-[100px] w-full flex items-center justify-center overflow-hidden mb-1 bg-gray-50 rounded-[4px]">
+            <div class="product-image-frame h-[100px] w-full flex items-center justify-center overflow-hidden mb-1 bg-gray-50 rounded-[4px]">
               ${productImg(p.image, p.name, 100)}
             </div>
             <h5 class="text-[11px] text-gray-800 font-bold truncate">${p.name}</h5>
