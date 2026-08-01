@@ -147,10 +147,6 @@ function card(p, index) {
               <button type="button" onclick="event.stopPropagation(); toggleWishlist('${id}')" class="absolute top-2.5 right-2 h-7 w-7 rounded-full bg-white/95 shadow-sm border border-gray-50 flex items-center justify-center z-10 transition" aria-label="Add ${esc(p.name)} to wishlist">
                 <svg class="h-4.5 w-4.5 text-gray-400 hover:text-red-500" aria-hidden="true"><use href="#i-heart"/></svg>
               </button>
-${discount > 0 ? `
-              <div class="absolute top-2.5 left-2 bg-orange-50 text-[#ff8c00] text-[10px] font-black px-1.5 py-0.5 rounded-sm">
-                -${discount}%
-              </div>` : ''}
 
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
@@ -161,6 +157,7 @@ ${discount > 0 ? `
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">${money(p.retail)}</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">${money(p.compareAt || p.retail)}</span>
+                  ${discount > 0 ? `<span class="text-[10px] text-[#ff8c00] font-black ml-1">-${discount}%</span>` : ''}
                   ${p.retail > 5000 ? '<span class="card-free-delivery">Free Delivery</span>' : ''}
                 </div>
                 <div class="flex items-center gap-0.5 text-[9px] text-amber-500 font-black mt-1">

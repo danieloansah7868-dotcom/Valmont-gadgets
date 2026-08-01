@@ -1250,10 +1250,6 @@ document.addEventListener("keydown", function(e) {
                 </svg>
               </button>
 
-              <div class="absolute top-2.5 left-2 bg-orange-50 text-[#ff8c00] text-[10px] font-black px-1.5 py-0.5 rounded-sm">
-                -${discount}%
-              </div>
-              
               <div class="p-3">
                 <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   ${productImg(p.image, p.name, 140, {className: 'max-h-full object-contain group-hover:scale-105 transition duration-200', sizes: '(max-width: 640px) 45vw, 140px'})}
@@ -1263,6 +1259,7 @@ document.addEventListener("keydown", function(e) {
                 <div class="mt-2">
                   <span class="text-[14px] font-black text-gray-800">${isDealerMode ? money(p.wholesale) : money(p.retail)}</span>
                   <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">${isDealerMode ? money(p.retail) : money(p.compareAt)}</span>
+                  <span class="text-[10px] text-[#ff8c00] font-black ml-1">-${discount}%</span>
                   ${isDealerMode ? '<span class="text-[9px] text-green-600 font-extrabold ml-1 uppercase">Wholesale</span>' : ''}
                   ${p.retail > 5000 ? '<span class="card-free-delivery">Free Delivery</span>' : ''}
                 </div>
@@ -1322,14 +1319,16 @@ document.addEventListener("keydown", function(e) {
         const discount = Math.round((1 - (p.retail / p.compareAt)) * 100);
         return `
           <div class="bg-white rounded-[4px] p-2.5 border border-gray-100 hover:border-orange-200/50 shrink-0 w-[145px] hover:shadow transition relative cursor-pointer" onclick="openProductDetail('${p.id}')">
-            <span class="absolute top-1 left-1 bg-orange-50 text-[#ff8c00] text-[9px] font-black px-1.5 py-0.5 rounded-sm">-${discount}%</span>
             <div class="h-[100px] w-full flex items-center justify-center overflow-hidden mb-1 bg-gray-50 rounded-[4px]">
               ${productImg(p.image, p.name, 100)}
             </div>
             <h5 class="text-[11px] text-gray-800 font-bold truncate">${p.name}</h5>
             <div class="mt-1 leading-tight">
               <span class="block text-[13px] font-black text-gray-900">${money(p.retail)}</span>
-              <span class="block text-[10px] text-gray-400 line-through font-semibold">${money(p.compareAt)}</span>
+              <span class="flex items-center gap-1">
+                <span class="text-[10px] text-gray-400 line-through font-semibold">${money(p.compareAt)}</span>
+                <span class="text-[9px] text-[#ff8c00] font-black">-${discount}%</span>
+              </span>
             </div>
             <button type="button" class="flash-add" onclick="event.stopPropagation(); addToCart('${p.id}')">Add to Bag</button>
           </div>
