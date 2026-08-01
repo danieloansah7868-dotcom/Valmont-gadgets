@@ -846,15 +846,16 @@ a[class*="bg-[#ff8c00]"][class*="hover:bg-orange-600"]:hover {
     border: 0 !important;
     border-bottom: 1px solid #e5e7eb !important;
   }
-  header > div { flex-wrap: nowrap !important; align-items: center !important; gap: 8px !important; }
-  header > div > :first-child { flex: 0 0 auto; order: 1; }
-  header > div > :last-child { display: flex !important; order: 3; margin-left: auto; gap: 2px; }
+  header > div { flex-wrap: wrap !important; align-items: center !important; gap: 8px 0 !important; }
+  header > div > :first-child { flex: 1 1 auto; order: 1; }
+  header > div > :last-child { display: flex !important; order: 2; margin-left: auto; gap: 2px; }
   header .desktop-logo { display: none !important; }
   .mobile-wordmark { display: block; color: #0b1a38; font-size: 17px; line-height: .9; font-weight: 900; letter-spacing: -.6px; }
   .mobile-wordmark span, .mobile-wordmark strong { display: block; }
   .mobile-wordmark strong { color: #ff8c00; }
   header > div > :first-child > button { display: block !important; color: #0b1a38 !important; }
-  header .search-container { order: 2; flex: 1 1 auto; flex-basis: auto; min-width: 0; width: auto; margin: 0 !important; border: 0 !important; border-radius: 999px !important; background: #f1f5f9 !important; }
+  /* Search bar sits on its own full-width row below the logo/account row. */
+  header .search-container { order: 3; flex: 0 0 100% !important; max-width: 100% !important; min-width: 0; width: 100% !important; margin: 0 !important; border: 0 !important; border-radius: 999px !important; background: #f1f5f9 !important; }
   header .search-container #searchInput { min-height: 44px; font-size: 16px !important; }
   /* Keep a tappable round search button inside the pill so mobile shoppers
      can submit a search by tapping instead of only via the keyboard. */
@@ -889,10 +890,10 @@ a[class*="bg-[#ff8c00]"][class*="hover:bg-orange-600"]:hover {
   #flashProductsRow > div > div:first-of-type { height: 108px !important; }
   #flashProductsRow h5 { white-space: normal !important; min-height: 30px; font-size: 11px !important; }
   #store-feed { padding: 12px 8px 96px !important; }
-  #productGrid, .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px !important; }
+  #productGrid, .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
   #productGrid > div { border-radius: 14px !important; box-shadow: 0 1px 5px rgba(11,26,56,.15) !important; }
-  #productGrid > div > .p-3 { padding: 8px !important; }
-  #productGrid > div .h-\[140px\] { height: 110px !important; margin-bottom: 7px !important; }
+  #productGrid > div > .p-3 { padding: 9px !important; }
+  #productGrid > div .h-\[140px\] { height: 132px !important; margin-bottom: 7px !important; }
   #productGrid h4 { min-height: 38px !important; font-size: 11px !important; font-weight: 700 !important; }
   #productGrid .text-\[14px\] { font-size: 13px !important; }
   #productGrid .text-\[11px\] { display: none !important; }

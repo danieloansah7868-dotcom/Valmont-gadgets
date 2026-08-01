@@ -1717,11 +1717,12 @@
     @media (max-width:767px) {
       body { background:#fff; }
       header { position:sticky; background:#fff !important; border-bottom:1px solid #e5e7eb !important; box-shadow:0 2px 8px rgba(0,0,0,.05); padding:9px 12px !important; }
-      header .search-container { order:2; max-width:none; border:0; border-radius:999px; }
+      /* Two-row header: logo + account on top, full-width search bar below. */
+      header > div { flex-wrap:wrap; gap:8px 0 !important; }
+      header > div > :first-child { order:1; flex:1 1 auto; }
+      header > div > :last-child { order:2; margin-left:auto; }
+      header .search-container { order:3; flex:0 0 100% !important; max-width:100% !important; margin-top:8px !important; border:0; border-radius:999px; }
       header .search-container input { font-size:16px; }
-      header > div { flex-wrap:nowrap; gap:8px !important; }
-      header > div > :first-child { order:1; }
-      header > div > :last-child { order:3; margin-left:auto; }
       header a, header button { color:#0b1a38 !important; }
       .category-filters { margin:0 !important; padding:10px 14px !important; border-bottom:1px solid #e5e7eb; background:#fff; gap:24px !important; }
       .category-filters .mobile-chip { padding:8px 0 !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; background:transparent !important; color:#0b1a38 !important; font-size:13px !important; }
@@ -1729,10 +1730,10 @@
       #customer-store-view > .grid:first-of-type, #customer-store-view > .bg-gradient-to-r { display:none !important; }
       #store-feed { padding:10px 9px 90px; border:0; border-radius:0; box-shadow:none; }
       #store-feed > div:first-child { display:none; }
-      #productGrid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
+      #productGrid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
       #productGrid > div { border-radius:15px; border-color:#e5e7eb; box-shadow:0 2px 7px rgba(11,26,56,.11); }
       #productGrid > div > .p-3 { padding:9px; }
-      #productGrid > div .h-\[140px\] { height:128px; margin-bottom:7px; }
+      #productGrid > div .h-\[140px\] { height:132px; margin-bottom:7px; }
       #productGrid h4 { min-height:34px; font-size:12px; font-weight:700; }
       #productGrid p.text-\[10px\], #productGrid .mt-1\.5, #productGrid .mt-2\.5 { display:none; }
       #productGrid .text-\[14px\] { font-size:15px; color:#0b1a38; }
