@@ -924,14 +924,20 @@ a[class*="bg-[#ff8c00]"][class*="hover:bg-orange-600"]:hover {
 
   /* Mobile menu drawer proper styling */
   #mobileMenuModal {
+    background: #ffffff !important;
+    color: #0b1a38 !important;
     border-right: 2px solid #ff8c00 !important;
   }
+  #mobileMenuModal .border-gray-800 { border-color: #e5e7eb !important; }
   #mobileMenuModal a, #mobileMenuModal button {
-    color: #ffffff !important;
+    color: #0b1a38 !important;
   }
   #mobileMenuModal a:hover, #mobileMenuModal button:hover {
     color: #ff8c00 !important;
+    background: #fff7ed !important;
   }
+  #mobileMenuModal .text-gray-400 { color: #6b7280 !important; }
+  #mobileMenuModal .bg\[\#0b1a38\] { background: #fff7ed !important; }
 
   /* Improve touch targets on mobile */
   button, a, [role="button"] {
