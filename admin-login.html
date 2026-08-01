@@ -31,21 +31,36 @@
     <a class="forgot" href="mailto:admin@valmontgadgets.com?subject=Valmont%20admin%20password%20reset">Forgot password?</a>
     <p class="note">Authorized Valmont Gadgets staff only.</p>
   </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const ADMIN_EMAIL = 'admin@valmontgadgets.com';
-    const ADMIN_PASSWORD = 'valmont2026';
-    if (sessionStorage.getItem('adminLoggedIn') === 'true') window.location.replace('/admin.html');
-    document.getElementById('loginForm').addEventListener('submit', function (event) {
+    const SUPABASE_URL = 'https://eydsoqnpetqczaeqrscc.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4ODc1NjYsImV4cCI6MjEwMDQ2MzU2Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // If already logged in, redirect straight to admin
+    sb.auth.getSession().then(({ data }) => {
+      if (data.session) window.location.replace('/admin.html');
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async function (event) {
       event.preventDefault();
       const email = document.getElementById('email').value.trim().toLowerCase();
       const password = document.getElementById('password').value;
       const error = document.getElementById('error');
-      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-        sessionStorage.setItem('adminLoggedIn', 'true');
-        window.location.replace('/admin.html');
-      } else {
-        error.textContent = 'The email or password is incorrect. Please try again.';
+      const btn = document.querySelector('button[type="submit"]');
+      error.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+
+      const { data, error: authError } = await sb.auth.signInWithPassword({ email, password });
+
+      if (authError || !data.session) {
+        error.textContent = authError?.message || 'Invalid email or password. Please try again.';
         document.getElementById('password').select();
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      } else {
+        window.location.replace('/admin.html');
       }
     });
   </script>
