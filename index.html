@@ -3080,19 +3080,23 @@
       <div id="checkoutStep3" class="hidden">
         <h4 class="font-extrabold text-[12px] uppercase text-gray-800 tracking-wider mb-4 border-b pb-1.5">Select Payment Method</h4>
         <div class="space-y-3">
-          <label class="flex items-center gap-3 border p-3.5 rounded-lg cursor-pointer hover:bg-gray-50 select-none">
+          <label class="checkout-payment-option flex items-center gap-3 border p-3.5 rounded-xl cursor-pointer hover:bg-orange-50 select-none">
+            <span class="checkout-payment-icon">₵</span>
             <input type="radio" name="paymentOption" value="momo" class="accent-[#ff8c00]" checked />
-            <div class="leading-tight">
-              <span class="block font-bold text-[13px]">Mobile Money (MTN MoMo, Telecel Cash)</span>
-              <span class="block text-[11px] text-gray-500 font-medium mt-0.5">Secure pay upon invoice before dispatch.</span>
+            <div class="leading-tight flex-1">
+              <span class="block font-bold text-[13px]">Mobile Money</span>
+              <span class="block text-[11px] text-gray-500 font-medium mt-0.5">MTN MoMo, Telecel Cash or AT Money</span>
             </div>
+            <span class="text-gray-400 text-lg">›</span>
           </label>
-          <label class="flex items-center gap-3 border p-3.5 rounded-lg cursor-pointer hover:bg-gray-50 select-none">
+          <label class="checkout-payment-option flex items-center gap-3 border p-3.5 rounded-xl cursor-pointer hover:bg-orange-50 select-none">
+            <span class="checkout-payment-icon cards">▣</span>
             <input type="radio" name="paymentOption" value="card" class="accent-[#ff8c00]" />
-            <div class="leading-tight">
-              <span class="block font-bold text-[13px]">Credit / Debit Card (Visa, Mastercard)</span>
-              <span class="block text-[11px] text-gray-500 font-medium mt-0.5">Secure payment via Valmont-Pay gateway.</span>
+            <div class="leading-tight flex-1">
+              <span class="block font-bold text-[13px]">Bank Cards</span>
+              <span class="block text-[11px] text-gray-500 font-medium mt-0.5">Visa and Mastercard via Valmont-Pay</span>
             </div>
+            <span class="text-gray-400 text-lg">›</span>
           </label>
         </div>
         <div class="mt-5 rounded-xl border border-orange-200 bg-orange-50 p-4 text-center">
@@ -3505,22 +3509,33 @@
 
   <!-- 12. JUMIA-STYLE MOBILE CATEGORIES POP-UP DRAWER -->
   <div id="mobileCategoriesOverlay" class="fixed inset-0 bg-black/60 z-[9990] hidden transition-opacity" onclick="closeMobileCategoriesModal();"></div>
-  <div id="mobileCategoriesModal" class="fixed bottom-[64px] left-0 right-0 max-h-[70vh] bg-white rounded-t-2xl z-[9991] shadow-2xl overflow-y-auto hidden no-scrollbar transition-transform duration-300 translate-y-full p-4 border-t-2 border-[#ff8c00]">
-    <div class="flex justify-between items-center border-b pb-3 mb-4 shrink-0">
-      <h3 class="font-black text-[13px] uppercase tracking-wider text-[#0b1a38]">
-        Browse Categories
-      </h3>
-      <button onclick="closeMobileCategoriesModal();" class="text-gray-500 hover:text-black text-sm font-bold border px-3 py-1 rounded-[4px] hover:bg-gray-50">x Close</button>
+  <div id="mobileCategoriesModal" class="mobile-category-sheet fixed inset-0 bg-white z-[9991] shadow-2xl overflow-hidden hidden no-scrollbar transition-transform duration-300 translate-y-full">
+    <div class="flex justify-between items-center border-b px-4 py-4 shrink-0">
+      <h3 class="font-black text-[14px] uppercase tracking-wider text-[#0b1a38]">Categories</h3>
+      <button onclick="closeMobileCategoriesModal();" class="text-gray-500 hover:text-black text-sm font-bold border px-3 py-1.5 rounded-lg">Close</button>
     </div>
-    <div class="grid grid-cols-2 gap-3 pb-6" id="mobileCategoryGrid">
-      <!-- Injected via JS dynamically -->
+    <div class="mobile-category-layout">
+      <aside class="mobile-category-sidebar" aria-label="Category groups">
+        <button class="mobile-category-side-item active" type="button">All Categories</button>
+        <button class="mobile-category-side-item" type="button">Phones & Tablets</button>
+        <button class="mobile-category-side-item" type="button">Computing</button>
+        <button class="mobile-category-side-item" type="button">Audio & Gaming</button>
+        <button class="mobile-category-side-item" type="button">Accessories</button>
+        <button class="mobile-category-side-item" type="button">Smart Home</button>
+      </aside>
+      <main class="mobile-category-content">
+        <p class="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-3">Shop by category</p>
+        <div class="grid grid-cols-2 gap-3 pb-8" id="mobileCategoryGrid">
+          <!-- Injected via JS dynamically -->
+        </div>
+      </main>
     </div>
   </div>
 
 
   <!-- MOBILE HAMBURGER MENU / SETTINGS DRAWER (Slide from left!) -->
   <div id="mobileMenuOverlay" class="fixed inset-0 bg-black/60 z-50 hidden transition-opacity" onclick="closeMobileMenuModal();"></div>
-  <div id="mobileMenuModal" class="fixed top-0 bottom-0 left-0 w-[280px] bg-[#0b1a38] text-white z-50 shadow-2xl transition-transform duration-300 -translate-x-full flex flex-col justify-between">
+  <div id="mobileMenuModal" class="mobile-account-menu fixed top-0 bottom-0 left-0 w-[300px] bg-white text-[#0b1a38] z-50 shadow-2xl transition-transform duration-300 -translate-x-full flex flex-col justify-between">
     <!-- Header -->
     <div class="p-4 border-b border-gray-800 flex items-center justify-between">
       <div class="mobile-drawer-wordmark" aria-label="Valmont Gadgets">
