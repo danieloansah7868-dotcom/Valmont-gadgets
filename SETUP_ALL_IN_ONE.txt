@@ -6,14 +6,6 @@
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Drop tables from any previous partial run (safe — no live data yet)
-DROP TABLE IF EXISTS reviews CASCADE;
-DROP TABLE IF EXISTS orders CASCADE;
-DROP TABLE IF EXISTS customers CASCADE;
-DROP TABLE IF EXISTS products CASCADE;
-DROP TABLE IF EXISTS categories CASCADE;
-DROP TABLE IF EXISTS site_settings CASCADE;
-
 -- ── TABLES ────────────────────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS categories (
