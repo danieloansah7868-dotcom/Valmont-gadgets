@@ -1006,7 +1006,8 @@ document.addEventListener("keydown", function(e) {
      */
     function productImg(src, alt, size, opts) {
       const o = opts || {};
-      const cls = o.className || 'max-h-full object-contain';
+      const isLocalProductPhoto = /^uploads\//.test(src || '');
+      const cls = `${o.className || 'max-h-full object-contain'}${isLocalProductPhoto ? ' product-media-local' : ''}`;
       const lazy = o.eager ? '' : ' loading="lazy"';
       const prio = o.eager ? ' fetchpriority="high"' : '';
       const sizes = o.sizes || `${size}px`;

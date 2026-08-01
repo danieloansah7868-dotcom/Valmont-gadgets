@@ -355,6 +355,13 @@ html {
 .product-image-frame img:hover {
   transform: scale(1.3);
 }
+.product-image-frame img.product-media-local {
+  object-fit: cover;
+  transform: none;
+}
+.product-image-frame img.product-media-local:hover {
+  transform: scale(1.03);
+}
 .bottom-nav-item .account-signed-check {
   display: none;
 }
