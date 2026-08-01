@@ -1025,7 +1025,7 @@ document.addEventListener("keydown", function(e) {
     // === SUPABASE DATABASE INTEGRATION CONFIGURATION ===
     const VALMONT_SUPABASE = {
       url: 'https://eydsoqnpetqczaeqrscc.supabase.co',
-      anonKey: 'sb_publishable_BHdfWG7G433xVJ93ZJTNIQ_q_jFBwso'
+      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4ODc1NjYsImV4cCI6MjEwMDQ2MzU2Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc'
     };
 
     const hasSupabase = () => {
@@ -1061,6 +1061,76 @@ document.addEventListener("keydown", function(e) {
       });
       if (!response.ok) throw new Error(await response.text());
       return response.json();
+    }
+
+    // === SUPABASE PRODUCT SYNC ===
+    // Fetches products added via the admin panel and merges them into the
+    // storefront PRODUCTS array so they appear on the shop automatically.
+    async function syncProductsFromSupabase() {
+      if (!hasSupabase()) return;
+      try {
+        const remote = await supabaseFetch('products?is_active=eq.true&order=created_at.desc');
+        if (!Array.isArray(remote) || !remote.length) return;
+
+        const existingIds = new Set(PRODUCTS.map(p => String(p.id)));
+
+        remote.forEach(rp => {
+          const id = String(rp.id);
+          const parsedImages = typeof rp.images === 'string' ? JSON.parse(rp.images || '[]') : (rp.images || []);
+          const imageUrl = rp.image_url || rp.image || parsedImages[0] || '';
+          const otherImages = parsedImages.filter(u => u && u !== imageUrl);
+
+          const mapped = {
+            id: id,
+            name: rp.name || 'Untitled Product',
+            category: rp.category_id || rp.category || 'uncategorized',
+            retail: Number(rp.price || 0),
+            compareAt: Number(rp.compare_at_price || 0),
+            badge: rp.badge || '',
+            stock: String(rp.stock ?? rp.stock_quantity ?? ''),
+            specs: rp.specs || '',
+            description: rp.description || '',
+            features: [],
+            tags: [],
+            image: imageUrl,
+            images: [imageUrl, ...otherImages].filter(Boolean),
+            wholesale: Number(rp.wholesale_price || 0),
+            deliveryCost: 80,
+            paymentCost: 0,
+            reviews_count: Number(rp.reviews_count || 0),
+            stock_quantity: Number(rp.stock ?? rp.stock_quantity ?? 0),
+            colors: typeof rp.colors === 'string' ? JSON.parse(rp.colors || '[]') : (rp.colors || []),
+            storage_options: typeof rp.storage_options === 'string' ? JSON.parse(rp.storage_options || '[]') : (rp.storage_options || [])
+          };
+
+          if (existingIds.has(id)) {
+            const idx = PRODUCTS.findIndex(p => String(p.id) === id);
+            if (idx >= 0) PRODUCTS[idx] = { ...PRODUCTS[idx], ...mapped };
+          } else {
+            PRODUCTS.push(mapped);
+            existingIds.add(id);
+          }
+        });
+
+        // Re-normalize review/stock counts for new products
+        PRODUCTS.forEach((p, index) => {
+          if (p.reviews_count == null) {
+            const name = p.name.toLowerCase();
+            const isPopular = name.includes('iphone 15 pro max') || name.includes('s24 ultra');
+            const isMidRange = name.includes('iphone 13') || name.includes('a55');
+            const isNew = p.badge === 'NEW';
+            p.reviews_count = isPopular ? 42 + (index % 27) : isMidRange ? 18 + (index % 15) : isNew ? index % 6 : 12 + (index % 18);
+          }
+          if (p.stock_quantity == null) p.stock_quantity = 6 + (index % 12);
+        });
+
+        // Re-render with merged data
+        renderProducts();
+        renderFlashSales();
+        console.info(`Synced ${remote.length} product(s) from Supabase.`);
+      } catch (e) {
+        console.warn('Supabase product sync skipped:', e.message || e);
+      }
     }
 
     window.loadPaystackScript = function loadPaystackScript() {
@@ -2796,6 +2866,9 @@ _Stock is verified before dispatch. We will reach out on WhatsApp to finalize yo
     updateWishlistUI();
     renderRecentlyViewed();
     updateUserUI();
+
+    // Merge products added via admin panel (async, re-renders on completion)
+    syncProductsFromSupabase();
 
     // Auto-fill checkout fields if user exists
     if (currentUser) {
