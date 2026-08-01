@@ -786,8 +786,7 @@
 <div id="authScreen" class="auth-screen hidden">
   <div class="auth-card">
     <div class="auth-logo">
-      <img src="logo.svg" alt="Valmont" />
-      <span>VALMONT GADGETS</span>
+      <img src="logo.svg" alt="Valmont Gadgets" />
     </div>
 
     <div class="auth-tabs">
@@ -810,7 +809,7 @@
     <form id="formSignUp" class="auth-form hidden" onsubmit="handleSignUp(event)">
       <div class="auth-field">
         <label>Full Name</label>
-        <input type="text" id="signUpName" placeholder="John Mensah" required>
+        <input type="text" id="signUpName" placeholder="Enter your full name" required>
       </div>
       <div class="auth-field">
         <label>Email Address</label>
@@ -818,11 +817,11 @@
       </div>
       <div class="auth-field">
         <label>Phone Number</label>
-        <input type="tel" id="signUpPhone" placeholder="054 245 1578" required>
+        <input type="tel" id="signUpPhone" placeholder="Enter your phone number" required>
       </div>
       <div class="auth-field">
         <label>Password</label>
-        <input type="password" id="signUpPassword" placeholder="Min 6 characters" required minlength="6">
+        <input type="password" id="signUpPassword" placeholder="At least 6 characters" required minlength="6">
       </div>
       <button type="submit" class="auth-submit">Create Account</button>
     </form>
@@ -830,12 +829,6 @@
     <div class="auth-forgot">
       <button onclick="handlePasswordReset()">Forgot Password?</button>
     </div>
-
-    <div class="auth-divider">Or log in with</div>
-    <button class="auth-google" onclick="handleGoogleSignIn()">
-      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.13-5.136 4.13A5.71 5.71 0 0 1 8.28 12.83a5.71 5.71 0 0 1 5.711-5.703c2.22 0 4.229 1.125 5.414 2.946l3.393-3.393C20.697 4.312 16.59 2.5 12.24 2.5c-5.244 0-9.5 4.256-9.5 9.5s4.256 9.5 9.5 9.5c5.006 0 9.07-3.627 9.07-9.5 0-.61-.053-1.176-.144-1.715H12.24z"/></svg>
-      Continue with Google
-    </button>
     <div style="text-align:center;margin-top:16px;">
       <a href="index.html" style="font-size:12px;color:var(--text-secondary);font-weight:600;text-decoration:none;">← Back to Store</a>
     </div>
@@ -918,7 +911,7 @@
         </div>
         <div class="profile-field">
           <label>MoMo Phone Number</label>
-          <input type="tel" id="savedMomoPhone" placeholder="054 245 1578">
+          <input type="tel" id="savedMomoPhone" placeholder="Enter your phone number">
         </div>
         <div style="display:flex;align-items:end;">
           <button type="submit" class="profile-edit-btn">💾 Save Preference</button>

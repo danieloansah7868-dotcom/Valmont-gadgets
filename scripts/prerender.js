@@ -54,7 +54,7 @@ function normalise(products) {
     const name = p.name.toLowerCase();
     const isPopular = name.includes('iphone 15 pro max') || name.includes('s24 ultra');
     const isMidRange = name.includes('iphone 13') || name.includes('a55');
-    const isAccessory = ['chargers', 'phone_acc', 'phone_parts', 'travel_acc', 'laptop_acc'].includes(p.category);
+    const isAccessory = ['chargers', 'phone_acc', 'phone_parts', 'travel_acc', 'laptop_acc', 'smart_home', 'networking', 'cameras'].includes(p.category);
     const isNew = p.badge === 'NEW';
     p.reviews_count = isPopular ? 42 + (index % 27)
       : isMidRange ? 18 + (index % 15)
@@ -97,8 +97,8 @@ function imageMarkup(p, index) {
   const eager = index < 6; // first row on desktop is above the fold
   const loading = eager ? '' : ' loading="lazy"';
   const priority = index === 0 ? ' fetchpriority="high"' : '';
-  const cls = 'max-h-full object-contain group-hover:scale-105 transition duration-200';
   const local = /^uploads\//.test(p.image || '');
+  const cls = `max-h-full object-contain group-hover:scale-105 transition duration-200${local ? ' product-media-local' : ''}`;
 
   if (local) {
     const base = p.image.replace(/\.png$/, '');
@@ -149,7 +149,7 @@ function card(p, index) {
               </button>
 
               <div class="p-3">
-                <div class="h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
+                <div class="product-image-frame h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   ${imageMarkup(p, index)}
                 </div>
                 <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">${esc(p.name)}</h4>
