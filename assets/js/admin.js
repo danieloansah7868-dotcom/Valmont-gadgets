@@ -3,9 +3,6 @@
 
 const SUPABASE_URL = "https://eydsoqnpetqczaeqrscc.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4ODc1NjYsImV4cCI6MjEwMDQ2MzU2Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc";
-const ADMIN_EMAIL = "admin@valmontgadgets.com";
-const ADMIN_PASSWORD = "valmont2026";
-const DEFAULT_ADMIN_PASSWORD = ADMIN_PASSWORD;
 const PRODUCT_IMAGE_BUCKET = "product-images";
 
 const DEFAULT_CATEGORIES = [
@@ -481,12 +478,19 @@ const db = new ValmontAdminDatabase();
 window.addEventListener("DOMContentLoaded", initAdminPanel);
 
 async function initAdminPanel() {
-  // Admin pages are protected by a tab-scoped session. Keep the login route separate.
-  if (sessionStorage.getItem("adminLoggedIn") !== "true") {
+  // Admin pages are protected by Supabase Auth. Redirect to login if no session.
+  if (typeof supabase === "undefined") {
+    // Supabase JS not loaded — cannot verify session
     window.location.replace("/admin-login.html");
     return;
   }
-  bindAuthEvents();
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const { data } = await sb.auth.getSession();
+  if (!data.session) {
+    window.location.replace("/admin-login.html");
+    return;
+  }
+  bindAuthEvents(sb);
   bindNavigationEvents();
   bindFormEvents();
   bindProductModalEvents();
@@ -497,31 +501,33 @@ async function initAdminPanel() {
   await loadAllData();
 }
 
-function bindAuthEvents() {
-  document.getElementById("adminLoginForm").addEventListener("submit", event => {
-    event.preventDefault();
-    const input = document.getElementById("adminPasswordInput");
-    const password = input.value.trim();
-    if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem("adminLoggedIn", "true");
-      document.getElementById("loginError").classList.add("hidden");
-      showAdminApp();
-      loadAllData();
-    } else {
-      document.getElementById("loginError").classList.remove("hidden");
-      input.select();
-    }
-  });
-  document.getElementById("topLogoutBtn").addEventListener("click", logoutAdmin);
-  document.getElementById("sidebarLogoutBtn").addEventListener("click", logoutAdmin);
+function bindAuthEvents(sb) {
+  // In-page re-login form (fallback if session expired without redirect)
+  const loginForm = document.getElementById("adminLoginForm");
+  if (loginForm) {
+    loginForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      const input = document.getElementById("adminPasswordInput");
+      const emailInput = document.getElementById("adminEmailInput");
+      const email = (emailInput ? emailInput.value : "admin@valmontgadgets.com").trim().toLowerCase();
+      const password = input.value.trim();
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (data.session) {
+        document.getElementById("loginError")?.classList.add("hidden");
+        showAdminApp();
+        loadAllData();
+      } else {
+        document.getElementById("loginError")?.classList.remove("hidden");
+        input.select();
+      }
+    });
+  }
+  document.getElementById("topLogoutBtn").addEventListener("click", () => logoutAdmin(sb));
+  document.getElementById("sidebarLogoutBtn").addEventListener("click", () => logoutAdmin(sb));
 }
 
-function getAdminPassword() {
-  return localStorage.getItem("valmont_admin_password") || DEFAULT_ADMIN_PASSWORD;
-}
-
-function logoutAdmin() {
-  sessionStorage.removeItem("adminLoggedIn");
+async function logoutAdmin(sb) {
+  try { await sb.auth.signOut(); } catch (_) {}
   window.location.replace("/admin-login.html");
 }
 
@@ -1112,19 +1118,26 @@ async function handleLogoUpload(event) {
   showToast("Logo uploaded.");
 }
 
-function changeAdminPassword() {
+async function changeAdminPassword() {
   const current = document.getElementById("currentAdminPassword").value;
   const next = document.getElementById("newAdminPassword").value.trim();
-  if (current !== getAdminPassword()) {
-    showToast("Current password is incorrect.");
-    return;
-  }
   if (next.length < 6) {
     showToast("New password must be at least 6 characters.");
     return;
   }
-  localStorage.setItem("valmont_admin_password", next);
-  localStorage.setItem("valmont_admin_saved_password", next);
+  if (typeof supabase === "undefined") {
+    showToast("Supabase not available. Try again later.");
+    return;
+  }
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  // Re-authenticate with current password to verify it
+  const { data: sessionData } = await sb.auth.getSession();
+  const email = sessionData.session?.user?.email;
+  if (!email) { showToast("Not logged in. Please sign in again."); return; }
+  const { error: verifyError } = await sb.auth.signInWithPassword({ email, password: current });
+  if (verifyError) { showToast("Current password is incorrect."); return; }
+  const { error: updateError } = await sb.auth.updateUser({ password: next });
+  if (updateError) { showToast("Could not update password: " + updateError.message); return; }
   document.getElementById("currentAdminPassword").value = "";
   document.getElementById("newAdminPassword").value = "";
   showToast("Admin password changed on this device.");

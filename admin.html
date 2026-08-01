@@ -60,13 +60,17 @@
       </div>
       <form id="adminLoginForm" class="mt-7 space-y-4">
         <div>
+          <label class="admin-label" for="adminEmailInput">Email</label>
+          <input id="adminEmailInput" type="email" class="admin-input" placeholder="admin@valmontgadgets.com" value="admin@valmontgadgets.com" autocomplete="username" required />
+        </div>
+        <div>
           <label class="admin-label" for="adminPasswordInput">Password</label>
           <input id="adminPasswordInput" type="password" class="admin-input" placeholder="Enter admin password" autocomplete="current-password" required />
-          <p id="loginError" class="mt-2 hidden text-xs font-bold text-red-400">Incorrect password. Please try again.</p>
+          <p id="loginError" class="mt-2 hidden text-xs font-bold text-red-400">Invalid email or password. Please try again.</p>
         </div>
         <button class="btn-gold w-full" type="submit">Unlock Admin Panel</button>
       </form>
-      <p class="mt-5 text-center text-[11px] font-semibold leading-relaxed text-slate-500">Client-side password gate for Valmont operators. Do not share access on public devices.</p>
+      <p class="mt-5 text-center text-[11px] font-semibold leading-relaxed text-slate-500">Secured by Supabase Auth. Do not share access on public devices.</p>
     </div>
   </div>
 
@@ -316,6 +320,7 @@
   </div>
 
   <div id="adminToast" class="fixed bottom-5 right-5 z-[90] hidden max-w-sm rounded-xl border border-slate-700 bg-[#12234a] px-4 py-3 text-sm font-bold text-white shadow-2xl"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/admin.js"></script>
 </body>
 </html>
