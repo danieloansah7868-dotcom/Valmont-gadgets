@@ -580,22 +580,22 @@ html {
 }
 
 
-/* ===== WCAG AA CONTRAST: white-on-#ff8c00 on light surfaces =====
- * Brand orange #ff8c00 behind white text scored only 2.43:1, failing WCAG AA
- * (4.5:1) on the primary "Add To Bag" CTAs and header search button, both
- * sitting on white/light card or page backgrounds.
+/* ===== BRAND CTA COLOR: everything matches the search button =====
+ * Brand direction: the storefront accent is gold-orange #ff8c00 (the header
+ * search button). All primary CTAs — "Add To Bag" on product cards, the
+ * product-detail "Add to Bag", checkout, wishlist add-all, etc. — must use
+ * the exact same color so the whole site matches the search button.
  *
- * Darken those fills to #ad5900 (4.99:1 against #ffffff — passes AA on
- * normal text). Brand orange is preserved on navy (#0b1a38) surfaces where
- * #ff8c00 vs #0b1a38 = 7.08:1 (AAA), and for orange as text/icon/border
- * (which is the inverse pairing and already passes). Small decorative fills
- * (stock bars, badges, pills, ping dot) that don't carry body copy are not
- * targeted — they keep #ff8c00.
+ * Previously these fills were darkened to #ad5900 for WCAG AA contrast, which
+ * made the Add To Bag buttons look like a different, muddy brown next to the
+ * bright orange search button. Per brand direction we now pin every
+ * white-on-orange CTA to #ff8c00 with the same #e67e00 hover as the search
+ * button, so everything reads as one consistent gold-orange.
  *
  * Scoped CSS override only. No HTML/JS changed.
  */
 
-/* 1. Header search submit button — use the storefront CTA orange. */
+/* 1. Header search submit button — the reference gold-orange. */
 #searchBtn {
   background-color: #ff8c00 !important;
 }
@@ -605,14 +605,15 @@ html {
 
 /* 2. Any filled-orange + white-text <button> or <a> that is NOT inside a
  *    navy-chrome container. [class*=] substring matching avoids escaping
- *    Tailwind arbitrary-value class names like bg-[#ff8c00]. */
+ *    Tailwind arbitrary-value class names like bg-[#ff8c00].
+ *    Matched to #searchBtn exactly (fill + hover). */
 button[class*="bg-[#ff8c00]"][class*="text-white"],
 a[class*="bg-[#ff8c00]"][class*="text-white"] {
-  background-color: #ad5900 !important;
+  background-color: #ff8c00 !important;
 }
 button[class*="bg-[#ff8c00]"][class*="hover:bg-orange-600"]:hover,
 a[class*="bg-[#ff8c00]"][class*="hover:bg-orange-600"]:hover {
-  background-color: #924a00 !important;
+  background-color: #e67e00 !important;
 }
 
 /* 3. Restore brand orange for white-on-orange fills that live inside the
