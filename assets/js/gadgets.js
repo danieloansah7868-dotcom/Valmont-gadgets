@@ -336,7 +336,16 @@ function renderStorefrontGrid() {
       </div>`;
   }).join("");
   if (pageCount > 1) {
-    productGrid.insertAdjacentHTML("afterend", `<nav class="product-pagination flex justify-center gap-2 py-6" aria-label="Product pages">${Array.from({length: pageCount}, (_, i) => `<button type="button" data-page="${i + 1}" class="px-3 py-2 rounded border text-sm font-bold ${i + 1 === currentProductPage ? "bg-[#0b1a38] text-white" : "bg-white text-[#0b1a38]"}">${i + 1}</button>`).join("")}</nav>`);
+    // Matches app.js: active page in brand orange, inactive white with hover.
+    productGrid.insertAdjacentHTML("afterend", `<nav class="product-pagination flex justify-center gap-2 py-6" aria-label="Product pages">${Array.from({length: pageCount}, (_, i) => {
+      const isActive = i + 1 === currentProductPage;
+      // Weight lives in the branch: Tailwind emits .font-bold after .font-black,
+      // so a shared base `font-bold` would override the active `font-black`.
+      const state = isActive
+        ? "bg-[#ff8c00] border-[#ff8c00] text-white font-black shadow-md scale-105"
+        : "bg-white border-gray-200 text-gray-700 font-bold hover:bg-orange-50 hover:border-[#ff8c00] hover:text-[#ff8c00]";
+      return `<button type="button" data-page="${i + 1}"${isActive ? ' aria-current="page"' : ''} class="px-3 py-2 rounded border text-sm transition-all duration-150 ${state}">${i + 1}</button>`;
+    }).join("")}</nav>`);
     document.querySelectorAll(".product-pagination [data-page]").forEach(button => button.addEventListener("click", () => { currentProductPage = Number(button.dataset.page); renderStorefrontGrid(); document.getElementById("store-feed")?.scrollIntoView({behavior:"smooth"}); }));
   }
 }
