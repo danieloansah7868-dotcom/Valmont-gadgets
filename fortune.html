@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Daily Fortune — Valmont Gadgets</title>
+<meta name="description" content="Draw three cards for a bit of fun and find your lucky gadget of the day at Valmont Gadgets.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="favicon.svg">
+<style>
+  :root{
+    --navy:#0b1a38;
+    --navy-2:#122649;
+    --orange:#ff8c00;
+    --ink:#f8fafc;
+    --muted:#94a3b8;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(900px 500px at 50% -10%, rgba(255,140,0,.16), transparent 60%),
+      linear-gradient(180deg,var(--navy) 0%, #060f22 100%);
+    color:var(--ink);
+    min-height:100vh;
+    padding:28px 16px 60px;
+  }
+  .wrap{max-width:760px;margin:0 auto}
+  header{text-align:center;margin-bottom:26px}
+  .brand{
+    font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--orange);font-weight:700
+  }
+  h1{font-size:clamp(26px,7vw,40px);margin:10px 0 6px;letter-spacing:-.5px}
+  .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.55}
+
+  .deck{
+    display:grid;grid-template-columns:repeat(3,1fr);
+    gap:12px;margin:28px 0 22px
+  }
+  .card{
+    position:relative;aspect-ratio:2/3;border-radius:14px;
+    perspective:1000px;background:none;border:0;padding:0;cursor:pointer
+  }
+  .inner{
+    position:absolute;inset:0;transition:transform .6s cubic-bezier(.2,.8,.2,1);
+    transform-style:preserve-3d
+  }
+  .card.flipped .inner{transform:rotateY(180deg)}
+  .face{
+    position:absolute;inset:0;border-radius:14px;
+    backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    box-shadow:0 10px 26px rgba(0,0,0,.45)
+  }
+  .back{
+    background:
+      repeating-linear-gradient(45deg,var(--navy-2) 0 8px, #16305c 8px 16px);
+    border:2px solid var(--orange)
+  }
+  .back span{
+    font-size:11px;letter-spacing:.18em;color:var(--orange);
+    font-weight:800;text-transform:uppercase
+  }
+  .front{
+    background:#fdfdfd;color:#111827;transform:rotateY(180deg);
+    border:2px solid rgba(255,140,0,.55)
+  }
+  .rank{font-size:clamp(24px,8vw,38px);font-weight:800;line-height:1}
+  .suit{font-size:clamp(22px,7vw,34px);margin-top:4px}
+  .red{color:#d61f36}
+  .black{color:#111827}
+
+  .btn{
+    display:block;width:100%;padding:15px;border:0;border-radius:12px;
+    background:var(--orange);color:#1a1200;font-weight:800;font-size:16px;
+    cursor:pointer;letter-spacing:.02em
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{
+    background:transparent;color:var(--muted);
+    border:1px solid rgba(148,163,184,.35);margin-top:10px;font-weight:600
+  }
+
+  .reading{
+    margin-top:24px;background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,140,0,.22);border-radius:16px;padding:20px;
+    display:none
+  }
+  .reading.show{display:block;animation:rise .45s ease both}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .reading h2{margin:0 0 14px;font-size:18px;color:var(--orange)}
+  .line{margin:0 0 12px;font-size:15px;line-height:1.6;color:#e8edf6}
+  .line b{color:#fff}
+  .lucky{
+    margin-top:16px;padding-top:16px;border-top:1px solid rgba(148,163,184,.2);
+    font-size:15px;line-height:1.6
+  }
+  .lucky a{color:var(--orange);font-weight:700;text-decoration:none}
+  .disclaimer{
+    text-align:center;color:var(--muted);font-size:12px;
+    margin-top:26px;line-height:1.6
+  }
+  .disclaimer a{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">Valmont Gadgets</div>
+    <h1>Daily Fortune</h1>
+    <p class="sub">Tap the cards, draw three, see what the day says.<br>Then find your lucky gadget.</p>
+  </header>
+
+  <div class="deck" id="deck">
+    <button class="card" data-i="0" aria-label="Card 1">
+      <div class="inner">
+        <div class="face back"><span>VG</span></div>
+        <div class="face front"><div class="rank"></div><div class="suit"></div></div>
+      </div>
+    </button>
+    <button class="card" data-i="1" aria-label="Card 2">
+      <div class="inner">
+        <div class="face back"><span>VG</span></div>
+        <div class="face front"><div class="rank"></div><div class="suit"></div></div>
+      </div>
+    </button>
+    <button class="card" data-i="2" aria-label="Card 3">
+      <div class="inner">
+        <div class="face back"><span>VG</span></div>
+        <div class="face front"><div class="rank"></div><div class="suit"></div></div>
+      </div>
+    </button>
+  </div>
+
+  <button class="btn" id="draw">Draw my three cards</button>
+  <button class="btn ghost" id="again" style="display:none">Shuffle again</button>
+
+  <div class="reading" id="reading">
+    <h2>Your reading</h2>
+    <div id="lines"></div>
+    <div class="lucky" id="lucky"></div>
+  </div>
+
+  <p class="disclaimer">
+    Just for fun — no real prices, stock or predictions attached.<br>
+    <a href="/">← Back to Valmont Gadgets</a>
+  </p>
+
+</div>
+
+<script>
+(function(){
+  var RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+  var SUITS = [
+    {s:'\u2665', name:'Hearts', cls:'red'},
+    {s:'\u2666', name:'Diamonds', cls:'red'},
+    {s:'\u2663', name:'Clubs', cls:'black'},
+    {s:'\u2660', name:'Spades', cls:'black'}
+  ];
+
+  var SUIT_THEME = {
+    Hearts:   'people, love and the things you actually care about',
+    Diamonds: 'money, deals and what you own',
+    Clubs:    'work, building and effort',
+    Spades:   'obstacles, patience and hard truths'
+  };
+
+  var RANK_MEANING = {
+    'A':'a clean start — the beginning of something',
+    '2':'a partnership or a choice between two paths',
+    '3':'steady growth, small but real',
+    '4':'stability; ground that holds',
+    '5':'a shake-up that turns out useful',
+    '6':'a small win, quietly earned',
+    '7':'a snag worth watching, not fearing',
+    '8':'movement — money or news arriving',
+    '9':'the wish card; the thing you hoped for',
+    '10':'completion, the full result of the work',
+    'J':'a young messenger; an offer or a friend',
+    'Q':'a capable woman, or that side of you',
+    'K':'a decisive man, or a backer with power'
+  };
+
+  var POSITIONS = ['Where you are', 'What is moving', 'Where it lands'];
+
+  var LUCKY = [
+    {n:'iPhone 15 Pro', why:'sharp choices today — go premium or go home'},
+    {n:'MacBook Air', why:'a build day; you need the tool that keeps up'},
+    {n:'AirPods Pro', why:'block the noise, protect your focus'},
+    {n:'Samsung Galaxy S24', why:'versatility wins today'},
+    {n:'Power bank', why:'stay charged; something will run long'},
+    {n:'Smart watch', why:'timing matters more than speed today'},
+    {n:'Executive laptop', why:'a serious day deserves serious gear'},
+    {n:'Bluetooth speaker', why:'let the day be a little louder'}
+  ];
+
+  var deck = document.getElementById('deck');
+  var cards = deck.querySelectorAll('.card');
+  var drawBtn = document.getElementById('draw');
+  var againBtn = document.getElementById('again');
+  var reading = document.getElementById('reading');
+  var lines = document.getElementById('lines');
+  var lucky = document.getElementById('lucky');
+
+  function pick(){
+    var used = {}, out = [];
+    while(out.length < 3){
+      var r = RANKS[Math.floor(Math.random()*RANKS.length)];
+      var su = SUITS[Math.floor(Math.random()*SUITS.length)];
+      var key = r + su.name;
+      if(used[key]) continue;
+      used[key] = 1;
+      out.push({rank:r, suit:su});
+    }
+    return out;
+  }
+
+  function reset(){
+    reading.classList.remove('show');
+    for(var i=0;i<cards.length;i++) cards[i].classList.remove('flipped');
+  }
+
+  function deal(){
+    reset();
+    var drawn = pick();
+
+    setTimeout(function(){
+      drawn.forEach(function(c, i){
+        setTimeout(function(){
+          var card = cards[i];
+          var front = card.querySelector('.front');
+          front.querySelector('.rank').textContent = c.rank;
+          front.querySelector('.rank').className = 'rank ' + c.suit.cls;
+          front.querySelector('.suit').textContent = c.suit.s;
+          front.querySelector('.suit').className = 'suit ' + c.suit.cls;
+          card.classList.add('flipped');
+        }, i * 280);
+      });
+    }, 120);
+
+    setTimeout(function(){
+      lines.innerHTML = drawn.map(function(c, i){
+        return '<p class="line"><b>' + POSITIONS[i] + ' — ' +
+               c.rank + c.suit.s + '</b><br>' +
+               RANK_MEANING[c.rank] + ', in ' + SUIT_THEME[c.suit.name] + '.</p>';
+      }).join('');
+
+      var g = LUCKY[Math.floor(Math.random()*LUCKY.length)];
+      lucky.innerHTML = '<b>Lucky gadget:</b> ' + g.n +
+        ' — ' + g.why + '. <a href="/">Browse the store →</a>';
+
+      reading.classList.add('show');
+      drawBtn.style.display = 'none';
+      againBtn.style.display = 'block';
+    }, 1100);
+  }
+
+  drawBtn.addEventListener('click', deal);
+  againBtn.addEventListener('click', deal);
+  for(var i=0;i<cards.length;i++){
+    cards[i].addEventListener('click', function(){
+      if(drawBtn.style.display !== 'none') deal();
+    });
+  }
+})();
+</script>
+</body>
+</html>
