@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Daily Drop — Admin | Valmont Gadgets</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="favicon.svg">
+<style>
+  :root{--navy:#0b1a38;--navy2:#122649;--orange:#ff8c00;--ink:#f8fafc;--muted:#94a3b8;--gold:#ffd54a;--green:#25d366}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+       background:linear-gradient(180deg,var(--navy) 0%,#060f22 100%);color:var(--ink);min-height:100vh;padding:20px 14px 60px}
+  .wrap{max-width:1080px;margin:0 auto}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  h1{font-size:22px;margin:0}
+  .brand{font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--orange);font-weight:800}
+  .top a,.top button{font-size:13px;padding:9px 14px;border-radius:9px;border:1px solid rgba(148,163,184,.3);
+       background:transparent;color:var(--muted);text-decoration:none;cursor:pointer}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px}
+  .stat{background:rgba(255,255,255,.05);border:1px solid rgba(148,163,184,.18);border-radius:13px;padding:14px}
+  .stat .n{font-size:26px;font-weight:800;line-height:1}
+  .stat .l{font-size:11.5px;color:var(--muted);margin-top:5px;text-transform:uppercase;letter-spacing:.09em}
+  .stat.g .n{color:var(--gold)}
+  .stat.o .n{color:var(--orange)}
+
+  .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  input,select{padding:10px 12px;border-radius:9px;border:1px solid rgba(148,163,184,.3);
+       background:rgba(0,0,0,.3);color:var(--ink);font-size:14px}
+  input{flex:1;min-width:150px}
+  input:focus,select:focus{outline:0;border-color:var(--orange)}
+  .btn{background:var(--orange);color:#1a1200;border:0;font-weight:700;padding:10px 16px;border-radius:9px;cursor:pointer;font-size:14px}
+
+  .tblwrap{overflow-x:auto;border:1px solid rgba(148,163,184,.18);border-radius:13px;background:rgba(255,255,255,.03)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:760px}
+  th{text-align:left;padding:11px 12px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+     color:var(--muted);border-bottom:1px solid rgba(148,163,184,.2);white-space:nowrap}
+  td{padding:11px 12px;border-bottom:1px solid rgba(148,163,184,.09);vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  tr.golden{background:rgba(255,213,74,.07)}
+  .tier{font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.06em}
+  .tier.common{background:rgba(148,163,184,.2);color:#cbd5e1}
+  .tier.good{background:rgba(255,140,0,.18);color:var(--orange)}
+  .tier.golden{background:rgba(255,213,74,.2);color:var(--gold)}
+  code{font-family:ui-monospace,Menlo,monospace;background:rgba(255,140,0,.13);color:var(--orange);
+       padding:3px 7px;border-radius:6px;font-size:12px}
+  .wa{color:var(--green);text-decoration:none;font-weight:600;white-space:nowrap}
+  .chk{width:19px;height:19px;accent-color:var(--green);cursor:pointer}
+  .empty,.loading{padding:34px 16px;text-align:center;color:var(--muted);font-size:14px}
+  .note{margin-top:14px;font-size:12px;color:var(--muted);line-height:1.7}
+  #gate{display:none;padding:40px 16px;text-align:center}
+  #gate a{color:var(--orange)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div>
+      <div class="brand">Valmont Gadgets</div>
+      <h1>Daily Drop — flips &amp; leads</h1>
+    </div>
+    <div>
+      <a href="/admin.html">← Main admin</a>
+      <button id="csvBtn">Export CSV</button>
+      <button id="refreshBtn">Refresh</button>
+    </div>
+  </div>
+
+  <div id="gate">
+    <p>You need to be signed in as admin.</p>
+    <p><a href="/admin-login.html">Go to admin login →</a></p>
+  </div>
+
+  <div id="main">
+    <div class="cards">
+      <div class="stat o"><div class="n" id="sToday">–</div><div class="l">Flips today</div></div>
+      <div class="stat"><div class="n" id="sTotal">–</div><div class="l">Total flips</div></div>
+      <div class="stat"><div class="n" id="sLeads">–</div><div class="l">Unique numbers</div></div>
+      <div class="stat g"><div class="n" id="sGolden">–</div><div class="l">Golden cards hit</div></div>
+      <div class="stat"><div class="n" id="sClaimed">–</div><div class="l">Claimed</div></div>
+    </div>
+
+    <div class="bar">
+      <input id="q" placeholder="Search number, code or prize…">
+      <select id="fDate">
+        <option value="today">Today</option>
+        <option value="7">Last 7 days</option>
+        <option value="30">Last 30 days</option>
+        <option value="all">All time</option>
+      </select>
+      <select id="fTier">
+        <option value="">All tiers</option>
+        <option value="golden">Golden only</option>
+        <option value="good">Good only</option>
+        <option value="common">Common only</option>
+      </select>
+      <select id="fClaim">
+        <option value="">Claimed &amp; unclaimed</option>
+        <option value="no">Unclaimed only</option>
+        <option value="yes">Claimed only</option>
+      </select>
+    </div>
+
+    <div class="tblwrap">
+      <table>
+        <thead>
+          <tr>
+            <th>When</th><th>WhatsApp</th><th>Tier</th><th>Prize</th>
+            <th>Code</th><th>Product shown</th><th>Claimed</th>
+          </tr>
+        </thead>
+        <tbody id="rows">
+          <tr><td colspan="7" class="loading">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="note">
+      Tick <b>Claimed</b> once you've honoured a code on WhatsApp — it saves instantly.<br>
+      Tap a number to open the chat. Codes expire midnight the day they were drawn.
+    </p>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  'use strict';
+  var SB_URL = 'https://eydsoqnpetqczaeqrscc.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4ODc1NjYsImV4cCI6MjEwMDQ2MzU2Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc';
+  var sb = supabase.createClient(SB_URL, SB_KEY);
+  var $ = function(i){ return document.getElementById(i); };
+  var all = [];
+
+  function dropDay(){
+    var d = new Date();
+    if(d.getHours() < 6) d.setDate(d.getDate()-1);
+    return d.toISOString().slice(0,10);
+  }
+
+  function fmt(ts){
+    var d = new Date(ts);
+    return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) + ' ' +
+           d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  }
+
+  function render(){
+    var q = $('q').value.trim().toLowerCase();
+    var tier = $('fTier').value, claim = $('fClaim').value, range = $('fDate').value;
+    var today = dropDay();
+    var cut = null;
+    if(range === '7' || range === '30'){
+      cut = new Date(Date.now() - parseInt(range,10)*864e5).toISOString().slice(0,10);
+    }
+
+    var rows = all.filter(function(r){
+      if(range === 'today' && r.drop_date !== today) return false;
+      if(cut && r.drop_date < cut) return false;
+      if(tier && r.prize_tier !== tier) return false;
+      if(claim === 'yes' && !r.claimed) return false;
+      if(claim === 'no' && r.claimed) return false;
+      if(q){
+        var hay = (r.whatsapp+' '+r.prize_code+' '+r.prize_label+' '+(r.product_name||'')).toLowerCase();
+        if(hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+
+    $('sToday').textContent   = all.filter(function(r){ return r.drop_date === today; }).length;
+    $('sTotal').textContent   = all.length;
+    $('sLeads').textContent   = Object.keys(all.reduce(function(a,r){ a[r.whatsapp]=1; return a; },{})).length;
+    $('sGolden').textContent  = all.filter(function(r){ return r.prize_tier === 'golden'; }).length;
+    $('sClaimed').textContent = all.filter(function(r){ return r.claimed; }).length;
+
+    if(!rows.length){
+      $('rows').innerHTML = '<tr><td colspan="7" class="empty">No flips match this filter yet.</td></tr>';
+      return;
+    }
+
+    $('rows').innerHTML = rows.map(function(r){
+      var msg = encodeURIComponent('Hi 👋 Valmont Gadgets here about your Daily Drop card: ' +
+                r.prize_label + ' (code ' + r.prize_code + ').');
+      return '<tr class="' + (r.prize_tier === 'golden' ? 'golden' : '') + '">' +
+        '<td style="white-space:nowrap;color:#cbd5e1">' + fmt(r.created_at) + '</td>' +
+        '<td><a class="wa" target="_blank" href="https://wa.me/' + r.whatsapp + '?text=' + msg + '">+' + r.whatsapp + '</a></td>' +
+        '<td><span class="tier ' + r.prize_tier + '">' + r.prize_tier + '</span></td>' +
+        '<td>' + r.prize_label + '</td>' +
+        '<td><code>' + r.prize_code + '</code></td>' +
+        '<td style="color:var(--muted)">' + (r.product_name || '—') + '</td>' +
+        '<td><input class="chk" type="checkbox" data-id="' + r.id + '"' + (r.claimed ? ' checked' : '') + '></td>' +
+      '</tr>';
+    }).join('');
+
+    Array.prototype.forEach.call(document.querySelectorAll('.chk'), function(c){
+      c.addEventListener('change', function(){
+        var id = this.dataset.id, val = this.checked, box = this;
+        box.disabled = true;
+        sb.from('drop_flips').update({claimed: val}).eq('id', id).then(function(res){
+          box.disabled = false;
+          if(res.error){ box.checked = !val; alert('Could not save: ' + res.error.message); return; }
+          all.forEach(function(r){ if(r.id === id) r.claimed = val; });
+          $('sClaimed').textContent = all.filter(function(r){ return r.claimed; }).length;
+        });
+      });
+    });
+  }
+
+  function load(){
+    $('rows').innerHTML = '<tr><td colspan="7" class="loading">Loading…</td></tr>';
+    sb.from('drop_flips').select('*').order('created_at',{ascending:false}).limit(2000)
+      .then(function(res){
+        if(res.error){
+          $('rows').innerHTML = '<tr><td colspan="7" class="empty">' + res.error.message +
+            '<br><br>Have you run <code>20260804_daily_drop.sql</code> in Supabase?</td></tr>';
+          return;
+        }
+        all = res.data || [];
+        render();
+      });
+  }
+
+  function csv(){
+    var head = ['date','time','whatsapp','tier','prize','code','product','claimed'];
+    var lines = [head.join(',')].concat(all.map(function(r){
+      return [r.drop_date, new Date(r.created_at).toISOString().slice(11,16),
+              "'" + r.whatsapp, r.prize_tier, '"'+r.prize_label+'"', r.prize_code,
+              '"'+(r.product_name||'')+'"', r.claimed ? 'yes' : 'no'].join(',');
+    }));
+    var blob = new Blob([lines.join('\n')], {type:'text/csv'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'valmont-daily-drop-' + dropDay() + '.csv';
+    a.click();
+  }
+
+  ['q','fDate','fTier','fClaim'].forEach(function(id){
+    $(id).addEventListener('input', render);
+    $(id).addEventListener('change', render);
+  });
+  $('refreshBtn').addEventListener('click', load);
+  $('csvBtn').addEventListener('click', csv);
+
+  sb.auth.getSession().then(function(r){
+    if(!r.data.session){
+      $('main').style.display = 'none';
+      $('gate').style.display = 'block';
+      return;
+    }
+    load();
+  });
+})();
+</script>
+</body>
+</html>

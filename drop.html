@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Daily Drop — 3 Cards, 1 Deal | Valmont Gadgets</title>
+<meta name="description" content="Flip one card a day at Valmont Gadgets. Real deals on phones, laptops and accessories — plus one Golden Card hidden in the deck.">
+<link rel="canonical" href="https://valmontgadgets.com/drop.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Daily Drop — 3 Cards, 1 Deal | Valmont Gadgets">
+<meta property="og:description" content="Three cards. One deal. One Golden Card hidden in the deck. Flip yours — resets 6am daily.">
+<meta property="og:url" content="https://valmontgadgets.com/drop.html">
+<meta property="og:image" content="https://valmontgadgets.com/uploads/clean_15_pro.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg">
+<style>
+  :root{
+    --navy:#0b1a38; --navy2:#122649; --orange:#ff8c00;
+    --ink:#f8fafc; --muted:#94a3b8; --gold:#ffd54a;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(900px 520px at 50% -12%, rgba(255,140,0,.17), transparent 62%),
+               linear-gradient(180deg,var(--navy) 0%, #060f22 100%);
+    color:var(--ink);min-height:100vh;padding:26px 16px 70px;
+  }
+  .wrap{max-width:720px;margin:0 auto}
+  header{text-align:center;margin-bottom:18px}
+  .brand{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--orange);font-weight:800}
+  h1{font-size:clamp(26px,7.5vw,40px);margin:9px 0 6px;letter-spacing:-.6px}
+  .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.55}
+
+  .status{
+    display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:16px 0 4px;
+    font-size:12px;color:var(--muted)
+  }
+  .pill{
+    background:rgba(255,255,255,.06);border:1px solid rgba(148,163,184,.22);
+    padding:6px 11px;border-radius:999px
+  }
+  .pill b{color:var(--ink)}
+  .pill.gold{border-color:rgba(255,213,74,.5);color:var(--gold)}
+
+  .deck{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin:22px 0 18px}
+  .card{position:relative;aspect-ratio:2/3;perspective:1000px;background:none;border:0;padding:0;cursor:pointer}
+  .card.float .inner{animation:bob 3.2s ease-in-out infinite}
+  .card:nth-child(2).float .inner{animation-delay:.25s}
+  .card:nth-child(3).float .inner{animation-delay:.5s}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .inner{position:absolute;inset:0;transition:transform .65s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d}
+  .card.flipped .inner{transform:rotateY(180deg);animation:none}
+  .card.dim{opacity:.42;filter:saturate(.5)}
+  .card.chosen .inner{box-shadow:0 0 0 3px var(--orange),0 14px 32px rgba(0,0,0,.5);border-radius:14px}
+  .face{
+    position:absolute;inset:0;border-radius:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    box-shadow:0 10px 26px rgba(0,0,0,.45);overflow:hidden;padding:8px;text-align:center
+  }
+  .back{background:repeating-linear-gradient(45deg,var(--navy2) 0 8px,#16305c 8px 16px);border:2px solid var(--orange)}
+  .back span{font-size:11px;letter-spacing:.2em;color:var(--orange);font-weight:800}
+  .front{background:#fdfdfd;color:#111827;transform:rotateY(180deg);border:2px solid rgba(255,140,0,.55)}
+  .front.golden{background:linear-gradient(160deg,#fff6d8,#ffd54a);border-color:#c99700}
+  .front img{width:100%;height:52%;object-fit:contain;margin-bottom:4px}
+  .fl{font-size:11px;font-weight:800;line-height:1.25;color:#111827}
+  .fp{font-size:10px;color:#4b5563;margin-top:3px;line-height:1.2}
+
+  .btn{display:block;width:100%;padding:15px;border:0;border-radius:12px;background:var(--orange);
+       color:#1a1200;font-weight:800;font-size:16px;cursor:pointer}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn.alt{background:#25d366;color:#06301a;margin-top:10px}
+  .btn.ghost{background:transparent;color:var(--muted);border:1px solid rgba(148,163,184,.35);
+             margin-top:10px;font-weight:600;font-size:14px}
+
+  .panel{
+    margin-top:18px;background:rgba(255,255,255,.045);border:1px solid rgba(255,140,0,.22);
+    border-radius:16px;padding:19px;display:none
+  }
+  .panel.show{display:block;animation:rise .45s ease both}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .panel h2{margin:0 0 6px;font-size:17px;color:var(--orange)}
+  .panel p{margin:0 0 13px;font-size:14px;color:var(--muted);line-height:1.55}
+  input{
+    width:100%;padding:14px;border-radius:11px;border:1px solid rgba(148,163,184,.35);
+    background:rgba(0,0,0,.28);color:var(--ink);font-size:16px;margin-bottom:10px
+  }
+  input:focus{outline:0;border-color:var(--orange)}
+  .err{color:#ff8080;font-size:13px;margin:-4px 0 10px;display:none}
+  .err.show{display:block}
+
+  .prize{text-align:center}
+  .prize .tier{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--orange);font-weight:800}
+  .prize.g .tier{color:var(--gold)}
+  .prize .big{font-size:clamp(21px,6vw,28px);font-weight:800;margin:8px 0 4px;line-height:1.25}
+  .prize .prod{font-size:14px;color:var(--muted);margin-bottom:14px}
+  .code{
+    display:inline-block;font-family:ui-monospace,Menlo,monospace;font-size:19px;font-weight:800;
+    letter-spacing:.13em;background:rgba(255,140,0,.15);border:1px dashed var(--orange);
+    color:var(--orange);padding:11px 20px;border-radius:11px;margin-bottom:8px
+  }
+  .prize.g .code{background:rgba(255,213,74,.16);border-color:var(--gold);color:var(--gold)}
+  .timer{font-size:13px;color:var(--muted);margin-bottom:15px}
+  .timer b{color:var(--ink)}
+
+  .missed{margin-top:16px;padding-top:14px;border-top:1px solid rgba(148,163,184,.2)}
+  .missed h3{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 9px}
+  .missed div{font-size:13.5px;color:#cbd5e1;margin-bottom:6px}
+
+  .rules{margin-top:26px;font-size:12px;color:var(--muted);line-height:1.7;text-align:center}
+  .rules a{color:var(--muted)}
+  .rules b{color:#cbd5e1}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">Valmont Gadgets</div>
+    <h1>Daily Drop</h1>
+    <p class="sub">Three cards. One deal. One <b style="color:var(--gold)">Golden Card</b> hidden in the deck.<br>Pick a card — deck reshuffles 6am daily.</p>
+    <div class="status">
+      <span class="pill" id="pFlips">Loading today's deck…</span>
+      <span class="pill gold" id="pGolden">Golden Card: unclaimed</span>
+    </div>
+  </header>
+
+  <div class="deck" id="deck">
+    <button class="card float" data-i="0" aria-label="Card 1">
+      <div class="inner">
+        <div class="face back"><span>VG</span></div>
+        <div class="face front"><img alt="" hidden><div class="fl"></div><div class="fp"></div></div>
+      </div>
+    </button>
+    <button class="card float" data-i="1" aria-label="Card 2">
+      <div class="inner">
+        <div class="face back"><span>VG</span></div>
+        <div class="face front"><img alt="" hidden><div class="fl"></div><div class="fp"></div></div>
+      </div>
+    </button>
+    <button class="card float" data-i="2" aria-label="Card 3">
+      <div class="inner">
+        <div class="face back"><span>VG</span></div>
+        <div class="face front"><img alt="" hidden><div class="fl"></div><div class="fp"></div></div>
+      </div>
+    </button>
+  </div>
+
+  <!-- step 1 -->
+  <div id="stepPick">
+    <button class="btn" id="pickBtn">Tap a card above to choose</button>
+  </div>
+
+  <!-- step 2: capture -->
+  <div class="panel" id="stepPhone">
+    <h2>Card locked in 🔒</h2>
+    <p>Enter your WhatsApp number to unlock it. We'll only message you about this deal and future drops.</p>
+    <input id="wa" type="tel" inputmode="numeric" placeholder="024 123 4567" autocomplete="tel">
+    <div class="err" id="waErr">Enter a valid Ghana number.</div>
+    <button class="btn" id="unlockBtn">Unlock my card</button>
+    <button class="btn ghost" id="backBtn">Pick a different card</button>
+  </div>
+
+  <!-- step 3: reveal -->
+  <div class="panel" id="stepPrize">
+    <div class="prize" id="prize">
+      <div class="tier" id="tier">Your deal</div>
+      <div class="big" id="big"></div>
+      <div class="prod" id="prod"></div>
+      <div class="code" id="code"></div>
+      <div class="timer" id="timer"></div>
+      <button class="btn alt" id="claimBtn">Claim on WhatsApp</button>
+      <button class="btn ghost" id="shareBtn">Share to status</button>
+    </div>
+    <div class="missed">
+      <h3>What the other cards held</h3>
+      <div id="missed"></div>
+      <div style="font-size:13px;color:var(--muted);margin-top:10px">
+        New deck at 6am. Come back and flip again.
+      </div>
+    </div>
+  </div>
+
+  <!-- already flipped -->
+  <div class="panel" id="stepDone">
+    <h2>You already flipped today ✋</h2>
+    <p id="doneMsg"></p>
+    <button class="btn alt" id="claimBtn2">Claim on WhatsApp</button>
+    <a class="btn ghost" href="/" style="text-decoration:none;text-align:center">Browse the store</a>
+  </div>
+
+  <p class="rules">
+    <b>One flip per person per day.</b> Deck resets 6am. Codes expire at midnight and can't be combined
+    with other offers. Discounts apply to listed prices — no inflated "before" prices, ever.<br>
+    Free flip, no purchase or payment required to play.<br>
+    <a href="/">← Back to Valmont Gadgets</a>
+  </p>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  'use strict';
+
+  // ── config ───────────────────────────────────────────────
+  var SB_URL = 'https://eydsoqnpetqczaeqrscc.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4ODc1NjYsImV4cCI6MjEwMDQ2MzU2Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc';
+  var WA_NUMBER = '233542451578';
+  var SITE = 'https://valmontgadgets.com';
+
+  var sb = null;
+  try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e){}
+
+  // ── prize table (REAL, affordable offers only) ───────────
+  // weight = relative chance. Edit freely.
+  var PRIZES = [
+    // common ~85%
+    {tier:'common', w:22, label:'Free Accra delivery',            code:'DROPFREE',  cat:null,     note:'On any order today'},
+    {tier:'common', w:20, label:'50% OFF any phone case',         code:'DROPCASE50',cat:'power',  note:'Accessory deal'},
+    {tier:'common', w:14, label:'50% OFF screen protector + free fitting', code:'DROPSCRN50', cat:'power', note:'Accessory deal'},
+    {tier:'common', w:14, label:'Free 32GB memory card',          code:'DROPSD32',  cat:'power',  note:'With any phone purchase'},
+    {tier:'common', w:15, label:'5% OFF any phone or laptop',     code:'DROP5',     cat:null,     note:'Sitewide'},
+    // good ~13%
+    {tier:'good',   w:7,  label:'GH₵150 off your next purchase',  code:'DROPCR150', cat:null,     note:'Store credit'},
+    {tier:'good',   w:4,  label:'20% OFF any accessory',          code:'DROPACC20', cat:'audio',  note:'Audio & power'},
+    {tier:'good',   w:2,  label:'10% OFF any laptop',             code:'DROPLAP10', cat:'laptops',note:'Executive range'},
+    // golden ~2%
+    {tier:'golden', w:2,  label:'GOLDEN CARD — 30% OFF one unit', code:'GOLDEN30',  cat:null,     note:'Limited: one winner, today only'}
+  ];
+
+  var $ = function(id){ return document.getElementById(id); };
+  var deck = $('deck');
+  var cards = deck.querySelectorAll('.card');
+  var chosen = -1, dealt = null, products = [];
+
+  // ── device id ────────────────────────────────────────────
+  function deviceId(){
+    var k = 'vg_drop_device';
+    var v = localStorage.getItem(k);
+    if(!v){
+      v = (crypto.randomUUID ? crypto.randomUUID()
+           : String(Date.now()) + Math.random().toString(36).slice(2));
+      localStorage.setItem(k, v);
+    }
+    return v;
+  }
+
+  // ── drop day: rolls over at 6am local ────────────────────
+  function dropDay(){
+    var d = new Date();
+    if(d.getHours() < 6) d.setDate(d.getDate() - 1);
+    return d.getFullYear() + '-' +
+           String(d.getMonth()+1).padStart(2,'0') + '-' +
+           String(d.getDate()).padStart(2,'0');
+  }
+
+  // ── deterministic shuffle per device per day ─────────────
+  function seedFrom(str){
+    var h = 2166136261;
+    for(var i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function rng(seed){
+    var s = seed;
+    return function(){ s ^= s<<13; s>>>=0; s ^= s>>17; s ^= s<<5; s>>>=0; return s/4294967296; };
+  }
+
+  function weightedPick(rand){
+    var total = PRIZES.reduce(function(a,p){ return a+p.w; },0);
+    var r = rand()*total;
+    for(var i=0;i<PRIZES.length;i++){ r -= PRIZES[i].w; if(r<=0) return PRIZES[i]; }
+    return PRIZES[0];
+  }
+
+  function buildHand(){
+    var rand = rng(seedFrom(deviceId() + '|' + dropDay()));
+    var hand = [], seen = {};
+    var guard = 0;
+    while(hand.length < 3 && guard++ < 60){
+      var p = weightedPick(rand);
+      if(seen[p.code]) continue;
+      seen[p.code] = 1;
+      hand.push(p);
+    }
+    while(hand.length < 3) hand.push(PRIZES[0]);
+    // attach a product image where category matches
+    hand.forEach(function(p){
+      var pool = p.cat ? products.filter(function(x){ return x.category_id === p.cat; }) : products;
+      if(!pool.length) pool = products;
+      if(pool.length) p.product = pool[Math.floor(rand()*pool.length)];
+    });
+    return hand;
+  }
+
+  // ── load products + stats ────────────────────────────────
+  function loadProducts(){
+    if(!sb) return Promise.resolve([]);
+    return sb.from('products')
+      .select('id,name,price,image_url,category_id')
+      .eq('is_active', true).gt('stock', 0).limit(60)
+      .then(function(r){ return r.data || []; })
+      .catch(function(){ return []; });
+  }
+
+  function loadStats(){
+    if(!sb) return;
+    sb.from('drop_stats').select('flips,golden_hits').eq('drop_date', dropDay())
+      .then(function(r){
+        var row = (r.data && r.data[0]) || {flips:0, golden_hits:0};
+        $('pFlips').innerHTML = '<b>' + (row.flips||0) + '</b> flipped today';
+        $('pGolden').textContent = (row.golden_hits > 0)
+          ? 'Golden Card: CLAIMED 🏆' : 'Golden Card: still unclaimed';
+      }).catch(function(){ $('pFlips').textContent = "Today's deck is live"; });
+  }
+
+  // ── phone normalise ──────────────────────────────────────
+  function normWA(v){
+    var d = (v||'').replace(/\D/g,'');
+    if(d.indexOf('233') === 0 && d.length === 12) return d;
+    if(d.indexOf('0') === 0 && d.length === 10) return '233' + d.slice(1);
+    if(d.length === 9) return '233' + d;
+    return null;
+  }
+
+  function midnightLeft(){
+    var n = new Date(), m = new Date(n); m.setHours(24,0,0,0);
+    var s = Math.max(0, Math.floor((m-n)/1000));
+    return String(Math.floor(s/3600)).padStart(2,'0') + 'h ' +
+           String(Math.floor(s%3600/60)).padStart(2,'0') + 'm';
+  }
+
+  // ── render ───────────────────────────────────────────────
+  function paintCard(i, p){
+    var f = cards[i].querySelector('.front');
+    var img = f.querySelector('img');
+    f.classList.toggle('golden', p.tier === 'golden');
+    if(p.product && p.product.image_url){
+      img.src = p.product.image_url; img.hidden = false; img.alt = p.product.name;
+    } else { img.hidden = true; }
+    f.querySelector('.fl').textContent = p.label;
+    f.querySelector('.fp').textContent = p.product ? p.product.name : p.note;
+    cards[i].classList.add('flipped');
+  }
+
+  function show(id){
+    ['stepPick','stepPhone','stepPrize','stepDone'].forEach(function(s){
+      var el = $(s);
+      if(s === id){ el.classList.add('show'); el.style.display = (s==='stepPick'?'block':''); }
+      else { el.classList.remove('show'); if(s==='stepPick') el.style.display='none'; }
+    });
+  }
+
+  // ── flow ─────────────────────────────────────────────────
+  function choose(i){
+    if(chosen > -1) return;
+    chosen = i;
+    for(var k=0;k<cards.length;k++){
+      cards[k].classList.remove('float');
+      if(k !== i) cards[k].classList.add('dim');
+    }
+    cards[i].classList.add('chosen');
+    show('stepPhone');
+    setTimeout(function(){ $('wa').focus(); }, 300);
+  }
+
+  function reset(){
+    chosen = -1;
+    for(var k=0;k<cards.length;k++){
+      cards[k].classList.remove('dim','chosen','flipped');
+      cards[k].classList.add('float');
+    }
+    show('stepPick');
+  }
+
+  function reveal(waNum){
+    var win = dealt[chosen];
+    var isG = win.tier === 'golden';
+
+    setTimeout(function(){ paintCard(chosen, win); }, 120);
+    dealt.forEach(function(p,i){
+      if(i !== chosen) setTimeout(function(){ paintCard(i,p); }, 900 + i*260);
+    });
+
+    var pz = $('prize');
+    pz.classList.toggle('g', isG);
+    $('tier').textContent = isG ? '★ Golden Card ★' : (win.tier === 'good' ? 'Nice one' : 'Your deal today');
+    $('big').textContent = win.label;
+    $('prod').textContent = win.product ? ('Suggested: ' + win.product.name) : win.note;
+    $('code').textContent = win.code;
+    $('timer').innerHTML = 'Expires at midnight — <b>' + midnightLeft() + '</b> left';
+
+    $('missed').innerHTML = dealt.map(function(p,i){
+      return i === chosen ? '' : '<div>✕ ' + p.label + '</div>';
+    }).join('');
+
+    var msg = encodeURIComponent(
+      'Hi Valmont Gadgets 👋 I flipped today\'s Daily Drop and got: ' +
+      win.label + ' (code ' + win.code + '). I\'d like to claim it.');
+    $('claimBtn').onclick = function(){ window.open('https://wa.me/'+WA_NUMBER+'?text='+msg,'_blank'); };
+    $('claimBtn2').onclick = $('claimBtn').onclick;
+
+    $('shareBtn').onclick = function(){
+      var txt = 'I just flipped ' + win.label + ' on Valmont Gadgets Daily Drop 🃏 ' +
+                'Three cards, one deal, and a Golden Card nobody\'s found. Flip yours: ' + SITE + '/drop.html';
+      if(navigator.share) navigator.share({title:'Valmont Daily Drop', text:txt}).catch(function(){});
+      else window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+    };
+
+    setTimeout(function(){ show('stepPrize'); }, 700);
+
+    // persist
+    localStorage.setItem('vg_drop_' + dropDay(), JSON.stringify({label:win.label, code:win.code, tier:win.tier}));
+    if(sb){
+      sb.from('drop_flips').insert({
+        drop_date: dropDay(), device_id: deviceId(), whatsapp: waNum,
+        prize_tier: win.tier, prize_label: win.label, prize_code: win.code,
+        product_id: win.product ? win.product.id : null,
+        product_name: win.product ? win.product.name : null
+      }).then(function(){}).catch(function(){});
+    }
+  }
+
+  // ── wiring ───────────────────────────────────────────────
+  for(var i=0;i<cards.length;i++){
+    (function(n){ cards[n].addEventListener('click', function(){ choose(n); }); })(i);
+  }
+  $('backBtn').addEventListener('click', reset);
+
+  $('unlockBtn').addEventListener('click', function(){
+    var n = normWA($('wa').value);
+    if(!n){ $('waErr').classList.add('show'); return; }
+    $('waErr').classList.remove('show');
+    this.disabled = true; this.textContent = 'Unlocking…';
+    localStorage.setItem('vg_drop_wa', n);
+    reveal(n);
+  });
+  $('wa').addEventListener('keydown', function(e){ if(e.key === 'Enter') $('unlockBtn').click(); });
+
+  // ── boot ─────────────────────────────────────────────────
+  $('stepPick').style.display = 'block';
+  var prior = localStorage.getItem('vg_drop_' + dropDay());
+  loadStats();
+  loadProducts().then(function(p){
+    products = p;
+    dealt = buildHand();
+
+    if(prior){
+      var d = JSON.parse(prior);
+      $('doneMsg').innerHTML = 'You drew <b style="color:var(--orange)">' + d.label +
+        '</b> — code <b>' + d.code + '</b>. Valid until midnight (' + midnightLeft() +
+        ' left). New deck at 6am.';
+      $('stepPick').style.display = 'none';
+      show('stepDone');
+      var wm = encodeURIComponent('Hi Valmont Gadgets 👋 I flipped the Daily Drop and got: ' +
+        d.label + ' (code ' + d.code + '). I\'d like to claim it.');
+      $('claimBtn2').onclick = function(){ window.open('https://wa.me/'+WA_NUMBER+'?text='+wm,'_blank'); };
+      for(var k=0;k<cards.length;k++) cards[k].classList.remove('float');
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
