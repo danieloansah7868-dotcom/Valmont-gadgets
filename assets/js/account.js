@@ -9,6 +9,15 @@ let userWishlist = [];
 let editingProfile = false;
 let allProducts = [];
 
+const GHANA_MOBILE_PREFIXES = ['020', '023', '024', '025', '026', '027', '028', '050', '053', '054', '055', '056', '057', '059'];
+
+function normalizeGhanaLocalPhone(value) {
+  let digits = String(value || '').replace(/\D/g, '');
+  if (/^233\d{9}$/.test(digits)) digits = '0' + digits.slice(3);
+  if (!/^0\d{9}$/.test(digits)) return '';
+  return GHANA_MOBILE_PREFIXES.some(prefix => digits.startsWith(prefix)) ? digits : '';
+}
+
 const VALMONT_AUTH = {
   url: 'https://eydsoqnpetqczaeqrscc.supabase.co',
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwiaWF0IjoxNzg0ODg3NTY2LCJleHAiOjIxMDA0NjM1Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc'
@@ -25,7 +34,8 @@ async function authRequest(path, body) {
 
 function saveAuthUser(account, accessToken) {
   const metadata = account.user_metadata || {};
-  currentUser = { id: account.id, name: metadata.full_name || metadata.name || account.email.split('@')[0], email: account.email, phone: metadata.phone || account.phone || '' };
+  const rawPhone = metadata.phone || account.phone || '';
+  currentUser = { id: account.id, name: metadata.full_name || metadata.name || account.email.split('@')[0], email: account.email, phone: normalizeGhanaLocalPhone(rawPhone) || rawPhone };
   localStorage.setItem('valmont_user', JSON.stringify(currentUser));
   if (accessToken) localStorage.setItem('valmont_access_token', accessToken);
 }
@@ -83,9 +93,12 @@ async function handleSignUp(e) {
   e.preventDefault();
   const name = document.getElementById('signUpName').value.trim();
   const email = document.getElementById('signUpEmail').value.trim().toLowerCase();
-  const phone = document.getElementById('signUpPhone').value.trim();
+  const phone = normalizeGhanaLocalPhone(document.getElementById('signUpPhone').value.trim());
   const password = document.getElementById('signUpPassword').value;
-  if (!name || !email || !phone || !password) { showToast('Please fill all fields'); return; }
+  if (!name || !email || !phone || !password) {
+    showToast(phone ? 'Please fill all fields' : 'Enter a valid Ghana mobile number, e.g. 024 123 4567.');
+    return;
+  }
   if (password.length < 6) { showToast('Password must be at least 6 characters'); return; }
   try {
     const result = await authRequest('signup', { email, password, data: { full_name: name, phone, role: 'customer' } });
