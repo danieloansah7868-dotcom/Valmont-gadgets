@@ -43,7 +43,11 @@
   .pill.gold{border-color:rgba(255,213,74,.5);color:var(--gold)}
 
   .deck{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin:22px 0 18px}
+  .deck.locked{opacity:.4;filter:saturate(.45);pointer-events:none}
   .card{position:relative;aspect-ratio:2/3;perspective:1000px;background:none;border:0;padding:0;cursor:pointer}
+  .auth-gate{text-align:center}
+  .auth-gate h2{margin-bottom:6px}
+  .auth-gate p{margin-bottom:14px}
   .card.float .inner{animation:bob 3.2s ease-in-out infinite}
   .card:nth-child(2).float .inner{animation-delay:.25s}
   .card:nth-child(3).float .inner{animation-delay:.5s}
@@ -124,7 +128,15 @@
     </div>
   </header>
 
-  <div class="deck" id="deck">
+  <div class="panel auth-gate" id="authGate">
+    <h2>Sign in to flip today's card</h2>
+    <p>Daily Drop flips are tied to your Valmont account so everyone gets one fair chance per day.</p>
+    <a class="btn" href="/account.html">Sign in or create an account</a>
+    <button class="btn ghost" id="checkAuthBtn" type="button">I've signed in — unlock the deck</button>
+    <div class="err" id="authErr">Sign in first, then come back to unlock the deck.</div>
+  </div>
+
+  <div class="deck locked" id="deck" aria-describedby="authGate">
     <button class="card float" data-i="0" aria-label="Card 1">
       <div class="inner">
         <div class="face back"><span>VG</span></div>
@@ -146,7 +158,7 @@
   </div>
 
   <!-- step 1 -->
-  <div id="stepPick">
+  <div id="stepPick" style="display:none">
     <button class="btn" id="pickBtn">Tap a card above to choose</button>
   </div>
 
@@ -211,6 +223,18 @@
   var sb = null;
   try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e){}
 
+  function getCustomerAccount(){
+    if(!localStorage.getItem('valmont_access_token')) return null;
+    try {
+      var user = JSON.parse(localStorage.getItem('valmont_user') || 'null');
+      return user && user.id ? user : null;
+    } catch(e){ return null; }
+  }
+
+  var account = getCustomerAccount();
+  var accountBooted = null;
+  var prior = null;
+
   // ── prize table (REAL, affordable offers only) ───────────
   // weight = relative chance. Edit freely.
   var PRIZES = [
@@ -232,6 +256,45 @@
   var deck = $('deck');
   var cards = deck.querySelectorAll('.card');
   var chosen = -1, dealt = null, products = [];
+
+  function showAuthGate(message){
+    $('authGate').classList.add('show');
+    $('authGate').style.display = 'block';
+    $('authErr').textContent = message || 'Sign in first, then come back to unlock the deck.';
+    $('authErr').classList.add('show');
+    deck.classList.add('locked');
+    Array.prototype.forEach.call(cards, function(card){ card.disabled = true; });
+    $('stepPick').style.display = 'none';
+  }
+
+  function hideAuthGate(){
+    $('authGate').classList.remove('show');
+    $('authGate').style.display = 'none';
+    $('authErr').classList.remove('show');
+    deck.classList.remove('locked');
+    Array.prototype.forEach.call(cards, function(card){ card.disabled = false; });
+    $('stepPick').style.display = 'block';
+  }
+
+  function refreshAccountGate(){
+    var nextAccount = getCustomerAccount();
+    if(!nextAccount){
+      account = null;
+      showAuthGate();
+      return false;
+    }
+    if(!account || account.id !== nextAccount.id){
+      account = nextAccount;
+      // The account is part of the daily deal identity. Reboot the page so
+      // a sign-in change can never reuse another customer's local state.
+      if(accountBooted && accountBooted !== account.id) window.location.reload();
+    }
+    hideAuthGate();
+    return true;
+  }
+
+  // ── account identity ─────────────────────────────────────
+  function accountKey(){ return account ? 'acct:' + account.id : null; }
 
   // ── device id ────────────────────────────────────────────
   function deviceId(){
@@ -359,7 +422,7 @@
 
   // ── flow ─────────────────────────────────────────────────
   function choose(i){
-    if(chosen > -1) return;
+    if(!refreshAccountGate() || chosen > -1) return;
     chosen = i;
     for(var k=0;k<cards.length;k++){
       cards[k].classList.remove('float');
@@ -434,6 +497,7 @@
   $('backBtn').addEventListener('click', reset);
 
   $('unlockBtn').addEventListener('click', function(){
+    if(!refreshAccountGate()) return;
     var n = normWA($('wa').value);
     if(!n){ $('waErr').classList.add('show'); return; }
     $('waErr').classList.remove('show');
@@ -442,10 +506,17 @@
     reveal(n);
   });
   $('wa').addEventListener('keydown', function(e){ if(e.key === 'Enter') $('unlockBtn').click(); });
+  $('checkAuthBtn').addEventListener('click', function(){
+    if(refreshAccountGate()) window.location.reload();
+  });
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible') refreshAccountGate();
+  });
 
   // ── boot ─────────────────────────────────────────────────
-  $('stepPick').style.display = 'block';
-  var prior = localStorage.getItem('vg_drop_' + dropDay());
+  if(!refreshAccountGate()) return;
+  accountBooted = account.id;
+  prior = localStorage.getItem('vg_drop_' + dropDay());
   loadStats();
   loadProducts().then(function(p){
     products = p;
