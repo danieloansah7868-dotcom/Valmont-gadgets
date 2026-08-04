@@ -2019,7 +2019,7 @@
 
   <!-- DAILY DROP STRIP -->
   <a id="dropStrip" href="/drop.html"
-     class="hidden max-w-[1200px] mx-auto mt-3 mb-1 px-4 no-underline"
+     class="block max-w-[1200px] mx-auto mt-3 mb-1 px-4 no-underline"
      style="text-decoration:none">
     <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#0b1a38,#122649);
                 border:1px solid rgba(255,140,0,.45);border-radius:12px;padding:11px 14px;">
@@ -2029,26 +2029,8 @@
         One <b style="color:#ffd54a">Golden Card</b> hidden in the deck.
       </span>
       <span style="color:#ff8c00;font-weight:800;font-size:13px;white-space:nowrap">Flip yours →</span>
-      <button type="button" id="dropStripX" aria-label="Dismiss"
-              style="background:none;border:0;color:#94a3b8;font-size:17px;line-height:1;cursor:pointer;padding:0 2px">×</button>
     </div>
   </a>
-  <script>
-  (function(){
-    var d=new Date(); if(d.getHours()<6) d.setDate(d.getDate()-1);
-    var day=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    var strip=document.getElementById('dropStrip');
-    if(!strip) return;
-    if(localStorage.getItem('vg_drop_strip_hide')===day) return;
-    strip.classList.remove('hidden');
-    strip.style.display='block';
-    document.getElementById('dropStripX').addEventListener('click',function(e){
-      e.preventDefault(); e.stopPropagation();
-      localStorage.setItem('vg_drop_strip_hide',day);
-      strip.style.display='none';
-    });
-  })();
-  </script>
 
   <!-- 3. JUMIA HOME CONTAINER LAYOUT -->
   <main class="max-w-[1200px] mx-auto px-4 py-6 md:py-8 pb-20 md:pb-8">
