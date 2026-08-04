@@ -147,6 +147,11 @@
            d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
   }
 
+  function waInternational(local){
+    var d = String(local || '').replace(/\D/g,'');
+    return /^0\d{9}$/.test(d) ? '233' + d.slice(1) : d;
+  }
+
   function render(){
     var q = $('q').value.trim().toLowerCase();
     var tier = $('fTier').value, claim = $('fClaim').value, range = $('fDate').value;
@@ -183,9 +188,10 @@
     $('rows').innerHTML = rows.map(function(r){
       var msg = encodeURIComponent('Hi 👋 Valmont Gadgets here about your Daily Drop card: ' +
                 r.prize_label + ' (code ' + r.prize_code + ').');
+      var wa = waInternational(r.whatsapp);
       return '<tr class="' + (r.prize_tier === 'golden' ? 'golden' : '') + '">' +
         '<td style="white-space:nowrap;color:#cbd5e1">' + fmt(r.created_at) + '</td>' +
-        '<td><a class="wa" target="_blank" href="https://wa.me/' + r.whatsapp + '?text=' + msg + '">+' + r.whatsapp + '</a></td>' +
+        '<td><a class="wa" target="_blank" href="https://wa.me/' + wa + '?text=' + msg + '">' + (r.whatsapp || '—') + '</a></td>' +
         '<td><span class="tier ' + r.prize_tier + '">' + r.prize_tier + '</span></td>' +
         '<td>' + r.prize_label + '</td>' +
         '<td><code>' + r.prize_code + '</code></td>' +
