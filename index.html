@@ -2018,19 +2018,31 @@
   </header>
 
   <!-- DAILY DROP STRIP -->
-  <a id="dropStrip" href="/drop.html"
-     class="block max-w-[1200px] mx-auto mt-3 mb-1 px-4 no-underline"
-     style="text-decoration:none">
-    <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#0b1a38,#122649);
-                border:1px solid rgba(255,140,0,.45);border-radius:12px;padding:11px 14px;">
-      <span style="font-size:19px;line-height:1">🃏</span>
-      <span style="flex:1;color:#f8fafc;font-size:13.5px;line-height:1.35">
-        <b style="color:#ff8c00">Today's Drop is live</b> — 3 cards, 1 deal.
-        One <b style="color:#ffd54a">Golden Card</b> hidden in the deck.
-      </span>
-      <span style="color:#ff8c00;font-weight:800;font-size:13px;white-space:nowrap">Flip yours →</span>
-    </div>
-  </a>
+  <div class="max-w-[1200px] mx-auto mt-3 mb-1 px-4 flex flex-col md:flex-row gap-3">
+    <a id="dropStrip" href="/drop.html" class="flex-1 block no-underline" style="text-decoration:none">
+      <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#0b1a38,#122649);
+                  border:1px solid rgba(255,140,0,.45);border-radius:12px;padding:11px 14px;">
+        <span style="font-size:19px;line-height:1">🃏</span>
+        <span style="flex:1;color:#f8fafc;font-size:13.5px;line-height:1.35">
+          <b style="color:#ff8c00">Today's Drop is live</b> — 3 cards, 1 deal.
+          One <b style="color:#ffd54a">Golden Card</b> hidden in the deck.
+        </span>
+        <span style="color:#ff8c00;font-weight:800;font-size:13px;white-space:nowrap">Flip yours →</span>
+      </div>
+    </a>
+    
+    <button onclick="openInstallmentCatalog();" class="flex-1 block no-underline text-left" style="text-decoration:none">
+      <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#eef2ff,#e0e7ff);
+                  border:1px solid #c7d2fe;border-radius:12px;padding:11px 14px;">
+        <span style="font-size:19px;line-height:1">💳</span>
+        <span style="flex:1;color:#1e1b4b;font-size:13.5px;line-height:1.35">
+          <b style="color:#4338ca">Buy on Installments</b> — Pay 40% down.
+          Spread the balance over <b style="color:#4338ca">12 weeks</b> or 3 months.
+        </span>
+        <span style="color:#4338ca;font-weight:800;font-size:13px;white-space:nowrap">View Plans →</span>
+      </div>
+    </button>
+  </div>
 
   <!-- 3. JUMIA HOME CONTAINER LAYOUT -->
   <main class="max-w-[1200px] mx-auto px-4 py-6 md:py-8 pb-20 md:pb-8">
@@ -3315,6 +3327,27 @@
             <span id="dealerDetailLabel" class="text-[9px] text-green-600 font-extrabold bg-green-50 px-2 py-0.5 rounded ml-1 uppercase hidden">Wholesale</span>
           </div>
 
+          <!-- Installment Plan Summary -->
+          <div id="installmentSummary" class="hidden mb-5 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-3.5 shadow-sm">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-lg">💳</span>
+              <h4 class="font-black text-[12px] uppercase text-blue-900 tracking-wider">Buy on Installments</h4>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-white/60 p-2.5 rounded-lg border border-blue-100">
+                <span class="block text-[9px] font-black uppercase text-blue-500 mb-1">Weekly Plan</span>
+                <span id="weeklyInstallment" class="block font-black text-[13px] text-blue-900">GH₵ 0/wk</span>
+                <span id="weeklyDown" class="block text-[9px] font-bold text-gray-500 mt-0.5">Deposit: GH₵ 0</span>
+              </div>
+              <div class="bg-white/60 p-2.5 rounded-lg border border-blue-100">
+                <span class="block text-[9px] font-black uppercase text-indigo-500 mb-1">Monthly Plan</span>
+                <span id="monthlyInstallment" class="block font-black text-[13px] text-indigo-900">GH₵ 0/mo</span>
+                <span id="monthlyDown" class="block text-[9px] font-bold text-gray-500 mt-0.5">Deposit: GH₵ 0</span>
+              </div>
+            </div>
+            <button onclick="openInstallmentCatalog();" class="w-full mt-3 text-[10px] font-black uppercase text-blue-700 hover:underline">View Full Installment Catalog →</button>
+          </div>
+
           <div class="border-t pt-3 space-y-2 text-[12px] font-semibold text-gray-600 mb-4">
             <div class="flex items-center gap-1.5">
               <span class="text-green-600">Check</span>
@@ -3334,6 +3367,9 @@
         <div class="space-y-2 border-t pt-4">
           <button id="detailAddToCart" class="w-full bg-[#ff8c00] hover:bg-orange-600 text-white font-bold text-[12px] tracking-widest uppercase py-3 rounded-[4px] transition shadow flex items-center justify-center gap-1.5">
             Add to Bag
+          </button>
+          <button id="detailInstallmentBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] tracking-wider uppercase py-2.5 rounded-[4px] transition flex items-center justify-center gap-1.5 hidden">
+            <span>💳 Apply for Installment Plan</span>
           </button>
           <button id="detailExpressDelivery" class="w-full border border-[#0b1a38] bg-white text-[#0b1a38] hover:bg-[#f5f8fc] font-bold text-[11px] tracking-wider uppercase py-2.5 rounded-[4px] transition flex items-center justify-center gap-1.5">
             Valmont Express Delivery (+30%)
@@ -3578,18 +3614,22 @@
 
       <!-- Scoped pricing desk and log inside the dealer hub so they are easily accessible! -->
       <div class="border rounded-lg p-3 bg-gray-100 text-[#0b1a38] text-[12px]">
-        <h4 class="font-bold text-[13px] text-gray-800 mb-2 border-b pb-1"> Dealer Profit Calculator</h4>
+        <h4 class="font-bold text-[13px] text-gray-800 mb-2 border-b pb-1"> Dealer Profit Desk</h4>
         <div class="grid grid-cols-2 gap-3 mb-3">
           <div>
-            <label for="dl_wholesale" class="block font-bold text-[10px] text-gray-500">Wholesale Price (GH₵)</label>
+            <label for="dl_wholesale" class="block font-bold text-[10px] text-gray-500">Wholesale Cost (GH₵)</label>
             <input id="dl_wholesale" type="number" value="2000" class="w-full border p-1.5 rounded bg-white text-[12px] font-bold" />
           </div>
           <div>
-            <label for="dl_retail" class="block font-bold text-[10px] text-gray-500">Retail Price (GH₵)</label>
-            <input id="dl_retail" type="number" value="2450" class="w-full border p-1.5 rounded bg-white text-[12px] font-bold" />
+            <label for="dl_markup" class="block font-bold text-[10px] text-gray-500">Your Desired Profit (GH₵)</label>
+            <input id="dl_markup" type="number" value="450" class="w-full border p-1.5 rounded bg-white text-[12px] font-bold" />
           </div>
         </div>
-        <div class="font-black text-gray-700 text-[11px]" id="dl_calc_result">Net Profit: GH₵ 450 (18.3% margin)</div>
+        <div class="p-2.5 bg-white border rounded-lg mb-2">
+          <span class="block text-[10px] font-black uppercase text-gray-400">Recommended Retail Price</span>
+          <div id="dl_calc_result" class="text-lg font-black text-[#0b1a38]">GH₵ 2,450</div>
+          <div id="dl_margin_text" class="text-[10px] font-bold text-[#ff8c00]">18.3% margin on sale</div>
+        </div>
       </div>
 
       <button onclick="deactivateDealerMode();" class="w-full border border-red-500 text-red-500 hover:bg-red-50 font-bold text-[12px] tracking-widest uppercase py-3 rounded-[4px] transition">
@@ -3802,6 +3842,49 @@
       Got It
     </button>
   </div>
+  </div>
+
+  <!-- 14. FULL INSTALLMENT CATALOG MODAL -->
+  <div id="installmentOverlay" class="fixed inset-0 bg-black/60 z-[10010] hidden transition-opacity" onclick="closeInstallmentCatalog();"></div>
+  <div id="installmentModal" class="fixed inset-y-6 inset-x-4 md:inset-y-12 md:inset-x-24 bg-white z-[10011] rounded-xl shadow-2xl overflow-hidden hidden transition-all duration-300 max-w-[900px] mx-auto flex flex-col border border-gray-200">
+    <div class="bg-[#0b1a38] text-white p-5 flex justify-between items-center shrink-0 border-b-2 border-[#ff8c00]">
+      <div>
+        <h3 class="font-black text-[16px] uppercase tracking-widest">iPhone Installment Catalog</h3>
+        <p class="text-[10px] text-gray-400 font-bold mt-0.5">Valmont Hire Purchase Program • Valid for 2026</p>
+      </div>
+      <button onclick="closeInstallmentCatalog();" class="text-gray-400 hover:text-white text-lg font-bold">x</button>
+    </div>
+    <div class="bg-blue-50 px-5 py-3 border-b border-blue-100 flex flex-col md:flex-row md:items-center justify-between gap-2 text-[11px] font-bold text-blue-900">
+      <div>Requirements: Ghana Card + 1 Guarantor (Phone confirmation)</div>
+      <div class="hidden md:block">|</div>
+      <div>Pay 40% Deposit to Begin</div>
+    </div>
+    <div class="flex-1 overflow-auto p-0 no-scrollbar bg-gray-50">
+      <table class="w-full text-left border-collapse min-w-[700px]">
+        <thead class="sticky top-0 bg-white z-10 shadow-sm">
+          <tr class="text-[10px] font-black uppercase text-gray-500 tracking-wider">
+            <th class="p-4 border-b border-gray-100">Model & Storage</th>
+            <th class="p-4 border-b border-gray-100 text-right">Cash Price</th>
+            <th class="p-4 border-b border-gray-100 bg-blue-50/30">Weekly Down</th>
+            <th class="p-4 border-b border-gray-100 bg-blue-50/30">Weekly (12)</th>
+            <th class="p-4 border-b border-gray-100 bg-indigo-50/30">Monthly Down</th>
+            <th class="p-4 border-b border-gray-100 bg-indigo-50/30">Monthly (3)</th>
+          </tr>
+        </thead>
+        <tbody id="installmentCatalogBody" class="text-[12px] font-bold text-gray-700">
+          <!-- Populated via JS -->
+        </tbody>
+      </table>
+    </div>
+    <div class="p-5 border-t border-gray-100 bg-white shrink-0 text-center">
+      <p class="text-[11px] text-gray-500 font-medium leading-relaxed">
+        * Installment plans are subject to stock verification and credit approval. 
+        A valid Ghana ID and proof of income may be required for processing. 
+        <a href="https://wa.me/233542451578" target="_blank" class="text-[#ff8c00] font-bold underline ml-1">Contact Support for Approval →</a>
+      </p>
+    </div>
+  </div>
+
   <!-- ADMIN SPEC EDITOR TEMPLATE: cloned by trusted admin tooling only. -->
   <template id="adminSpecTemplate">
     <section class="admin-spec-editor" aria-label="Device specifications and availability editor">

@@ -77,7 +77,8 @@ document.addEventListener("keydown", function(e) {
         image: 'https://images.unsplash.com/photo-1696446703255-020d67fa2f3b?q=80&w=800&auto=format&fit=crop',
         wholesale: 13900,
         deliveryCost: 120,
-        paymentCost: 280
+        paymentCost: 280,
+        has_installments: true
       },
       {
         id: 'iphone-15-pro-128-uk-used-92',
@@ -90,7 +91,8 @@ document.addEventListener("keydown", function(e) {
         tags: ['iphone 15 pro', 'uk used', 'refurbished', '128gb', 'bh92'],
         image: 'uploads/clean_15_pro.png',
         images: ['uploads/clean_15_pro.png'],
-        wholesale: 0, deliveryCost: 80, paymentCost: 224
+        wholesale: 0, deliveryCost: 80, paymentCost: 224,
+        has_installments: true
       },
       {
         id: 'VG-IP14PM-256',
@@ -1046,7 +1048,6 @@ document.addEventListener("keydown", function(e) {
       }
     ];
 
-    // Normalize merchandising data: realistic reviews and inventory by product tier.
     PRODUCTS.forEach((p, index) => {
       const name = p.name.toLowerCase();
       const isPopular = name.includes('iphone 15 pro max') || name.includes('s24 ultra');
@@ -1055,7 +1056,68 @@ document.addEventListener("keydown", function(e) {
       const isNew = p.badge === 'NEW';
       p.reviews_count = isPopular ? 42 + (index % 27) : isMidRange ? 18 + (index % 15) : isNew ? index % 6 : isAccessory ? 8 + (index % 8) : 12 + (index % 18);
       p.stock_quantity = isPopular ? 3 + (index % 6) : p.category === 'samsung' ? 5 + (index % 8) : isAccessory ? 15 + (index % 16) : 6 + (index % 12);
+      
+      // Auto-enable installments only for the specific iPhones from the images
+      const name = p.name.toLowerCase();
+      const isEligibleiPhone = name.includes('iphone') && 
+        (name.includes('12') || name.includes('13') || name.includes('14') || 
+         name.includes('15') || name.includes('16') || name.includes('17'));
+
+      if (isEligibleiPhone) {
+        p.has_installments = true;
+      }
     });
+
+    // INSTALLMENT CATALOG MODAL LOGIC
+    function openInstallmentCatalog() {
+      const overlay = document.getElementById('installmentOverlay');
+      const modal = document.getElementById('installmentModal');
+      if (overlay && modal) {
+        overlay.classList.remove('hidden');
+        setTimeout(() => overlay.classList.add('opacity-100'), 10);
+        modal.classList.remove('hidden');
+        renderInstallmentCatalog();
+      }
+    }
+
+    function closeInstallmentCatalog() {
+      const overlay = document.getElementById('installmentOverlay');
+      const modal = document.getElementById('installmentModal');
+      if (overlay && modal) {
+        overlay.classList.remove('opacity-100');
+        setTimeout(() => overlay.classList.add('hidden'), 300);
+        modal.classList.add('hidden');
+      }
+    }
+
+    function renderInstallmentCatalog() {
+      const body = document.getElementById('installmentCatalogBody');
+      if (!body) return;
+
+      const items = PRODUCTS.filter(p => p.has_installments).sort((a,b) => a.retail - b.retail);
+      
+      body.innerHTML = items.map(p => {
+        const plan = getInstallmentPlan(p.retail);
+        return `
+          <tr class="hover:bg-blue-50/20 transition border-b border-gray-100">
+            <td class="p-4 flex items-center gap-3">
+              <div class="h-8 w-8 bg-white rounded border border-gray-100 flex items-center justify-center shrink-0">
+                ${productImg(p.image, p.name, 30)}
+              </div>
+              <span class="truncate">${p.name}</span>
+            </td>
+            <td class="p-4 text-right font-black text-gray-900">${money(plan.totalWithMarkup)}</td>
+            <td class="p-4 bg-blue-50/20 text-blue-900">${money(plan.weekly.down)}</td>
+            <td class="p-4 bg-blue-50/20 text-blue-900">${money(plan.weekly.installment)}/wk</td>
+            <td class="p-4 bg-indigo-50/20 text-indigo-900">${money(plan.monthly.down)}</td>
+            <td class="p-4 bg-indigo-50/20 text-indigo-900">${money(plan.monthly.installment)}/mo</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    window.openInstallmentCatalog = openInstallmentCatalog;
+    window.closeInstallmentCatalog = closeInstallmentCatalog;
 
     /**
      * Renders a product image. Local uploads/*.png have pre-generated 400/800
@@ -1281,6 +1343,29 @@ document.addEventListener("keydown", function(e) {
 
     // Money formatter (GH₵)
     const money = value => `GH₵ ${Math.max(0, Number(value || 0)).toLocaleString()}`;
+
+    // OWNER CONFIGURATION: Add your profit to the supplier's price here
+    const VALMONT_INSTALLMENT_MARKUP = 300; // Flat GH₵ 300 added to all installment deals for the owner
+
+    // INSTALLMENT PLAN CALCULATOR
+    // Weekly: 40% Down + (60% x 1.5) ÷ 12
+    // Monthly: 50% Down + (50% x 1.6) ÷ 3
+    function getInstallmentPlan(cashPrice) {
+      // Step 1: Add Owner's Profit to the base price first
+      const p = Number(cashPrice) + VALMONT_INSTALLMENT_MARKUP;
+      
+      const weeklyDown = p * 0.40;
+      const weeklyAmount = ((p * 0.60) * 1.5) / 12;
+      
+      const monthlyDown = p * 0.50;
+      const monthlyAmount = ((p * 0.50) * 1.6) / 3;
+      
+      return {
+        totalWithMarkup: p,
+        weekly: { down: weeklyDown, installment: weeklyAmount },
+        monthly: { down: monthlyDown, installment: monthlyAmount }
+      };
+    }
 
     // Highlights only the active tab in accent color and turns others gray
     function updateMobileNavHighlights(activeTab) {
@@ -2528,6 +2613,31 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
       const discount = Math.round((1 - (product.retail / product.compareAt)) * 100);
       document.getElementById('detailDiscPercent').textContent = `-${discount}%`;
 
+      // Handle Installment Plan Summary
+      const instSummary = document.getElementById('installmentSummary');
+      const instBtn = document.getElementById('detailInstallmentBtn');
+      if (instSummary) {
+        if (product.has_installments) {
+          const plan = getInstallmentPlan(product.retail);
+          document.getElementById('weeklyInstallment').textContent = `${money(plan.weekly.installment)}/wk`;
+          document.getElementById('weeklyDown').textContent = `Deposit: ${money(plan.weekly.down)}`;
+          document.getElementById('monthlyInstallment').textContent = `${money(plan.monthly.installment)}/mo`;
+          document.getElementById('monthlyDown').textContent = `Deposit: ${money(plan.monthly.down)}`;
+          instSummary.classList.remove('hidden');
+          
+          if (instBtn) {
+            instBtn.classList.remove('hidden');
+            instBtn.onclick = () => {
+              const text = encodeURIComponent(`Hello Valmont Gadgets, I'm interested in the installment deal for the ${product.name}.\n\nPrice: ${money(plan.totalWithMarkup)}\nDeposit (40%): ${money(plan.weekly.down)}\n\nI have my Ghana Card ready and my Guarantor's number for confirmation. Please link me to the processing unit!`);
+              window.open(`https://wa.me/233542451578?text=${text}`, '_blank');
+            };
+          }
+        } else {
+          instSummary.classList.add('hidden');
+          if (instBtn) instBtn.classList.add('hidden');
+        }
+      }
+
       detailOverlay.classList.remove('hidden');
       setTimeout(() => detailOverlay.classList.add('opacity-100'), 10);
       detailModal.classList.remove('hidden'); detailModal.classList.add('active');
@@ -3113,16 +3223,20 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
               
               <div class="bg-[#050d24] p-5 rounded-lg border border-[#142850]">
                 <div class="flex justify-between items-center pb-2 border-b border-gray-800 font-semibold text-[13px] text-gray-400">
-                  <span>Selling Price − Costs = Net Profit</span>
+                  <span>Selling Price = Cost + Profit + Delivery</span>
                 </div>
-                <div class="mt-4 grid grid-cols-2 gap-4">
+                <div class="mt-4 grid grid-cols-3 gap-4">
                   <div>
                     <span class="block text-[10px] uppercase tracking-wider font-extrabold text-gray-500">Pay Supplier</span>
-                    <span id="supplier-pay" class="text-xl font-black text-white">GH₵ 0</span>
+                    <span id="supplier-pay" class="text-lg font-black text-white">GH₵ 0</span>
                   </div>
                   <div>
                     <span class="block text-[10px] uppercase tracking-wider font-extrabold text-gray-500">Keep Profit</span>
-                    <span id="keep-amount" class="text-xl font-black text-[#ff8c00]">GH₵ 0</span>
+                    <span id="keep-amount" class="text-lg font-black text-[#ff8c00]">GH₵ 0</span>
+                  </div>
+                  <div>
+                    <span class="block text-[10px] uppercase tracking-wider font-extrabold text-gray-500">Final Retail</span>
+                    <span id="profit" class="text-lg font-black text-white">GH₵ 0</span>
                   </div>
                 </div>
                 <div class="mt-3 text-[12px] font-bold text-[#ff8c00]" id="margin">0.0% margin on sale</div>
@@ -3140,12 +3254,12 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
               </div>
 
               <div class="field mb-3.5">
-                <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">Supplier Wholesale Price (Cost) *</label>
+                <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">Wholesale Cost *</label>
                 <input id="wholesale" type="number" placeholder="2000" class="w-full bg-[#050d24] border border-[#142850] p-3 rounded-lg text-white text-[13px] outline-none" />
               </div>
               <div class="field mb-3.5">
-                <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">Your Customer Selling Price (Retail) *</label>
-                <input id="retail" type="number" placeholder="2450" class="w-full bg-[#050d24] border border-[#142850] p-3 rounded-lg text-white text-[13px] outline-none" />
+                <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">Your Markup (Desired Profit) *</label>
+                <input id="retail" type="number" placeholder="450" class="w-full bg-[#050d24] border border-[#142850] p-3 rounded-lg text-white text-[13px] outline-none" />
               </div>
               <div class="field">
                 <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">Other Costs (Accra Delivery + MoMo Fees)</label>
@@ -3309,9 +3423,9 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
       function calculateResellerProfit() {
         if (!wholesaleInput || !retailInput || !costsInput) return;
         const supplier = Number(wholesaleInput.value || 0);
-        const selling = Number(retailInput.value || 0);
+        const markup = Number(retailInput.value || 0);
         const otherCosts = Number(costsInput.value || 0);
-        const profit = selling - supplier - otherCosts;
+        const selling = supplier + markup + otherCosts;
         
         const money = val => `GH₵ ${Math.max(0, Math.round(val)).toLocaleString()}`;
         
@@ -3320,11 +3434,11 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         const keepAmountText = document.querySelector('#keep-amount');
         const marginText = document.querySelector('#margin');
 
-        if (profitText) profitText.textContent = money(profit);
+        if (profitText) profitText.textContent = money(selling); // Using profit label to show Total Selling Price now
         if (supplierPayText) supplierPayText.textContent = money(supplier);
-        if (keepAmountText) keepAmountText.textContent = money(profit);
+        if (keepAmountText) keepAmountText.textContent = money(markup);
         if (marginText) {
-          marginText.textContent = `${selling ? ((profit / selling) * 100).toFixed(1) : '0.0'}% margin on sale`;
+          marginText.textContent = `${selling ? ((markup / selling) * 100).toFixed(1) : '0.0'}% margin on sale`;
         }
       }
 
@@ -3483,24 +3597,29 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
     document.body.insertBefore(banner, document.body.children[1]);
   }
 
-  // Hook local dealer calculator
-  const dlWholesale = document.getElementById('dl_wholesale');
-  const dlRetail = document.getElementById('dl_retail');
-  const dlCalcResult = document.getElementById('dl_calc_result');
+    // Hook local dealer calculator
+    const dlWholesale = document.getElementById('dl_wholesale');
+    const dlMarkup = document.getElementById('dl_markup');
+    const dlCalcResult = document.getElementById('dl_calc_result');
+    const dlMarginText = document.getElementById('dl_margin_text');
 
-  function calculateDealerProfit() {
-    if (!dlWholesale || !dlRetail || !dlCalcResult) return;
-    const cost = Number(dlWholesale.value || 0);
-    const sell = Number(dlRetail.value || 0);
-    const profit = sell - cost;
-    const margin = sell ? ((profit / sell) * 100).toFixed(1) : '0.0';
-    dlCalcResult.textContent = `Net Profit: GH₵ ${profit.toLocaleString()} (${margin}% margin on sale)`;
-  }
+    function calculateDealerPrice() {
+      if (!dlWholesale || !dlMarkup || !dlCalcResult) return;
+      const cost = Number(dlWholesale.value || 0);
+      const markup = Number(dlMarkup.value || 0);
+      const retail = cost + markup;
+      const margin = retail ? ((markup / retail) * 100).toFixed(1) : '0.0';
+      
+      dlCalcResult.textContent = money(retail);
+      if (dlMarginText) {
+        dlMarginText.textContent = `${margin}% margin on sale`;
+      }
+    }
 
-  if (dlWholesale && dlRetail) {
-    [dlWholesale, dlRetail].forEach(inp => inp.addEventListener('input', calculateDealerProfit));
-    calculateDealerProfit();
-  }
+    if (dlWholesale && dlMarkup) {
+      [dlWholesale, dlMarkup].forEach(inp => inp.addEventListener('input', calculateDealerPrice));
+      calculateDealerPrice();
+    }
 
   // Run on startup
   if (isDealerMode && dealerProfile) {
