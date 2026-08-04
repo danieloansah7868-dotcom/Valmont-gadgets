@@ -107,12 +107,12 @@
       <table>
         <thead>
           <tr>
-            <th>When</th><th>WhatsApp</th><th>Tier</th><th>Prize</th>
+            <th>When</th><th>Account</th><th>WhatsApp</th><th>Tier</th><th>Prize</th>
             <th>Code</th><th>Product shown</th><th>Claimed</th>
           </tr>
         </thead>
         <tbody id="rows">
-          <tr><td colspan="7" class="loading">Loading…</td></tr>
+          <tr><td colspan="8" class="loading">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -147,6 +147,11 @@
            d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
   }
 
+  function waInternational(local){
+    var d = String(local || '').replace(/\D/g,'');
+    return /^0\d{9}$/.test(d) ? '233' + d.slice(1) : d;
+  }
+
   function render(){
     var q = $('q').value.trim().toLowerCase();
     var tier = $('fTier').value, claim = $('fClaim').value, range = $('fDate').value;
@@ -163,7 +168,7 @@
       if(claim === 'yes' && !r.claimed) return false;
       if(claim === 'no' && r.claimed) return false;
       if(q){
-        var hay = (r.whatsapp+' '+r.prize_code+' '+r.prize_label+' '+(r.product_name||'')).toLowerCase();
+        var hay = (r.account_email+' '+r.whatsapp+' '+r.prize_code+' '+r.prize_label+' '+(r.product_name||'')).toLowerCase();
         if(hay.indexOf(q) === -1) return false;
       }
       return true;
@@ -176,16 +181,18 @@
     $('sClaimed').textContent = all.filter(function(r){ return r.claimed; }).length;
 
     if(!rows.length){
-      $('rows').innerHTML = '<tr><td colspan="7" class="empty">No flips match this filter yet.</td></tr>';
+      $('rows').innerHTML = '<tr><td colspan="8" class="empty">No flips match this filter yet.</td></tr>';
       return;
     }
 
     $('rows').innerHTML = rows.map(function(r){
       var msg = encodeURIComponent('Hi 👋 Valmont Gadgets here about your Daily Drop card: ' +
                 r.prize_label + ' (code ' + r.prize_code + ').');
+      var wa = waInternational(r.whatsapp);
       return '<tr class="' + (r.prize_tier === 'golden' ? 'golden' : '') + '">' +
         '<td style="white-space:nowrap;color:#cbd5e1">' + fmt(r.created_at) + '</td>' +
-        '<td><a class="wa" target="_blank" href="https://wa.me/' + r.whatsapp + '?text=' + msg + '">+' + r.whatsapp + '</a></td>' +
+        '<td style="color:var(--muted);max-width:210px;overflow:hidden;text-overflow:ellipsis">' + (r.account_email || 'Legacy / unlinked') + '</td>' +
+        '<td><a class="wa" target="_blank" href="https://wa.me/' + wa + '?text=' + msg + '">' + (r.whatsapp || '—') + '</a></td>' +
         '<td><span class="tier ' + r.prize_tier + '">' + r.prize_tier + '</span></td>' +
         '<td>' + r.prize_label + '</td>' +
         '<td><code>' + r.prize_code + '</code></td>' +
@@ -209,11 +216,11 @@
   }
 
   function load(){
-    $('rows').innerHTML = '<tr><td colspan="7" class="loading">Loading…</td></tr>';
+    $('rows').innerHTML = '<tr><td colspan="8" class="loading">Loading…</td></tr>';
     sb.from('drop_flips').select('*').order('created_at',{ascending:false}).limit(2000)
       .then(function(res){
         if(res.error){
-          $('rows').innerHTML = '<tr><td colspan="7" class="empty">' + res.error.message +
+          $('rows').innerHTML = '<tr><td colspan="8" class="empty">' + res.error.message +
             '<br><br>Have you run <code>20260804_daily_drop.sql</code> in Supabase?</td></tr>';
           return;
         }
@@ -223,11 +230,12 @@
   }
 
   function csv(){
-    var head = ['date','time','whatsapp','tier','prize','code','product','claimed'];
+    var head = ['date','time','account_email','whatsapp','tier','prize','code','product','claimed'];
     var lines = [head.join(',')].concat(all.map(function(r){
       return [r.drop_date, new Date(r.created_at).toISOString().slice(11,16),
-              "'" + r.whatsapp, r.prize_tier, '"'+r.prize_label+'"', r.prize_code,
-              '"'+(r.product_name||'')+'"', r.claimed ? 'yes' : 'no'].join(',');
+              '"'+(r.account_email||'')+'"', "'" + r.whatsapp, r.prize_tier,
+              '"'+r.prize_label+'"', r.prize_code, '"'+(r.product_name||'')+'"',
+              r.claimed ? 'yes' : 'no'].join(',');
     }));
     var blob = new Blob([lines.join('\n')], {type:'text/csv'});
     var a = document.createElement('a');

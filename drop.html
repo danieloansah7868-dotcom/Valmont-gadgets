@@ -43,7 +43,11 @@
   .pill.gold{border-color:rgba(255,213,74,.5);color:var(--gold)}
 
   .deck{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin:22px 0 18px}
+  .deck.locked{opacity:.4;filter:saturate(.45);pointer-events:none}
   .card{position:relative;aspect-ratio:2/3;perspective:1000px;background:none;border:0;padding:0;cursor:pointer}
+  .auth-gate{text-align:center}
+  .auth-gate h2{margin-bottom:6px}
+  .auth-gate p{margin-bottom:14px}
   .card.float .inner{animation:bob 3.2s ease-in-out infinite}
   .card:nth-child(2).float .inner{animation-delay:.25s}
   .card:nth-child(3).float .inner{animation-delay:.5s}
@@ -124,7 +128,15 @@
     </div>
   </header>
 
-  <div class="deck" id="deck">
+  <div class="panel auth-gate" id="authGate">
+    <h2>Sign in to flip today's card</h2>
+    <p>Daily Drop flips are tied to your Valmont account so everyone gets one fair chance per day.</p>
+    <a class="btn" href="/account.html">Sign in or create an account</a>
+    <button class="btn ghost" id="checkAuthBtn" type="button">I've signed in — unlock the deck</button>
+    <div class="err" id="authErr">Sign in first, then come back to unlock the deck.</div>
+  </div>
+
+  <div class="deck locked" id="deck" aria-describedby="authGate">
     <button class="card float" data-i="0" aria-label="Card 1">
       <div class="inner">
         <div class="face back"><span>VG</span></div>
@@ -146,7 +158,7 @@
   </div>
 
   <!-- step 1 -->
-  <div id="stepPick">
+  <div id="stepPick" style="display:none">
     <button class="btn" id="pickBtn">Tap a card above to choose</button>
   </div>
 
@@ -209,7 +221,27 @@
   var SITE = 'https://valmontgadgets.com';
 
   var sb = null;
-  try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e){}
+
+  function getCustomerAccount(){
+    if(!localStorage.getItem('valmont_access_token')) return null;
+    try {
+      var user = JSON.parse(localStorage.getItem('valmont_user') || 'null');
+      return user && user.id ? user : null;
+    } catch(e){ return null; }
+  }
+
+  var account = getCustomerAccount();
+  if(account){
+    try {
+      sb = window.supabase.createClient(SB_URL, SB_KEY, {
+        global: { headers: { Authorization: 'Bearer ' + localStorage.getItem('valmont_access_token') } }
+      });
+    } catch(e){}
+  }
+  var accountBooted = null;
+  var prior = null;
+  var flipCheckReady = false;
+  var alreadyFlipped = false;
 
   // ── prize table (REAL, affordable offers only) ───────────
   // weight = relative chance. Edit freely.
@@ -233,17 +265,56 @@
   var cards = deck.querySelectorAll('.card');
   var chosen = -1, dealt = null, products = [];
 
-  // ── device id ────────────────────────────────────────────
-  function deviceId(){
-    var k = 'vg_drop_device';
-    var v = localStorage.getItem(k);
-    if(!v){
-      v = (crypto.randomUUID ? crypto.randomUUID()
-           : String(Date.now()) + Math.random().toString(36).slice(2));
-      localStorage.setItem(k, v);
-    }
-    return v;
+  function showAuthGate(message){
+    $('authGate').classList.add('show');
+    $('authGate').style.display = 'block';
+    $('authErr').textContent = message || 'Sign in first, then come back to unlock the deck.';
+    $('authErr').classList.add('show');
+    deck.classList.add('locked');
+    Array.prototype.forEach.call(cards, function(card){ card.disabled = true; });
+    $('stepPick').style.display = 'none';
   }
+
+  function hideAuthGate(){
+    $('authGate').classList.remove('show');
+    $('authGate').style.display = 'none';
+    $('authErr').classList.remove('show');
+    if(alreadyFlipped){
+      deck.classList.add('locked');
+      Array.prototype.forEach.call(cards, function(card){ card.disabled = true; });
+      $('stepPick').style.display = 'none';
+    } else {
+      deck.classList.remove('locked');
+      Array.prototype.forEach.call(cards, function(card){ card.disabled = false; });
+      $('stepPick').style.display = 'block';
+    }
+  }
+
+  function refreshAccountGate(){
+    var nextAccount = getCustomerAccount();
+    if(!nextAccount){
+      account = null;
+      showAuthGate();
+      return false;
+    }
+    if(!account || account.id !== nextAccount.id){
+      account = nextAccount;
+      // The account is part of the daily deal identity. Reboot the page so
+      // a sign-in change can never reuse another customer's local state.
+      if(accountBooted || !sb) window.location.reload();
+    }
+    hideAuthGate();
+    return true;
+  }
+
+  // ── account identity ─────────────────────────────────────
+  function accountKey(){ return account ? 'acct:' + account.id : null; }
+
+  // ── flip identity ────────────────────────────────────────
+  // Keep the existing column name for compatibility with the first migration,
+  // but make the value account-scoped. A cleared browser cannot create a new
+  // identity for the same signed-in customer.
+  function deviceId(){ return accountKey(); }
 
   // ── drop day: rolls over at 6am local ────────────────────
   function dropDay(){
@@ -313,13 +384,57 @@
       }).catch(function(){ $('pFlips').textContent = "Today's deck is live"; });
   }
 
+  function flipStorageKey(){
+    return 'vg_drop_' + dropDay() + '_' + account.id;
+  }
+
+  function loadAccountFlip(){
+    if(!sb || !account) return Promise.resolve({data:null, error:new Error('Not signed in')});
+    return sb.from('drop_flips')
+      .select('id,drop_date,whatsapp,prize_tier,prize_label,prize_code,product_id,product_name')
+      .eq('drop_date', dropDay()).eq('account_id', account.id).maybeSingle()
+      .then(function(result){ return result; })
+      .catch(function(error){ return {data:null, error:error}; });
+  }
+
+  function insertAccountFlip(waNum, win){
+    if(!sb || !account) return Promise.reject(new Error('You must be signed in to flip.'));
+    var row = {
+      drop_date: dropDay(),
+      device_id: deviceId(),
+      account_id: account.id,
+      account_email: account.email || null,
+      whatsapp: waNum,
+      prize_tier: win.tier,
+      prize_label: win.label,
+      prize_code: win.code,
+      product_id: win.product ? win.product.id : null,
+      product_name: win.product ? win.product.name : null
+    };
+    return sb.from('drop_flips').insert(row).then(function(result){
+      if(result.error) throw result.error;
+      return row;
+    });
+  }
+
+  function flipConflict(error){
+    return !!(error && (error.code === '23505' || /duplicate|unique/i.test(error.message || '')));
+  }
+
   // ── phone normalise ──────────────────────────────────────
+  // Daily Drop leads are stored in Ghana's local mobile format. Keep the
+  // international conversion at the WhatsApp-link boundary only.
+  var GHANA_MOBILE_PREFIXES = ['020','023','024','025','026','027','028','050','053','054','055','056','057','059'];
   function normWA(v){
     var d = (v||'').replace(/\D/g,'');
-    if(d.indexOf('233') === 0 && d.length === 12) return d;
-    if(d.indexOf('0') === 0 && d.length === 10) return '233' + d.slice(1);
-    if(d.length === 9) return '233' + d;
-    return null;
+    if(!/^0\d{9}$/.test(d)) return null;
+    if(!GHANA_MOBILE_PREFIXES.some(function(prefix){ return d.indexOf(prefix) === 0; })) return null;
+    return d;
+  }
+
+  function waInternational(local){
+    var d = String(local || '').replace(/\D/g,'');
+    return /^0\d{9}$/.test(d) ? '233' + d.slice(1) : d;
   }
 
   function midnightLeft(){
@@ -352,7 +467,7 @@
 
   // ── flow ─────────────────────────────────────────────────
   function choose(i){
-    if(chosen > -1) return;
+    if(!refreshAccountGate() || !flipCheckReady || alreadyFlipped || chosen > -1) return;
     chosen = i;
     for(var k=0;k<cards.length;k++){
       cards[k].classList.remove('float');
@@ -364,15 +479,42 @@
   }
 
   function reset(){
+    if(alreadyFlipped) return;
     chosen = -1;
     for(var k=0;k<cards.length;k++){
       cards[k].classList.remove('dim','chosen','flipped');
       cards[k].classList.add('float');
+      cards[k].disabled = false;
     }
+    deck.classList.remove('locked');
     show('stepPick');
   }
 
-  function reveal(waNum){
+  function showDone(flip){
+    prior = flip;
+    alreadyFlipped = true;
+    var label = flip.prize_label || flip.label || 'your Daily Drop deal';
+    var code = flip.prize_code || flip.code || '';
+    $('doneMsg').innerHTML = 'You drew <b style="color:var(--orange)">' + label +
+      '</b> — code <b>' + code + '</b>. Valid until midnight (' + midnightLeft() +
+      ' left). New deck at 6am.';
+    $('stepPick').style.display = 'none';
+    $('claimBtn2').style.display = 'block';
+    var wm = encodeURIComponent('Hi Valmont Gadgets 👋 I flipped the Daily Drop and got: ' +
+      label + ' (code ' + code + '). I\'d like to claim it.');
+    $('claimBtn2').onclick = function(){ window.open('https://wa.me/'+WA_NUMBER+'?text='+wm,'_blank'); };
+    deck.classList.add('locked');
+    for(var k=0;k<cards.length;k++){
+      cards[k].classList.remove('float');
+      cards[k].disabled = true;
+    }
+    show('stepDone');
+  }
+
+  function reveal(waNum, savedFlip){
+    alreadyFlipped = true;
+    deck.classList.add('locked');
+    Array.prototype.forEach.call(cards, function(card){ card.disabled = true; });
     var win = dealt[chosen];
     var isG = win.tier === 'golden';
 
@@ -408,16 +550,12 @@
 
     setTimeout(function(){ show('stepPrize'); }, 700);
 
-    // persist
-    localStorage.setItem('vg_drop_' + dropDay(), JSON.stringify({label:win.label, code:win.code, tier:win.tier}));
-    if(sb){
-      sb.from('drop_flips').insert({
-        drop_date: dropDay(), device_id: deviceId(), whatsapp: waNum,
-        prize_tier: win.tier, prize_label: win.label, prize_code: win.code,
-        product_id: win.product ? win.product.id : null,
-        product_name: win.product ? win.product.name : null
-      }).then(function(){}).catch(function(){});
-    }
+    // Persist a convenience copy for this browser. The account-scoped row
+    // already saved in Supabase is the source of truth for one-flip-per-day.
+    localStorage.setItem(flipStorageKey(), JSON.stringify({
+      id: savedFlip && savedFlip.id || null,
+      label: win.label, code: win.code, tier: win.tier, whatsapp: waNum
+    }));
   }
 
   // ── wiring ───────────────────────────────────────────────
@@ -427,34 +565,68 @@
   $('backBtn').addEventListener('click', reset);
 
   $('unlockBtn').addEventListener('click', function(){
+    if(!refreshAccountGate()) return;
     var n = normWA($('wa').value);
-    if(!n){ $('waErr').classList.add('show'); return; }
+    if(!n){
+      $('waErr').textContent = 'Enter a valid Ghana mobile number, for example 024 123 4567.';
+      $('waErr').classList.add('show');
+      return;
+    }
     $('waErr').classList.remove('show');
-    this.disabled = true; this.textContent = 'Unlocking…';
-    localStorage.setItem('vg_drop_wa', n);
-    reveal(n);
+    var button = this;
+    var win = dealt[chosen];
+    button.disabled = true; button.textContent = 'Unlocking…';
+    $('backBtn').disabled = true;
+    loadAccountFlip().then(function(check){
+      if(check.data){
+        showDone(check.data);
+        return null;
+      }
+      return insertAccountFlip(n, win).then(function(saved){
+        localStorage.setItem('vg_drop_wa_' + account.id, n);
+        reveal(n, saved);
+      });
+    }).catch(function(error){
+      button.disabled = false; button.textContent = 'Unlock my card';
+      $('backBtn').disabled = false;
+      if(flipConflict(error)){
+        $('waErr').textContent = 'This account or WhatsApp number has already flipped today.';
+      } else {
+        $('waErr').textContent = 'We could not save your flip. Please check your connection and try again.';
+      }
+      $('waErr').classList.add('show');
+    });
   });
   $('wa').addEventListener('keydown', function(e){ if(e.key === 'Enter') $('unlockBtn').click(); });
+  $('checkAuthBtn').addEventListener('click', function(){
+    if(refreshAccountGate()) window.location.reload();
+  });
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible') refreshAccountGate();
+  });
 
   // ── boot ─────────────────────────────────────────────────
-  $('stepPick').style.display = 'block';
-  var prior = localStorage.getItem('vg_drop_' + dropDay());
+  if(!refreshAccountGate()) return;
+  accountBooted = account.id;
+  flipCheckReady = false;
+  $('stepPick').style.display = 'none';
+  try { prior = JSON.parse(localStorage.getItem(flipStorageKey()) || 'null'); }
+  catch(e) { prior = null; }
   loadStats();
-  loadProducts().then(function(p){
-    products = p;
+  Promise.all([loadProducts(), loadAccountFlip()]).then(function(results){
+    products = results[0];
     dealt = buildHand();
+    var remote = results[1];
+    flipCheckReady = true;
 
-    if(prior){
-      var d = JSON.parse(prior);
-      $('doneMsg').innerHTML = 'You drew <b style="color:var(--orange)">' + d.label +
-        '</b> — code <b>' + d.code + '</b>. Valid until midnight (' + midnightLeft() +
-        ' left). New deck at 6am.';
-      $('stepPick').style.display = 'none';
-      show('stepDone');
-      var wm = encodeURIComponent('Hi Valmont Gadgets 👋 I flipped the Daily Drop and got: ' +
-        d.label + ' (code ' + d.code + '). I\'d like to claim it.');
-      $('claimBtn2').onclick = function(){ window.open('https://wa.me/'+WA_NUMBER+'?text='+wm,'_blank'); };
-      for(var k=0;k<cards.length;k++) cards[k].classList.remove('float');
+    if(remote && remote.data){
+      prior = remote.data;
+      try { localStorage.setItem(flipStorageKey(), JSON.stringify(remote.data)); } catch(e){}
+      showDone(remote.data);
+    } else if(prior){
+      showDone(prior);
+    } else {
+      $('stepPick').style.display = 'block';
     }
   });
 

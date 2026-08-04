@@ -48,6 +48,30 @@
       </div>
     </section>
 
+    <!-- Optional guest-to-account prompt. Checkout remains available to guests. -->
+    <section id="accountPrompt" class="hidden mt-4 rounded-2xl bg-white card-shadow p-6 md:p-8">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 shrink-0 rounded-xl bg-orange-100 brand-orange flex items-center justify-center font-black">＋</div>
+        <div>
+          <h2 class="text-lg font-black brand-navy">Save your details for next time</h2>
+          <p class="mt-1 text-sm leading-6 text-slate-600">
+            You checked out as a guest. Create a password for <b id="accountPromptEmail" class="brand-navy"></b>
+            and we'll save this order to your Valmont account.
+          </p>
+        </div>
+      </div>
+      <form id="accountPromptForm" class="mt-4">
+        <label for="accountPromptPassword" class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Create a password</label>
+        <div class="mt-1 flex flex-col gap-2 sm:flex-row">
+          <input id="accountPromptPassword" type="password" minlength="6" autocomplete="new-password" required
+                 placeholder="At least 6 characters" class="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-3 text-sm outline-none focus:border-orange-400">
+          <button id="accountPromptSubmit" type="submit" class="rounded-xl bg-brand-navy px-5 py-3 text-sm font-extrabold text-white">Create my account</button>
+        </div>
+      </form>
+      <button id="accountPromptSkip" type="button" class="mt-3 text-xs font-bold text-slate-500 underline">Maybe later</button>
+      <p id="accountPromptMessage" class="mt-3 hidden text-sm font-semibold" role="status" aria-live="polite"></p>
+    </section>
+
     <!-- DAILY DROP RETENTION HOOK -->
     <a href="/drop.html" class="block mt-4 no-underline" style="text-decoration:none">
       <div style="background:linear-gradient(135deg,#0b1a38,#122649);border:1px solid rgba(255,140,0,.4);
@@ -160,6 +184,72 @@
       } catch (e) { order = null; }
 
       const money = (n) => 'GH₵ ' + Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const AUTH_URL = 'https://eydsoqnpetqczaeqrscc.supabase.co';
+      const AUTH_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwiaWF0IjoxNzg0ODg3NTY2LCJleHAiOjIxMDA0NjM1Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc';
+
+      function setupAccountPrompt(pendingOrder) {
+        const prompt = $('accountPrompt');
+        if (status !== 'success' || !pendingOrder || localStorage.getItem('valmont_access_token')) return;
+        const email = String(pendingOrder.email || pendingOrder.customer_email || '').trim().toLowerCase();
+        if (!email || email === 'sales@valmontgadgets.com') return;
+
+        $('accountPromptEmail').textContent = email;
+        prompt.classList.remove('hidden');
+        $('accountPromptSkip').addEventListener('click', function () { prompt.classList.add('hidden'); });
+        $('accountPromptForm').addEventListener('submit', async function (event) {
+          event.preventDefault();
+          const password = $('accountPromptPassword').value;
+          const submit = $('accountPromptSubmit');
+          const message = $('accountPromptMessage');
+          if (password.length < 6) {
+            message.textContent = 'Use at least 6 characters for your password.';
+            message.className = 'mt-3 text-sm font-semibold text-rose-600';
+            return;
+          }
+          submit.disabled = true;
+          submit.textContent = 'Creating…';
+          try {
+            const response = await fetch(`${AUTH_URL}/auth/v1/signup`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', apikey: AUTH_KEY },
+              body: JSON.stringify({
+                email,
+                password,
+                data: {
+                  full_name: pendingOrder.customer_name || pendingOrder.name || '',
+                  phone: pendingOrder.customer_phone || pendingOrder.phone || '',
+                  role: 'customer'
+                }
+              })
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error_description || data.msg || data.message || 'Unable to create account.');
+
+            if (data.user && data.session && data.session.access_token) {
+              const metadata = data.user.user_metadata || {};
+              const user = {
+                id: data.user.id,
+                name: metadata.full_name || metadata.name || pendingOrder.customer_name || email.split('@')[0],
+                email: data.user.email || email,
+                phone: metadata.phone || pendingOrder.customer_phone || pendingOrder.phone || ''
+              };
+              localStorage.setItem('valmont_user', JSON.stringify(user));
+              localStorage.setItem('valmont_access_token', data.session.access_token);
+              message.textContent = 'Account created. You are signed in and can now use Daily Drop.';
+            } else {
+              message.textContent = 'Account created. Check your email to confirm it, then sign in from Account.';
+            }
+            message.className = 'mt-3 text-sm font-semibold text-emerald-600';
+            this.classList.add('hidden');
+            $('accountPromptSkip').classList.add('hidden');
+          } catch (error) {
+            message.textContent = error.message || 'Unable to create account. Please try again.';
+            message.className = 'mt-3 text-sm font-semibold text-rose-600';
+            submit.disabled = false;
+            submit.textContent = 'Create my account';
+          }
+        });
+      }
 
       // Fill reference from URL (preferred) or from stored order
       const displayRef = reference || (order && (order.reference_code || order.reference)) || '—';
@@ -233,6 +323,8 @@
         const receipt = '*VALMONT GADGETS — ORDER CONFIRMED*\nReference: *#' + displayRef + '*\n\nPayment received via Valmont-Pay.';
         $('whatsappBtn').href = 'https://wa.me/233542451578?text=' + encodeURIComponent(receipt);
       }
+
+      setupAccountPrompt(order);
 
       // Clear the pending order (and the cart) once the confirmation
       // page has successfully loaded and populated the receipt.
