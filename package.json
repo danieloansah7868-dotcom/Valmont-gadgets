@@ -10,6 +10,9 @@
     "prerender": "node scripts/prerender.js",
     "build": "npm run build:css && npm run build:js && npm run prerender && npm run sitemap",
     "verify": "node scripts/verify-hydration.js && node scripts/audit.js",
+    "test": "node scripts/test-valmontpay.mjs",
+    "smoke": "node scripts/smoke-valmontpay.mjs",
+    "typecheck": "node scripts/typecheck.js",
     "sitemap": "node scripts/gen-sitemap.js"
   },
   "repository": {

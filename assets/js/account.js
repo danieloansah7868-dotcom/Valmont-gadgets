@@ -11,6 +11,12 @@ let allProducts = [];
 
 const GHANA_MOBILE_PREFIXES = ['020', '023', '024', '025', '026', '027', '028', '050', '053', '054', '055', '056', '057', '059'];
 
+// HTML-escape for anything interpolated into innerHTML (product names from
+// the DB, addresses, statuses) and JSON.parse that never throws on corrupt
+// localStorage.
+function esc(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function safeParseJSON(raw, fallback) { try { const v = JSON.parse(raw); return v === undefined ? fallback : v; } catch (e) { return fallback; } }
+
 function normalizeGhanaLocalPhone(value) {
   let digits = String(value || '').replace(/\D/g, '');
   if (/^233\d{9}$/.test(digits)) digits = '0' + digits.slice(3);
@@ -43,9 +49,9 @@ function saveAuthUser(account, accessToken) {
 window.addEventListener('DOMContentLoaded', initAccount);
 
 function initAccount() {
-  currentUser = localStorage.getItem('valmont_access_token') ? JSON.parse(localStorage.getItem('valmont_user') || 'null') : null;
+  currentUser = localStorage.getItem('valmont_access_token') ? safeParseJSON(localStorage.getItem('valmont_user'), null) : null;
   if (!localStorage.getItem('valmont_access_token')) localStorage.removeItem('valmont_user');
-  allProducts = JSON.parse(localStorage.getItem('valmont_products') || '[]');
+  allProducts = safeParseJSON(localStorage.getItem('valmont_products'), []);
   // Also try from inline PRODUCTS if available
   if (allProducts.length === 0 && typeof PRODUCTS !== 'undefined') {
     allProducts = PRODUCTS;
@@ -176,7 +182,7 @@ function saveProfile(e) {
 
 // ===== ADDRESSES =====
 function loadAddresses() {
-  customerAddresses = JSON.parse(localStorage.getItem('valmont_customer_addresses') || '[]');
+  customerAddresses = safeParseJSON(localStorage.getItem('valmont_customer_addresses'), []);
   renderAddresses();
 }
 
@@ -190,10 +196,10 @@ function renderAddresses() {
   container.innerHTML = customerAddresses.map(addr => `
     <div class="address-card ${addr.is_default ? 'default' : ''}">
       <div class="addr-info">
-        <h4>${addr.name} ${addr.is_default ? '<span class="default-badge">Default</span>' : ''}</h4>
-        <p><strong>${addr.recipient}</strong> · ${addr.phone}</p>
-        <p>${addr.zone} — ${addr.street}</p>
-        ${addr.landmark ? '<p style="font-size:11px;color:#94a3b8;">Landmark: ' + addr.landmark + '</p>' : ''}
+        <h4>${esc(addr.name)} ${addr.is_default ? '<span class="default-badge">Default</span>' : ''}</h4>
+        <p><strong>${esc(addr.recipient)}</strong> · ${esc(addr.phone)}</p>
+        <p>${esc(addr.zone)} — ${esc(addr.street)}</p>
+        ${addr.landmark ? '<p style="font-size:11px;color:#94a3b8;">Landmark: ' + esc(addr.landmark) + '</p>' : ''}
       </div>
       <div class="addr-actions">
         <button class="addr-action-btn edit" onclick="editAddress('${addr.id}')">Edit</button>
@@ -292,7 +298,7 @@ function setDefaultAddress(id) {
 
 // ===== ORDERS =====
 function loadPaymentPreference() {
-  const preference = JSON.parse(localStorage.getItem('valmont_payment_preference') || 'null');
+  const preference = safeParseJSON(localStorage.getItem('valmont_payment_preference'), null);
   if (!preference) return;
   const method = document.getElementById('savedPaymentMethod');
   const network = document.getElementById('savedMomoNetwork');
@@ -317,7 +323,7 @@ function savePaymentPreference(event) {
 }
 
 function loadOrders() {
-  const allOrders = JSON.parse(localStorage.getItem('valmont_orders') || '[]');
+  const allOrders = safeParseJSON(localStorage.getItem('valmont_orders'), []);
   customerOrders = allOrders.filter(o => {
     if (!currentUser) return false;
     return (o.customer_phone && currentUser.phone && o.customer_phone.includes(currentUser.phone.slice(-8))) ||
@@ -342,13 +348,13 @@ function renderOrders() {
       <div class="order-card" onclick="viewOrderDetail('${order.id || order.reference_code}')">
         <div class="order-card-top">
           <div>
-            <div class="order-card-ref">#${order.reference_code || order.id}</div>
+            <div class="order-card-ref">#${esc(order.reference_code || order.id)}</div>
             <div class="order-card-date">${date}</div>
           </div>
-          <span class="order-status ${statusClass}">${order.status || 'Pending'}</span>
+          <span class="order-status ${statusClass}">${esc(order.status || 'Pending')}</span>
         </div>
         <div class="order-card-mid">
-          <span class="order-card-items">${itemCount} item${itemCount > 1 ? 's' : ''} — ${itemName.substring(0, 30)}</span>
+          <span class="order-card-items">${itemCount} item${itemCount > 1 ? 's' : ''} — ${esc(String(itemName).substring(0, 30))}</span>
           <span class="order-card-total">GH₵ ${parseFloat(order.total_amount || 0).toLocaleString()}</span>
         </div>
       </div>
@@ -380,10 +386,10 @@ function viewOrderDetail(orderId) {
     <div style="margin-bottom:16px;">
       <h4 style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-secondary);margin:0 0 8px 0;">Customer & Delivery</h4>
       <div style="background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div><span style="color:var(--text-secondary);font-size:10px;font-weight:700;text-transform:uppercase;">Name</span><br><strong>${order.customer_name || '—'}</strong></div>
-        <div><span style="color:var(--text-secondary);font-size:10px;font-weight:700;text-transform:uppercase;">Phone</span><br><strong>${order.customer_phone || '—'}</strong></div>
-        <div style="grid-column:1/-1;"><span style="color:var(--text-secondary);font-size:10px;font-weight:700;text-transform:uppercase;">Address</span><br><strong>${order.customer_area || ''} — ${order.customer_street || '—'}</strong></div>
-        <div style="grid-column:1/-1;"><span style="color:var(--text-secondary);font-size:10px;font-weight:700;text-transform:uppercase;">Payment</span><br><strong>${order.payment_method || 'Mobile Money'}</strong></div>
+        <div><span style="color:var(--text-secondary);font-size:10px;font-weight:700;text-transform:uppercase;">Name</span><br><strong>${esc(order.customer_name || '—')}</strong></div>
+        <div><span style="color:var(--text-secondary);font-size:10px;font-weight:700;text-transform:uppercase;">Phone</span><br><strong>${esc(order.customer_phone || '—')}</strong></div>
+        <div style="grid-column:1/-1;"><span style="color:var(--text-secondary);font-size:10px;font-weight:700;text-transform:uppercase;">Address</span><br><strong>${esc(order.customer_area || '')} — ${esc(order.customer_street || '—')}</strong></div>
+        <div style="grid-column:1/-1;"><span style="color:var(--text-secondary);font-size:10px;font-weight:700;text-transform:uppercase;">Payment</span><br><strong>${esc(order.payment_method || 'Mobile Money')}</strong></div>
       </div>
     </div>
 
@@ -392,11 +398,11 @@ function viewOrderDetail(orderId) {
       ${items.length === 0 ? '<p style="font-size:13px;color:var(--text-secondary);">No items listed.</p>' : items.map(item => `
         <div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
           <div style="width:48px;height:48px;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
-            <img src="${item.image_url || 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=100'}" style="max-width:100%;max-height:100%;object-fit:contain;" alt="">
+            <img src="${esc(item.image_url || 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=100')}" style="max-width:100%;max-height:100%;object-fit:contain;" alt="">
           </div>
           <div style="flex:1;">
-            <div style="font-size:12px;font-weight:700;">${item.name || item.product_name || 'Product'}</div>
-            ${item.selected_color || item.selected_storage ? `<div style="font-size:10px;color:var(--text-secondary);">${[item.selected_color, item.selected_storage].filter(Boolean).join(' / ')}</div>` : ''}
+            <div style="font-size:12px;font-weight:700;">${esc(item.name || item.product_name || 'Product')}</div>
+            ${item.selected_color || item.selected_storage ? `<div style="font-size:10px;color:var(--text-secondary);">${esc([item.selected_color, item.selected_storage].filter(Boolean).join(' / '))}</div>` : ''}
             <div style="font-size:11px;color:var(--text-secondary);">Qty: ${item.qty || item.quantity || 1} × GH₵ ${(item.price || item.unit_price || 0).toLocaleString()}</div>
           </div>
           <div style="font-size:13px;font-weight:800;color:var(--accent);">GH₵ ${((item.price || item.unit_price || 0) * (item.qty || item.quantity || 1)).toLocaleString()}</div>
@@ -448,7 +454,7 @@ function reorderItems(orderId) {
   const order = customerOrders.find(o => o.id === orderId || o.reference_code === orderId);
   if (!order || !order.items) { showToast('Unable to reorder'); return; }
 
-  let cart = JSON.parse(localStorage.getItem('valmont_cart') || '[]');
+  let cart = safeParseJSON(localStorage.getItem('valmont_cart'), []);
   order.items.forEach(item => {
     const existing = cart.findIndex(c => c.id === item.id && c.selected_color === (item.selected_color || '') && c.selected_storage === (item.selected_storage || ''));
     if (existing !== -1) {
@@ -474,7 +480,7 @@ function reorderItems(orderId) {
 
 // ===== WISHLIST =====
 function loadWishlist() {
-  userWishlist = JSON.parse(localStorage.getItem('valmont_wishlist') || '[]');
+  userWishlist = safeParseJSON(localStorage.getItem('valmont_wishlist'), []);
   renderWishlist();
 }
 
@@ -493,10 +499,10 @@ function renderWishlist() {
     return `
       <div class="wishlist-item">
         <div class="wishlist-item-img">
-          <img src="${img}" alt="${p.name}" loading="lazy">
+          <img src="${esc(img)}" alt="${esc(p.name)}" loading="lazy">
         </div>
         <div class="wishlist-item-body">
-          <h4>${p.name}</h4>
+          <h4>${esc(p.name)}</h4>
           <div class="price">GH₵ ${(p.retail || p.price || 0).toLocaleString()}</div>
         </div>
         <div class="wishlist-item-actions">
@@ -511,7 +517,7 @@ function renderWishlist() {
 function moveToCart(productId) {
   const prod = allProducts.find(p => p.id === productId);
   if (!prod) return;
-  let cart = JSON.parse(localStorage.getItem('valmont_cart') || '[]');
+  let cart = safeParseJSON(localStorage.getItem('valmont_cart'), []);
   const existing = cart.findIndex(c => c.id === productId);
   if (existing !== -1) {
     cart[existing].qty++;
@@ -543,7 +549,7 @@ function removeFromWishlist(productId) {
 
 // ===== BROWSING HISTORY =====
 function loadHistory() {
-  browsingHistory = JSON.parse(localStorage.getItem('valmont_recently_viewed') || '[]');
+  browsingHistory = safeParseJSON(localStorage.getItem('valmont_recently_viewed'), []);
   renderHistory();
 }
 
@@ -564,10 +570,10 @@ function renderHistory() {
     return `
       <div class="history-item" onclick="window.location.href='index.html'">
         <div class="history-item-img">
-          <img src="${img}" alt="${p.name}" loading="lazy">
+          <img src="${esc(img)}" alt="${esc(p.name)}" loading="lazy">
         </div>
         <div class="history-item-body">
-          <h4>${p.name}</h4>
+          <h4>${esc(p.name)}</h4>
           <div class="price">GH₵ ${(p.retail || p.price || 0).toLocaleString()}</div>
         </div>
       </div>
@@ -585,14 +591,14 @@ function clearHistory() {
 
 // ===== SETTINGS =====
 function loadSettings() {
-  const settings = JSON.parse(localStorage.getItem('valmont_settings') || '{"notifications":true,"email":true,"dark":false}');
+  const settings = safeParseJSON(localStorage.getItem('valmont_settings'), {notifications: true, email: true, dark: false});
   updateToggle('toggleNotif', settings.notifications !== false);
   updateToggle('toggleEmail', settings.email !== false);
   updateToggle('toggleDark', settings.dark === true);
 }
 
 function toggleSetting(key) {
-  const settings = JSON.parse(localStorage.getItem('valmont_settings') || '{"notifications":true,"email":true,"dark":false}');
+  const settings = safeParseJSON(localStorage.getItem('valmont_settings'), {notifications: true, email: true, dark: false});
   settings[key] = !settings[key];
   localStorage.setItem('valmont_settings', JSON.stringify(settings));
   const elId = key === 'notifications' ? 'toggleNotif' : key === 'email' ? 'toggleEmail' : 'toggleDark';
