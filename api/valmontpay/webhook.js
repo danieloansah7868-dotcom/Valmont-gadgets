@@ -5,7 +5,7 @@
  *   - The gateway signs every delivery with HMAC-SHA512(rawBody, tenant
  *     webhook signing secret) and sends it as `x-valmontpay-signature`.
  *   - `x-valmontpay-tenant` carries the tenant key (this storefront is
- *     registered as "TENANT_KEY", LIVE mode).
+ *     registered as "valmont-gadget", LIVE mode).
  *   - Payload shape: { event: 'charge.success' | 'charge.failed', data: {
  *     reference, status, amount, currency, channel, paid_at, merchant,
  *     gateway_reference } }. `amount` is in GHS cedis (major units).
@@ -13,10 +13,12 @@
  * Security model:
  *   1. Verify the signature over the EXACT raw request bytes, constant-time.
  *      Bad/missing signature → 401. Never crash.
- *   2. Require x-valmontpay-tenant === TENANT_KEY → otherwise 401.
- *   3. Only a signed `charge.success` whose pesewa amount matches the stored
- *      order total can move an order to 'Paid' (the DB transition itself is
- *      enforced again inside the confirm_order_paid() RPC).
+ *   2. Require x-valmontpay-tenant === "valmont-gadget" → otherwise 401.
+ *   3. Only a signed `charge.success` with `data.status === 'success'` whose
+ *      pesewa amount exactly matches the stored order total can move an order
+ *      to 'Paid' (the DB transition itself is enforced again inside the
+ *      confirm_order_paid() RPC, which also decrements product stock exactly
+ *      once — repeat deliveries hit the 'already_paid' branch).
  *   4. Idempotent by reference: gateway repeats get a plain 200.
  *   5. Ignored events are acknowledged with a fast 200 so the gateway stops
  *      retrying them; retryable failures return explicit 5xx.
@@ -29,7 +31,7 @@
 export const config = { runtime: 'edge' };
 
 /** This storefront's tenant key on https://valmontpay.app (LIVE). */
-export const TENANT_KEY = 'TENANT_KEY';
+export const TENANT_KEY = 'valmont-gadget';
 
 /** Supabase project backing the storefront (same project app.js uses). */
 const DEFAULT_SUPABASE_URL = 'https://eydsoqnpetqczaeqrscc.supabase.co';
@@ -145,6 +147,17 @@ export async function handleWebhookCore({ rawBodyBytes, headers, env, fetchImpl,
   }
 
   const data = payload.data && typeof payload.data === 'object' ? payload.data : {};
+
+  // Contract: BOTH event === 'charge.success' AND data.status === 'success'
+  // must hold before an order can flip to Paid. Any other status is terminal
+  // (it will never become 'success' on retry) → fast 200 so the gateway stops.
+  if (String(data.status || '').toLowerCase() !== 'success') {
+    return {
+      status: 200,
+      body: { status: true, ignored: true, event, reason: 'data.status is not success', observed_status: data.status || null },
+    };
+  }
+
   const reference = String(data.reference || data.gateway_reference || '').trim();
   if (!reference) {
     return { status: 400, body: { status: false, message: 'Payload is missing data.reference' } };

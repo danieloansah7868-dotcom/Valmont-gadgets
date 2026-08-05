@@ -295,12 +295,11 @@ async function runInitialize(body, opts = {}) {
 test('initialize: recomputes total from DB prices, ignores client amounts', async () => {
   const { result, calls } = await runInitialize({
     items: [
-      { id: 'VG-A', qty: 2, price: 1, total_amount: 2 }, // hostile client amounts -> ignored
+      { id: 'VG-A', qty: 2 },
       { id: 'VG-B', qty: 1 },
     ],
     customer: { name: 'Ama Serwaa', phone: '054 245 1578', email: 'ama@example.com', area: 'Osu', street: '12 High St', full_address: '12 High St, Osu, Accra' },
     payment_method: 'Mobile Money',
-    total_amount: 1, // must never be honoured
   });
   assert.equal(result.status, 200);
   assert.equal(result.body.total, 139.98); // 2x19.99 + 100, cedis
@@ -368,6 +367,111 @@ test('initialize: order insert failure -> 500, gateway never called', async () =
   const { result, calls } = await runInitialize({ items: [{ id: 'VG-A', qty: 1 }] }, { orderInsertStatus: 500 });
   assert.equal(result.status, 500);
   assert.equal(calls.some((c) => c.url.includes('/api/transaction/initialize')), false);
+});
+
+// ─── 2026-08 audit regressions: webhook status gate, 410 retirement, bare 401 ──
+
+test('webhook: tenant key is the registered LIVE tenant "valmont-gadget"', async () => {
+  assert.equal(TENANT_KEY, 'valmont-gadget');
+});
+
+test('webhook: charge.success with data.status !== success -> fast 200 ignored, never Paid', async () => {
+  for (const st of ['pending', 'failed', 'abandoned', undefined]) {
+    const payload = chargeSuccessPayload();
+    if (st === undefined) delete payload.data.status; else payload.data.status = st;
+    const { result, calls } = await runWebhook(payload, { result: 'paid' });
+    assert.equal(result.status, 200, `status=${st} should 200`);
+    assert.equal(result.body.ignored, true);
+    assert.equal(result.body.result, undefined); // never 'paid'
+    assert.equal(calls.length, 0); // DB never touched
+  }
+});
+
+test('webhook: UNSIGNED request -> bare 401 (no crash, minimal body)', async () => {
+  const payload = JSON.stringify(chargeSuccessPayload());
+  const { result, calls } = await runWebhook({
+    rawBodyBytes: new TextEncoder().encode(payload),
+    headers: { 'x-valmontpay-tenant': TENANT_KEY }, // signature header absent
+  }, { result: 'paid' });
+  assert.equal(result.status, 401);
+  assert.equal(result.body.status, false);
+  assert.ok(!/error|exception|stack/i.test(JSON.stringify(result.body)), 'body must stay minimal');
+  assert.equal(calls.length, 0);
+});
+
+test('initialize: legacy client-priced body -> 410 Gone', async () => {
+  const variants = [
+    { items: [{ id: 'VG-A', qty: 1 }], total_amount: 139.98 },
+    { items: [{ id: 'VG-A', qty: 1 }], amount: 100 },
+    { items: [{ id: 'VG-A', qty: 1 }], subtotal: 100 },
+    { items: [{ id: 'VG-A', qty: 1, price: 19.99 }] },
+    { items: [{ id: 'VG-A', qty: 1, unit_price: 19.99 }] },
+    { items: [{ id: 'VG-A', qty: 1, retail: 19.99 }] },
+  ];
+  for (const body of variants) {
+    const { result, calls } = await runInitialize(body);
+    assert.equal(result.status, 410, `expected 410 for ${JSON.stringify(body)}`);
+    assert.match(result.body.message, /Gone/i);
+    assert.equal(calls.some((c) => c.url.includes('/api/transaction/initialize')), false, 'gateway never called for legacy requests');
+  }
+});
+
+// ─── client helper regressions (extracted from app.js) ──────────────────────
+
+import { readFileSync } from 'node:fs';
+const appSrc = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+function extractFn(name) {
+  const start = appSrc.indexOf(`function ${name}(`);
+  if (start === -1) throw new Error(`helper ${name} missing from app.js`);
+  const openBrace = appSrc.indexOf('{', start);
+  let depth = 0, end = -1;
+  for (let i = openBrace; i < appSrc.length; i++) {
+    if (appSrc[i] === '{') depth++;
+    else if (appSrc[i] === '}') { depth--; if (!depth) { end = i; break; } }
+  }
+  return appSrc.slice(start, end + 1);
+}
+const helpers = new Function(`
+  ${extractFn('safeDiscountPercent')}
+  ${extractFn('effectiveUnitPrice')}
+  ${extractFn('safeParseJSON')}
+  ${extractFn('round2')}
+  return { safeDiscountPercent, effectiveUnitPrice, safeParseJSON, round2 };
+`)();
+
+test('app.js safeDiscountPercent: never -Infinity/NaN on bad compareAt', () => {
+  const { safeDiscountPercent } = helpers;
+  assert.equal(safeDiscountPercent(16500, 18000), 8);
+  assert.equal(safeDiscountPercent(100, 0), 0);       // DB default compare_at_price=0
+  assert.equal(safeDiscountPercent(100, null), 0);
+  assert.equal(safeDiscountPercent(100, 100), 0);
+  assert.equal(safeDiscountPercent(150, 100), 0);      // inverted
+  assert.equal(safeDiscountPercent('abc', 'def'), 0);
+});
+
+test('app.js effectiveUnitPrice: dealer mode never prices a SKU at GH₵0', () => {
+  const { effectiveUnitPrice } = helpers;
+  assert.equal(effectiveUnitPrice({ retail: 11200, wholesale: 0 }, true), 11200); // wholesale 0 -> retail
+  assert.equal(effectiveUnitPrice({ retail: 11200, wholesale: 9000 }, true), 9000);
+  assert.equal(effectiveUnitPrice({ retail: 11200, wholesale: 9000 }, false), 11200);
+  assert.equal(effectiveUnitPrice({ retail: 0 }, false), 0);
+  assert.equal(effectiveUnitPrice(null, true), 0);
+});
+
+test('app.js safeParseJSON: corrupt localStorage can never throw the page', () => {
+  const { safeParseJSON } = helpers;
+  assert.deepEqual(safeParseJSON('{"a":1}', {}), { a: 1 });
+  assert.deepEqual(safeParseJSON('{corrupt!!', []), []);
+  assert.equal(safeParseJSON('null', 'x'), null);
+  assert.equal(safeParseJSON(undefined, 5), 5);
+  assert.deepEqual(safeParseJSON('"oops"', []), 'oops'); // valid JSON, wrong shape -> caller guards
+});
+
+test('app.js round2: pesewa rounding for installment plans', () => {
+  const { round2 } = helpers;
+  assert.equal(round2(0.1 + 0.2), 0.3);
+  assert.equal(round2(123.456), 123.46);
+  assert.equal(round2(862.5), 862.5);
 });
 
 // ─── runner ─────────────────────────────────────────────────────────────────

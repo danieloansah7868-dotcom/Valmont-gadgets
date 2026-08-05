@@ -6,7 +6,7 @@ import webhookHandler from '../api/valmontpay/webhook.js';
 import initializeHandler from '../api/valmontpay/initialize.js';
 
 const SECRET = 'smoke-webhook-secret';
-const TENANT = 'TENANT_KEY';
+const TENANT = 'valmont-gadget';
 process.env.VALMONTPAY_WEBHOOK_SECRET = SECRET;
 process.env.VALMONTPAY_SECRET_KEY = 'sk_smoke_tenant';
 
@@ -69,10 +69,9 @@ const expect = (cond, label) => { cond ? pass++ : fail++; console.log(`${cond ? 
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
-      items: [{ id: 'VG-A', qty: 2, price: 1 }],
+      items: [{ id: 'VG-A', qty: 2 }],
       customer: { name: 'Smoke Tester', phone: '0542451578', email: 'smoke@example.com', area: 'Osu', street: '1 St', full_address: '1 St, Osu' },
       payment_method: 'Mobile Money',
-      total_amount: 1,
     }),
   });
   const res = await initializeHandler(req);
@@ -156,6 +155,42 @@ const expect = (cond, label) => { cond ? pass++ : fail++; console.log(`${cond ? 
 {
   const res = await webhookHandler(new Request('https://valmontgadgets.com/api/valmontpay/webhook', { method: 'GET' }));
   expect(res.status === 405, `GET -> 405 (got ${res.status})`);
+}
+
+// ── webhook: UNSIGNED request -> bare 401 (manual check) ────────────────────
+{
+  const payload = JSON.stringify({ event: 'charge.success', data: { reference: 'VG-ORDER-1', status: 'success', amount: 39.98 } });
+  const res = await webhookHandler(new Request('https://valmontgadgets.com/api/valmontpay/webhook', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: payload,
+  }));
+  expect(res.status === 401, `unsigned webhook -> bare 401 (got ${res.status})`);
+}
+
+// ── webhook: charge.success without data.status=success -> ignored ──────────
+{
+  const payload = JSON.stringify({ event: 'charge.success', data: { reference: 'VG-ORDER-1', status: 'pending', amount: 39.98 } });
+  const res = await webhookHandler(new Request('https://valmontgadgets.com/api/valmontpay/webhook', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-valmontpay-signature': createHmac('sha512', SECRET).update(payload).digest('hex'),
+      'x-valmontpay-tenant': TENANT,
+    },
+    body: payload,
+  }));
+  const body = await res.json();
+  expect(res.status === 200 && body.ignored === true, `data.status=pending -> 200 ignored (got ${res.status} ${JSON.stringify(body)})`);
+}
+
+// ── initialize: legacy client-priced request -> 410 Gone ────────────────────
+{
+  const res = await initializeHandler(new Request('https://valmontgadgets.com/api/valmontpay/initialize', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ items: [{ id: 'VG-A', qty: 1 }], total_amount: 19.99 }),
+  }));
+  const body = await res.json();
+  expect(res.status === 410, `legacy client-priced initialize -> 410 (got ${res.status})`);
+  expect(/Gone/i.test(body.message || ''), '410 body explains retirement');
 }
 
 server.close();

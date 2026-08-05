@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="ga-measurement-id" content="G-TEST1234">
   <meta name="meta-pixel-id" content="1234567890">
-  <title>Order Confirmed — Valmont Gadgets</title>
-  <meta name="description" content="Your Valmont Gadgets order has been confirmed. Payment received via Valmont-Pay." />
+  <title>Order Received — Pending Confirmation — Valmont Gadgets</title>
+  <meta name="description" content="Your Valmont Gadgets order was received. Payment is pending confirmation via Valmont-Pay." />
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="icon" type="image/png" href="favicon.png">
@@ -37,11 +37,11 @@
   <main class="max-w-3xl mx-auto px-4 py-8">
     <!-- Status banner -->
     <section id="statusBanner" class="rounded-2xl bg-white card-shadow p-6 md:p-8 text-center">
-      <div id="successIcon" class="tick-anim mx-auto w-16 h-16 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg">
-        <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      <div id="successIcon" class="tick-anim mx-auto w-16 h-16 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
       </div>
-      <h1 id="statusHeading" class="mt-4 text-2xl md:text-3xl font-black brand-navy">Payment Successful!</h1>
-      <p id="statusSub" class="mt-2 text-sm text-slate-600">Your order has been confirmed and your payment has been received through Valmont-Pay.</p>
+      <h1 id="statusHeading" class="mt-4 text-2xl md:text-3xl font-black brand-navy">Order Received — Pending Confirmation</h1>
+      <p id="statusSub" class="mt-2 text-sm text-slate-600">Thank you! Valmont-Pay is confirming your payment. Your order is marked <b>Pending</b> and flips to <b>Paid</b> automatically the moment the gateway confirms it — usually within seconds. Keep your reference safe.</p>
       <div class="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-50 border border-slate-200 px-3 py-1.5">
         <span class="text-[10px] font-black uppercase tracking-widest text-slate-500">Reference</span>
         <span id="refCode" class="text-xs font-extrabold brand-navy">—</span>
@@ -184,6 +184,14 @@
       } catch (e) { order = null; }
 
       const money = (n) => 'GH₵ ' + Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const escapeHtml = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+      // Payment-return screens NEVER claim "paid": the signed Valmont-Pay
+      // webhook (POST /api/valmontpay/webhook) is the only path to Paid.
+      if (status === 'success') {
+        $('statusHeading').textContent = 'Order Received — Pending Confirmation';
+        $('statusSub').innerHTML = 'Thank you! Valmont-Pay is confirming your payment. Your order is marked <b>Pending</b> and flips to <b>Paid</b> automatically the moment the gateway confirms it — usually within seconds. Keep your reference safe.';
+      }
       const AUTH_URL = 'https://eydsoqnpetqczaeqrscc.supabase.co';
       const AUTH_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwiaWF0IjoxNzg0ODg3NTY2LCJleHAiOjIxMDA0NjM1Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc';
 
@@ -284,8 +292,8 @@
             const qty = Number(i.qty || 1);
             const price = Number(i.price || 0);
             return '<li class="flex items-center justify-between gap-3 px-3 py-2.5 text-sm">' +
-              '<div class="min-w-0"><div class="font-bold brand-navy truncate">' + (i.name || 'Item') + '</div>' +
-              (variants ? '<div class="text-[11px] text-slate-500">' + variants + '</div>' : '') +
+              '<div class="min-w-0"><div class="font-bold brand-navy truncate">' + escapeHtml(i.name || 'Item') + '</div>' +
+              (variants ? '<div class="text-[11px] text-slate-500">' + escapeHtml(variants) + '</div>' : '') +
               '</div>' +
               '<div class="text-right shrink-0"><div class="text-[11px] text-slate-500">Qty ' + qty + '</div>' +
               '<div class="font-extrabold brand-navy">' + money(price * qty) + '</div></div>' +
@@ -320,7 +328,7 @@
       } else {
         // No stored order — still show reference and a generic receipt
         $('itemsList').innerHTML = '<li class="p-3 text-xs text-slate-500">Order details not available on this device.</li>';
-        const receipt = '*VALMONT GADGETS — ORDER CONFIRMED*\nReference: *#' + displayRef + '*\n\nPayment received via Valmont-Pay.';
+        const receipt = '*VALMONT GADGETS — ORDER RECEIVED*\nReference: *#' + displayRef + '*\n\nPayment pending confirmation via Valmont-Pay.';
         $('whatsappBtn').href = 'https://wa.me/233542451578?text=' + encodeURIComponent(receipt);
       }
 
@@ -328,12 +336,13 @@
 
       // Clear the pending order (and the cart) once the confirmation
       // page has successfully loaded and populated the receipt.
-      // Also append this paid order to the local order log so the
-      // customer's Account > Orders view reflects it immediately.
+      // Also append the order to the local order log so the customer's
+      // Account > Orders view reflects it immediately (as PENDING — only the
+      // signed webhook may ever mark it Paid).
       if (status === 'success') {
-        if (order && typeof ValmontAnalytics !== 'undefined' && ValmontAnalytics.trackPurchase) {
-          try { ValmontAnalytics.trackPurchase(order); } catch (e) {}
-        }
+        // NOTE: purchase analytics intentionally NOT fired here — payment is
+        // only "pending confirmation" at return time. Purchase tracking belongs
+        // to the confirmed-payment path (Valmont-Pay webhook → Paid).
         try {
           if (order) {
             const log = JSON.parse(localStorage.getItem('valmont_orders') || '[]');
@@ -348,7 +357,7 @@
                 customer_email: order.email || order.customer_email || '',
                 total_amount:   Number(order.total_amount || 0),
                 items:          Array.isArray(order.items) ? order.items : [],
-                status:         'Paid',
+                status:         'Pending confirmation',
                 payment_method: 'Valmont-Pay',
                 created_at:     new Date().toISOString()
               });

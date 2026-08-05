@@ -1104,7 +1104,7 @@ document.addEventListener("keydown", function(e) {
               <div class="h-8 w-8 bg-white rounded border border-gray-100 flex items-center justify-center shrink-0">
                 ${productImg(p.image, p.name, 30)}
               </div>
-              <span class="truncate">${p.name}</span>
+              <span class="truncate">${escapeHtml(p.name)}</span>
             </td>
             <td class="p-4 text-right font-black text-gray-900">${money(plan.totalWithMarkup)}</td>
             <td class="p-4 bg-blue-50/20 text-blue-900">${money(plan.weekly.down)}</td>
@@ -1134,12 +1134,14 @@ document.addEventListener("keydown", function(e) {
       const prio = o.eager ? ' fetchpriority="high"' : '';
       const sizes = o.sizes || `${size}px`;
       const safeAlt = String(alt || '').replace(/"/g, '&quot;');
+      const safeSrc = String(src || '').replace(/"/g, '&quot;');
       if (/^uploads\/.+\.png$/.test(src || '')) {
         const base = src.replace(/\.png$/, '');
-        return `<picture><source type="image/webp" srcset="${base}_400.webp 400w, ${base}_800.webp 800w" sizes="${sizes}">` +
-               `<img src="${src}" alt="${safeAlt}" width="${size}" height="${size}"${lazy}${prio} decoding="async" class="${cls}" /></picture>`;
+        const safeBase = String(base).replace(/"/g, '&quot;');
+        return `<picture><source type="image/webp" srcset="${safeBase}_400.webp 400w, ${safeBase}_800.webp 800w" sizes="${sizes}">` +
+               `<img src="${safeSrc}" alt="${safeAlt}" width="${size}" height="${size}"${lazy}${prio} decoding="async" class="${cls}" /></picture>`;
       }
-      return `<img src="${src}" alt="${safeAlt}" width="${size}" height="${size}"${lazy}${prio} decoding="async" class="${cls}" />`;
+      return `<img src="${safeSrc}" alt="${safeAlt}" width="${size}" height="${size}"${lazy}${prio} decoding="async" class="${cls}" />`;
     }
 
     // Populate private costs
@@ -1202,7 +1204,8 @@ document.addEventListener("keydown", function(e) {
 
         remote.forEach(rp => {
           const id = String(rp.id);
-          const parsedImages = typeof rp.images === 'string' ? JSON.parse(rp.images || '[]') : (rp.images || []);
+          let parsedImages = rp.images || [];
+          if (typeof rp.images === 'string') { parsedImages = safeParseJSON(rp.images, []); if (!Array.isArray(parsedImages)) parsedImages = []; }
           const imageUrl = rp.image_url || rp.image || parsedImages[0] || '';
           const otherImages = parsedImages.filter(u => u && u !== imageUrl);
 
@@ -1225,8 +1228,8 @@ document.addEventListener("keydown", function(e) {
             paymentCost: 0,
             reviews_count: Number(rp.reviews_count || 0),
             stock_quantity: Number(rp.stock ?? rp.stock_quantity ?? 0),
-            colors: typeof rp.colors === 'string' ? JSON.parse(rp.colors || '[]') : (rp.colors || []),
-            storage_options: typeof rp.storage_options === 'string' ? JSON.parse(rp.storage_options || '[]') : (rp.storage_options || [])
+            colors: (() => { const v = typeof rp.colors === 'string' ? safeParseJSON(rp.colors, []) : (rp.colors || []); return Array.isArray(v) ? v : []; })(),
+            storage_options: (() => { const v = typeof rp.storage_options === 'string' ? safeParseJSON(rp.storage_options, []) : (rp.storage_options || []); return Array.isArray(v) ? v : []; })()
           };
 
           if (existingIds.has(id)) {
@@ -1278,10 +1281,13 @@ document.addEventListener("keydown", function(e) {
     let activeSort = initialFilters.get('sort') || 'popular';
     let currentProductPage = Math.max(1, Number(initialFilters.get('page') || 1));
     let searchQuery = '';
-    let cart = JSON.parse(localStorage.getItem('valmont_cart') || '[]');
-    let wishlist = JSON.parse(localStorage.getItem('valmont_wishlist') || '[]');
-    let recentlyViewed = JSON.parse(localStorage.getItem('valmont_recently_viewed') || '[]');
-    let currentUser = localStorage.getItem('valmont_access_token') ? JSON.parse(localStorage.getItem('valmont_user') || 'null') : null;
+    let cart = safeParseJSON(localStorage.getItem('valmont_cart'), []);
+    if (!Array.isArray(cart)) cart = [];
+    let wishlist = safeParseJSON(localStorage.getItem('valmont_wishlist'), []);
+    if (!Array.isArray(wishlist)) wishlist = [];
+    let recentlyViewed = safeParseJSON(localStorage.getItem('valmont_recently_viewed'), []);
+    if (!Array.isArray(recentlyViewed)) recentlyViewed = [];
+    let currentUser = localStorage.getItem('valmont_access_token') ? safeParseJSON(localStorage.getItem('valmont_user'), null) : null;
     // Legacy local-only profiles were not authenticated accounts; do not treat them as signed in.
     if (!localStorage.getItem('valmont_access_token')) localStorage.removeItem('valmont_user');
     let isResellerMode = false;
@@ -1344,6 +1350,33 @@ document.addEventListener("keydown", function(e) {
     // Money formatter (GH₵)
     const money = value => `GH₵ ${Math.max(0, Number(value || 0)).toLocaleString()}`;
 
+    // ── Safe pricing/parsing helpers (regression-tested by npm test) ─────────
+    // Discount vs compare-at price, immune to missing/zero/inverted compareAt
+    // (admin-added DB products default compare_at_price to 0 → the old formula
+    // rendered "-Infinity%" on every one of them).
+    function safeDiscountPercent(retail, compareAt) {
+      const r = Number(retail), c = Number(compareAt);
+      if (!Number.isFinite(r) || !Number.isFinite(c) || c <= 0 || c <= r) return 0;
+      return Math.round((1 - r / c) * 100);
+    }
+    // The price a customer pays for one unit. Dealer/wholesale pricing only
+    // applies when a positive wholesale price exists — several SKUs carry
+    // wholesale: 0, which the old code happily added to the cart at GH₵0.
+    function effectiveUnitPrice(product, dealerMode) {
+      const retail = Number(product && product.retail);
+      if (!Number.isFinite(retail) || retail <= 0) return 0;
+      if (dealerMode) {
+        const wholesale = Number(product && product.wholesale);
+        if (Number.isFinite(wholesale) && wholesale > 0) return wholesale;
+      }
+      return retail;
+    }
+    // JSON.parse that can never throw the whole page on corrupt localStorage.
+    function safeParseJSON(raw, fallback) {
+      try { const v = JSON.parse(raw); return v === undefined ? fallback : v; } catch (e) { return fallback; }
+    }
+    function round2(n) { return Math.round((Number(n) + Number.EPSILON) * 100) / 100; }
+
     // OWNER CONFIGURATION: Add your profit to the supplier's price here
     const VALMONT_INSTALLMENT_MARKUP = 300; // Flat GH₵ 300 added to all installment deals for the owner
 
@@ -1354,11 +1387,11 @@ document.addEventListener("keydown", function(e) {
       // Step 1: Add Owner's Profit to the base price first
       const p = Number(cashPrice) + VALMONT_INSTALLMENT_MARKUP;
       
-      const weeklyDown = p * 0.40;
-      const weeklyAmount = ((p * 0.60) * 1.5) / 12;
+      const weeklyDown = round2(p * 0.40);
+      const weeklyAmount = round2(((p * 0.60) * 1.5) / 12);
       
-      const monthlyDown = p * 0.50;
-      const monthlyAmount = ((p * 0.50) * 1.6) / 3;
+      const monthlyDown = round2(p * 0.50);
+      const monthlyAmount = round2(((p * 0.50) * 1.6) / 3);
       
       return {
         totalWithMarkup: p,
@@ -1392,7 +1425,7 @@ document.addEventListener("keydown", function(e) {
     function updateMobileAccountLabel() {
       const label = document.getElementById('mobileAccountLabel');
       const navAccount = document.getElementById('navAccount');
-      const user = localStorage.getItem('valmont_access_token') ? JSON.parse(localStorage.getItem('valmont_user') || 'null') : null;
+      const user = localStorage.getItem('valmont_access_token') ? safeParseJSON(localStorage.getItem('valmont_user'), null) : null;
       if (label && user) {
         label.textContent = user.name.split(' ')[0];
         if (navAccount) { navAccount.classList.add('signed-in'); navAccount.setAttribute('aria-label', `Signed in as ${user.name}`); }
@@ -1466,7 +1499,7 @@ document.addEventListener("keydown", function(e) {
         `;
       } else {
         productGrid.innerHTML = visibleProducts.map(p => {
-          const discount = Math.round((1 - (p.retail / p.compareAt)) * 100);
+          const discount = safeDiscountPercent(p.retail, p.compareAt);
           const isWishlisted = wishlist.includes(p.id);
           const heartColor = isWishlisted ? 'text-red-500 fill-red-500' : 'text-gray-400 hover:text-red-500';
           
@@ -1483,11 +1516,11 @@ document.addEventListener("keydown", function(e) {
                 <div class="product-image-frame h-[140px] w-full flex items-center justify-center overflow-hidden mb-2 rounded-[4px] bg-gray-50">
                   ${productImg(p.image, p.name, 140, {className: 'max-h-full object-contain group-hover:scale-105 transition duration-200', sizes: '(max-width: 640px) 45vw, 140px'})}
                 </div>
-                <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">${p.name}</h4>
-                <p class="text-[10px] text-gray-400 font-medium truncate mt-1">${p.specs}</p>
+                <h4 class="text-[12px] font-semibold text-gray-800 line-clamp-2 leading-tight min-h-[32px]">${escapeHtml(p.name)}</h4>
+                <p class="text-[10px] text-gray-400 font-medium truncate mt-1">${escapeHtml(p.specs)}</p>
                 <div class="mt-2">
-                  <span class="text-[14px] font-black text-gray-800">${isDealerMode ? money(p.wholesale) : money(p.retail)}</span>
-                  <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">${isDealerMode ? money(p.retail) : money(p.compareAt)}</span>
+                  <span class="text-[14px] font-black text-gray-800">${money(effectiveUnitPrice(p, isDealerMode))}</span>
+                  <span class="text-[11px] text-gray-400 line-through ml-1 font-semibold">${isDealerMode ? money(p.retail) : (Number(p.compareAt) > Number(p.retail) ? money(p.compareAt) : '')}</span>
                   <span class="text-[10px] text-[#ff8c00] font-black ml-1">-${discount}%</span>
                   ${isDealerMode ? '<span class="text-[9px] text-green-600 font-extrabold ml-1 uppercase">Wholesale</span>' : ''}
                   ${p.retail > 5000 ? '<span class="card-free-delivery">Free Delivery</span>' : ''}
@@ -1556,13 +1589,13 @@ document.addEventListener("keydown", function(e) {
         .map(id => PRODUCTS.find(product => product.id === id))
         .filter(Boolean);
       flashGrid.innerHTML = flashItems.map(p => {
-        const discount = Math.round((1 - (p.retail / p.compareAt)) * 100);
+        const discount = safeDiscountPercent(p.retail, p.compareAt);
         return `
           <div class="bg-white rounded-[4px] p-2.5 border border-gray-100 hover:border-orange-200/50 shrink-0 w-[145px] hover:shadow transition relative cursor-pointer" onclick="openProductDetail('${p.id}')">
             <div class="product-image-frame h-[100px] w-full flex items-center justify-center overflow-hidden mb-1 bg-gray-50 rounded-[4px]">
               ${productImg(p.image, p.name, 100)}
             </div>
-            <h5 class="text-[11px] text-gray-800 font-bold truncate">${p.name}</h5>
+            <h5 class="text-[11px] text-gray-800 font-bold truncate">${escapeHtml(p.name)}</h5>
             <div class="mt-1 leading-tight">
               <span class="block text-[13px] font-black text-gray-900">${money(p.retail)}</span>
               <span class="flex items-center gap-1">
@@ -1658,7 +1691,7 @@ document.addEventListener("keydown", function(e) {
               ${productImg(p.image, p.name, 100)}
             </div>
             <div class="flex-1 min-w-0">
-              <h5 class="text-[12px] font-bold text-gray-800 truncate">${p.name}</h5>
+              <h5 class="text-[12px] font-bold text-gray-800 truncate">${escapeHtml(p.name)}</h5>
               <p class="text-[11px] text-gray-500 font-black mt-0.5">${money(p.retail)}</p>
             </div>
             <div class="flex gap-2 shrink-0">
@@ -1719,13 +1752,13 @@ document.addEventListener("keydown", function(e) {
       const items = PRODUCTS.filter(p => recentlyViewed.includes(p.id));
 
       recentlyViewedGrid.innerHTML = items.map(p => {
-        const discount = Math.round((1 - (p.retail / p.compareAt)) * 100);
+        const discount = safeDiscountPercent(p.retail, p.compareAt);
         return `
           <div class="bg-white rounded-[4px] p-2 border border-gray-100 shrink-0 w-[130px] hover:shadow transition cursor-pointer" onclick="openProductDetail('${p.id}')">
             <div class="h-[90px] w-full flex items-center justify-center overflow-hidden mb-1 bg-gray-50 rounded-[4px]">
               ${productImg(p.image, p.name, 100)}
             </div>
-            <h5 class="text-[10px] text-gray-800 font-bold truncate leading-none">${p.name.split(' — ')[0]}</h5>
+            <h5 class="text-[10px] text-gray-800 font-bold truncate leading-none">${escapeHtml(p.name.split(' — ')[0])}</h5>
             <span class="block text-[11px] font-black text-gray-900 mt-1">${money(p.retail)}</span>
           </div>
         `;
@@ -1780,8 +1813,9 @@ document.addEventListener("keydown", function(e) {
       const product = PRODUCTS.find(p => p.id === id);
       if (!product) return;
       
-      // Adapt price if Dealer Mode is active
-      const activePrice = isDealerMode ? product.wholesale : product.retail;
+      // Adapt price if Dealer Mode is active (falls back to retail when the
+      // SKU has no wholesale price — never adds an item at GH₵0).
+      const activePrice = effectiveUnitPrice(product, isDealerMode);
       
       const existing = cart.find(item => item.id === id);
       if (existing) {
@@ -1875,7 +1909,7 @@ document.addEventListener("keydown", function(e) {
               ${productImg(item.image, item.name, 60)}
             </div>
             <div class="flex-1 min-w-0">
-              <h5 class="text-[12px] font-bold text-gray-800 truncate leading-tight">${item.name}</h5>
+              <h5 class="text-[12px] font-bold text-gray-800 truncate leading-tight">${escapeHtml(item.name)}</h5>
               <p class="text-[11px] text-gray-500 font-black mt-0.5">${money(item.retail)}</p>
               
               <div class="flex items-center gap-2.5 mt-1.5">
@@ -2071,7 +2105,7 @@ document.addEventListener("keydown", function(e) {
 
     
     document.getElementById('paymentSentBtn')?.addEventListener('click', () => {
-      triggerPaymentCheckout(true);
+      triggerPaymentCheckout();
     });
 
     // Global variables for paystack tracking
@@ -2080,7 +2114,12 @@ document.addEventListener("keydown", function(e) {
     let paystackSavedName = '';
     let paystackSavedPayment = '';
 
-    function triggerPaymentCheckout(paymentConfirmed = false) {
+    function triggerPaymentCheckout() {
+      if (!Array.isArray(cart) || cart.length === 0) {
+        if (typeof showValmontToast === 'function') showValmontToast('Your bag is empty — add a gadget before checking out.');
+        else alert('Your bag is empty — add a gadget before checking out.');
+        return;
+      }
       const name = document.getElementById('shippingName').value.trim();
       const phone = document.getElementById('shippingPhone').value.trim();
       const city = document.getElementById('shippingCity').value.trim();
@@ -2140,7 +2179,11 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         });
     }
 
+    let valmontPayInFlight = false;
     async function redirectToValmontPay(ctx) {
+      // Double-submit guard: one gateway checkout in flight at a time.
+      if (valmontPayInFlight) return;
+      valmontPayInFlight = true;
       const emailEl = document.getElementById('shippingEmail');
       const email = (emailEl && emailEl.value ? emailEl.value.trim() : '') || 'sales@valmontgadgets.com';
 
@@ -2194,6 +2237,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         window.location.href = data.url;
       } catch (err) {
         console.error('Valmont-Pay initialize failed:', err);
+        valmontPayInFlight = false;
         alert('Could not open the secure payment page: ' + (err && err.message ? err.message : 'please try again.'));
         if (checkoutActionBtn) checkoutActionBtn.disabled = false;
         if (btnSpan) btnSpan.textContent = 'Submit Secure Order';
@@ -2253,69 +2297,15 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
     function processSimulatedPayment() {
       // Compatibility shim: the "Pay" button in the legacy in-page modal used
       // to invoke this. For MoMo the modal collects the network + phone and
-      // then re-runs the checkout pipeline, which now routes card payments
-      // through redirectToValmontPay() and MoMo through the existing
-      // finalizeCheckout / WhatsApp handoff.
+      // then re-runs the checkout pipeline, which routes all prepaid methods
+      // through the server-side Valmont-Pay tenant flow (redirectToValmontPay).
       closePaystackModal();
-      try { triggerPaymentCheckout(false); } catch (e) { console.error('Checkout handoff failed:', e); }
+      try { triggerPaymentCheckout(); } catch (e) { console.error('Checkout handoff failed:', e); }
     }
 
-    async function finalizeCheckout() {
-      const subtotal = cart.reduce((sum, item) => sum + (item.retail * item.qty), 0);
-      const city = document.getElementById('shippingCity').value.trim();
-      const town = document.getElementById('shippingTown').value.trim();
-      const gps = document.getElementById('shippingGPS').value.trim();
-      const street = document.getElementById('shippingStreet').value.trim();
-      const fullAddress = `${street}, ${town}, ${city} ${gps ? '(' + gps + ')' : ''}`;
-      const phone = document.getElementById('shippingPhone').value.trim();
-
-      // 1. Dual-Database Pipeline: Try writing to live Supabase DB first if configured
-      if (hasSupabase()) {
-        try {
-          console.log('Supabase detected! Writing order to live database...');
-          const created = await supabaseInsert('orders', {
-            order_number: paystackSavedRef,
-            customer_name: paystackSavedName,
-            customer_phone: phone,
-            delivery_address: fullAddress,
-            delivery_zone: area || null,
-            total_amount: subtotal,
-            payment_method: paystackSavedPayment
-          });
-
-          if (created && created.length > 0) {
-            const orderId = created[0].id;
-            await supabaseInsert('order_items', cart.map(item => ({
-              order_id: orderId,
-              product_name: item.name,
-              unit_price: item.retail,
-              quantity: item.qty
-            })));
-            console.log('Order successfully committed to Supabase!');
-          }
-        } catch (error) {
-          console.error('Supabase write error:', error);
-        }
-      }
-
-      // 2. Save order to local storage (Reseller Desk Order list)
-      saveOrderToLog(paystackSavedRef, paystackSavedName, cart.map(i => i.name).join(', '), paystackSavedPayment);
-
-      // Clear cart and close UI. Checkout no longer opens WhatsApp.
-      cart = [];
-      localStorage.setItem('valmont_cart', JSON.stringify(cart));
-      updateCartCount();
-      closeCart();
-      alert(`Order #${paystackSavedRef} processed successfully!`);
-    }
-
-    function saveOrderToLog(ref, name, itemNames, payment) {
-      let orders = JSON.parse(localStorage.getItem('valmont_orders') || '[]');
-      orders.unshift({ id: ref, date: 'Just Now', item: itemNames, status: 'Awaiting pay', supplier: 'To Settle' });
-      localStorage.setItem('valmont_orders', JSON.stringify(orders));
-      renderLocalOrderTable();
-    }
-
+    // NOTE: the old finalizeCheckout()/saveOrderToLog() client-priced path was
+    // retired (HTTP 410 policy server-side). Orders are recorded by
+    // POST /api/valmontpay/initialize with database-priced totals only.
 
     // ==============================================================================
     // VERIFIED CUSTOMER REVIEWS & 5-STAR RATINGS SYSTEM
@@ -2390,7 +2380,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
 
       // 2. Combine with local reviews from localStorage
       try {
-        const localReviews = JSON.parse(localStorage.getItem('valmont_reviews') || '[]');
+        const localReviews = safeParseJSON(localStorage.getItem('valmont_reviews'), []);
         const matchingLocal = localReviews.filter(r => (r.product_id === product.id || r.product_id === product.slug) && r.is_approved !== false);
         
         const existingIds = new Set(reviews.map(r => String(r.id)));
@@ -2576,7 +2566,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
       }
 
       // 2. Save locally
-      let localReviews = JSON.parse(localStorage.getItem('valmont_reviews') || '[]');
+      let localReviews = safeParseJSON(localStorage.getItem('valmont_reviews'), []);
       localReviews.unshift(newReview);
       localStorage.setItem('valmont_reviews', JSON.stringify(localReviews));
 
@@ -2627,7 +2617,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
       document.getElementById('detailSpecs').textContent = product.specs;
       document.getElementById('detailStock').textContent = product.stock;
       if (isDealerMode) {
-        document.getElementById('detailPrice').textContent = money(product.wholesale);
+        document.getElementById('detailPrice').textContent = money(effectiveUnitPrice(product, true));
         document.getElementById('detailCompareAt').textContent = money(product.retail);
         document.getElementById('dealerDetailLabel').classList.remove('hidden');
       } else {
@@ -2636,8 +2626,8 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         document.getElementById('dealerDetailLabel').classList.add('hidden');
       }
       
-      const discount = Math.round((1 - (product.retail / product.compareAt)) * 100);
-      document.getElementById('detailDiscPercent').textContent = `-${discount}%`;
+      const discount = safeDiscountPercent(product.retail, product.compareAt);
+      document.getElementById('detailDiscPercent').textContent = discount > 0 ? `-${discount}%` : '';
 
       // Handle Installment Plan Summary
       const instSummary = document.getElementById('installmentSummary');
@@ -3186,7 +3176,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
       document.getElementById('shippingPhone').value = currentUser.phone;
       if (currentUser.email && document.getElementById('shippingEmail')) document.getElementById('shippingEmail').value = currentUser.email;
       try {
-        const savedAddresses = JSON.parse(localStorage.getItem('valmont_customer_addresses') || '[]');
+        const savedAddresses = safeParseJSON(localStorage.getItem('valmont_customer_addresses'), []);
         const address = savedAddresses.find(item => item.is_default) || savedAddresses[0];
         if (address) {
           const city = document.getElementById('shippingCity');
@@ -3196,7 +3186,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
           if (town) town.value = address.name || '';
           if (street) street.value = [address.street, address.landmark].filter(Boolean).join(', ');
         }
-        const preference = JSON.parse(localStorage.getItem('valmont_payment_preference') || 'null');
+        const preference = safeParseJSON(localStorage.getItem('valmont_payment_preference'), null);
         if (preference?.method) {
           const paymentRadio = document.querySelector(`input[name="paymentOption"][value="${preference.method}"]`);
           if (paymentRadio) paymentRadio.checked = true;
@@ -3388,7 +3378,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         </div>
       `;
 
-      let localOrders = JSON.parse(localStorage.getItem('valmont_orders') || '[]');
+      let localOrders = safeParseJSON(localStorage.getItem('valmont_orders'), []);
       
       if (localOrders.length === 0) {
         localOrders = [
@@ -3482,7 +3472,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
           const id = Math.floor(1050 + Math.random() * 300);
           const randomProduct = typeof PRODUCTS !== 'undefined' ? PRODUCTS[Math.floor(Math.random() * PRODUCTS.length)].name : 'New product order';
           
-          let orders = JSON.parse(localStorage.getItem('valmont_orders') || '[]');
+          let orders = safeParseJSON(localStorage.getItem('valmont_orders'), []);
           orders.unshift({ id: `VG-${id}`, date: 'Just Now', item: randomProduct.split(' — ')[0], status: 'Awaiting pay', supplier: 'To Settle' });
           localStorage.setItem('valmont_orders', JSON.stringify(orders));
           renderLocalOrderTable();
@@ -3527,7 +3517,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
   
   // === INTEGRATED DEALER ACCESS & WHOLESALE PRICING LOGIC ===
   isDealerMode = Boolean(localStorage.getItem('valmont_access_token')) && localStorage.getItem('valmont_is_dealer') === 'true';
-  dealerProfile = isDealerMode ? JSON.parse(localStorage.getItem('valmont_dealer_profile') || 'null') : null;
+  dealerProfile = isDealerMode ? safeParseJSON(localStorage.getItem('valmont_dealer_profile'), null) : null;
   if (!isDealerMode) { localStorage.removeItem('valmont_is_dealer'); localStorage.removeItem('valmont_dealer_profile'); }
 
   let dealerOverlay = document.getElementById('dealerOverlay');

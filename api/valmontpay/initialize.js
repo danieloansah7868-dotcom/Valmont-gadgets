@@ -83,6 +83,38 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
     return { status: 500, body: { status: false, message: 'Payments are not configured. Please try again later.' } };
   }
 
+  // ── 410 Gone: legacy client-priced requests ───────────────────────────────
+  // The retired flow let clients dictate amounts. Any request still carrying
+  // client-priced fields is refused with 410 so old callers fail loudly and
+  // visibly instead of being silently re-priced.
+  const LEGACY_PRICE_FIELDS = ['amount', 'total', 'total_amount', 'subtotal', 'price', 'unit_price', 'line_total'];
+  if (body && typeof body === 'object') {
+    const carried = LEGACY_PRICE_FIELDS.filter((k) => body[k] !== undefined && body[k] !== null);
+    if (carried.length) {
+      emit(`[VALMONTPAY-INIT] legacy client-priced request rejected (410): fields=${carried.join(',')}`);
+      return {
+        status: 410,
+        body: {
+          status: false,
+          message: 'Gone: client-priced checkout has been retired. Amounts are computed server-side from the database — send items and quantities only.',
+        },
+      };
+    }
+    if (Array.isArray(body.items)) {
+      const itemCarried = body.items.filter((i) => i && typeof i === 'object' && ['price', 'unit_price', 'retail', 'line_total', 'amount'].some((k) => i[k] !== undefined && i[k] !== null));
+      if (itemCarried.length) {
+        emit('[VALMONTPAY-INIT] legacy client-priced items rejected (410)');
+        return {
+          status: 410,
+          body: {
+            status: false,
+            message: 'Gone: client-priced checkout has been retired. Amounts are computed server-side from the database — send items and quantities only.',
+          },
+        };
+      }
+    }
+  }
+
   // ── Validate the request shape (never any amounts) ────────────────────────
   const items = body && Array.isArray(body.items) ? body.items : null;
   if (!items || items.length === 0 || items.length > MAX_ITEMS) {

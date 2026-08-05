@@ -554,6 +554,11 @@ $$;
 -- HMAC-SHA512 signature FIRST, then calls this with the signed amount. The
 -- transition to 'Paid' only happens when the stored total matches the paid
 -- amount at pesewa precision. Repeats are idempotent ('already_paid').
+--
+-- Stock decrement: product stock is reduced exactly ONCE, inside the same
+-- transaction as the Pending→Paid transition. Repeat webhook deliveries hit
+-- the 'already_paid' branch above the decrement, so stock can never be
+-- double-decremented by gateway retries.
 CREATE OR REPLACE FUNCTION public.confirm_order_paid(
   p_reference text,
   p_expected_total numeric
@@ -569,7 +574,7 @@ BEGIN
     RETURN jsonb_build_object('result', 'invalid_reference');
   END IF;
 
-  SELECT id, order_number, total, status INTO o
+  SELECT id, order_number, total, status, items INTO o
   FROM public.orders
   WHERE order_number = p_reference OR payment_reference = p_reference
   ORDER BY created_at ASC
@@ -592,6 +597,19 @@ BEGIN
       'order_total', o.total
     );
   END IF;
+
+  -- Decrement product stock (floor at 0). Runs only on this transition,
+  -- so gateway retries can never decrement twice.
+  UPDATE public.products pr
+  SET stock = GREATEST(coalesce(pr.stock, 0) - line.qty, 0),
+      updated_at = timezone('utc'::text, now())
+  FROM (
+    SELECT (it->>'product_id')::text AS pid,
+           GREATEST(coalesce((it->>'quantity')::int, 1), 1) AS qty
+    FROM jsonb_array_elements(coalesce(o.items, '[]'::jsonb)) AS it
+    WHERE it->>'product_id' IS NOT NULL
+  ) line
+  WHERE pr.id = line.pid;
 
   UPDATE public.orders
   SET status = 'Paid',
