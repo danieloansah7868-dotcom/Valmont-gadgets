@@ -74,7 +74,19 @@ const deferred = qa('script[src]').filter((s) => s.defer || s.async);
 check(qa('script[src]').length === deferred.length, 'all external scripts defer/async');
 check(!/js\.paystack\.co/.test(html), 'Paystack not eagerly loaded in HTML');
 check(/loadPaystackScript/.test(read('shop.min.js')), 'Paystack lazy-loader present in bundle');
-check(gz('shop.min.js') < 30 * 1024, 'JS bundle gzipped', `${kb(size('shop.min.js'))} raw / ${kb(gz('shop.min.js'))} gz`);
+const clientSurfaces = ['app.js', 'shop.min.js', 'index.html', 'order-confirmed.html', 'account.html', 'drop.html', 'assets/js/gadgets.js', 'assets/js/admin.js', 'assets/js/account.js', 'assets/js/analytics.js']
+  .filter((f) => fs.existsSync(path.join(ROOT, f)))
+  .map((f) => read(f));
+const clientBlob = clientSurfaces.join('\n');
+check(!/(sk_live_|sk_test_|pk_live_|pk_test_)[A-Za-z0-9]+/.test(clientBlob), 'no Paystack keys in any browser bundle');
+check(!/VALMONTPAY_(SECRET|WEBHOOK)_KEY\s*[:=]\s*['"][^'"]+['"]/.test(clientBlob), 'no inline Valmont-Pay secret values in browser bundles');
+check(!/Bearer\s+\$?\{?process\.env\.VALMONTPAY/.test(clientBlob), 'no server-side tenant auth in browser bundles');
+check(/\/api\/valmontpay\/initialize/.test(read('app.js')), 'checkout goes through server-side /api/valmontpay/initialize');
+check(!/pay\.html\?[^'"]*amount=/.test(read('app.js')), 'no client-built amount-in-URL gateway links in app.js');
+// Budget raised 30→32 KB when shop.min.js was re-synced with app.js: the old
+// artifact was stale (terser had been failing on a duplicate-const SyntaxError
+// in app.js) and the secure Valmont-Pay checkout adds ~1 KB gz on top.
+check(gz('shop.min.js') < 32 * 1024, 'JS bundle gzipped', `${kb(size('shop.min.js'))} raw / ${kb(gz('shop.min.js'))} gz`);
 check(size('index.html') > 0, 'index.html size', `${kb(size('index.html'))} raw / ${kb(gz('index.html'))} gz`);
 
 const uploads = fs.readdirSync(path.join(ROOT, 'uploads'));

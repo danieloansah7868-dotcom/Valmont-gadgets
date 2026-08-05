@@ -1058,7 +1058,7 @@ document.addEventListener("keydown", function(e) {
       p.stock_quantity = isPopular ? 3 + (index % 6) : p.category === 'samsung' ? 5 + (index % 8) : isAccessory ? 15 + (index % 16) : 6 + (index % 12);
       
       // Auto-enable installments only for the specific iPhones from the images
-      const name = p.name.toLowerCase();
+      // (`name` is already declared above in this scope.)
       const isEligibleiPhone = name.includes('iphone') && 
         (name.includes('12') || name.includes('13') || name.includes('14') || 
          name.includes('15') || name.includes('16') || name.includes('17'));
@@ -2140,7 +2140,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         });
     }
 
-    function redirectToValmontPay(ctx) {
+    async function redirectToValmontPay(ctx) {
       const emailEl = document.getElementById('shippingEmail');
       const email = (emailEl && emailEl.value ? emailEl.value.trim() : '') || 'sales@valmontgadgets.com';
 
@@ -2164,14 +2164,40 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         console.warn('Unable to persist pending order:', e);
       }
 
-      const gatewayUrl = new URL('https://valmontpay.app/pay.html');
-      gatewayUrl.searchParams.set('merchant', 'Valmont Gadgets');
-      gatewayUrl.searchParams.set('amount', Number(ctx.subtotal).toFixed(2));
-      gatewayUrl.searchParams.set('email', email);
-      gatewayUrl.searchParams.set('reference', ctx.reference);
-      gatewayUrl.searchParams.set('callback_url', 'https://valmontgadgets.com/order-confirmed.html');
-
-      window.location.href = gatewayUrl.toString();
+      // Secure Valmont-Pay tenant flow: /api/valmontpay/initialize recomputes
+      // every price from the database (client amounts are never charged),
+      // records the Pending order and returns the hosted checkout URL signed
+      // server-side with the tenant secret key. See api/valmontpay/*.js.
+      const btnSpan = checkoutActionBtn && checkoutActionBtn.querySelector('span');
+      try {
+        if (checkoutActionBtn) checkoutActionBtn.disabled = true;
+        if (btnSpan) btnSpan.textContent = 'Opening secure payment…';
+        const res = await fetch('/api/valmontpay/initialize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: ctx.items.map(i => ({ id: i.id, qty: i.qty })),
+            customer: { name: ctx.name, phone: ctx.phone, email: email, area: ctx.area, street: ctx.street, full_address: ctx.fullAddress },
+            payment_method: ctx.paymentMethod
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data || data.status !== true || !data.url) {
+          throw new Error((data && data.message) || ('Payment gateway error (' + res.status + ')'));
+        }
+        // Sync the pending order to the server-issued order number/reference.
+        paystackSavedRef = data.order_number;
+        pendingOrder.reference_code = data.order_number;
+        pendingOrder.payment_reference = data.reference || null;
+        pendingOrder.total_amount = data.total;
+        try { localStorage.setItem('valmont_pending_order', JSON.stringify(pendingOrder)); } catch (e) { /* non-fatal */ }
+        window.location.href = data.url;
+      } catch (err) {
+        console.error('Valmont-Pay initialize failed:', err);
+        alert('Could not open the secure payment page: ' + (err && err.message ? err.message : 'please try again.'));
+        if (checkoutActionBtn) checkoutActionBtn.disabled = false;
+        if (btnSpan) btnSpan.textContent = 'Submit Secure Order';
+      }
     }
 
     // Legacy in-page Paystack modal removed. The DOM elements below (if still

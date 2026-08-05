@@ -483,17 +483,33 @@ export default function Page() {
     return `https://wa.me/233542451578?text=${text}`;
   };
 
-  const valmontPayUrl = useMemo(() => {
-    if (!cart.length) return "#";
-    const params = new URLSearchParams({
-      merchant: "Valmont Gadgets",
-      amount: subtotal.toFixed(2),
-      email: "sales@valmontgadgets.com",
-      reference: `VG-${Date.now().toString().slice(-6)}`,
-      callback_url: "https://valmontgadgets.com/order-confirmed.html",
-    });
-    return `https://valmontpay.app/pay.html?${params.toString()}`;
-  }, [cart, subtotal]);
+  // Secure Valmont-Pay tenant flow: the server (/api/valmontpay/initialize)
+  // recomputes every price from the database and signs the checkout with the
+  // tenant secret key. Client-side amounts are never sent to the gateway.
+  const [paying, setPaying] = useState(false);
+  const checkoutWithValmontPay = async () => {
+    if (!cart.length || paying) return;
+    setPaying(true);
+    try {
+      const res = await fetch("/api/valmontpay/initialize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cart.map((item) => ({ id: item.id, qty: item.qty })),
+          customer: { email: "sales@valmontgadgets.com" },
+          payment_method: "Valmont-Pay",
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data || data.status !== true || !data.url) {
+        throw new Error((data && data.message) || `Payment gateway error (${res.status})`);
+      }
+      window.location.href = data.url;
+    } catch (err) {
+      setDeliveryMessage(`Could not open Valmont-Pay: ${err instanceof Error ? err.message : "please try again."}`);
+      setPaying(false);
+    }
+  };
 
   return (
     <div className={`min-h-screen ${pageBg} antialiased`}>
@@ -635,7 +651,7 @@ export default function Page() {
               <div className="flex justify-between mb-2 text-[12px] font-semibold text-gray-500 uppercase tracking-wide"><span>Subtotal</span><span>{formatGH(subtotal)}</span></div>
               <div className="flex justify-between mb-4 text-[14px] font-black text-[#0b1a38]"><span>Total Retail</span><span>{formatGH(subtotal)}</span></div>
               <p className="text-[10px] font-medium text-gray-500 mb-4 leading-relaxed uppercase tracking-wide">12-month warranty included. Free Accra delivery above GH₵ 5,000. MoMo & Card accepted.</p>
-              <a href={valmontPayUrl} target="_self" rel="noopener noreferrer" aria-disabled={!cart.length} className={`block w-full bg-[#ff8c00] hover:bg-[#e67e00] text-white text-center font-extrabold text-[12px] tracking-widest uppercase rounded-xl py-4 transition ${!cart.length ? "pointer-events-none opacity-50" : ""}`}>Pay securely with Valmont-Pay</a>
+                <button type="button" onClick={checkoutWithValmontPay} disabled={!cart.length || paying} aria-disabled={!cart.length || paying} className={`block w-full bg-[#ff8c00] hover:bg-[#e67e00] text-white text-center font-extrabold text-[12px] tracking-widest uppercase rounded-xl py-4 transition disabled:pointer-events-none disabled:opacity-50 ${!cart.length ? "pointer-events-none opacity-50" : ""}`}>{paying ? "Opening Valmont-Pay…" : "Pay securely with Valmont-Pay"}</button>
               <button onClick={() => setCart([])} className="w-full mt-2 text-[11px] font-bold tracking-widest uppercase text-gray-500 py-2">Clear Cart</button>
               {/* Private profit summary - console only, not rendered publicly. Ledger accessible only in backend. */}
               <div className="hidden">
