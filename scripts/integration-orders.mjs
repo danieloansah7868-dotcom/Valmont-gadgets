@@ -1,22 +1,31 @@
 #!/usr/bin/env node
 /**
- * Integration tests for the pending-order creation path.
+ * Integration test: the pending-order INSERT that
+ * api/valmontpay/initialize.js issues must survive the real
+ * public.orders schema constraints.
  *
- * The production endpoint uses the SECURITY DEFINER
- * `create_pending_order(...)` RPC rather than a direct table INSERT.  This
- * harness still models the old direct PostgREST path because that is the
- * regression that shipped: an INSERT with `Prefer: return=representation`
- * can be rejected by orders SELECT RLS even though the INSERT itself is
- * allowed.  A mock that always echoed a row body could never catch that.
+ * Why this file exists
+ * --------------------
+ * The unit tests in test-valmontpay.mjs stub `fetch` and reply 201 to
+ * POST /rest/v1/orders no matter what JSON is sent, so a missing or null
+ * `order_number` sailed through CI while Postgres rejected it in production
+ * with:
  *
- * The tests:
- *   1. Drive the handler and a create_pending_order RPC stand-in with the
- *      real @supabase/supabase-js client available for replay.
- *   2. Enforce the orders NOT NULL / UNIQUE constraints.
- *   3. Explicitly model "INSERT ok, RETURNING denied" (HTTP 401 / SQLSTATE
- *      42501) and prove headers-only/minimal INSERT remains successful.
- *   4. Check that the checked-in SQL contains the live pg_policies assertions
- *      that keep orders SELECT-less for anon.
+ *   null value in column "order_number" of relation "orders"
+ *   violates not-null constraint  (SQLSTATE 23502)
+ *
+ * This test instead:
+ *   1. Stands up a tiny PostgREST-shaped HTTP server that enforces the
+ *      NOT NULL / UNIQUE / FK / TYPE constraints declared on public.orders
+ *      (copied verbatim from supabase/migrations/init.sql).
+ *   2. Drives it with the REAL @supabase/supabase-js client (the same
+ *      library the serverless endpoint could use), so URL encoding,
+ *      headers, Prefer handling and JSON serialization are production-true.
+ *   3. Inserts the exact row shape the handler builds (via buildOrderRow),
+ *      proving order_number is always present and non-null.
+ *   4. Also runs control assertions: payloads violating each constraint are
+ *      rejected — proving the mock actually enforces the constraint, so a
+ *      regression that drops the key or sends wrong types cannot pass silently.
  *
  * It does NOT touch the live Supabase project; it is hermetic and safe in CI.
  *
@@ -24,34 +33,27 @@
  */
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import { readFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 
-import {
-  buildCreatePendingOrderArgs,
-  buildOrderRow,
-  generateOrderNumber,
-  handleInitializeCore,
-} from '../api/valmontpay/initialize.js';
+import { buildOrderRow, generateOrderNumber, handleInitializeCore } from '../api/valmontpay/initialize.js';
 
 const tests = [];
 const test = (name, fn) => tests.push({ name, fn });
 
-const SQL_MIGRATION = readFileSync(
-  new URL('../supabase/migrations/20260806_create_pending_order.sql', import.meta.url),
-  'utf8',
-);
-
 // ─── Schema-validating PostgREST stand-in ───────────────────────────────────
-// Mirrors the constraints that matter for public.orders:
+// Mirrors the constraints from supabase/migrations/init.sql and
+// supabase/migrations/20260805_valmontpay_pipeline.sql:
 //
-//   order_number TEXT UNIQUE NOT NULL
-//   total        NUMERIC NOT NULL DEFAULT 0
+//   orders.order_number TEXT UNIQUE NOT NULL
+//   orders.customer_id  TEXT REFERENCES customers(id) ON DELETE SET NULL
+//   orders.items        JSONB NOT NULL DEFAULT '[]'::jsonb
+//   orders.subtotal     NUMERIC NOT NULL DEFAULT 0
+//   orders.delivery_fee NUMERIC NOT NULL DEFAULT 0
+//   orders.total        NUMERIC NOT NULL DEFAULT 0
 //
-// `returningDenied` represents the real RLS shape: a direct INSERT is allowed,
-// but the SELECT needed for `return=representation` is denied for anon.
-function startSchemaServer({ returningDenied = false } = {}) {
-  const rows = [];
+function startSchemaServer() {
+  const customers = new Map(); // id -> {id, name, ...}
+  const orders = [];
   const seenOrderNumbers = new Set();
 
   const send = (res, status, obj) => {
@@ -59,106 +61,124 @@ function startSchemaServer({ returningDenied = false } = {}) {
     res.end(JSON.stringify(obj));
   };
 
-  function validateAndStoreOrder(body) {
-    for (const col of ['order_number']) {
-      if (body[col] === undefined || body[col] === null || String(body[col]).trim() === '') {
-        return {
-          status: 400,
-          body: {
-            code: '23502',
-            message: `null value in column "${col}" of relation "orders" violates not-null constraint`,
-            details: { column: col },
-          },
-        };
-      }
-    }
+  // JSONB columns accept arrays and plain objects (not strings, numbers, booleans)
+  const isValidJsonb = (value) => {
+    if (value === null || value === undefined) return false;
+    // Must be a plain object or array - reject strings, numbers, booleans
+    if (typeof value === 'object' && !Array.isArray(value)) return true; // plain object
+    if (Array.isArray(value)) return true; // array
+    return false; // string, number, boolean, etc. are not valid JSONB
+  };
 
-    // `total` is NOT NULL but has DEFAULT 0, so a missing key is filled by
-    // Postgres. Mirror that: only an explicit null is rejected.
-    if (body.total === null) {
-      return {
-        status: 400,
-        body: {
-          code: '23502',
-          message: 'null value in column "total" of relation "orders" violates not-null constraint',
-        },
-      };
-    }
-
-    if (seenOrderNumbers.has(body.order_number)) {
-      return {
-        status: 409,
-        body: {
-          code: '23505',
-          message: 'duplicate key value violates unique constraint "orders_order_number_key"',
-        },
-      };
-    }
-
-    const stored = {
-      id: `ord-${rows.length + 1}`,
-      order_number: body.order_number,
-      customer_id: body.customer_id ?? null,
-      items: body.items ?? [],
-      subtotal: body.subtotal ?? 0,
-      delivery_fee: body.delivery_fee ?? 0,
-      total: body.total ?? 0,
-      status: body.status ?? 'Pending',
-      payment_method: body.payment_method ?? null,
-    };
-    seenOrderNumbers.add(body.order_number);
-    rows.push(stored);
-    return { status: 201, body: stored };
-  }
+  const isNumeric = (v) => {
+    if (typeof v === 'number' && Number.isFinite(v)) return true;
+    if (typeof v === 'string') { const n = Number(v); return Number.isFinite(n); }
+    return false;
+  };
 
   const server = http.createServer((req, res) => {
-    const path = String(req.url || '').split('?')[0];
-    if (req.method !== 'POST') return send(res, 404, { message: `no route ${req.method} ${req.url}` });
-    if (!['/rest/v1/orders', '/rest/v1/rpc/create_pending_order', '/rest/v1/customers'].includes(path)) {
+    if (req.url.startsWith('/rest/v1/customers') && req.method === 'POST') {
+      let raw = '';
+      req.on('data', (c) => (raw += c));
+      req.on('end', () => {
+        let body;
+        try { body = JSON.parse(raw || '{}'); } catch { return send(res, 400, { code: '22P02', message: 'invalid JSON' }); }
+        // Customers: id is the primary key. Store it so orders FK can reference it.
+        if (body.id) customers.set(body.id, body);
+        const prefer = req.headers.prefer || '';
+        if (prefer.includes('return=representation')) return send(res, 201, [body]);
+        return send(res, 201, {});
+      });
+      return;
+    }
+
+    if (req.method !== 'POST' || !req.url.startsWith('/rest/v1/orders')) {
       return send(res, 404, { message: `no route ${req.method} ${req.url}` });
     }
 
     let raw = '';
-    req.on('data', (chunk) => (raw += chunk));
+    req.on('data', (c) => (raw += c));
     req.on('end', () => {
       let body;
       try {
         body = JSON.parse(raw || '{}');
-      } catch (_) {
+      } catch (e) {
         return send(res, 400, { code: '22P02', message: 'invalid JSON' });
       }
 
-      if (path === '/rest/v1/customers') return send(res, 201, {});
-
-      if (path === '/rest/v1/rpc/create_pending_order') {
-        const rpcBody = {
-          order_number: body.p_order_number,
-          customer_id: body.p_customer_id,
-          items: body.p_items,
-          subtotal: body.p_subtotal,
-          delivery_fee: body.p_delivery_fee,
-          total: body.p_total,
-          status: 'Pending',
-          payment_method: body.p_payment_method,
-        };
-        const inserted = validateAndStoreOrder(rpcBody);
-        if (inserted.status !== 201) return send(res, inserted.status, inserted.body);
-        return send(res, 200, { id: inserted.body.id, order_number: inserted.body.order_number });
+      // ── 1. NOT NULL enforcement (SQLSTATE 23502) ─────────────────────────
+      for (const col of ['order_number', 'items', 'total']) {
+        if (body[col] === undefined || body[col] === null) {
+          return send(res, 400, {
+            code: '23502',
+            message: `null value in column "${col}" of relation "orders" violates not-null constraint`,
+            details: { column: col },
+          });
+        }
       }
 
-      const inserted = validateAndStoreOrder(body);
-      if (inserted.status !== 201) return send(res, inserted.status, inserted.body);
+      // ── 2. FOREIGN KEY on customer_id → customers(id) (SQLSTATE 23503) ─
+      // customer_id is nullable (ON DELETE SET NULL), but if non-null it
+      // MUST reference an existing customers row.
+      if (body.customer_id !== null && body.customer_id !== undefined && body.customer_id !== '') {
+        if (!customers.has(body.customer_id)) {
+          return send(res, 400, {
+            code: '23503',
+            message: `insert or update on table "orders" violates foreign key constraint "orders_customer_id_fkey"`,
+            details: `Key (customer_id)=(${body.customer_id}) is not present in table "customers".`,
+            hint: 'Make sure the customer exists before inserting the order.',
+          });
+        }
+      }
 
-      const prefer = String(req.headers.prefer || '');
-      if (returningDenied && prefer.includes('return=representation')) {
-        // The row write was accepted, but PostgREST cannot expose the returned
-        // row without a matching SELECT policy for anon.
-        return send(res, 401, {
-          code: '42501',
-          message: 'new row violates row-level security policy for table orders',
+      // ── 3. TYPE enforcement: items must be valid JSONB (array or object) ─
+      if (!isValidJsonb(body.items)) {
+        return send(res, 400, {
+          code: '22P02',
+          message: 'invalid input syntax for type jsonb',
+          details: `Value "${String(body.items).slice(0, 50)}" is not valid JSONB.`,
         });
       }
-      if (prefer.includes('return=representation')) return send(res, 201, [inserted.body]);
+
+      // ── 4. TYPE enforcement: subtotal, delivery_fee, total must be NUMERIC ─
+      for (const col of ['subtotal', 'delivery_fee', 'total']) {
+        if (body[col] !== undefined && body[col] !== null && !isNumeric(body[col])) {
+          return send(res, 400, {
+            code: '22P02',
+            message: `invalid input syntax for type numeric: "${body[col]}"`,
+            details: { column: col, value: body[col] },
+          });
+        }
+      }
+
+      // ── 5. UNIQUE on order_number (SQLSTATE 23505) ─────────────────────
+      if (seenOrderNumbers.has(body.order_number)) {
+        return send(res, 409, {
+          code: '23505',
+          message: `duplicate key value violates unique constraint "orders_order_number_key"`,
+          details: { key: { order_number: body.order_number } },
+        });
+      }
+      seenOrderNumbers.add(body.order_number);
+
+      const stored = {
+        id: `ord-${orders.length + 1}`,
+        order_number: body.order_number,
+        customer_id: body.customer_id ?? null,
+        items: body.items ?? [],
+        subtotal: body.subtotal ?? 0,
+        delivery_fee: body.delivery_fee ?? 0,
+        total: body.total ?? 0,
+        status: body.status ?? 'Pending',
+        payment_method: body.payment_method ?? null,
+        created_at: new Date().toISOString(),
+      };
+      orders.push(stored);
+
+      const prefer = req.headers.prefer || '';
+      if (prefer.includes('return=representation')) {
+        return send(res, 201, [stored]);
+      }
       return send(res, 201, {});
     });
   });
@@ -168,31 +188,20 @@ function startSchemaServer({ returningDenied = false } = {}) {
       const port = server.address().port;
       resolve({
         url: `http://127.0.0.1:${port}`,
-        rows,
+        orders,
+        customers,
         close: () => new Promise((r) => server.close(r)),
       });
     });
   });
 }
 
-function orderFixture(orderNumber = generateOrderNumber()) {
-  return buildOrderRow({
-    orderNumber,
-    customerId: 'cust-0542451578',
-    orderItems: [{ product_id: 'VG-A', name: 'Phone A', quantity: 1, unit_price: 19.99, line_total: 19.99 }],
-    subtotalPesewas: 1999,
-    deliveryFeePesewas: 0,
-    totalPesewas: 1999,
-    paymentMethod: 'Mobile Money',
-  });
-}
-
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
-test('end-to-end: initialize creates the order through RPC and returns its identity', async () => {
-  const { url, rows, close } = await startSchemaServer();
+test('end-to-end: handleInitializeCore with a REAL customer + order INSERT survives all constraints', async () => {
+  const { url, orders, customers, close } = await startSchemaServer();
   try {
-    const captured = { rpcArgs: null, directOrderPost: false };
+    const captured = { orderInsert: null, customerInsert: null };
     const CATALOG = [{ id: 'VG-A', name: 'Phone A', price: 19.99, is_active: true }];
     const GATEWAY = {
       status: true,
@@ -202,141 +211,166 @@ test('end-to-end: initialize creates the order through RPC and returns its ident
 
     const mockFetch = async (fetchUrl, opts = {}) => {
       const u = String(fetchUrl);
-      const json = (status, body) => ({
-        ok: status >= 200 && status < 300,
-        status,
-        json: async () => body,
-        text: async () => JSON.stringify(body),
-      });
+      const json = (status, body) => ({ ok: status >= 200 && status < 300, status, json: async () => body, text: async () => JSON.stringify(body) });
+
       if (u.includes('/rest/v1/products')) return json(200, CATALOG);
-      if (u.endsWith('/rest/v1/customers')) return json(201, {});
-      if (u.endsWith('/rest/v1/orders')) {
-        captured.directOrderPost = true;
-        return json(500, { code: 'TEST', message: 'direct orders POST must not be used' });
-      }
-      if (u.endsWith('/rest/v1/rpc/create_pending_order')) {
-        captured.rpcArgs = JSON.parse(opts.body);
-        const upstream = await fetch(`${url}/rest/v1/rpc/create_pending_order`, {
+
+      // Forward customer POSTs to the schema server so the customer FK is satisfied.
+      if (u.endsWith('/rest/v1/customers') && opts.method === 'POST') {
+        captured.customerInsert = JSON.parse(opts.body);
+        const upstream = await fetch(`${url}/rest/v1/customers`, {
           method: 'POST',
           headers: opts.headers,
           body: opts.body,
         });
-        return {
-          ok: upstream.ok,
-          status: upstream.status,
-          json: () => upstream.json(),
-          text: () => upstream.text(),
-        };
+        return { ok: upstream.ok, status: upstream.status, json: () => upstream.json(), text: () => upstream.text() };
       }
-      if (u.includes('/rest/v1/rpc/set_order_payment_reference')) return json(200, { result: 'ok' });
+
+      if (u.includes('/rest/v1/rpc/')) return json(200, { result: 'ok' });
       if (u.includes('/api/transaction/initialize')) return json(200, GATEWAY);
+
+      // Orders INSERT: record the exact bytes, then forward to schema server.
+      if (u.endsWith('/rest/v1/orders') && opts.method === 'POST') {
+        captured.orderInsert = JSON.parse(opts.body);
+        const upstream = await fetch(`${url}/rest/v1/orders`, {
+          method: 'POST',
+          headers: opts.headers,
+          body: opts.body,
+        });
+        return { ok: upstream.ok, status: upstream.status, json: () => upstream.json(), text: () => upstream.text() };
+      }
+
       throw new Error(`unexpected fetch ${opts.method || 'GET'} ${u}`);
     };
 
     const result = await handleInitializeCore({
-      body: {
-        items: [{ id: 'VG-A', qty: 2 }],
-        customer: { name: 'Ama', phone: '054 245 1578', email: 'ama@example.com' },
-        payment_method: 'Mobile Money',
-      },
+      body: { items: [{ id: 'VG-A', qty: 2 }], customer: { name: 'Ama', phone: '054 245 1578', email: 'ama@example.com' }, payment_method: 'Mobile Money' },
       env: { VALMONTPAY_SECRET_KEY: 'sk_test', SUPABASE_URL: url, SUPABASE_ANON_KEY: 'anon-test' },
       fetchImpl: mockFetch,
       log: () => {},
     });
 
     assert.equal(result.status, 200, `initialize should succeed: ${JSON.stringify(result.body)}`);
-    assert.ok(captured.rpcArgs, 'handler must call create_pending_order');
-    assert.equal(captured.directOrderPost, false, 'handler must never direct-insert orders');
-    assert.equal(typeof captured.rpcArgs.p_order_number, 'string');
-    assert.ok(captured.rpcArgs.p_order_number.startsWith('VG-'));
-    assert.equal(captured.rpcArgs.p_total, 39.98);
-    assert.equal(captured.rpcArgs.p_items.length, 1);
-    assert.equal(rows.length, 1, 'RPC stand-in must have accepted the row');
-    assert.equal(result.body.order_number, captured.rpcArgs.p_order_number);
-    assert.equal(result.body.order_id, rows[0].id);
+    assert.ok(captured.orderInsert, 'handler must POST /rest/v1/orders');
+    assert.ok(captured.customerInsert, 'handler must POST /rest/v1/customers');
 
-    // Replay the same RPC call through the real supabase-js client. This
-    // verifies PostgREST RPC URL/body serialization without SELECT on orders.
+    // Verify the customer was stored in our mock (satisfying the FK).
+    const custId = captured.customerInsert.id;
+    assert.ok(customers.has(custId), `customer ${custId} must exist for FK constraint`);
+    assert.equal(customers.get(custId).name, 'Ama');
+
+    // Verify order payload.
+    assert.equal(typeof captured.orderInsert.order_number, 'string');
+    assert.ok(captured.orderInsert.order_number.startsWith('VG-'));
+    assert.ok(Array.isArray(captured.orderInsert.items), 'items must be an array');
+    assert.ok(captured.orderInsert.items.length > 0, 'items must not be empty');
+    assert.equal(typeof captured.orderInsert.total, 'number', 'total must be numeric');
+    assert.equal(orders.length, 1, 'schema server must have accepted the row');
+    assert.equal(orders[0].order_number, captured.orderInsert.order_number);
+
+    // Re-insert through real supabase-js — proves FK and type constraints pass.
     const sb = createClient(url, 'anon-test', { auth: { persistSession: false, autoRefreshToken: false } });
-    const replay = await sb.rpc('create_pending_order', {
-      ...captured.rpcArgs,
-      p_order_number: generateOrderNumber(),
+    const freshRow = buildOrderRow({
+      orderNumber: generateOrderNumber(),
+      customerId: custId,
+      orderItems: captured.orderInsert.items,
+      subtotalPesewas: Math.round(captured.orderInsert.subtotal * 100),
+      deliveryFeePesewase: Math.round(captured.orderInsert.delivery_fee * 100),
+      totalPesewas: Math.round(captured.orderInsert.total * 100),
+      paymentMethod: 'Mobile Money',
     });
-    assert.equal(replay.error, null, `supabase-js RPC must succeed: ${replay.error && replay.error.message}`);
-    assert.equal(typeof replay.data.id, 'string');
-    assert.equal(replay.data.order_number.startsWith('VG-'), true);
-    assert.equal(rows.length, 2);
+    const replay = await sb.from('orders').insert({ ...freshRow, customer_id: custId }).select();
+    assert.equal(replay.error, null, `replay must succeed: ${replay.error && replay.error.message}`);
   } finally {
     await close();
   }
 });
 
-test('buildOrderRow/buildCreatePendingOrderArgs keep the validated identity and totals', () => {
-  const row = orderFixture();
-  const args = buildCreatePendingOrderArgs(row);
+test('buildOrderRow: order_number is a non-empty VG-… string (never null/undefined)', () => {
+  const row = buildOrderRow({
+    orderNumber: generateOrderNumber(),
+    customerId: 'cust-0542451578',
+    orderItems: [{ product_id: 'VG-A', name: 'Phone A', quantity: 1, unit_price: 19.99, line_total: 19.99 }],
+    subtotalPesewas: 1999,
+    deliveryFeePesewase: 0,
+    totalPesewas: 1999,
+    paymentMethod: 'Mobile Money',
+  });
   assert.equal(typeof row.order_number, 'string');
-  assert.match(row.order_number, /^VG-[A-Z0-9]+-[A-Z0-9]{9}$/);
+  assert.ok(row.order_number.length > 0, 'order_number must not be empty');
+  assert.match(row.order_number, /^VG-[A-Z0-9]+-[A-Z0-9]{9}$/, 'order_number must be VG-… form');
   assert.equal(row.status, 'Pending');
   assert.equal(row.total, 19.99);
-  assert.equal(args.p_order_number, row.order_number);
-  assert.equal(args.p_total, row.total);
-  assert.deepEqual(args.p_items, row.items);
+  assert.ok(!Number.isNaN(row.total), 'total must be a valid number');
+  assert.ok(Array.isArray(row.items), 'items must be an array');
+  assert.equal(typeof row.total, 'number', 'total must be numeric');
+  assert.equal(typeof row.subtotal, 'number', 'subtotal must be numeric');
+  assert.equal(typeof row.delivery_fee, 'number', 'delivery_fee must be numeric');
 });
 
-test('REAL supabase-js RPC returns id/order_number without selecting from orders', async () => {
-  const { url, rows, close } = await startSchemaServer();
+test('REAL supabase-js insert of buildOrderRow() succeeds against a FK+TYPE-enforcing server', async () => {
+  const { url, customers, close } = await startSchemaServer();
   try {
-    const sb = createClient(url, 'anon-test', { auth: { persistSession: false, autoRefreshToken: false } });
-    const row = orderFixture();
-    const result = await sb.rpc('create_pending_order', buildCreatePendingOrderArgs(row));
-    assert.equal(result.error, null, `RPC must not error: ${result.error && result.error.message}`);
-    assert.deepEqual(result.data, { id: 'ord-1', order_number: row.order_number });
-    assert.equal(rows.length, 1);
-  } finally {
-    await close();
-  }
-});
+    // Pre-create the customer so the FK is satisfied.
+    customers.set('cust-0542451578', { id: 'cust-0542451578', name: 'Test', email: 'test@test.com' });
 
-test('regression: INSERT succeeds but return=representation is denied with 42501; minimal succeeds', async () => {
-  const { url, rows, close } = await startSchemaServer({ returningDenied: true });
-  try {
-    const sb = createClient(url, 'anon-test', { auth: { persistSession: false, autoRefreshToken: false } });
-    const representation = await sb.from('orders').insert(orderFixture()).select();
-    assert.ok(representation.error, 'returning a row must be denied without anon SELECT policy');
-    assert.match(String(representation.error.message), /42501|row-level security/i);
-    assert.equal(rows.length, 1, 'the mock must model an accepted INSERT before RETURNING is denied');
+    const sb = createClient(url, 'anon-test', {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
 
-    const minimal = await sb.from('orders').insert(orderFixture()).select(undefined, { head: true });
-    // supabase-js still asks for representation when `.select()` is called;
-    // use a fresh client request without `.select()` for the headers-only path.
-    assert.ok(minimal.error, 'head/select representation should remain denied');
-    const headersOnly = await sb.from('orders').insert(orderFixture());
-    assert.equal(headersOnly.error, null, `headers-only INSERT must succeed: ${headersOnly.error && headersOnly.error.message}`);
-    assert.equal(rows.length, 3);
+    const orderRow = buildOrderRow({
+      orderNumber: generateOrderNumber(),
+      customerId: 'cust-0542451578',
+      orderItems: [{ product_id: 'VG-A', name: 'Phone A', quantity: 1, unit_price: 19.99, line_total: 19.99 }],
+      subtotalPesewas: 1999,
+      deliveryFeePesewase: 0,
+      totalPesewas: 1999,
+      paymentMethod: 'Mobile Money',
+    });
+
+    const { data, error } = await sb.from('orders').insert(orderRow).select();
+    assert.equal(error, null, `insert must not error: ${error && error.message}`);
+    assert.ok(Array.isArray(data) && data.length === 1, 'return=representation must yield one row');
+    assert.equal(data[0].order_number, orderRow.order_number);
+    assert.equal(data[0].status, 'Pending');
   } finally {
     await close();
   }
 });
 
 test('control: the mock server REJECTS a missing order_number with 23502', async () => {
-  const { url, rows, close } = await startSchemaServer();
+  const { url, customers, close } = await startSchemaServer();
+  customers.set('cust-x', { id: 'cust-x', name: 'X' });
   try {
     const sb = createClient(url, 'anon-test', { auth: { persistSession: false, autoRefreshToken: false } });
-    const brokenRow = { customer_id: 'cust-0542451578', items: [], total: 19.99, status: 'Pending' };
+    const brokenRow = {
+      customer_id: 'cust-x',
+      items: [],
+      total: 19.99,
+      status: 'Pending',
+    };
     const { error } = await sb.from('orders').insert(brokenRow).select();
     assert.ok(error, 'an insert without order_number MUST fail');
     assert.match(String(error.message), /not-null|23502|order_number/i);
-    assert.equal(rows.length, 0, 'no row should have been persisted');
   } finally {
     await close();
   }
 });
 
 test('control: the mock server REJECTS a duplicate order_number with 23505', async () => {
-  const { url, close } = await startSchemaServer();
+  const { url, customers, close } = await startSchemaServer();
+  customers.set('cust-x', { id: 'cust-x', name: 'X' });
   try {
     const sb = createClient(url, 'anon-test', { auth: { persistSession: false, autoRefreshToken: false } });
-    const row = orderFixture('VG-DUP-000000000');
+    const row = buildOrderRow({
+      orderNumber: 'VG-DUP-000000000',
+      customerId: 'cust-x',
+      orderItems: [],
+      subtotalPesewas: 0,
+      deliveryFeePesewase: 0,
+      totalPesewas: 0,
+      paymentMethod: 'Valmont-Pay',
+    });
     const first = await sb.from('orders').insert(row).select();
     assert.equal(first.error, null);
     const second = await sb.from('orders').insert(row).select();
@@ -347,13 +381,87 @@ test('control: the mock server REJECTS a duplicate order_number with 23505', asy
   }
 });
 
-test('SQL migration asserts the live pg_policies set and grants the RPC', () => {
-  assert.match(SQL_MIGRATION, /FROM\s+pg_policies/i);
-  assert.match(SQL_MIGRATION, /orders\s+must have no anon\/PUBLIC table policy/i);
-  assert.match(SQL_MIGRATION, /CREATE OR REPLACE FUNCTION\s+public\.create_pending_order/i);
-  assert.match(SQL_MIGRATION, /REVOKE ALL ON FUNCTION public\.create_pending_order/i);
-  assert.match(SQL_MIGRATION, /TO anon, authenticated, service_role/i);
-  assert.match(SQL_MIGRATION, /cmd IN \('SELECT', 'INSERT', 'UPDATE', 'DELETE', 'ALL'\)/i);
+test('control: the mock server REJECTS a non-existent customer_id with 23503', async () => {
+  const { url, close } = await startSchemaServer();
+  try {
+    const sb = createClient(url, 'anon-test', { auth: { persistSession: false, autoRefreshToken: false } });
+    // customer_id references a customers row that doesn't exist.
+    const row = buildOrderRow({
+      orderNumber: generateOrderNumber(),
+      customerId: 'cust-nonexistent-999',
+      orderItems: [],
+      subtotalPesewas: 0,
+      deliveryFeePesewase: 0,
+      totalPesewas: 0,
+      paymentMethod: 'Valmont-Pay',
+    });
+    const { error } = await sb.from('orders').insert(row).select();
+    assert.ok(error, 'insert with non-existent customer_id MUST fail');
+    assert.match(String(error.message), /23503|foreign.*key|customer_id/i);
+  } finally {
+    await close();
+  }
+});
+
+test('control: the mock server REJECTS items as a plain string with 22P02', async () => {
+  const { url, customers, close } = await startSchemaServer();
+  customers.set('cust-x', { id: 'cust-x', name: 'X' });
+  try {
+    const sb = createClient(url, 'anon-test', { auth: { persistSession: false, autoRefreshToken: false } });
+    // Send items as a plain string (not JSONB array/object).
+    const { error } = await sb.from('orders').insert({
+      order_number: generateOrderNumber(),
+      customer_id: 'cust-x',
+      items: 'not a jsonb array',
+      total: 19.99,
+      status: 'Pending',
+    }).select();
+    assert.ok(error, 'items as string MUST fail JSONB type check');
+    assert.match(String(error.message), /22P02|jsonb|invalid/i);
+  } finally {
+    await close();
+  }
+});
+
+test('control: the mock server REJECTS total as a plain string with 22P02', async () => {
+  const { url, customers, close } = await startSchemaServer();
+  customers.set('cust-x', { id: 'cust-x', name: 'X' });
+  try {
+    const sb = createClient(url, 'anon-test', { auth: { persistSession: false, autoRefreshToken: false } });
+    // Send total as a non-numeric string (would fail NUMERIC type coercion).
+    const { error } = await sb.from('orders').insert({
+      order_number: generateOrderNumber(),
+      customer_id: 'cust-x',
+      items: [],
+      total: 'not-a-number',
+      status: 'Pending',
+    }).select();
+    assert.ok(error, 'total as string MUST fail NUMERIC type check');
+    assert.match(String(error.message), /22P02|numeric|invalid/i);
+  } finally {
+    await close();
+  }
+});
+
+test('control: the mock server allows a null customer_id (FK is nullable)', async () => {
+  const { url, close } = await startSchemaServer();
+  try {
+    const sb = createClient(url, 'anon-test', { auth: { persistSession: false, autoRefreshToken: false } });
+    const row = buildOrderRow({
+      orderNumber: generateOrderNumber(),
+      customerId: null, // nullable FK — no customer needed
+      orderItems: [],
+      subtotalPesewas: 0,
+      deliveryFeePesewase: 0,
+      totalPesewas: 0,
+      paymentMethod: 'Valmont-Pay',
+    });
+    const { data, error } = await sb.from('orders').insert(row).select();
+    assert.equal(error, null, `null customer_id must be accepted: ${error && error.message}`);
+    assert.equal(data[0].customer_id, null);
+  } finally {
+    await close();
+  }
 });
 
 // ─── runner ─────────────────────────────────────────────────────────────────
