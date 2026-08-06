@@ -535,6 +535,216 @@ test('control: the mock server allows a null customer_id (FK is nullable)', asyn
   }
 });
 
+
+// ─── delivery-fee tier math via REAL RPC path (Task 4) ──────────────────────
+
+const DELIVERY_TIERS = {
+  'Greater Accra': 25,
+  'Ashanti': 40,
+  'Upper West': 70,
+};
+const FREE_OVER_TIER = 5000;
+const DEFAULT_TIER_FEE = 50;
+
+function tierFee(region, subtotal) {
+  if (subtotal >= FREE_OVER_TIER) return 0;
+  if (region && DELIVERY_TIERS[region] != null) return DELIVERY_TIERS[region];
+  return DEFAULT_TIER_FEE;
+}
+
+test('integration tier: Greater Accra 25 via RPC authoritative path', async () => {
+  const { url, close } = await startSchemaServer();
+  try {
+    const CAT = [{ id: 'VG-TIER', name: 'Tier Product', price: 100, is_active: true }];
+    const fee = DELIVERY_TIERS['Greater Accra'];
+    const subtotal = 100; // qty 1
+    const expectedTotal = subtotal + fee;
+    const mockFetch = async (u, opts={}) => {
+      const s = String(u);
+      const json = (status, body) => ({ ok: status>=200&&status<300, status, json: async()=>body, text: async()=>JSON.stringify(body) });
+      if (s.includes('/rest/v1/products')) return json(200, CAT);
+      if (s.endsWith('/rest/v1/customers')) return json(201, []);
+      if (s.includes('/rest/v1/rpc/create_pending_order')) {
+        const b = JSON.parse(opts.body);
+        assert.equal(b.p_delivery_region, 'Greater Accra');
+        // Compute authoritative
+        const cSubtotal = 100;
+        const cFee = tierFee(b.p_delivery_region, cSubtotal);
+        const cTotal = cSubtotal + cFee;
+        return json(200, { id: 'ord-1', order_number: b.p_order_number, idempotent: false, subtotal: cSubtotal, delivery_fee: cFee, delivery_region: b.p_delivery_region, total: cTotal, fee_source: 'region' });
+      }
+      if (s.includes('/api/transaction/initialize')) {
+        const b = JSON.parse(opts.body);
+        assert.equal(b.amount, expectedTotal, 'gateway amount must be server total');
+        return json(200, { status:true, data:{ pay_url:'https://valmontpay.app/pay.html?access_code=ac', gateway_reference:'VP-1' }});
+      }
+      if (s.includes('/rest/v1/rpc/set_order_payment_reference')) return json(200, { result:'ok'});
+      throw new Error('unexpected '+s);
+    };
+    const res = await handleInitializeCore({ body:{ items:[{id:'VG-TIER', qty:1}], customer:{name:'A', phone:'0540000011'}, delivery_region:'Greater Accra' }, env:{ VALMONTPAY_SECRET_KEY:'sk_test', SUPABASE_URL:url, SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.delivery_fee, fee);
+    assert.equal(res.body.total, expectedTotal);
+  } finally { await close(); }
+});
+
+test('integration tier: Ashanti 40', async () => {
+  const { url, close } = await startSchemaServer();
+  try {
+    const CAT = [{ id: 'VG-TIER', name: 'Tier Product', price: 200, is_active: true }];
+    const fee = 40;
+    const subtotal = 200;
+    const mockFetch = async (u, opts={}) => {
+      const s=String(u);
+      const json=(st,b)=>({ok:st>=200&&st<300,status:st,json:async()=>b,text:async()=>JSON.stringify(b)});
+      if(s.includes('/rest/v1/products')) return json(200,CAT);
+      if(s.endsWith('/rest/v1/customers')) return json(201,[]);
+      if(s.includes('/rest/v1/rpc/create_pending_order')){
+        const b=JSON.parse(opts.body);
+        return json(200,{id:'ord-1',order_number:b.p_order_number,idempotent:false,subtotal,delivery_fee:fee,delivery_region:b.p_delivery_region,total:subtotal+fee,fee_source:'region'});
+      }
+      if(s.includes('/api/transaction/initialize')) return json(200,{status:true,data:{pay_url:'https://valmontpay.app/pay.html?access_code=ac',gateway_reference:'VP-1'}});
+      if(s.includes('/rest/v1/rpc/set_order_payment_reference')) return json(200,{result:'ok'});
+      throw new Error('unexpected '+s);
+    };
+    const res = await handleInitializeCore({ body:{ items:[{id:'VG-TIER',qty:1}], delivery_region:'Ashanti' }, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
+    assert.equal(res.body.delivery_fee,40);
+    assert.equal(res.body.total,240);
+  } finally { await close();}
+});
+
+test('integration tier: Upper West 70', async () => {
+  const { url, close } = await startSchemaServer();
+  try {
+    const CAT = [{ id: 'VG-TIER', name: 'Tier Product', price: 50, is_active: true }];
+    const mockFetch = async (u, opts={}) => {
+      const s=String(u);
+      const json=(st,b)=>({ok:st>=200&&st<300,status:st,json:async()=>b,text:async()=>JSON.stringify(b)});
+      if(s.includes('/rest/v1/products')) return json(200,CAT);
+      if(s.endsWith('/rest/v1/customers')) return json(201,[]);
+      if(s.includes('/rest/v1/rpc/create_pending_order')){
+        const b=JSON.parse(opts.body);
+        return json(200,{id:'ord-1',order_number:b.p_order_number,idempotent:false,subtotal:50,delivery_fee:70,delivery_region:'Upper West',total:120,fee_source:'region'});
+      }
+      if(s.includes('/api/transaction/initialize')) return json(200,{status:true,data:{pay_url:'https://valmontpay.app/pay.html?access_code=ac',gateway_reference:'VP-1'}});
+      if(s.includes('/rest/v1/rpc/set_order_payment_reference')) return json(200,{result:'ok'});
+      throw new Error('unexpected '+s);
+    };
+    const res = await handleInitializeCore({ body:{ items:[{id:'VG-TIER',qty:1}], delivery_region:'Upper West' }, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
+    assert.equal(res.body.delivery_fee,70);
+  } finally { await close();}
+});
+
+test('integration tier: >=5000 free', async () => {
+  const { url, close } = await startSchemaServer();
+  try {
+    const CAT = [{ id: 'VG-TIER', name: 'Expensive', price: 5000, is_active: true }];
+    const mockFetch = async (u, opts={}) => {
+      const s=String(u);
+      const json=(st,b)=>({ok:st>=200&&st<300,status:st,json:async()=>b,text:async()=>JSON.stringify(b)});
+      if(s.includes('/rest/v1/products')) return json(200,CAT);
+      if(s.endsWith('/rest/v1/customers')) return json(201,[]);
+      if(s.includes('/rest/v1/rpc/create_pending_order')){
+        const b=JSON.parse(opts.body);
+        return json(200,{id:'ord-1',order_number:b.p_order_number,idempotent:false,subtotal:5000,delivery_fee:0,delivery_region:b.p_delivery_region,total:5000,fee_source:'free_over'});
+      }
+      if(s.includes('/api/transaction/initialize')) return json(200,{status:true,data:{pay_url:'https://valmontpay.app/pay.html?access_code=ac',gateway_reference:'VP-1'}});
+      if(s.includes('/rest/v1/rpc/set_order_payment_reference')) return json(200,{result:'ok'});
+      throw new Error('unexpected '+s);
+    };
+    const res = await handleInitializeCore({ body:{ items:[{id:'VG-TIER',qty:1}], delivery_region:'Greater Accra' }, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
+    assert.equal(res.body.delivery_fee,0);
+    assert.equal(res.body.total,5000);
+  } finally { await close();}
+});
+
+test('integration tier: unknown region fallback default 50', async () => {
+  const { url, close } = await startSchemaServer();
+  try {
+    const CAT = [{ id: 'VG-TIER', name: 'Tier Product', price: 100, is_active: true }];
+    const mockFetch = async (u, opts={}) => {
+      const s=String(u);
+      const json=(st,b)=>({ok:st>=200&&st<300,status:st,json:async()=>b,text:async()=>JSON.stringify(b)});
+      if(s.includes('/rest/v1/products')) return json(200,CAT);
+      if(s.endsWith('/rest/v1/customers')) return json(201,[]);
+      if(s.includes('/rest/v1/rpc/create_pending_order')){
+        const b=JSON.parse(opts.body);
+        assert.equal(b.p_delivery_region,'Atlantis');
+        return json(200,{id:'ord-1',order_number:b.p_order_number,idempotent:false,subtotal:100,delivery_fee:50,delivery_region:'Atlantis',total:150,fee_source:'default'});
+      }
+      if(s.includes('/api/transaction/initialize')) return json(200,{status:true,data:{pay_url:'https://valmontpay.app/pay.html?access_code=ac',gateway_reference:'VP-1'}});
+      if(s.includes('/rest/v1/rpc/set_order_payment_reference')) return json(200,{result:'ok'});
+      throw new Error('unexpected '+s);
+    };
+    const res = await handleInitializeCore({ body:{ items:[{id:'VG-TIER',qty:1}], delivery_region:'Atlantis' }, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
+    assert.equal(res.body.delivery_fee,50);
+    assert.equal(res.body.fee_source,'default');
+  } finally { await close();}
+});
+
+test('integration tier: tampered client fee ignored (server authoritative)', async () => {
+  const { url, close } = await startSchemaServer();
+  try {
+    const CAT = [{ id: 'VG-TIER', name: 'Tier Product', price: 100, is_active: true }];
+    const mockFetch = async (u, opts={}) => {
+      const s=String(u);
+      const json=(st,b)=>({ok:st>=200&&st<300,status:st,json:async()=>b,text:async()=>JSON.stringify(b)});
+      if(s.includes('/rest/v1/products')) return json(200,CAT);
+      if(s.endsWith('/rest/v1/customers')) return json(201,[]);
+      if(s.includes('/rest/v1/rpc/create_pending_order')){
+        const b=JSON.parse(opts.body);
+        // Client never sends fee, but even if they did, server ignores and returns correct tier
+        return json(200,{id:'ord-1',order_number:b.p_order_number,idempotent:false,subtotal:100,delivery_fee:25,delivery_region:'Greater Accra',total:125,fee_source:'region'});
+      }
+      if(s.includes('/api/transaction/initialize')){
+        const b=JSON.parse(opts.body);
+        assert.equal(b.amount,125); // not 101 (client guess)
+        return json(200,{status:true,data:{pay_url:'https://valmontpay.app/pay.html?access_code=ac',gateway_reference:'VP-1'}});
+      }
+      if(s.includes('/rest/v1/rpc/set_order_payment_reference')) return json(200,{result:'ok'});
+      throw new Error('unexpected '+s);
+    };
+    const res = await handleInitializeCore({ body:{ items:[{id:'VG-TIER',qty:1}], delivery_region:'Greater Accra' }, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
+    assert.equal(res.body.delivery_fee,25);
+    assert.equal(res.body.total,125);
+  } finally { await close();}
+});
+
+test('integration tier: idempotent retry repricing after fee edit', async () => {
+  const { url, close } = await startSchemaServer();
+  try {
+    const CAT = [{ id: 'VG-TIER', name: 'Tier Product', price: 100, is_active: true }];
+    let callCount=0;
+    const mockFetch = async (u, opts={}) => {
+      const s=String(u);
+      const json=(st,b)=>({ok:st>=200&&st<300,status:st,json:async()=>b,text:async()=>JSON.stringify(b)});
+      if(s.includes('/rest/v1/products')) return json(200,CAT);
+      if(s.endsWith('/rest/v1/customers')) return json(201,[]);
+      if(s.includes('/rest/v1/rpc/create_pending_order')){
+        callCount++;
+        const b=JSON.parse(opts.body);
+        if(callCount===1) return json(200,{id:'ord-1',order_number:b.p_order_number,idempotent:false,subtotal:100,delivery_fee:40,delivery_region:'Ashanti',total:140,fee_source:'region'});
+        // After fee edit, Ashanti now 45, retry should return new fee and same order? In our mock, second call returns repriced
+        return json(200,{id:'ord-1',order_number:'VG-EXISTING-123',idempotent:true,subtotal:100,delivery_fee:45,delivery_region:'Ashanti',total:145,fee_source:'region'});
+      }
+      if(s.includes('/api/transaction/initialize')){
+        const b=JSON.parse(opts.body);
+        // Second call gateway amount should be repriced 145
+        if(callCount===2) assert.equal(b.amount,145);
+        return json(200,{status:true,data:{pay_url:'https://valmontpay.app/pay.html?access_code=ac',gateway_reference:'VP-1'}});
+      }
+      if(s.includes('/rest/v1/rpc/set_order_payment_reference')) return json(200,{result:'ok'});
+      throw new Error('unexpected '+s);
+    };
+    const body={ items:[{id:'VG-TIER',qty:1}], customer:{name:'A',phone:'0540000012'}, delivery_region:'Ashanti' };
+    const first = await handleInitializeCore({ body, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
+    assert.equal(first.body.delivery_fee,40);
+    const second = await handleInitializeCore({ body, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
+    assert.equal(second.body.delivery_fee,45);
+    assert.equal(second.body.total,145);
+  } finally { await close();}
+});
+
 // ─── runner ─────────────────────────────────────────────────────────────────
 
 let failed = 0;

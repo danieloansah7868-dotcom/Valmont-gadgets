@@ -264,23 +264,34 @@
       $('refCode').textContent = displayRef;
 
       if (order) {
+        const deliveryRegion = order.delivery_region || order.deliveryRegion || null;
+        const feeSource = order.fee_source || null;
         $('custName').textContent  = order.customer_name  || order.name  || '—';
         $('custEmail').textContent = order.email || order.customer_email || 'sales@valmontgadgets.com';
         $('custPhone').textContent = order.customer_phone || order.phone || '—';
-        $('custArea').textContent  = order.customer_area  || order.area  || '—';
+        // Mirror delivery_region from localStorage (authoritative server value)
+        $('custArea').textContent  = deliveryRegion || order.customer_area  || order.area  || '—';
         $('custAddress').textContent = order.delivery_address || order.customer_street || 'To be confirmed via WhatsApp';
 
         const items = Array.isArray(order.items) ? order.items : [];
         const itemsSubtotal = items.reduce(function (s, i) {
           return s + (Number(i.price || 0) * Number(i.qty || 1));
         }, 0);
-        const totalAmt = Number(order.total_amount || 0);
+        const totalAmt = Number(order.total_amount != null ? order.total_amount : (order.total != null ? order.total : 0));
         const deliveryFee = Number(
           order.delivery_fee != null ? order.delivery_fee : Math.max(0, totalAmt - itemsSubtotal)
         );
         const subtotal = Number(order.subtotal != null ? order.subtotal : itemsSubtotal);
         $('subtotalAmount').textContent    = money(subtotal);
+        // Task 2: Mirror the same delivery numbers on confirmation page from localStorage.
+        // Show "Delivery (Region): GH₵X" when subtotal < free threshold, else "Delivery: FREE"
+        const deliveryLabelEl = document.querySelector('#deliveryFeeAmount') ? document.querySelector('#deliveryFeeAmount').previousElementSibling : null;
+        if (deliveryLabelEl) {
+          if (deliveryRegion) deliveryLabelEl.textContent = `Delivery (${deliveryRegion})`;
+          else deliveryLabelEl.textContent = 'Delivery Fee';
+        }
         $('deliveryFeeAmount').textContent = deliveryFee > 0 ? money(deliveryFee) : 'FREE';
+        if (feeSource) $('deliveryFeeAmount').title = `fee_source: ${feeSource}`;
         $('totalAmount').textContent       = money(totalAmt || (subtotal + deliveryFee));
         const list = $('itemsList');
         if (items.length === 0) {
@@ -313,14 +324,14 @@
           'Reference: *#' + displayRef + '*\n\n' +
           '*ITEMS:*\n' + (itemsText || '—') + '\n\n' +
           '*Subtotal:* ' + money(subtotal) + '\n' +
-          '*Delivery Fee:* ' + (deliveryFee > 0 ? money(deliveryFee) : 'FREE') + '\n' +
+          '*Delivery' + (deliveryRegion ? ` (${deliveryRegion})` : '') + ':* ' + (deliveryFee > 0 ? money(deliveryFee) : 'FREE') + (feeSource ? ` (${feeSource})` : '') + '\n' +
           '*TOTAL PAID:* ' + money(totalAmt || (subtotal + deliveryFee)) + '\n' +
           '*PAYMENT:* Paid via Valmont-Pay\n\n' +
           '*DELIVERY DETAILS:*\n' +
           'Recipient: ' + (order.customer_name || '—') + '\n' +
           'Phone: ' + (order.customer_phone || '—') + '\n' +
           'Email: ' + (order.email || order.customer_email || '—') + '\n' +
-          'Region/Area: ' + (order.customer_area || '—') + '\n' +
+          'Region: ' + (deliveryRegion || order.customer_area || '—') + '\n' +
           'Address: ' + (order.delivery_address || order.customer_street || 'To be provided via chat') + '\n\n' +
           '_Thank you for choosing Valmont Gadgets Ghana. We are preparing your shipment!_';
 
