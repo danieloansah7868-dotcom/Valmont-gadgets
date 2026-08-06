@@ -45,25 +45,31 @@ Referenced by name only — values already exist in the project settings:
 - `VALMONTPAY_WEBHOOK_SECRET` — webhook signing secret (HMAC-SHA512)
 
 Supabase access uses the same public anon key the storefront already ships
-(confined by RLS). No service-role secret is required: the migration adds two
-narrow `SECURITY DEFINER` RPCs (`confirm_order_paid`,
-`set_order_payment_reference`) as the only anon-reachable write paths.
+(confined by RLS). No service-role secret is required: the migrations add three
+narrow `SECURITY DEFINER` RPCs (`create_pending_order`, `confirm_order_paid`,
+`set_order_payment_reference`) as the only anon-reachable order/payment write
+paths. `public.orders` has no anon/PUBLIC SELECT policy (or direct anon table
+write policy); the create RPC returns only the new id and order number.
 `SUPABASE_URL` / `SUPABASE_ANON_KEY` may override the defaults if set.
 
 ## Database
 
-Apply `supabase/migrations/20260805_valmontpay_pipeline.sql` (Supabase SQL
-editor). It is idempotent: adds `orders.payment_reference`, seeds the catalog
-(insert-if-missing only — never overwrites existing products), and creates the
-two RPCs with grants for `anon`/`authenticated`/`service_role`.
+Apply `supabase/migrations/20260805_valmontpay_pipeline.sql`, then
+`supabase/migrations/20260806_create_pending_order.sql` (Supabase SQL editor).
+Both are idempotent. The first adds `orders.payment_reference`, seeds the
+catalog (insert-if-missing only — never overwrites existing products), and
+creates the payment RPCs. The second creates the SECURITY DEFINER pending-order
+RPC, removes anon/PUBLIC orders table policies and direct privileges, and
+asserts the live `pg_policies` set before completing.
 
 ## Local verification
 
 ```
 npm ci
 npm run typecheck   # syntax gate for all JS + structural check of app/page.tsx
-npm test            # 36 unit tests: crypto, auth gate, status gate, pesewa match,
+npm test            # 37 unit tests: crypto, auth gate, status gate, pesewa match,
                     # 410 retirement, idempotency, server repricing, client-bug regressions
+npm run test:integration # schema/RPC integration, RLS RETURNING regression, pg_policies assertion
 npm run smoke       # boots local mock Supabase + gateway, drives the real handlers
                     # (incl. manual UNSIGNED webhook → bare 401)
 npm run build && npm run verify   # prerender + hydration + full audit incl. bundle secret scan

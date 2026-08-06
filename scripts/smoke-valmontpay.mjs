@@ -11,6 +11,7 @@ process.env.VALMONTPAY_WEBHOOK_SECRET = SECRET;
 process.env.VALMONTPAY_SECRET_KEY = 'sk_smoke_tenant';
 
 let orders = [];
+let directOrderPosts = 0;
 let rpcCalls = [];
 let gatewayCalls = [];
 
@@ -25,8 +26,24 @@ const server = http.createServer((req, res) => {
     }
     if (url.startsWith('/rest/v1/customers')) return send(201, []);
     if (url.startsWith('/rest/v1/orders')) {
-      orders.push(JSON.parse(raw));
-      return send(200, [{ id: 'ord-1' }]);
+      directOrderPosts++;
+      return send(500, { code: 'TEST', message: 'direct orders POST must not be used' });
+    }
+    if (url.startsWith('/rest/v1/rpc/create_pending_order')) {
+      const args = JSON.parse(raw);
+      const order = {
+        id: 'ord-1',
+        order_number: args.p_order_number,
+        customer_id: args.p_customer_id,
+        items: args.p_items,
+        subtotal: args.p_subtotal,
+        delivery_fee: args.p_delivery_fee,
+        total: args.p_total,
+        status: 'Pending',
+        payment_method: args.p_payment_method,
+      };
+      orders.push(order);
+      return send(200, { id: order.id, order_number: order.order_number });
     }
     if (url.startsWith('/rest/v1/rpc/confirm_order_paid')) {
       rpcCalls.push(JSON.parse(raw));
@@ -82,6 +99,7 @@ const expect = (cond, label) => { cond ? pass++ : fail++; console.log(`${cond ? 
   expect(gatewayCalls[0].auth === 'Bearer sk_smoke_tenant', 'gateway called with Bearer tenant secret');
   expect(gatewayCalls[0].body.amount === 39.98, 'gateway amount in cedis (39.98), not pesewas');
   expect(orders[0].status === 'Pending' && orders[0].total === 39.98, 'pending order recorded with DB total');
+  expect(directOrderPosts === 0, 'initialize never direct-posts the orders table');
   expect(/^VG-/.test(body.order_number), `order_number issued (${body.order_number})`);
 }
 

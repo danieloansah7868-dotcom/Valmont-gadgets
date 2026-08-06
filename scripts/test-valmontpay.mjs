@@ -278,7 +278,7 @@ function initRoutes({ gateway = { status: true, message: 'ok', data: { access_co
       ...(productsThrows ? { throw: 'catalog down' } : {}),
     },
     { match: (c) => c.url.endsWith('/rest/v1/customers'), respond: () => ({ status: 201, json: [] }) },
-    { match: (c) => c.url.endsWith('/rest/v1/orders'), respond: () => ({ status: orderInsertStatus, json: orderInsertStatus < 300 ? [{ id: 'order-1' }] : { message: 'insert failed' } }) },
+    { match: (c) => c.url.includes('/rest/v1/rpc/create_pending_order'), respond: (c) => ({ status: orderInsertStatus, json: orderInsertStatus < 300 ? { id: 'order-1', order_number: c.body.p_order_number } : { code: '42501', message: 'insert failed' } }) },
     { match: (c) => c.url.includes('/api/transaction/initialize'), respond: () => ({ status: gatewayStatus, json: gateway }) },
     { match: (c) => c.url.includes('/rest/v1/rpc/set_order_payment_reference'), respond: () => ({ status: 200, json: { result: 'ok' } }) },
   ]);
@@ -304,24 +304,28 @@ test('initialize: recomputes total from DB prices, ignores client amounts', asyn
   assert.equal(result.status, 200);
   assert.equal(result.body.total, 139.98); // 2x19.99 + 100, cedis
   assert.equal(result.body.currency, 'GHS');
+  assert.equal(result.body.order_id, 'order-1');
   assert.match(result.body.url, /^https:\/\/valmontpay\.app\/pay\.html\?access_code=ac_test$/);
 
-  const orderInsert = calls.find((c) => c.url.endsWith('/rest/v1/orders'));
-  assert.equal(orderInsert.body.total, 139.98);
-  assert.equal(orderInsert.body.subtotal, 139.98);
-  assert.equal(orderInsert.body.status, 'Pending');
-  assert.equal(orderInsert.body.items.length, 2);
-  assert.equal(orderInsert.body.items[0].unit_price, 19.99);
+  const orderInsert = calls.find((c) => c.url.includes('/rest/v1/rpc/create_pending_order'));
+  assert.ok(orderInsert, 'pending order must be created through the RPC');
+  assert.equal(orderInsert.body.p_total, 139.98);
+  assert.equal(orderInsert.body.p_subtotal, 139.98);
+  assert.equal(orderInsert.body.p_items.length, 2);
+  assert.equal(orderInsert.body.p_items[0].unit_price, 19.99);
+  assert.equal(orderInsert.body.p_payment_method, 'Mobile Money');
+  assert.equal(orderInsert.body.p_order_number.startsWith('VG-'), true);
+  assert.equal(calls.some((c) => c.url.endsWith('/rest/v1/orders')), false, 'initialize must not direct-insert orders');
 
   const gatewayCall = calls.find((c) => c.url.includes('/api/transaction/initialize'));
   assert.equal(gatewayCall.headers.authorization, 'Bearer sk_valmont_test');
   assert.equal(gatewayCall.body.amount, 139.98); // cedis, never pesewas
-  assert.equal(gatewayCall.body.reference, orderInsert.body.order_number);
+  assert.equal(gatewayCall.body.reference, orderInsert.body.p_order_number);
   assert.equal(gatewayCall.body.callback_url, 'https://valmontgadgets.com/order-confirmed.html');
 
   const refStore = calls.find((c) => c.url.includes('set_order_payment_reference'));
   assert.equal(refStore.body.p_payment_reference, 'VP-MB3K7Z1A-9F4C2E18');
-  assert.equal(refStore.body.p_order_number, orderInsert.body.order_number);
+  assert.equal(refStore.body.p_order_number, orderInsert.body.p_order_number);
 });
 
 test('initialize: unknown product -> 400, gateway never called', async () => {
@@ -363,9 +367,19 @@ test('initialize: catalog unreachable -> 503', async () => {
   assert.equal(result.status, 503);
 });
 
-test('initialize: order insert failure -> 500, gateway never called', async () => {
+test('initialize: create_pending_order failure -> 500, gateway never called', async () => {
   const { result, calls } = await runInitialize({ items: [{ id: 'VG-A', qty: 1 }] }, { orderInsertStatus: 500 });
   assert.equal(result.status, 500);
+  assert.equal(calls.some((c) => c.url.includes('/api/transaction/initialize')), false);
+});
+
+test('initialize: raw Postgres code is bracketed in the diagnostic 500 body', async () => {
+  const { result, calls } = await runInitialize({ items: [{ id: 'VG-A', qty: 1 }] }, {
+    orderInsertStatus: 401,
+  });
+  assert.equal(result.status, 500);
+  assert.match(result.body.message, /\[42501\]/);
+  assert.match(result.body.message, /insert failed/);
   assert.equal(calls.some((c) => c.url.includes('/api/transaction/initialize')), false);
 });
 
