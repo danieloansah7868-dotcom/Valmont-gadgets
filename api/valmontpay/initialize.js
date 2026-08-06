@@ -313,13 +313,35 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
     return { status: 503, body: { status: false, message: 'Could not record your order. Please try again.' } };
   }
   if (!orderRes.ok) {
-    let detail = '';
+    let pgError = {};
+    let rawBody = '';
     try {
-      const j = await orderRes.json();
-      detail = (j && (j.message || j.msg || j.hint)) || '';
-    } catch (_) {}
-    emit(`[VALMONTPAY-INIT] order insert failed: HTTP ${orderRes.status} ${detail}`);
-    return { status: 500, body: { status: false, message: 'Could not record your order. Please try again.' } };
+      rawBody = await orderRes.text();
+      pgError = JSON.parse(rawBody || '{}');
+    } catch (_) {
+      rawBody = '';
+    }
+    const sqlState = pgError.code || '';
+    const pgMessage = pgError.message || pgError.msg || '';
+    const pgHint = pgError.hint || '';
+    const pgDetails = pgError.details || '';
+    // Include SQLSTATE in user-facing message so the redeploy output
+    // shows "[23503]" etc. for the next diagnostic pass.
+    emit(`[VALMONTPAY-INIT] order insert failed: HTTP ${orderRes.status} [${sqlState}] ${pgMessage}`);
+    if (pgHint) emit(`[VALMONTPAY-INIT] PostgreSQL hint: ${pgHint}`);
+    if (pgDetails) emit(`[VALMONTPAY-INIT] PostgreSQL details: ${pgDetails}`);
+    if (rawBody) emit(`[VALMONTPAY-INIT] raw PostgREST body: ${rawBody.slice(0, 500)}`);
+    return {
+      status: 500,
+      body: {
+        status: false,
+        message: `Could not record your order [${sqlState}]`,
+        detail: pgMessage || 'Database constraint violation',
+        hint: pgHint || undefined,
+        details: pgDetails || undefined,
+        raw: rawBody || undefined,
+      },
+    };
   }
 
   emit(`[VALMONTPAY-INIT] pending order ${orderNumber} recorded: GHS ${formatCedis(totalPesewas)} (${orderItems.length} line/s)`);
