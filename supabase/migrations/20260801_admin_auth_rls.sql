@@ -41,11 +41,14 @@ CREATE POLICY "Authenticated full access categories"
   USING (true) WITH CHECK (true);
 
 -- ── ORDERS ────────────────────────────────────────────────────────────────────
--- Anon can INSERT orders (checkout) and read their own
+-- Orders are intentionally private for anon/PUBLIC. Checkout uses the
+-- validating SECURITY DEFINER create_pending_order() RPC; there is no direct
+-- anon INSERT or SELECT policy on orders.
 DROP POLICY IF EXISTS "Anon can create orders" ON public.orders;
-CREATE POLICY "Anon can create orders"
-  ON public.orders FOR INSERT TO anon
-  WITH CHECK (true);
+DROP POLICY IF EXISTS "Anon can read orders" ON public.orders;
+DROP POLICY IF EXISTS "Anon can read own orders" ON public.orders;
+REVOKE SELECT, INSERT ON TABLE public.orders FROM PUBLIC, anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.orders TO authenticated, service_role;
 
 DROP POLICY IF EXISTS "Authenticated full access orders" ON public.orders;
 CREATE POLICY "Authenticated full access orders"

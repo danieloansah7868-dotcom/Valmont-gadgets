@@ -28,8 +28,8 @@ const CALLBACK_URL = 'https://valmontgadgets.com/order-confirmed.html';
 /** Supabase project backing the storefront (same project app.js uses). */
 const DEFAULT_SUPABASE_URL = 'https://eydsoqnpetqczaeqrscc.supabase.co';
 // The anon key is already public: it ships inside app.js/shop.min.js and is
-// confined by RLS (anon can only read active products, INSERT orders/customers
-// and call the two narrow payment RPCs). No service-role secret is required.
+// confined by RLS (anon can only read active products, INSERT customers and
+// call the three narrow checkout/payment RPCs). No service-role secret is required.
 const DEFAULT_SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4ODc1NjYsImV4cCI6MjEwMDQ2MzU2Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc';
 
@@ -65,17 +65,17 @@ function clampText(value, max) {
 }
 
 /**
- * Builds the exact JSON object POSTed to `POST /rest/v1/orders`.
+ * Builds the canonical pending-order values used by the create_pending_order
+ * RPC. Keeping this object in one place means the endpoint and the integration
+ * harness cannot drift on a key name (especially `order_number`).
  *
- * Exported so the integration test can insert the SAME payload shape through
- * real supabase-js (against a schema-validating mock server). The orders table
- * has `order_number TEXT UNIQUE NOT NULL` with no default, so any key rename
- * or missing value here would otherwise only surface in production as a 23502
- * not-null violation ("Could not record your order").
+ * The browser-facing anon role never POSTs this object to the orders table.
+ * The SECURITY DEFINER RPC validates it and performs the INSERT as its owner,
+ * then returns the newly-created id and order_number as jsonb.
  *
  * @param {object} p
  * @param {string} p.orderNumber  Server-generated "VG-…" reference.
- * @returns {object} The POST body for the orders row (never mutated later).
+ * @returns {object} Canonical order values (never mutated later).
  */
 export function buildOrderRow({
   orderNumber,
@@ -96,6 +96,49 @@ export function buildOrderRow({
     status: 'Pending',
     payment_method: paymentMethod,
   };
+}
+
+/** Convert the canonical order values to PostgREST's named RPC arguments. */
+export function buildCreatePendingOrderArgs(orderRow) {
+  return {
+    p_order_number: orderRow.order_number,
+    p_customer_id: orderRow.customer_id,
+    p_items: orderRow.items,
+    p_subtotal: orderRow.subtotal,
+    p_delivery_fee: orderRow.delivery_fee,
+    p_total: orderRow.total,
+    p_payment_method: orderRow.payment_method,
+  };
+}
+
+/**
+ * Keep database diagnostics visible while this checkout path is being
+ * diagnosed. PostgREST errors carry SQLSTATE in `code` (for example 42501),
+ * so the 500 response remains actionable without exposing a full stack trace.
+ */
+export function formatDatabaseError(payload, status = 500) {
+  const value = payload && typeof payload === 'object' ? payload : {};
+  const code = String(value.code || value.sqlstate || value.error_code || `HTTP_${status}`).trim();
+  let message = typeof payload === 'string'
+    ? payload
+    : (value.message || value.error_description || value.details || value.hint || `HTTP ${status}`);
+  if (typeof message !== 'string') {
+    try { message = JSON.stringify(message); } catch (_) { message = String(message); }
+  }
+  return `[${code}] ${String(message).trim()}`;
+}
+
+async function readJsonSafely(response) {
+  try {
+    return await response.json();
+  } catch (_) {
+    try {
+      const text = await response.text();
+      return text ? { message: text } : null;
+    } catch (__) {
+      return null;
+    }
+  }
 }
 
 // ─── Core handler (exported for unit tests) ─────────────────────────────────
@@ -262,9 +305,11 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
   const phoneDigits = phone.replace(/\D/g, '');
   const customerId = phoneDigits ? `cust-${phoneDigits}` : `cust-anon-${Date.now()}`;
 
-  // Single source of truth for the orders row — both the live INSERT and the
-  // supabase-js integration test build from this object, so a key-name drift
-  // (e.g. `orderNo` vs `order_number`) cannot slip past the test gate.
+  // Single source of truth for the pending order — the endpoint and the
+  // integration test both derive the named RPC arguments from this object.
+  // There is deliberately no direct POST /rest/v1/orders here: anon has no
+  // orders SELECT policy, so a table INSERT ... RETURNING would be rejected by
+  // PostgREST even after the write policy allowed the INSERT.
   const orderRow = buildOrderRow({
     orderNumber,
     customerId,
@@ -292,37 +337,48 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
       }),
     });
     // Non-2xx here is tolerated: a duplicate id (race) or a soft failure must
-    // not block checkout — the orders.customer_id FK is nullable-safe below.
+    // not block checkout. The RPC safely stores a null customer_id when the
+    // best-effort customer row is not present.
   } catch (err) {
     emit(`[VALMONTPAY-INIT] customer upsert skipped: ${err && err.message}`);
   }
 
-  let orderRes;
+  // create_pending_order() is SECURITY DEFINER. It validates the canonical
+  // values, inserts with the database owner's rights, and returns {id,
+  // order_number} as jsonb. This avoids SELECT/RLS evaluation of a returned
+  // orders row while keeping the order number available to the gateway.
+  let pendingOrder;
+  const rpcArgs = buildCreatePendingOrderArgs(orderRow);
   try {
-    orderRes = await fetchImpl(`${sbUrl}/rest/v1/orders`, {
+    const orderRes = await fetchImpl(`${sbUrl}/rest/v1/rpc/create_pending_order`, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        ...sbHeaders,
-        prefer: 'return=representation',
-      },
-      body: JSON.stringify(orderRow),
+      headers: { 'content-type': 'application/json', ...sbHeaders },
+      body: JSON.stringify(rpcArgs),
     });
+    const rpcJson = await readJsonSafely(orderRes);
+    if (!orderRes.ok) {
+      const diagnostic = formatDatabaseError(rpcJson, orderRes.status);
+      emit(`[VALMONTPAY-INIT] create_pending_order failed: ${diagnostic}`);
+      return {
+        status: 500,
+        body: { status: false, message: `Could not record your order. ${diagnostic}` },
+      };
+    }
+    pendingOrder = rpcJson && !Array.isArray(rpcJson) && typeof rpcJson === 'object' ? rpcJson : null;
   } catch (err) {
-    emit(`[VALMONTPAY-INIT] order insert failed (network): ${err && err.message}`);
+    emit(`[VALMONTPAY-INIT] create_pending_order failed (network): ${err && err.message}`);
     return { status: 503, body: { status: false, message: 'Could not record your order. Please try again.' } };
   }
-  if (!orderRes.ok) {
-    let detail = '';
-    try {
-      const j = await orderRes.json();
-      detail = (j && (j.message || j.msg || j.hint)) || '';
-    } catch (_) {}
-    emit(`[VALMONTPAY-INIT] order insert failed: HTTP ${orderRes.status} ${detail}`);
-    return { status: 500, body: { status: false, message: 'Could not record your order. Please try again.' } };
+
+  const returnedOrderNumber = pendingOrder && String(pendingOrder.order_number || '').trim();
+  const returnedOrderId = pendingOrder && pendingOrder.id != null ? String(pendingOrder.id).trim() : '';
+  if (!pendingOrder || returnedOrderNumber !== orderNumber || !returnedOrderId) {
+    const diagnostic = `[RPC_RESPONSE] create_pending_order returned an invalid order identity for ${orderNumber}`;
+    emit(`[VALMONTPAY-INIT] ${diagnostic}`);
+    return { status: 500, body: { status: false, message: `Could not record your order. ${diagnostic}` } };
   }
 
-  emit(`[VALMONTPAY-INIT] pending order ${orderNumber} recorded: GHS ${formatCedis(totalPesewas)} (${orderItems.length} line/s)`);
+  emit(`[VALMONTPAY-INIT] pending order ${orderNumber} recorded (id=${returnedOrderId}): GHS ${formatCedis(totalPesewas)} (${orderItems.length} line/s)`);
 
   // ── 4. Initialize the hosted checkout on the Valmont-Pay gateway ──────────
   const gatewayUrl = `${String(env.VALMONTPAY_GATEWAY_URL || GATEWAY_BASE).replace(/\/$/, '')}${GATEWAY_INITIALIZE_PATH}`;
@@ -397,6 +453,7 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
     body: {
       status: true,
       url: payUrl,
+      order_id: returnedOrderId,
       order_number: orderNumber,
       reference: gatewayReference || orderNumber,
       total: totalCedis,
