@@ -270,7 +270,7 @@ const CATALOG = [
   { id: 'VG-OFF', name: 'Deactivated', price: 50, is_active: false },
 ];
 
-function initRoutes({ gateway = { status: true, message: 'ok', data: { access_code: 'ac_test', reference: 'VG-ORDER-1', gateway_reference: 'VP-MB3K7Z1A-9F4C2E18', pay_url: 'https://valmontpay.app/pay.html?access_code=ac_test', checkout_url: 'https://valmontpay.app/checkout.html?reference=VG-ORDER-1' } }, gatewayStatus = 200, orderInsertStatus = 200, productsThrows = false } = {}) {
+function initRoutes({ gateway = { status: true, message: 'ok', data: { access_code: 'ac_test', reference: 'VG-ORDER-1', gateway_reference: 'VP-MB3K7Z1A-9F4C2E18', pay_url: 'https://valmontpay.app/pay.html?access_code=ac_test', checkout_url: 'https://valmontpay.app/checkout.html?reference=VG-ORDER-1' } }, gatewayStatus = 200, orderInsertStatus = 200, productsThrows = false, idempotentExisting = null } = {}) {
   return mockFetch([
     {
       match: (c) => c.url.includes('/rest/v1/products?'),
@@ -278,7 +278,20 @@ function initRoutes({ gateway = { status: true, message: 'ok', data: { access_co
       ...(productsThrows ? { throw: 'catalog down' } : {}),
     },
     { match: (c) => c.url.endsWith('/rest/v1/customers'), respond: () => ({ status: 201, json: [] }) },
-    { match: (c) => c.url.includes('/rest/v1/rpc/create_pending_order'), respond: (c) => ({ status: orderInsertStatus, json: orderInsertStatus < 300 ? { id: 'order-1', order_number: c.body.p_order_number } : { code: '42501', message: 'insert failed' } }) },
+    {
+      match: (c) => c.url.includes('/rest/v1/rpc/create_pending_order'),
+      respond: (c) => {
+        if (orderInsertStatus >= 300) {
+          return { status: orderInsertStatus, json: { code: '42501', message: 'insert failed' } };
+        }
+        // Simulate idempotency: if idempotentExisting is set, the RPC returns
+        // the existing order (idempotent: true). Otherwise, a fresh insert.
+        if (idempotentExisting) {
+          return { status: 200, json: { id: idempotentExisting.id, order_number: idempotentExisting.order_number, idempotent: true } };
+        }
+        return { status: 200, json: { id: 'order-1', order_number: c.body.p_order_number, idempotent: false } };
+      },
+    },
     { match: (c) => c.url.includes('/api/transaction/initialize'), respond: () => ({ status: gatewayStatus, json: gateway }) },
     { match: (c) => c.url.includes('/rest/v1/rpc/set_order_payment_reference'), respond: () => ({ status: 200, json: { result: 'ok' } }) },
   ]);
@@ -379,7 +392,7 @@ test('initialize: raw Postgres code is bracketed in the diagnostic 500 body', as
   });
   assert.equal(result.status, 500);
   assert.match(result.body.message, /\[42501\]/);
-  assert.match(result.body.message, /insert failed/);
+  assert.match(result.body.detail || result.body.message, /insert failed/);
   assert.equal(calls.some((c) => c.url.includes('/api/transaction/initialize')), false);
 });
 
@@ -428,6 +441,98 @@ test('initialize: legacy client-priced body -> 410 Gone', async () => {
     assert.match(result.body.message, /Gone/i);
     assert.equal(calls.some((c) => c.url.includes('/api/transaction/initialize')), false, 'gateway never called for legacy requests');
   }
+});
+
+// ─── idempotency: retry with same cart returns the same order ──────────────
+
+test('initialize: idempotent retry returns the SAME order_number (no duplicate)', async () => {
+  const existingOrder = { id: 'order-existing', order_number: 'VG-FIRST-123456789' };
+  const body = {
+    items: [{ id: 'VG-A', qty: 2 }, { id: 'VG-B', qty: 1 }],
+    customer: { name: 'Ama', phone: '054 245 1578', email: 'ama@example.com' },
+    payment_method: 'Mobile Money',
+  };
+
+  // First call — fresh create.
+  const { result: first, calls: firstCalls } = await runInitialize(body);
+  assert.equal(first.status, 200);
+  assert.equal(first.body.idempotent, false, 'first call must not be idempotent');
+
+  // Second call — simulate idempotent hit (same customer, same cart).
+  const { result: second, calls: secondCalls } = await runInitialize(body, { idempotentExisting: existingOrder });
+  assert.equal(second.status, 200);
+  assert.equal(second.body.idempotent, true, 'second call must be idempotent');
+  assert.equal(second.body.order_number, 'VG-FIRST-123456789', 'must return the EXISTING order_number');
+
+  // Both calls went through the RPC, never direct orders table access.
+  assert.ok(firstCalls.some((c) => c.url.includes('/rest/v1/rpc/create_pending_order')));
+  assert.ok(secondCalls.some((c) => c.url.includes('/rest/v1/rpc/create_pending_order')));
+  assert.equal(firstCalls.some((c) => c.url.endsWith('/rest/v1/orders')), false);
+  assert.equal(secondCalls.some((c) => c.url.endsWith('/rest/v1/orders')), false);
+
+  // The RPC receives an idempotency_key on both calls, and the SAME key.
+  const firstRpc = firstCalls.find((c) => c.url.includes('/rest/v1/rpc/create_pending_order'));
+  const secondRpc = secondCalls.find((c) => c.url.includes('/rest/v1/rpc/create_pending_order'));
+  assert.ok(firstRpc.body.p_idempotency_key, 'RPC must receive p_idempotency_key');
+  assert.equal(firstRpc.body.p_idempotency_key, secondRpc.body.p_idempotency_key, 'same cart → same idempotency key');
+});
+
+test('computeIdempotencyKey: same customer+cart → same key, different cart → different key', async () => {
+  const { computeIdempotencyKey } = await import('../api/valmontpay/initialize.js');
+  const cust = 'cust-0542451578';
+  const cartA = [{ id: 'VG-A', qty: 2 }, { id: 'VG-B', qty: 1 }];
+  const cartB = [{ id: 'VG-B', qty: 1 }, { id: 'VG-A', qty: 2 }]; // same items, different order
+  const cartC = [{ id: 'VG-A', qty: 3 }]; // different qty
+
+  assert.equal(computeIdempotencyKey(cust, cartA), computeIdempotencyKey(cust, cartB), 'same items in different order → same key');
+  assert.notEqual(computeIdempotencyKey(cust, cartA), computeIdempotencyKey(cust, cartC), 'different qty → different key');
+  assert.notEqual(computeIdempotencyKey(cust, cartA), computeIdempotencyKey('cust-other', cartA), 'different customer → different key');
+});
+
+// ─── CI grep gate: no direct /rest/v1/orders access in initialize/webhook ──
+
+test('CI grep gate: initialize.js must not contain /rest/v1/orders outside rpc/', async () => {
+  const src = readFileSync(new URL('../api/valmontpay/initialize.js', import.meta.url), 'utf8');
+  // Find all occurrences of /rest/v1/orders that are NOT part of /rest/v1/rpc/...
+  const lines = src.split('\n');
+  const violations = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // Skip comment-only lines that document the old path
+    if (/^\s*\*/.test(line) || /^\s*\/\//.test(line)) continue;
+    // Match /rest/v1/orders but NOT /rest/v1/rpc/...
+    if (/\/rest\/v1\/orders/.test(line) && !/\/rest\/v1\/rpc\//.test(line)) {
+      violations.push(`line ${i + 1}: ${line.trim()}`);
+    }
+  }
+  assert.equal(violations.length, 0, `Direct /rest/v1/orders access found in initialize.js:\n${violations.join('\n')}`);
+});
+
+test('CI grep gate: webhook.js must not contain /rest/v1/orders outside rpc/', async () => {
+  const src = readFileSync(new URL('../api/valmontpay/webhook.js', import.meta.url), 'utf8');
+  const lines = src.split('\n');
+  const violations = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (/^\s*\*/.test(line) || /^\s*\/\//.test(line)) continue;
+    if (/\/rest\/v1\/orders/.test(line) && !/\/rest\/v1\/rpc\//.test(line)) {
+      violations.push(`line ${i + 1}: ${line.trim()}`);
+    }
+  }
+  assert.equal(violations.length, 0, `Direct /rest/v1/orders access found in webhook.js:\n${violations.join('\n')}`);
+});
+
+test('CI grep gate: app.js must not contain /rest/v1/orders (browser must never read orders directly)', async () => {
+  const violations = [];
+  const lines = appSrc.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (/^\s*\*/.test(line) || /^\s*\/\//.test(line)) continue;
+    if (/\/rest\/v1\/orders/.test(line) && !/\/rest\/v1\/rpc\//.test(line)) {
+      violations.push(`line ${i + 1}: ${line.trim()}`);
+    }
+  }
+  assert.equal(violations.length, 0, `Direct /rest/v1/orders access found in app.js:\n${violations.join('\n')}`);
 });
 
 // ─── client helper regressions (extracted from app.js) ──────────────────────
