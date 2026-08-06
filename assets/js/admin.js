@@ -54,6 +54,9 @@ const state = {
   customers: [],
   reviews: [],
   settings: { ...DEFAULT_SETTINGS },
+  deliveryFees: [],
+  deliverySettings: { free_over: 5000, default_fee: 50 },
+  auditLog: [],
   productImages: [],
   editingProductId: null,
   draggingImageIndex: null,
@@ -441,6 +444,111 @@ class ValmontAdminDatabase {
     return merged;
   }
 
+
+  async getDeliveryFees() {
+    if (!this.useSupabase || !this.client) return [];
+    try {
+      const { data, error } = await this.client.from("delivery_fees").select("*").order("sort_order", { ascending: true });
+      if (error) throw error;
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      // 401/42501 -> not admin
+      if (error && (String(error.code) === "42501" || String(error.message).includes("401") || error.status === 401)) throw error;
+      console.warn("delivery_fees unavailable:", error);
+      return [];
+    }
+  }
+
+  async getDeliverySettings() {
+    if (!this.useSupabase || !this.client) return { free_over: 5000, default_fee: 50 };
+    try {
+      const { data, error } = await this.client.from("delivery_settings").select("*");
+      if (error) throw error;
+      const out = { free_over: 5000, default_fee: 50 };
+      if (Array.isArray(data)) {
+        data.forEach(row => {
+          const key = String(row.key || row.setting_key || row.name || "").trim();
+          let val = row.value;
+          try { if (typeof val === "string") val = JSON.parse(val); } catch(_) {}
+          if (key === "free_over") out.free_over = Number(val ?? val?.value ?? 5000);
+          if (key === "default_fee") out.default_fee = Number(val ?? val?.value ?? 50);
+          // also handle if row has free_over/default_fee columns directly
+          if (row.free_over != null) out.free_over = Number(row.free_over);
+          if (row.default_fee != null) out.default_fee = Number(row.default_fee);
+        });
+      }
+      // Fallback if settings stored as single row with jsonb
+      if (data && !Array.isArray(data) && typeof data === "object") {
+        if (data.free_over != null) out.free_over = Number(data.free_over);
+        if (data.default_fee != null) out.default_fee = Number(data.default_fee);
+      }
+      return out;
+    } catch (error) {
+      if (error && (String(error.code) === "42501" || String(error.message).includes("401") || error.status === 401)) throw error;
+      console.warn("delivery_settings unavailable:", error);
+      return { free_over: 5000, default_fee: 50 };
+    }
+  }
+
+  async saveDeliveryFees(fees, settings) {
+    // fees: array of {region, fee}
+    // settings: {free_over, default_fee}
+    let lastError = null;
+    // Save region fees: only changed rows via .update().eq()
+    for (const f of fees) {
+      try {
+        const { error } = await this.client.from("delivery_fees").update({ fee: Number(f.fee) }).eq("region", f.region);
+        if (error) throw error;
+      } catch (e) {
+        lastError = e;
+        if (String(e.code) === "42501" || e.status === 401 || String(e.message).includes("401")) throw e;
+        console.warn("delivery_fees update failed for", f.region, e);
+      }
+    }
+    // Save settings via upsert or update
+    const settingsRows = [
+      { key: "free_over", value: Number(settings.free_over) },
+      { key: "default_fee", value: Number(settings.default_fee) }
+    ];
+    for (const row of settingsRows) {
+      try {
+        // Try update first
+        const { data, error } = await this.client.from("delivery_settings").select("key").eq("key", row.key).limit(1);
+        if (!error && Array.isArray(data) && data.length === 0) {
+          const { error: insErr } = await this.client.from("delivery_settings").insert(row);
+          if (insErr) throw insErr;
+        } else {
+          const { error: updErr } = await this.client.from("delivery_settings").update({ value: row.value }).eq("key", row.key);
+          if (updErr) throw updErr;
+        }
+      } catch (e) {
+        // Fallback: try direct update with key column
+        try {
+          const { error } = await this.client.from("delivery_settings").update({ value: row.value }).eq("key", row.key);
+          if (error) throw error;
+        } catch (e2) {
+          lastError = e2;
+          if (String(e2.code) === "42501" || e2.status === 401) throw e2;
+          console.warn("delivery_settings update failed for", row.key, e2);
+        }
+      }
+    }
+    if (lastError && String(lastError.code) === "42501") throw lastError;
+  }
+
+  async getAuditLog() {
+    if (!this.useSupabase || !this.client) return [];
+    try {
+      const { data, error } = await this.client.from("admin_audit_log").select("*").order("changed_at", { ascending: false }).limit(50);
+      if (error) throw error;
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      if (error && (String(error.code) === "42501" || error.status === 401)) throw error;
+      console.warn("admin_audit_log unavailable:", error);
+      return [];
+    }
+  }
+
   async uploadImage(file, folder = "products") {
     const safeName = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
     const path = `${folder}/${Date.now()}-${crypto.randomUUID()}-${safeName}`;
@@ -552,6 +660,21 @@ async function loadAllData() {
     state.orders = attachCustomersToOrders(orders, customers);
     state.customers = mergeCustomersWithOrders(customers, state.orders);
     state.reviews = reviews;
+    // Delivery fees + audit log (Task 3) - load separately (admin-only SELECT)
+    try {
+      const [fees, dSettings, audit] = await Promise.all([db.getDeliveryFees(), db.getDeliverySettings(), db.getAuditLog()]);
+      state.deliveryFees = Array.isArray(fees) ? fees : [];
+      state.deliverySettings = dSettings || { free_over: 5000, default_fee: 50 };
+      state.auditLog = Array.isArray(audit) ? audit : [];
+    } catch (e) {
+      if (String(e.code) === "42501" || e.status === 401 || String(e.message).includes("not your admin")) {
+        // Will be surfaced when rendering
+        state.deliveryFees = [];
+        state.auditLog = [];
+      } else {
+        console.warn("Delivery fees load failed", e);
+      }
+    }
     renderEverything();
     db.subscribeToRealtime(async () => {
       await refreshDataSilently();
@@ -567,6 +690,7 @@ async function refreshDataSilently() {
   const [settings, categories, products, orders, customers, reviews] = await Promise.all([
     db.getSettings(), db.getCategories(), db.getProducts(), db.getOrders(), db.getCustomers(), db.getReviews()
   ]);
+  try { const [fees, dSettings, audit] = await Promise.all([db.getDeliveryFees(), db.getDeliverySettings(), db.getAuditLog()]); state.deliveryFees = fees; state.deliverySettings = dSettings; state.auditLog = audit; } catch(_) {}
   state.settings = { ...DEFAULT_SETTINGS, ...settings };
   state.categories = categories.length ? categories : DEFAULT_CATEGORIES;
   state.products = products;
@@ -586,6 +710,8 @@ function renderEverything() {
   renderCategories();
   renderSiteContentForm();
   renderSettingsForm();
+  renderDeliveryFees();
+  renderAuditLog();
   populateCategorySelect();
 }
 
@@ -1058,6 +1184,110 @@ function renderSettingsForm() {
   document.getElementById("payCard").checked = Boolean(state.settings.payment_methods?.card);
   document.getElementById("logoPreview").innerHTML = state.settings.logo_url ? `<img src="${escapeAttr(state.settings.logo_url)}" alt="Store logo" class="max-h-16 rounded-lg bg-white/5 object-contain" />` : "No logo uploaded.";
   renderShippingZoneRows();
+}
+
+
+function renderDeliveryFees() {
+  const freeOverEl = document.getElementById("deliveryFreeOver");
+  const defaultFeeEl = document.getElementById("deliveryDefaultFee");
+  const listEl = document.getElementById("deliveryFeesList");
+  const msgEl = document.getElementById("deliverySaveMessage");
+  if (!freeOverEl || !defaultFeeEl || !listEl) return;
+  const settings = state.deliverySettings || { free_over: 5000, default_fee: 50 };
+  freeOverEl.value = settings.free_over ?? 5000;
+  defaultFeeEl.value = settings.default_fee ?? 50;
+  const fees = Array.isArray(state.deliveryFees) && state.deliveryFees.length ? state.deliveryFees : [];
+  if (!fees.length) {
+    listEl.innerHTML = emptyState("No delivery fees found. Check admin permissions.");
+  } else {
+    // Sort by sort_order
+    const sorted = [...fees].sort((a,b)=> Number(a.sort_order||999)-Number(b.sort_order||999));
+    listEl.innerHTML = sorted.map(r => `
+      <div class="flex gap-3 items-center rounded-xl border border-slate-800 bg-[#071126] p-3">
+        <div class="flex-1 min-w-0"><p class="text-sm font-black text-white truncate">${escapeHtml(r.region)}</p><p class="text-[10px] text-slate-500">sort ${r.sort_order ?? ""}</p></div>
+        <div class="w-32"><label class="admin-label">Fee GH₵</label><input type="number" step="0.01" min="0" class="admin-input delivery-fee-input" data-region="${escapeAttr(r.region)}" value="${Number(r.fee ?? 0)}" /></div>
+      </div>
+    `).join("");
+  }
+  // Bind save button
+  const saveBtn = document.getElementById("saveDeliveryFees");
+  if (saveBtn && !saveBtn.dataset.bound) {
+    saveBtn.dataset.bound = "1";
+    saveBtn.addEventListener("click", async () => {
+      await saveDeliveryFees();
+    });
+  }
+}
+
+async function saveDeliveryFees() {
+  const msgEl = document.getElementById("deliverySaveMessage");
+  const freeOver = Number(document.getElementById("deliveryFreeOver").value || 0);
+  const defaultFee = Number(document.getElementById("deliveryDefaultFee").value || 0);
+  const inputs = Array.from(document.querySelectorAll(".delivery-fee-input"));
+  const fees = inputs.map(inp => ({ region: inp.dataset.region, fee: Number(inp.value || 0), original: state.deliveryFees.find(r=>r.region===inp.dataset.region)?.fee }));
+  const changed = fees.filter(f => Number(f.fee) !== Number(f.original));
+  // Validate
+  if (Number.isNaN(freeOver) || freeOver < 0) { showToast("Free over must be >=0"); return; }
+  if (Number.isNaN(defaultFee) || defaultFee < 0) { showToast("Default fee must be >=0"); return; }
+  // Show saving state
+  const saveBtn = document.getElementById("saveDeliveryFees");
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "Saving..."; }
+  try {
+    // Build payload for db.saveDeliveryFees: need to pass all fees (changed rows will be updated)
+    // But spec says save changed rows via .update().eq(); our db method does that.
+    await db.saveDeliveryFees(fees, { free_over: freeOver, default_fee: defaultFee });
+    // Refresh state
+    try {
+      const [newFees, newSettings, audit] = await Promise.all([db.getDeliveryFees(), db.getDeliverySettings(), db.getAuditLog()]);
+      state.deliveryFees = newFees;
+      state.deliverySettings = newSettings;
+      state.auditLog = audit;
+    } catch(_) {}
+    renderDeliveryFees();
+    renderAuditLog();
+    if (msgEl) { msgEl.textContent = "Delivery fees saved."; msgEl.className = "text-sm font-bold text-emerald-400"; msgEl.classList.remove("hidden"); }
+    showToast("Delivery fees saved.");
+  } catch (e) {
+    const code = String(e.code || e.status || "");
+    const msg = String(e.message || "");
+    if (code === "42501" || code === "401" || msg.includes("401") || msg.toLowerCase().includes("permission") || msg.toLowerCase().includes("not your admin")) {
+      if (msgEl) { msgEl.textContent = "not your admin account"; msgEl.className = "text-sm font-bold text-red-400"; msgEl.classList.remove("hidden"); }
+      showToast("not your admin account");
+    } else {
+      if (msgEl) { msgEl.textContent = "Save failed: " + (e.message || "unknown error"); msgEl.className = "text-sm font-bold text-red-400"; msgEl.classList.remove("hidden"); }
+      showToast("Save failed");
+    }
+    console.error("saveDeliveryFees failed", e);
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Save Delivery Fees"; }
+    setTimeout(() => { if (msgEl) msgEl.classList.add("hidden"); }, 4000);
+  }
+}
+
+function renderAuditLog() {
+  const body = document.getElementById("auditLogBody");
+  if (!body) return;
+  const logs = Array.isArray(state.auditLog) ? state.auditLog : [];
+  if (!logs.length) {
+    body.innerHTML = `<tr><td colspan="4">${emptyState("No audit history yet.")}</td></tr>`;
+    return;
+  }
+  body.innerHTML = logs.map(row => {
+    const changedAt = row.changed_at || row.created_at || row.timestamp || "";
+    const rowKey = row.row_key || row.region || row.key || row.table_name || "" ;
+    const actor = row.actor_email || row.actor || row.email || "";
+    // old->new fee: try various column names
+    let change = "";
+    if (row.old_fee != null || row.new_fee != null) change = `${row.old_fee ?? "-"} → ${row.new_fee ?? "-"}`;
+    else if (row.old_value != null || row.new_value != null) change = `${JSON.stringify(row.old_value)} → ${JSON.stringify(row.new_value)}`;
+    else if (row.old_data || row.new_data) change = `${escapeHtml(JSON.stringify(row.old_data||row.old||""))} → ${escapeHtml(JSON.stringify(row.new_data||row.new||""))}`;
+    else if (row.fee != null) change = `${row.fee}`;
+    else change = `${row.old_fee ?? row.old_value ?? ""} → ${row.new_fee ?? row.new_value ?? ""}`.trim() || "—";
+    // If change still empty, show generic
+    if (!change || change === " → ") change = "fee update";
+    const dateStr = changedAt ? new Date(changedAt).toLocaleString("en-GH") : "";
+    return `<tr><td>${escapeHtml(dateStr)}</td><td class="font-bold text-white">${escapeHtml(String(rowKey))}</td><td>${escapeHtml(change)}</td><td>${escapeHtml(String(actor))}</td></tr>`;
+  }).join("");
 }
 
 function renderShippingZoneRows() {

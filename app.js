@@ -1295,6 +1295,110 @@ document.addEventListener("keydown", function(e) {
     let isDealerMode = false;
     let dealerProfile = null;
 
+    // ── Delivery-fee live config (Task 2) ──────────────────────────────────
+    // Fetched once per checkout open via anon RPC get_delivery_config().
+    // Shape: { free_over: number, default_fee: number, regions: [{region, fee}...] }
+    let deliveryConfig = null;
+    let deliveryConfigPromise = null;
+    let selectedDeliveryRegion = null; // canonical region string or null
+
+    function getDeliveryFeeForRegion(subtotal, region) {
+      if (!deliveryConfig) return 0;
+      const freeOver = Number(deliveryConfig.free_over ?? 5000);
+      if (subtotal >= freeOver) return 0;
+      if (!region) return Number(deliveryConfig.default_fee ?? 50);
+      const entry = deliveryConfig.regions.find(r => r.region === region);
+      if (entry) return Number(entry.fee ?? deliveryConfig.default_fee);
+      return Number(deliveryConfig.default_fee ?? 50);
+    }
+
+    function fetchDeliveryConfig() {
+      if (deliveryConfig) return Promise.resolve(deliveryConfig);
+      if (deliveryConfigPromise) return deliveryConfigPromise;
+      deliveryConfigPromise = (async () => {
+        try {
+          const sbUrl = VALMONT_SUPABASE.url.replace(/\/$/, '');
+          const anonKey = VALMONT_SUPABASE.anonKey;
+          const res = await fetch(`${sbUrl}/rest/v1/rpc/get_delivery_config`, {
+            method: 'POST',
+            headers: { apikey: anonKey, authorization: `Bearer ${anonKey}`, 'content-type': 'application/json' },
+            body: JSON.stringify({})
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          // RPC may return {free_over, default_fee, regions[]} directly or inside jsonb
+          let cfg = data;
+          if (Array.isArray(data) && data[0]) cfg = data[0];
+          if (cfg && cfg.get_delivery_config) cfg = cfg.get_delivery_config;
+          // Normalize
+          const free_over = Number(cfg.free_over ?? cfg.freeOver ?? 5000);
+          const default_fee = Number(cfg.default_fee ?? cfg.defaultFee ?? 50);
+          let regions = cfg.regions || cfg.delivery_fees || [];
+          if (!Array.isArray(regions)) regions = [];
+          regions = regions.map(r => ({ region: String(r.region || r.name || '').trim(), fee: Number(r.fee ?? r.delivery_fee ?? 0), sort_order: Number(r.sort_order ?? 999) })).filter(r => r.region).sort((a,b)=>a.sort_order-b.sort_order || a.region.localeCompare(b.region));
+          deliveryConfig = { free_over, default_fee, regions };
+          return deliveryConfig;
+        } catch (e) {
+          console.warn('Delivery config fetch failed, using fallback:', e);
+          deliveryConfig = { free_over: 5000, default_fee: 50, regions: [
+            {region:'Greater Accra', fee:25, sort_order:1},{region:'Ashanti', fee:40, sort_order:2},{region:'Western', fee:45, sort_order:3},{region:'Central', fee:45, sort_order:4},{region:'Eastern', fee:40, sort_order:5},{region:'Volta', fee:50, sort_order:6},{region:'Northern', fee:60, sort_order:7},{region:'Upper East', fee:70, sort_order:8},{region:'Upper West', fee:70, sort_order:9},{region:'Bono', fee:50, sort_order:10},{region:'Bono East', fee:55, sort_order:11},{region:'Ahafo', fee:55, sort_order:12},{region:'Savannah', fee:65, sort_order:13},{region:'North East', fee:65, sort_order:14},{region:'Oti', fee:55, sort_order:15},{region:'Western North', fee:50, sort_order:16}
+          ]};
+          return deliveryConfig;
+        }
+      })();
+      return deliveryConfigPromise;
+    }
+
+    function populateRegionSelect() {
+      const sel = document.getElementById('shippingRegion');
+      if (!sel || !deliveryConfig) return;
+      const current = sel.value || selectedDeliveryRegion || '';
+      sel.innerHTML = '<option value="">Select your region</option>' +
+        deliveryConfig.regions.map(r => `<option value="${escapeHtml(r.region)}">${escapeHtml(r.region)} — ${money(r.fee)}</option>`).join('');
+      if (current && deliveryConfig.regions.some(r => r.region === current)) {
+        sel.value = current;
+        selectedDeliveryRegion = current;
+      }
+      // Clear previous handler to avoid duplicates
+      sel.onchange = () => {
+        selectedDeliveryRegion = sel.value || null;
+        sel.style.borderColor = '';
+        const errEl = sel.parentElement.querySelector('.shipping-field-error');
+        if (errEl) errEl.remove();
+        updateCartDeliveryDisplay();
+      };
+    }
+
+    function updateCartDeliveryDisplay() {
+      const labelEl = document.getElementById('cartDeliveryLabel');
+      const valueEl = document.getElementById('cartDeliveryValue');
+      if (!labelEl || !valueEl) return;
+      const subtotal = cart.reduce((s, i) => s + (Number(i.retail || 0) * Number(i.qty || 1)), 0);
+      const freeOver = deliveryConfig ? Number(deliveryConfig.free_over) : 5000;
+      if (subtotal >= freeOver) {
+        labelEl.textContent = 'Delivery:';
+        valueEl.textContent = 'FREE';
+        valueEl.className = 'font-black text-green-600';
+      } else {
+        const fee = getDeliveryFeeForRegion(subtotal, selectedDeliveryRegion);
+        if (selectedDeliveryRegion) {
+          labelEl.textContent = `Delivery (${selectedDeliveryRegion}):`;
+        } else {
+          labelEl.textContent = 'Delivery:';
+        }
+        valueEl.textContent = money(fee);
+        valueEl.className = 'font-bold text-gray-800';
+      }
+      // Also update total display
+      const subtotalEl = document.getElementById('cartSubtotal');
+      const totalEl = document.getElementById('cartTotal');
+      if (subtotalEl && totalEl) {
+        const feeLive = subtotal >= freeOver ? 0 : getDeliveryFeeForRegion(subtotal, selectedDeliveryRegion);
+        if (subtotalEl) subtotalEl.textContent = money(subtotal);
+        if (totalEl) totalEl.textContent = money(subtotal + feeLive);
+      }
+    }
+
     // Elements
     const productGrid = document.getElementById('productGrid');
     const flashGrid = document.getElementById('flashProductsRow');
@@ -1786,6 +1890,8 @@ document.addEventListener("keydown", function(e) {
       cartOverlay.classList.remove('hidden');
       setTimeout(() => cartOverlay.classList.add('opacity-100'), 10);
       cartDrawer.classList.remove('translate-x-full');
+      // Task 2: fetch delivery config on checkout open (anon RPC)
+      fetchDeliveryConfig().then(() => { populateRegionSelect(); updateCartDeliveryDisplay(); }).catch(()=>{});
       renderCartUI();
       if (typeof updateMobileNavHighlights === 'function') updateMobileNavHighlights('bag');
     }
@@ -1927,7 +2033,9 @@ document.addEventListener("keydown", function(e) {
 
       const subtotal = cart.reduce((sum, item) => sum + (item.retail * item.qty), 0);
       subtotalEl.textContent = money(subtotal);
-      totalEl.textContent = money(subtotal);
+      // Delivery fee is region-aware and free over threshold. Delegate to helper which also updates label.
+      if (typeof updateCartDeliveryDisplay === 'function') updateCartDeliveryDisplay();
+      else totalEl.textContent = money(subtotal);
     }
 
     // MULTI-STEP CHECKOUT ACTION LOGIC
@@ -1946,7 +2054,7 @@ document.addEventListener("keydown", function(e) {
     }
 
     // Clear inline shipping errors on user input
-    ['shippingName', 'shippingPhone', 'shippingEmail', 'shippingCity', 'shippingTown', 'shippingGPS', 'shippingStreet'].forEach(function(fieldId) {
+    ['shippingName', 'shippingPhone', 'shippingEmail', 'shippingRegion', 'shippingCity', 'shippingTown', 'shippingGPS', 'shippingStreet'].forEach(function(fieldId) {
       var fieldEl = document.getElementById(fieldId);
       if (fieldEl) {
         fieldEl.addEventListener('input', function() {
@@ -1977,9 +2085,11 @@ document.addEventListener("keydown", function(e) {
         document.getElementById('stepTab1').className = "text-gray-400 pb-0.5";
         document.getElementById('stepTab2').className = "text-[#ff8c00] border-b-2 border-[#ff8c00] pb-0.5";
         checkoutActionBtn.querySelector('span').textContent = "Proceed to Payment";
+        // Load delivery regions for shipping step (Task 2)
+        fetchDeliveryConfig().then(() => { populateRegionSelect(); updateCartDeliveryDisplay(); }).catch(()=>{});
       } else if (checkoutStep === 2) {
         // --- Inline field validation for Shipping step ---
-        const fieldIds = ['shippingName', 'shippingPhone', 'shippingEmail', 'shippingCity', 'shippingTown', 'shippingGPS', 'shippingStreet'];
+        const fieldIds = ['shippingName', 'shippingPhone', 'shippingEmail', 'shippingRegion', 'shippingCity', 'shippingTown', 'shippingGPS', 'shippingStreet'];
         let hasError = false;
 
         // Helper: show inline error under a field
@@ -2017,6 +2127,8 @@ document.addEventListener("keydown", function(e) {
         const town = document.getElementById('shippingTown').value.trim();
         const gps = document.getElementById('shippingGPS').value.trim();
         const street = document.getElementById('shippingStreet').value.trim();
+        const regionEl = document.getElementById('shippingRegion');
+        const region = regionEl ? regionEl.value.trim() : (selectedDeliveryRegion || '');
 
         // Name: required, at least 2 chars, must contain a letter
         if (!name || name.length < 2 || !/[a-zA-Z]/.test(name)) {
@@ -2052,6 +2164,17 @@ document.addEventListener("keydown", function(e) {
         if (!town) {
           showFieldError('shippingTown', 'Town or suburb is required.');
           hasError = true;
+        }
+
+        // Region: required (canonical string from get_delivery_config)
+        if (!region) {
+          showFieldError('shippingRegion', 'Please select your region.');
+          hasError = true;
+        } else if (region.length > 60) {
+          showFieldError('shippingRegion', 'Region must be 60 characters or fewer.');
+          hasError = true;
+        } else {
+          selectedDeliveryRegion = region;
         }
 
         // Ghana Post GPS: optional, but if filled must match XX-###-####
@@ -2128,6 +2251,8 @@ document.addEventListener("keydown", function(e) {
       const gps = document.getElementById('shippingGPS').value.trim();
       const street = document.getElementById('shippingStreet').value.trim();
       const fullAddress = `${street}, ${town}, ${city} ${gps ? '(' + gps + ')' : ''}`;
+      const regionEl = document.getElementById('shippingRegion');
+      const deliveryRegion = regionEl ? regionEl.value.trim() : (selectedDeliveryRegion || '');
       const paymentOpt = document.querySelector('input[name="paymentOption"]:checked').value;
 
       const subtotal = cart.reduce((sum, item) => sum + (item.retail * item.qty), 0);
@@ -2158,6 +2283,13 @@ Street: ${street || 'To be provided'}
 _Stock is verified before dispatch. We will contact you to finalize your delivery. Thank you for choosing Valmont Gadgets Ghana!_`;
 
       // Both card and Mobile Money use the same secure Valmont-Pay checkout.
+      // Ensure region is validated before proceeding (required)
+      if (!deliveryRegion) {
+        // Fallback validation if trigger called outside step 2 validation
+        if (typeof showValmontToast === 'function') showValmontToast('Please select your delivery region.');
+        else alert('Please select your delivery region.');
+        return;
+      }
       redirectToValmontPay({
           subtotal: subtotal,
           reference: ref,
@@ -2167,6 +2299,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
           street: street,
           fullAddress: fullAddress,
           paymentMethod: paymentNames[paymentOpt],
+          delivery_region: deliveryRegion,
           items: cart.map(function (item) {
             return {
               id: item.id,
@@ -2197,7 +2330,11 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         customer_street: ctx.street,
         delivery_address: ctx.fullAddress,
         payment_method: ctx.paymentMethod,
+        // total/subtotal/delivery_fee will be overwritten by RPC-authoritative values below
         total_amount: ctx.subtotal,
+        subtotal: ctx.subtotal,
+        delivery_fee: 0,
+        delivery_region: ctx.delivery_region || selectedDeliveryRegion || null,
         items: ctx.items
       };
 
@@ -2221,7 +2358,8 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
           body: JSON.stringify({
             items: ctx.items.map(i => ({ id: i.id, qty: i.qty })),
             customer: { name: ctx.name, phone: ctx.phone, email: email, area: ctx.area, street: ctx.street, full_address: ctx.fullAddress },
-            payment_method: ctx.paymentMethod
+            payment_method: ctx.paymentMethod,
+            delivery_region: ctx.delivery_region || selectedDeliveryRegion || null
           })
         });
         const data = await res.json().catch(() => ({}));
@@ -2229,10 +2367,18 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
           throw new Error((data && data.message) || ('Payment gateway error (' + res.status + ')'));
         }
         // Sync the pending order to the server-issued order number/reference.
+        // ALWAYS use RPC-RETURNED subtotal/delivery_fee/total (never locally computed)
         paystackSavedRef = data.order_number;
         pendingOrder.reference_code = data.order_number;
         pendingOrder.payment_reference = data.reference || null;
-        pendingOrder.total_amount = data.total;
+        if (data.subtotal != null) pendingOrder.subtotal = Number(data.subtotal);
+        if (data.delivery_fee != null) pendingOrder.delivery_fee = Number(data.delivery_fee);
+        if (data.delivery_region != null) pendingOrder.delivery_region = String(data.delivery_region);
+        if (data.fee_source != null) pendingOrder.fee_source = String(data.fee_source);
+        if (data.total != null) pendingOrder.total_amount = Number(data.total);
+        else if (data.subtotal != null && data.delivery_fee != null) pendingOrder.total_amount = Number(data.subtotal) + Number(data.delivery_fee);
+        // Mirror fee_source for debug
+        pendingOrder.total = pendingOrder.total_amount;
         try { localStorage.setItem('valmont_pending_order', JSON.stringify(pendingOrder)); } catch (e) { /* non-fatal */ }
         window.location.href = data.url;
       } catch (err) {

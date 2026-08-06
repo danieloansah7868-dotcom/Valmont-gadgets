@@ -93,6 +93,7 @@
         <button class="nav-btn" data-section="reviews"><span>Reviews</span></button>
         <button class="nav-btn" data-section="categories"><span>Categories</span></button>
         <button class="nav-btn" data-section="content"><span>Site Content</span></button>
+        <button class="nav-btn" data-section="delivery"><span>Delivery Fees</span></button>
         <button class="nav-btn" data-section="settings"><span>Settings</span></button>
       </nav>
       <div class="mt-5 space-y-3 border-t border-slate-800 pt-4">
@@ -223,6 +224,26 @@
             </div>
             <button class="btn-gold" type="submit">Save Site Content</button>
           </form>
+        </section>
+
+        <section id="section-delivery" class="section-panel space-y-6">
+          <div><h1 class="text-2xl font-black text-white">Delivery Fees</h1><p class="mt-1 text-sm font-semibold text-slate-400">Manage region fees, free-delivery threshold and audit history. Only your admin account can save.</p></div>
+          <div id="deliveryFeesCard" class="admin-card space-y-5 p-5">
+            <div class="grid gap-4 md:grid-cols-2">
+              <div><label class="admin-label">Free Delivery Over (GH₵)</label><input id="deliveryFreeOver" type="number" step="0.01" min="0" class="admin-input" /></div>
+              <div><label class="admin-label">Default Fee (Unknown Region) GH₵</label><input id="deliveryDefaultFee" type="number" step="0.01" min="0" class="admin-input" /></div>
+            </div>
+            <div>
+              <h3 class="admin-label">Region Fees (16 regions)</h3>
+              <div id="deliveryFeesList" class="grid gap-3 md:grid-cols-2"></div>
+            </div>
+            <div class="flex justify-end"><button id="saveDeliveryFees" class="btn-gold" type="button">Save Delivery Fees</button></div>
+            <p id="deliverySaveMessage" class="hidden text-sm font-bold"></p>
+          </div>
+          <div class="admin-card p-5">
+            <div class="mb-4 flex items-center justify-between"><h2 class="text-sm font-black uppercase tracking-widest text-white">Audit History (latest 50)</h2><span class="badge">admin_audit_log</span></div>
+            <div class="table-wrap"><table class="admin-table"><thead><tr><th>Changed At</th><th>Row Key</th><th>Change</th><th>Actor</th></tr></thead><tbody id="auditLogBody"></tbody></table></div>
+          </div>
         </section>
 
         <section id="section-settings" class="section-panel space-y-6">

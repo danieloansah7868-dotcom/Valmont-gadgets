@@ -158,11 +158,25 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
     return { status: 500, body: { status: false, message: 'Payments are not configured. Please try again later.' } };
   }
 
+  // ── delivery_region validation (optional, string <=60 else 400) ────────────
+  let deliveryRegion = null;
+  if (body && body.delivery_region !== undefined && body.delivery_region !== null) {
+    if (typeof body.delivery_region !== 'string') {
+      return { status: 400, body: { status: false, message: 'delivery_region must be a string' } };
+    }
+    const trimmed = body.delivery_region.trim();
+    if (trimmed.length > 60) {
+      return { status: 400, body: { status: false, message: 'delivery_region must be 60 characters or fewer' } };
+    }
+    if (trimmed.length > 0) deliveryRegion = trimmed;
+    else deliveryRegion = null;
+  }
+
   // ── 410 Gone: legacy client-priced requests ───────────────────────────────
   // The retired flow let clients dictate amounts. Any request still carrying
   // client-priced fields is refused with 410 so old callers fail loudly and
-  // visibly instead of being silently re-priced.
-  const LEGACY_PRICE_FIELDS = ['amount', 'total', 'total_amount', 'subtotal', 'price', 'unit_price', 'line_total'];
+  // visibly instead of being silently re-priced. Region is explicitly allowed.
+  const LEGACY_PRICE_FIELDS = ['amount', 'total', 'total_amount', 'subtotal', 'price', 'unit_price', 'line_total', 'delivery_fee', 'deliveryFee', 'fee', 'delivery_fee_amount', 'shipping_fee', 'shippingFee'];
   if (body && typeof body === 'object') {
     const carried = LEGACY_PRICE_FIELDS.filter((k) => body[k] !== undefined && body[k] !== null);
     if (carried.length) {
@@ -176,7 +190,7 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
       };
     }
     if (Array.isArray(body.items)) {
-      const itemCarried = body.items.filter((i) => i && typeof i === 'object' && ['price', 'unit_price', 'retail', 'line_total', 'amount'].some((k) => i[k] !== undefined && i[k] !== null));
+      const itemCarried = body.items.filter((i) => i && typeof i === 'object' && ['price', 'unit_price', 'retail', 'line_total', 'amount', 'delivery_fee', 'deliveryFee', 'fee'].some((k) => i[k] !== undefined && i[k] !== null));
       if (itemCarried.length) {
         emit('[VALMONTPAY-INIT] legacy client-priced items rejected (410)');
         return {
@@ -281,20 +295,12 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
   });
   // Sum straight from the integer unit prices — no float round-trips.
   const subtotalPesewas = normalized.reduce((sum, item) => sum + priceMap.get(item.id).unitPesewas * item.qty, 0);
-  // Delivery is arranged after payment (unchanged storefront behaviour), so
-  // the payable total equals the recomputed subtotal.
-  const deliveryFeePesewas = 0;
-  const totalPesewas = subtotalPesewas + deliveryFeePesewas;
-  const totalCedis = totalPesewas / 100;
+  // Local totals are only for the RPC payload validation; the AUTHORITATIVE
+  // fee/total come from the RPC response (server-side region tiering + free_over).
+  const localDeliveryFeePesewas = 0;
+  const localTotalPesewas = subtotalPesewas + localDeliveryFeePesewas;
 
   // ── 3. Record the Pending order (the webhook needs a row to mark Paid) ────
-  // generateOrderNumber() always returns a non-empty "VG-…" string, but a
-  // future refactor (renamed variable, swapped generator, edge-runtime quirk)
-  // could silently make it undefined. `orders.order_number` is NOT NULL with
-  // no default, so PostgREST would reject the row with a 23502 not-null
-  // violation — surfacing to the shopper as "Could not record your order".
-  // Fail fast, here, with a loud server-side log instead of round-tripping a
-  // guaranteed-rejected INSERT.
   const orderNumber = String(generateOrderNumber() || '').trim();
   if (!orderNumber.startsWith('VG-') || orderNumber.length < 8) {
     emit(`[VALMONTPAY-INIT] refused to record order: generated order_number is invalid (${JSON.stringify(orderNumber)})`);
@@ -320,24 +326,33 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
         addresses: [{ zone: area || null, street: street || null, address: fullAddress || null }],
       }),
     });
-    // Non-2xx here is tolerated: a duplicate id (race) or a soft failure must
-    // not block checkout — the orders.customer_id FK is nullable-safe below.
   } catch (err) {
     emit(`[VALMONTPAY-INIT] customer upsert skipped: ${err && err.message}`);
   }
 
   // ── 3c. Record the Pending order via SECURITY DEFINER RPC ──────────────────
   // The anon role has NO direct SELECT/INSERT privilege on public.orders
-  // (intentional — RLS migration revoked it). All order creation goes through
-  // create_pending_order(), which validates catalog prices server-side and is
+  // All order creation goes through create_pending_order(), which validates catalog prices server-side and is
   // idempotent: identical (customer, cart) retries return the same Pending
   // order instead of creating duplicates.
+  // When p_delivery_region is supplied the RPC computes fee server-authoritatively.
   const idempotencyKey = computeIdempotencyKey(customerId, normalized);
   const rpcItems = buildRpcItems(orderItems);
 
   let orderRes;
   let orderResult = null;
   try {
+    const rpcBody = {
+      p_order_number: orderNumber,
+      p_customer_id: customerId,
+      p_items: rpcItems,
+      p_subtotal: subtotalPesewas / 100,
+      p_delivery_fee: 0,
+      p_total: localTotalPesewas / 100,
+      p_payment_method: paymentMethod,
+      p_idempotency_key: idempotencyKey,
+      p_delivery_region: deliveryRegion,
+    };
     orderRes = await fetchImpl(`${sbUrl}/rest/v1/rpc/create_pending_order`, {
       method: 'POST',
       headers: {
@@ -345,16 +360,7 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
         ...sbHeaders,
         prefer: 'return=representation',
       },
-      body: JSON.stringify({
-        p_order_number: orderNumber,
-        p_customer_id: customerId,
-        p_items: rpcItems,
-        p_subtotal: subtotalPesewas / 100,
-        p_delivery_fee: 0,
-        p_total: totalPesewas / 100,
-        p_payment_method: paymentMethod,
-        p_idempotency_key: idempotencyKey,
-      }),
+      body: JSON.stringify(rpcBody),
     });
   } catch (err) {
     emit(`[VALMONTPAY-INIT] create_pending_order RPC failed (network): ${err && err.message}`);
@@ -388,18 +394,24 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
     };
   }
 
-  // The RPC returns {id, order_number, idempotent: bool}. On an idempotent
-  // retry, the existing order_number is returned — use it for the gateway.
+  // The RPC returns {id, order_number, idempotent: bool, subtotal, delivery_fee, delivery_region, total, fee_source}
+  // On an idempotent retry, the existing order_number is returned — use it for the gateway.
+  // ALWAYS use the RPC-RETURNED subtotal/delivery_fee/total (never locally computed ones).
   const effectiveOrderNumber = String(orderResult.order_number || orderNumber).trim();
   const isIdempotentHit = orderResult.idempotent === true;
-  emit(`[VALMONTPAY-INIT] pending order ${effectiveOrderNumber} ${isIdempotentHit ? 'reused (idempotent)' : 'recorded'}: GHS ${formatCedis(totalPesewas)} (${orderItems.length} line/s)`);
+  const rpcSubtotal = orderResult.subtotal != null ? Number(orderResult.subtotal) : subtotalPesewas / 100;
+  const rpcDeliveryFee = orderResult.delivery_fee != null ? Number(orderResult.delivery_fee) : 0;
+  const rpcTotal = orderResult.total != null ? Number(orderResult.total) : rpcSubtotal + rpcDeliveryFee;
+  const rpcDeliveryRegion = orderResult.delivery_region != null ? String(orderResult.delivery_region) : deliveryRegion;
+  const rpcFeeSource = orderResult.fee_source != null ? String(orderResult.fee_source) : null;
+
+  const rpcTotalPesewas = toPesewas(rpcTotal) ?? 0;
+  emit(`[VALMONTPAY-INIT] pending order ${effectiveOrderNumber} ${isIdempotentHit ? 'reused (idempotent)' : 'recorded'}: GHS ${formatCedis(rpcTotalPesewas)} (${orderItems.length} line/s) region=${rpcDeliveryRegion || 'none'} fee=${rpcDeliveryFee} source=${rpcFeeSource || 'unknown'}`);
 
   // ── 4. Initialize the hosted checkout on the Valmont-Pay gateway ──────────
   const gatewayUrl = `${String(env.VALMONTPAY_GATEWAY_URL || GATEWAY_BASE).replace(/\/$/, '')}${GATEWAY_INITIALIZE_PATH}`;
   let gatewayJson = null;
   try {
-    // 8s cap keeps the whole endpoint comfortably inside Vercel's default
-    // function duration even when the gateway is slow.
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);
     const gatewayRes = await fetchImpl(gatewayUrl, {
@@ -409,7 +421,7 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
         authorization: `Bearer ${secretKey}`,
       },
       body: JSON.stringify({
-        amount: totalCedis, // GHS cedis (major units) — gateway contract
+        amount: rpcTotal, // GHS cedis (major units) — ALWAYS RPC-returned total
         email,
         reference: effectiveOrderNumber,
         callback_url: CALLBACK_URL,
@@ -441,12 +453,10 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
   }
 
   // ── 5. Store the gateway's VP-… reference on the order ────────────────────
-  // The webhook matches on order_number OR payment_reference, so a failure
-  // here is logged loudly but never blocks the customer from paying.
   const gatewayReference = String(data.gateway_reference || data.reference || '').trim();
   if (gatewayReference) {
     try {
-      const note = `checkout initialized: GHS ${formatCedis(totalPesewas)}${data.access_code ? `, access_code ${data.access_code}` : ''}`;
+      const note = `checkout initialized: GHS ${formatCedis(rpcTotalPesewas)}${data.access_code ? `, access_code ${data.access_code}` : ''} region=${rpcDeliveryRegion || 'none'}`;
       const rpcRes = await fetchImpl(`${sbUrl}/rest/v1/rpc/set_order_payment_reference`, {
         method: 'POST',
         headers: { 'content-type': 'application/json', ...sbHeaders },
@@ -470,7 +480,11 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
       order_number: effectiveOrderNumber,
       order_id: orderResult && orderResult.id ? orderResult.id : null,
       reference: gatewayReference || effectiveOrderNumber,
-      total: totalCedis,
+      total: rpcTotal,
+      subtotal: rpcSubtotal,
+      delivery_fee: rpcDeliveryFee,
+      delivery_region: rpcDeliveryRegion,
+      fee_source: rpcFeeSource,
       currency: data.currency || 'GHS',
       idempotent: isIdempotentHit,
     },
