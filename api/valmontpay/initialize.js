@@ -64,6 +64,40 @@ function clampText(value, max) {
   return String(value == null ? '' : value).trim().slice(0, max);
 }
 
+/**
+ * Builds the exact JSON object POSTed to `POST /rest/v1/orders`.
+ *
+ * Exported so the integration test can insert the SAME payload shape through
+ * real supabase-js (against a schema-validating mock server). The orders table
+ * has `order_number TEXT UNIQUE NOT NULL` with no default, so any key rename
+ * or missing value here would otherwise only surface in production as a 23502
+ * not-null violation ("Could not record your order").
+ *
+ * @param {object} p
+ * @param {string} p.orderNumber  Server-generated "VG-…" reference.
+ * @returns {object} The POST body for the orders row (never mutated later).
+ */
+export function buildOrderRow({
+  orderNumber,
+  customerId,
+  orderItems,
+  subtotalPesewas,
+  deliveryFeePesewas,
+  totalPesewas,
+  paymentMethod,
+}) {
+  return {
+    order_number: orderNumber,
+    customer_id: customerId,
+    items: orderItems,
+    subtotal: subtotalPesewas / 100,
+    delivery_fee: deliveryFeePesewas / 100,
+    total: totalPesewas / 100,
+    status: 'Pending',
+    payment_method: paymentMethod,
+  };
+}
+
 // ─── Core handler (exported for unit tests) ─────────────────────────────────
 
 /**
@@ -213,9 +247,33 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
   const totalCedis = totalPesewas / 100;
 
   // ── 3. Record the Pending order (the webhook needs a row to mark Paid) ────
-  const orderNumber = generateOrderNumber();
+  // generateOrderNumber() always returns a non-empty "VG-…" string, but a
+  // future refactor (renamed variable, swapped generator, edge-runtime quirk)
+  // could silently make it undefined. `orders.order_number` is NOT NULL with
+  // no default, so PostgREST would reject the row with a 23502 not-null
+  // violation — surfacing to the shopper as "Could not record your order".
+  // Fail fast, here, with a loud server-side log instead of round-tripping a
+  // guaranteed-rejected INSERT.
+  const orderNumber = String(generateOrderNumber() || '').trim();
+  if (!orderNumber.startsWith('VG-') || orderNumber.length < 8) {
+    emit(`[VALMONTPAY-INIT] refused to record order: generated order_number is invalid (${JSON.stringify(orderNumber)})`);
+    return { status: 500, body: { status: false, message: 'Could not issue an order number. Please try again.' } };
+  }
   const phoneDigits = phone.replace(/\D/g, '');
   const customerId = phoneDigits ? `cust-${phoneDigits}` : `cust-anon-${Date.now()}`;
+
+  // Single source of truth for the orders row — both the live INSERT and the
+  // supabase-js integration test build from this object, so a key-name drift
+  // (e.g. `orderNo` vs `order_number`) cannot slip past the test gate.
+  const orderRow = buildOrderRow({
+    orderNumber,
+    customerId,
+    orderItems,
+    subtotalPesewas,
+    deliveryFeePesewas: 0,
+    totalPesewas,
+    paymentMethod,
+  });
 
   try {
     await fetchImpl(`${sbUrl}/rest/v1/customers`, {
@@ -248,16 +306,7 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
         ...sbHeaders,
         prefer: 'return=representation',
       },
-      body: JSON.stringify({
-        order_number: orderNumber,
-        customer_id: customerId,
-        items: orderItems,
-        subtotal: subtotalPesewas / 100,
-        delivery_fee: deliveryFeePesewas / 100,
-        total: totalCedis,
-        status: 'Pending',
-        payment_method: paymentMethod,
-      }),
+      body: JSON.stringify(orderRow),
     });
   } catch (err) {
     emit(`[VALMONTPAY-INIT] order insert failed (network): ${err && err.message}`);
