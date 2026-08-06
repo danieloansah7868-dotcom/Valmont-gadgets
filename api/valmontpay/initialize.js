@@ -28,8 +28,10 @@ const CALLBACK_URL = 'https://valmontgadgets.com/order-confirmed.html';
 /** Supabase project backing the storefront (same project app.js uses). */
 const DEFAULT_SUPABASE_URL = 'https://eydsoqnpetqczaeqrscc.supabase.co';
 // The anon key is already public: it ships inside app.js/shop.min.js and is
-// confined by RLS (anon can only read active products, INSERT orders/customers
-// and call the two narrow payment RPCs). No service-role secret is required.
+// confined by RLS (anon can only read active products, INSERT customers and
+// call the three narrow payment RPCs: create_pending_order,
+// set_order_payment_reference). No service-role secret is required — orders
+// are never read or written directly via PostgREST.
 const DEFAULT_SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4ODc1NjYsImV4cCI6MjEwMDQ2MzU2Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc';
 
@@ -73,6 +75,10 @@ function clampText(value, max) {
  * or missing value here would otherwise only surface in production as a 23502
  * not-null violation ("Could not record your order").
  *
+ * NOTE: The live checkout path now goes through the create_pending_order RPC
+ * (not a direct PostgREST INSERT) so that anon never needs orders INSERT
+ * privilege. buildOrderRow is retained for integration-test replay assertions.
+ *
  * @param {object} p
  * @param {string} p.orderNumber  Server-generated "VG-…" reference.
  * @returns {object} The POST body for the orders row (never mutated later).
@@ -96,6 +102,41 @@ export function buildOrderRow({
     status: 'Pending',
     payment_method: paymentMethod,
   };
+}
+
+/**
+ * Compute a stable idempotency key from customer + cart contents.
+ * Identical carts from the same customer always produce the same key,
+ * so retries hit the same Pending order instead of creating duplicates.
+ *
+ * @param {string} customerId
+ * @param {Array<{id: string, qty: number}>} normalizedItems
+ * @returns {string}
+ */
+export function computeIdempotencyKey(customerId, normalizedItems) {
+  const sorted = [...normalizedItems]
+    .map((i) => `${i.id}:${i.qty}`)
+    .sort();
+  return `idem:${customerId}:${sorted.join(',')}`.slice(0, 128);
+}
+
+/**
+ * Build the items array in the exact shape create_pending_order() expects:
+ * each entry has `product_id`, `quantity`, and optional `unit_price`,
+ * `line_total`, `selected_color`, `selected_storage`.
+ *
+ * @param {Array} orderItems  The enriched items from step 2 (with name, unit_price, line_total).
+ * @returns {Array} RPC-shaped items.
+ */
+function buildRpcItems(orderItems) {
+  return orderItems.map((item) => ({
+    product_id: item.product_id,
+    quantity: item.quantity,
+    unit_price: item.unit_price,
+    line_total: item.line_total,
+    selected_color: item.selected_color || null,
+    selected_storage: item.selected_storage || null,
+  }));
 }
 
 // ─── Core handler (exported for unit tests) ─────────────────────────────────
@@ -262,19 +303,7 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
   const phoneDigits = phone.replace(/\D/g, '');
   const customerId = phoneDigits ? `cust-${phoneDigits}` : `cust-anon-${Date.now()}`;
 
-  // Single source of truth for the orders row — both the live INSERT and the
-  // supabase-js integration test build from this object, so a key-name drift
-  // (e.g. `orderNo` vs `order_number`) cannot slip past the test gate.
-  const orderRow = buildOrderRow({
-    orderNumber,
-    customerId,
-    orderItems,
-    subtotalPesewas,
-    deliveryFeePesewas: 0,
-    totalPesewas,
-    paymentMethod,
-  });
-
+  // ── 3b. Best-effort customer upsert (for the FK) ──────────────────────────
   try {
     await fetchImpl(`${sbUrl}/rest/v1/customers`, {
       method: 'POST',
@@ -297,40 +326,56 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
     emit(`[VALMONTPAY-INIT] customer upsert skipped: ${err && err.message}`);
   }
 
+  // ── 3c. Record the Pending order via SECURITY DEFINER RPC ──────────────────
+  // The anon role has NO direct SELECT/INSERT privilege on public.orders
+  // (intentional — RLS migration revoked it). All order creation goes through
+  // create_pending_order(), which validates catalog prices server-side and is
+  // idempotent: identical (customer, cart) retries return the same Pending
+  // order instead of creating duplicates.
+  const idempotencyKey = computeIdempotencyKey(customerId, normalized);
+  const rpcItems = buildRpcItems(orderItems);
+
   let orderRes;
+  let orderResult = null;
   try {
-    orderRes = await fetchImpl(`${sbUrl}/rest/v1/orders`, {
+    orderRes = await fetchImpl(`${sbUrl}/rest/v1/rpc/create_pending_order`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
         ...sbHeaders,
         prefer: 'return=representation',
       },
-      body: JSON.stringify(orderRow),
+      body: JSON.stringify({
+        p_order_number: orderNumber,
+        p_customer_id: customerId,
+        p_items: rpcItems,
+        p_subtotal: subtotalPesewas / 100,
+        p_delivery_fee: 0,
+        p_total: totalPesewas / 100,
+        p_payment_method: paymentMethod,
+        p_idempotency_key: idempotencyKey,
+      }),
     });
   } catch (err) {
-    emit(`[VALMONTPAY-INIT] order insert failed (network): ${err && err.message}`);
+    emit(`[VALMONTPAY-INIT] create_pending_order RPC failed (network): ${err && err.message}`);
     return { status: 503, body: { status: false, message: 'Could not record your order. Please try again.' } };
   }
-  if (!orderRes.ok) {
-    let pgError = {};
-    let rawBody = '';
-    try {
-      rawBody = await orderRes.text();
-      pgError = JSON.parse(rawBody || '{}');
-    } catch (_) {
-      rawBody = '';
-    }
+
+  try {
+    orderResult = await orderRes.json();
+  } catch (_) {
+    orderResult = null;
+  }
+
+  if (!orderRes.ok || !orderResult || typeof orderResult !== 'object') {
+    let pgError = orderResult || {};
     const sqlState = pgError.code || '';
     const pgMessage = pgError.message || pgError.msg || '';
     const pgHint = pgError.hint || '';
     const pgDetails = pgError.details || '';
-    // Include SQLSTATE in user-facing message so the redeploy output
-    // shows "[23503]" etc. for the next diagnostic pass.
-    emit(`[VALMONTPAY-INIT] order insert failed: HTTP ${orderRes.status} [${sqlState}] ${pgMessage}`);
+    emit(`[VALMONTPAY-INIT] create_pending_order failed: HTTP ${orderRes.status} [${sqlState}] ${pgMessage}`);
     if (pgHint) emit(`[VALMONTPAY-INIT] PostgreSQL hint: ${pgHint}`);
     if (pgDetails) emit(`[VALMONTPAY-INIT] PostgreSQL details: ${pgDetails}`);
-    if (rawBody) emit(`[VALMONTPAY-INIT] raw PostgREST body: ${rawBody.slice(0, 500)}`);
     return {
       status: 500,
       body: {
@@ -339,12 +384,15 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
         detail: pgMessage || 'Database constraint violation',
         hint: pgHint || undefined,
         details: pgDetails || undefined,
-        raw: rawBody || undefined,
       },
     };
   }
 
-  emit(`[VALMONTPAY-INIT] pending order ${orderNumber} recorded: GHS ${formatCedis(totalPesewas)} (${orderItems.length} line/s)`);
+  // The RPC returns {id, order_number, idempotent: bool}. On an idempotent
+  // retry, the existing order_number is returned — use it for the gateway.
+  const effectiveOrderNumber = String(orderResult.order_number || orderNumber).trim();
+  const isIdempotentHit = orderResult.idempotent === true;
+  emit(`[VALMONTPAY-INIT] pending order ${effectiveOrderNumber} ${isIdempotentHit ? 'reused (idempotent)' : 'recorded'}: GHS ${formatCedis(totalPesewas)} (${orderItems.length} line/s)`);
 
   // ── 4. Initialize the hosted checkout on the Valmont-Pay gateway ──────────
   const gatewayUrl = `${String(env.VALMONTPAY_GATEWAY_URL || GATEWAY_BASE).replace(/\/$/, '')}${GATEWAY_INITIALIZE_PATH}`;
@@ -363,7 +411,7 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
       body: JSON.stringify({
         amount: totalCedis, // GHS cedis (major units) — gateway contract
         email,
-        reference: orderNumber,
+        reference: effectiveOrderNumber,
         callback_url: CALLBACK_URL,
         phone: phone || undefined,
       }),
@@ -377,18 +425,18 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
     }
     if (!gatewayRes.ok || !gatewayJson || gatewayJson.status === false) {
       const message = (gatewayJson && gatewayJson.message) || `Gateway error (HTTP ${gatewayRes.status})`;
-      emit(`[VALMONTPAY-INIT] gateway rejected ${orderNumber}: ${message}`);
+      emit(`[VALMONTPAY-INIT] gateway rejected ${effectiveOrderNumber}: ${message}`);
       return { status: 502, body: { status: false, message: 'The payment gateway could not start your checkout. Please try again.', detail: message } };
     }
   } catch (err) {
-    emit(`[VALMONTPAY-INIT] gateway unreachable for ${orderNumber}: ${err && err.message}`);
+    emit(`[VALMONTPAY-INIT] gateway unreachable for ${effectiveOrderNumber}: ${err && err.message}`);
     return { status: 502, body: { status: false, message: 'The payment gateway is unreachable. Please try again.' } };
   }
 
   const data = gatewayJson.data && typeof gatewayJson.data === 'object' ? gatewayJson.data : {};
   const payUrl = data.pay_url || data.checkout_url || data.paystack_authorization_url || '';
   if (!payUrl) {
-    emit(`[VALMONTPAY-INIT] gateway returned no checkout URL for ${orderNumber}`);
+    emit(`[VALMONTPAY-INIT] gateway returned no checkout URL for ${effectiveOrderNumber}`);
     return { status: 502, body: { status: false, message: 'The payment gateway returned no checkout link. Please try again.' } };
   }
 
@@ -403,14 +451,14 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
         method: 'POST',
         headers: { 'content-type': 'application/json', ...sbHeaders },
         body: JSON.stringify({
-          p_order_number: orderNumber,
+          p_order_number: effectiveOrderNumber,
           p_payment_reference: gatewayReference,
           p_note: note,
         }),
       });
-      if (!rpcRes.ok) emit(`[VALMONTPAY-INIT] payment_reference not stored for ${orderNumber}: HTTP ${rpcRes.status}`);
+      if (!rpcRes.ok) emit(`[VALMONTPAY-INIT] payment_reference not stored for ${effectiveOrderNumber}: HTTP ${rpcRes.status}`);
     } catch (err) {
-      emit(`[VALMONTPAY-INIT] payment_reference not stored for ${orderNumber}: ${err && err.message}`);
+      emit(`[VALMONTPAY-INIT] payment_reference not stored for ${effectiveOrderNumber}: ${err && err.message}`);
     }
   }
 
@@ -419,10 +467,12 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
     body: {
       status: true,
       url: payUrl,
-      order_number: orderNumber,
-      reference: gatewayReference || orderNumber,
+      order_number: effectiveOrderNumber,
+      order_id: orderResult && orderResult.id ? orderResult.id : null,
+      reference: gatewayReference || effectiveOrderNumber,
       total: totalCedis,
       currency: data.currency || 'GHS',
+      idempotent: isIdempotentHit,
     },
   };
 }

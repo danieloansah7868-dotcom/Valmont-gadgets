@@ -198,10 +198,10 @@ function startSchemaServer() {
 
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
-test('end-to-end: handleInitializeCore with a REAL customer + order INSERT survives all constraints', async () => {
+test('end-to-end: handleInitializeCore calls create_pending_order RPC (no direct orders INSERT)', async () => {
   const { url, orders, customers, close } = await startSchemaServer();
   try {
-    const captured = { orderInsert: null, customerInsert: null };
+    const captured = { rpcCall: null, customerInsert: null };
     const CATALOG = [{ id: 'VG-A', name: 'Phone A', price: 19.99, is_active: true }];
     const GATEWAY = {
       status: true,
@@ -226,18 +226,19 @@ test('end-to-end: handleInitializeCore with a REAL customer + order INSERT survi
         return { ok: upstream.ok, status: upstream.status, json: () => upstream.json(), text: () => upstream.text() };
       }
 
+      // RPC: create_pending_order — return the order_number that was sent.
+      if (u.includes('/rest/v1/rpc/create_pending_order')) {
+        captured.rpcCall = JSON.parse(opts.body);
+        const orderNumber = captured.rpcCall.p_order_number;
+        return json(200, { id: 'ord-rpc-1', order_number: orderNumber, idempotent: false });
+      }
+
       if (u.includes('/rest/v1/rpc/')) return json(200, { result: 'ok' });
       if (u.includes('/api/transaction/initialize')) return json(200, GATEWAY);
 
-      // Orders INSERT: record the exact bytes, then forward to schema server.
+      // Direct orders INSERT must NOT happen anymore.
       if (u.endsWith('/rest/v1/orders') && opts.method === 'POST') {
-        captured.orderInsert = JSON.parse(opts.body);
-        const upstream = await fetch(`${url}/rest/v1/orders`, {
-          method: 'POST',
-          headers: opts.headers,
-          body: opts.body,
-        });
-        return { ok: upstream.ok, status: upstream.status, json: () => upstream.json(), text: () => upstream.text() };
+        throw new Error('REGRESSION: initialize.js must NOT directly POST /rest/v1/orders — use the create_pending_order RPC');
       }
 
       throw new Error(`unexpected fetch ${opts.method || 'GET'} ${u}`);
@@ -251,36 +252,106 @@ test('end-to-end: handleInitializeCore with a REAL customer + order INSERT survi
     });
 
     assert.equal(result.status, 200, `initialize should succeed: ${JSON.stringify(result.body)}`);
-    assert.ok(captured.orderInsert, 'handler must POST /rest/v1/orders');
+    assert.ok(captured.rpcCall, 'handler must call create_pending_order RPC');
     assert.ok(captured.customerInsert, 'handler must POST /rest/v1/customers');
 
     // Verify the customer was stored in our mock (satisfying the FK).
     const custId = captured.customerInsert.id;
     assert.ok(customers.has(custId), `customer ${custId} must exist for FK constraint`);
-    assert.equal(customers.get(custId).name, 'Ama');
 
-    // Verify order payload.
-    assert.equal(typeof captured.orderInsert.order_number, 'string');
-    assert.ok(captured.orderInsert.order_number.startsWith('VG-'));
-    assert.ok(Array.isArray(captured.orderInsert.items), 'items must be an array');
-    assert.ok(captured.orderInsert.items.length > 0, 'items must not be empty');
-    assert.equal(typeof captured.orderInsert.total, 'number', 'total must be numeric');
-    assert.equal(orders.length, 1, 'schema server must have accepted the row');
-    assert.equal(orders[0].order_number, captured.orderInsert.order_number);
+    // Verify RPC payload shape.
+    assert.equal(typeof captured.rpcCall.p_order_number, 'string');
+    assert.ok(captured.rpcCall.p_order_number.startsWith('VG-'));
+    assert.ok(Array.isArray(captured.rpcCall.p_items), 'p_items must be an array');
+    assert.ok(captured.rpcCall.p_items.length > 0, 'p_items must not be empty');
+    assert.equal(typeof captured.rpcCall.p_total, 'number', 'p_total must be numeric');
+    assert.equal(captured.rpcCall.p_total, 39.98, 'p_total = 2 × 19.99 = 39.98 GHS');
+    assert.ok(captured.rpcCall.p_idempotency_key, 'p_idempotency_key must be present');
+    assert.equal(result.body.order_number, captured.rpcCall.p_order_number);
 
-    // Re-insert through real supabase-js — proves FK and type constraints pass.
-    const sb = createClient(url, 'anon-test', { auth: { persistSession: false, autoRefreshToken: false } });
-    const freshRow = buildOrderRow({
-      orderNumber: generateOrderNumber(),
-      customerId: custId,
-      orderItems: captured.orderInsert.items,
-      subtotalPesewas: Math.round(captured.orderInsert.subtotal * 100),
-      deliveryFeePesewase: Math.round(captured.orderInsert.delivery_fee * 100),
-      totalPesewas: Math.round(captured.orderInsert.total * 100),
-      paymentMethod: 'Mobile Money',
+    // No direct orders table access happened.
+    assert.equal(orders.length, 0, 'no direct orders INSERT should occur');
+  } finally {
+    await close();
+  }
+});
+
+test('end-to-end: RETRY flow — second call with same cart reuses the existing order (idempotent)', async () => {
+  const { url, customers, close } = await startSchemaServer();
+  try {
+    // Pre-create the customer.
+    customers.set('cust-0542451578', { id: 'cust-0542451578', name: 'Ama', phone: '0542451578' });
+
+    const CATALOG = [{ id: 'VG-A', name: 'Phone A', price: 19.99, is_active: true }];
+    const GATEWAY = {
+      status: true,
+      message: 'ok',
+      data: { access_code: 'ac_test', gateway_reference: 'VP-TEST', pay_url: 'https://valmontpay.app/pay.html?access_code=ac_test' },
+    };
+
+    // Track all RPC calls to verify idempotency behaviour.
+    const rpcCalls = [];
+    const existingOrder = { id: 'ord-existing', order_number: 'VG-RETRY-FIRST00' };
+
+    const mockFetch = async (fetchUrl, opts = {}) => {
+      const u = String(fetchUrl);
+      const json = (status, body) => ({ ok: status >= 200 && status < 300, status, json: async () => body, text: async () => JSON.stringify(body) });
+
+      if (u.includes('/rest/v1/products')) return json(200, CATALOG);
+      if (u.endsWith('/rest/v1/customers')) return json(201, []);
+
+      if (u.includes('/rest/v1/rpc/create_pending_order')) {
+        const body = JSON.parse(opts.body);
+        rpcCalls.push(body);
+        // Simulate: first call creates (idempotent: false), second call finds
+        // existing (idempotent: true, returns the existing order_number).
+        if (rpcCalls.length === 1) {
+          return json(200, { id: existingOrder.id, order_number: body.p_order_number, idempotent: false });
+        }
+        return json(200, { id: existingOrder.id, order_number: existingOrder.order_number, idempotent: true });
+      }
+
+      if (u.includes('/rest/v1/rpc/')) return json(200, { result: 'ok' });
+      if (u.includes('/api/transaction/initialize')) return json(200, GATEWAY);
+
+      if (u.endsWith('/rest/v1/orders') && opts.method === 'POST') {
+        throw new Error('REGRESSION: direct /rest/v1/orders INSERT detected');
+      }
+
+      throw new Error(`unexpected fetch ${opts.method || 'GET'} ${u}`);
+    };
+
+    const body = {
+      items: [{ id: 'VG-A', qty: 2 }],
+      customer: { name: 'Ama', phone: '054 245 1578', email: 'ama@example.com' },
+      payment_method: 'Mobile Money',
+    };
+
+    // First call: fresh create.
+    const first = await handleInitializeCore({
+      body,
+      env: { VALMONTPAY_SECRET_KEY: 'sk_test', SUPABASE_URL: url, SUPABASE_ANON_KEY: 'anon-test' },
+      fetchImpl: mockFetch,
+      log: () => {},
     });
-    const replay = await sb.from('orders').insert({ ...freshRow, customer_id: custId }).select();
-    assert.equal(replay.error, null, `replay must succeed: ${replay.error && replay.error.message}`);
+    assert.equal(first.status, 200, `first call should succeed: ${JSON.stringify(first.body)}`);
+    assert.equal(first.body.idempotent, false);
+
+    // Second call: retry (idempotent hit).
+    const second = await handleInitializeCore({
+      body,
+      env: { VALMONTPAY_SECRET_KEY: 'sk_test', SUPABASE_URL: url, SUPABASE_ANON_KEY: 'anon-test' },
+      fetchImpl: mockFetch,
+      log: () => {},
+    });
+    assert.equal(second.status, 200, `retry should succeed: ${JSON.stringify(second.body)}`);
+    assert.equal(second.body.idempotent, true);
+    assert.equal(second.body.order_number, 'VG-RETRY-FIRST00', 'retry must return the EXISTING order number');
+
+    // Both RPC calls must carry the SAME idempotency key.
+    assert.equal(rpcCalls.length, 2);
+    assert.equal(rpcCalls[0].p_idempotency_key, rpcCalls[1].p_idempotency_key, 'idempotency keys must match');
+    assert.ok(rpcCalls[0].p_idempotency_key.startsWith('idem:'), 'key must be namespaced');
   } finally {
     await close();
   }
