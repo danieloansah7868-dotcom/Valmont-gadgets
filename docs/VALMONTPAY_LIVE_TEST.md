@@ -8,7 +8,8 @@ webhook URL is registered on the gateway.
 ## 0. Preconditions
 
 - [ ] Vercel Production deployed with `api/valmontpay/*` (check `https://valmontgadgets.com/api/valmontpay/webhook` with `GET` → **405**).
-- [ ] `supabase/migrations/20260805_valmontpay_pipeline.sql` applied.
+- [ ] `supabase/migrations/20260805_valmontpay_pipeline.sql` and
+      `supabase/migrations/20260806_create_pending_order.sql` applied.
 - [ ] Env vars present in Vercel Production: `VALMONTPAY_SECRET_KEY`, `VALMONTPAY_PUBLIC_KEY`, `VALMONTPAY_WEBHOOK_SECRET`.
 - [ ] Gateway tenant `valmont-gadget` (LIVE): webhook URL = `https://valmontgadgets.com/api/valmontpay/webhook`, allowed domains include `valmontgadgets.com`.
 

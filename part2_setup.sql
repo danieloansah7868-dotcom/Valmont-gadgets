@@ -39,8 +39,13 @@ CREATE POLICY "Public can read categories" ON public.categories FOR SELECT TO an
 DROP POLICY IF EXISTS "Authenticated full access categories" ON public.categories;
 CREATE POLICY "Authenticated full access categories" ON public.categories FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
+-- Orders are private for anon/PUBLIC; checkout uses the validating
+-- SECURITY DEFINER create_pending_order() RPC from the Valmont-Pay migration.
 DROP POLICY IF EXISTS "Anon can create orders" ON public.orders;
-CREATE POLICY "Anon can create orders" ON public.orders FOR INSERT TO anon WITH CHECK (true);
+DROP POLICY IF EXISTS "Anon can read orders" ON public.orders;
+DROP POLICY IF EXISTS "Anon can read own orders" ON public.orders;
+REVOKE SELECT, INSERT ON TABLE public.orders FROM PUBLIC, anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.orders TO authenticated, service_role;
 
 DROP POLICY IF EXISTS "Authenticated full access orders" ON public.orders;
 CREATE POLICY "Authenticated full access orders" ON public.orders FOR ALL TO authenticated USING (true) WITH CHECK (true);
