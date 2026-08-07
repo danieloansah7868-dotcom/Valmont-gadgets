@@ -885,7 +885,7 @@ function openOrderModal(id) {
         </div>
         <div>
           <label class="admin-label">Status</label>
-          <select id="orderStatusInput" class="admin-input">${["Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"].map(status => `<option ${normalizeStatus(order.status) === status ? "selected" : ""}>${status}</option>`).join("")}</select>
+          <select id="orderStatusInput" class="admin-input">${["Pending", "Paid", "Confirmed", "Shipped", "Delivered", "Cancelled"].map(status => `<option ${normalizeStatus(order.status) === status ? "selected" : ""}>${status}</option>`).join("")}</select>
         </div>
       </div>
       <div class="mt-3">
@@ -1782,13 +1782,13 @@ function getProductName(id) {
 
 function normalizeStatus(status) {
   const value = titleCase(String(status || "Pending").replace(/[-_]/g, " ").trim());
-  const allowed = ["Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"];
+  const allowed = ["Pending", "Paid", "Confirmed", "Shipped", "Delivered", "Cancelled"];
   return allowed.includes(value) ? value : "Pending";
 }
 
 function statusClass(status) {
   const normalized = normalizeStatus(status);
-  if (normalized === "Delivered" || normalized === "Confirmed") return "badge-green";
+  if (normalized === "Delivered" || normalized === "Confirmed" || normalized === "Paid") return "badge-green";
   if (normalized === "Cancelled") return "badge-red";
   return "badge-amber";
 }
