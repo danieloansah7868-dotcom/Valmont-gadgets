@@ -2031,7 +2031,7 @@
       </div>
     </a>
     
-    <button onclick="openInstallmentCatalog();" class="flex-1 block no-underline text-left" style="text-decoration:none">
+    <button id="installmentCatalogTrigger" type="button" data-open-installments class="flex-1 block no-underline text-left" style="text-decoration:none" aria-haspopup="dialog" aria-controls="installmentModal">
       <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#eef2ff,#e0e7ff);
                   border:1px solid #c7d2fe;border-radius:12px;padding:11px 14px;">
         <span style="font-size:19px;line-height:1">💳</span>
@@ -3352,7 +3352,7 @@
                 <span id="monthlyDown" class="block text-[9px] font-bold text-gray-500 mt-0.5">Deposit: GH₵ 0</span>
               </div>
             </div>
-            <button onclick="openInstallmentCatalog();" class="w-full mt-3 text-[10px] font-black uppercase text-blue-700 hover:underline">View Full Installment Catalog →</button>
+            <button type="button" data-open-installments class="w-full mt-3 text-[10px] font-black uppercase text-blue-700 hover:underline" aria-haspopup="dialog" aria-controls="installmentModal">View Full Installment Catalog →</button>
           </div>
 
           <div class="border-t pt-3 space-y-2 text-[12px] font-semibold text-gray-600 mb-4">
@@ -3852,14 +3852,14 @@
   </div>
 
   <!-- 14. FULL INSTALLMENT CATALOG MODAL -->
-  <div id="installmentOverlay" class="fixed inset-0 bg-black/60 z-[10010] hidden transition-opacity" onclick="closeInstallmentCatalog();"></div>
-  <div id="installmentModal" class="fixed inset-y-6 inset-x-4 md:inset-y-12 md:inset-x-24 bg-white z-[10011] rounded-xl shadow-2xl overflow-hidden hidden transition-all duration-300 max-w-[900px] mx-auto flex flex-col border border-gray-200">
+  <div id="installmentOverlay" data-close-installments class="fixed inset-0 bg-black/60 z-[10010] hidden transition-opacity"></div>
+  <div id="installmentModal" role="dialog" aria-modal="true" aria-labelledby="installmentCatalogTitle" class="fixed inset-y-6 inset-x-4 md:inset-y-12 md:inset-x-24 bg-white z-[10011] rounded-xl shadow-2xl overflow-hidden hidden transition-all duration-300 max-w-[900px] mx-auto flex flex-col border border-gray-200">
     <div class="bg-[#0b1a38] text-white p-5 flex justify-between items-center shrink-0 border-b-2 border-[#ff8c00]">
       <div>
-        <h3 class="font-black text-[16px] uppercase tracking-widest">iPhone Installment Catalog</h3>
+        <h3 id="installmentCatalogTitle" class="font-black text-[16px] uppercase tracking-widest">iPhone Installment Catalog</h3>
         <p class="text-[10px] text-gray-400 font-bold mt-0.5">Valmont Hire Purchase Program • Valid for 2026</p>
       </div>
-      <button onclick="closeInstallmentCatalog();" class="text-gray-400 hover:text-white text-lg font-bold">x</button>
+      <button type="button" data-close-installments class="text-gray-400 hover:text-white text-lg font-bold" aria-label="Close installment plans">×</button>
     </div>
     <div class="bg-blue-50 px-5 py-3 border-b border-blue-100 flex flex-col md:flex-row md:items-center justify-between gap-2 text-[11px] font-bold text-blue-900">
       <div>Requirements: Ghana Card + 1 Guarantor (Phone confirmation)</div>

@@ -2,6 +2,11 @@
 // ACCESSIBLE MODAL FOCUS TRAPPING AND ESCAPE-TO-CLOSE
 document.addEventListener("keydown", function(e) {
   if (e.key === "Escape") {
+    const installmentModal = document.getElementById("installmentModal");
+    if (installmentModal && !installmentModal.classList.contains("hidden")) {
+      if (typeof closeInstallmentCatalog === "function") closeInstallmentCatalog();
+      return;
+    }
     const detailModal = document.getElementById("detailModal");
     if (detailModal && !detailModal.classList.contains("hidden")) {
       if (typeof closeProductDetail === "function") closeProductDetail();
@@ -24,7 +29,7 @@ document.addEventListener("keydown", function(e) {
     }
   }
   if (e.key === "Tab") {
-    const activeModal = ["detailModal", "wishlistModal", "loginModal", "dealerModal"].map(id => document.getElementById(id)).find(el => el && !el.classList.contains("hidden"));
+    const activeModal = ["installmentModal", "detailModal", "wishlistModal", "loginModal", "dealerModal"].map(id => document.getElementById(id)).find(el => el && !el.classList.contains("hidden"));
     const cartDrawer = document.getElementById("cartDrawer");
     const activeDialog = activeModal || (cartDrawer && !cartDrawer.classList.contains("translate-x-full") ? cartDrawer : null);
     if (activeDialog) {
@@ -1068,26 +1073,45 @@ document.addEventListener("keydown", function(e) {
       }
     });
 
+    // INSTALLMENT PLAN CALCULATOR
+    // Defined with the catalog code so the plans can always render when a
+    // customer taps the banner, even if unrelated page setup later fails.
+    const VALMONT_INSTALLMENT_MARKUP = 300;
+
+    function getInstallmentPlan(cashPrice) {
+      const p = Number(cashPrice) + VALMONT_INSTALLMENT_MARKUP;
+      const weeklyDown = round2(p * 0.40);
+      const weeklyAmount = round2(((p * 0.60) * 1.5) / 12);
+      const monthlyDown = round2(p * 0.50);
+      const monthlyAmount = round2(((p * 0.50) * 1.6) / 3);
+
+      return {
+        totalWithMarkup: p,
+        weekly: { down: weeklyDown, installment: weeklyAmount },
+        monthly: { down: monthlyDown, installment: monthlyAmount }
+      };
+    }
+
     // INSTALLMENT CATALOG MODAL LOGIC
     function openInstallmentCatalog() {
       const overlay = document.getElementById('installmentOverlay');
       const modal = document.getElementById('installmentModal');
-      if (overlay && modal) {
-        overlay.classList.remove('hidden');
-        setTimeout(() => overlay.classList.add('opacity-100'), 10);
-        modal.classList.remove('hidden');
-        renderInstallmentCatalog();
-      }
+      if (!overlay || !modal) return;
+
+      renderInstallmentCatalog();
+      overlay.classList.remove('hidden');
+      modal.classList.remove('hidden');
+      setTimeout(() => overlay.classList.add('opacity-100'), 10);
     }
 
     function closeInstallmentCatalog() {
       const overlay = document.getElementById('installmentOverlay');
       const modal = document.getElementById('installmentModal');
-      if (overlay && modal) {
-        overlay.classList.remove('opacity-100');
-        setTimeout(() => overlay.classList.add('hidden'), 300);
-        modal.classList.add('hidden');
-      }
+      if (!overlay || !modal) return;
+
+      overlay.classList.remove('opacity-100');
+      modal.classList.add('hidden');
+      setTimeout(() => overlay.classList.add('hidden'), 300);
     }
 
     function renderInstallmentCatalog() {
@@ -1118,6 +1142,23 @@ document.addEventListener("keydown", function(e) {
 
     window.openInstallmentCatalog = openInstallmentCatalog;
     window.closeInstallmentCatalog = closeInstallmentCatalog;
+
+    // Use real event listeners rather than relying on inline onclick handlers.
+    // This keeps the banner working in browsers/extensions that block inline JS
+    // and also covers installment links added by client-side rendering.
+    document.addEventListener('click', event => {
+      const openTrigger = event.target.closest('[data-open-installments]');
+      if (openTrigger) {
+        event.preventDefault();
+        openInstallmentCatalog();
+        return;
+      }
+
+      if (event.target.closest('[data-close-installments]')) {
+        event.preventDefault();
+        closeInstallmentCatalog();
+      }
+    });
 
     /**
      * Renders a product image. Local uploads/*.png have pre-generated 400/800
@@ -1477,32 +1518,10 @@ document.addEventListener("keydown", function(e) {
     }
     // JSON.parse that can never throw the whole page on corrupt localStorage.
     function safeParseJSON(raw, fallback) {
+      if (raw === null || raw === undefined || raw === '') return fallback;
       try { const v = JSON.parse(raw); return v === undefined ? fallback : v; } catch (e) { return fallback; }
     }
     function round2(n) { return Math.round((Number(n) + Number.EPSILON) * 100) / 100; }
-
-    // OWNER CONFIGURATION: Add your profit to the supplier's price here
-    const VALMONT_INSTALLMENT_MARKUP = 300; // Flat GH₵ 300 added to all installment deals for the owner
-
-    // INSTALLMENT PLAN CALCULATOR
-    // Weekly: 40% Down + (60% x 1.5) ÷ 12
-    // Monthly: 50% Down + (50% x 1.6) ÷ 3
-    function getInstallmentPlan(cashPrice) {
-      // Step 1: Add Owner's Profit to the base price first
-      const p = Number(cashPrice) + VALMONT_INSTALLMENT_MARKUP;
-      
-      const weeklyDown = round2(p * 0.40);
-      const weeklyAmount = round2(((p * 0.60) * 1.5) / 12);
-      
-      const monthlyDown = round2(p * 0.50);
-      const monthlyAmount = round2(((p * 0.50) * 1.6) / 3);
-      
-      return {
-        totalWithMarkup: p,
-        weekly: { down: weeklyDown, installment: weeklyAmount },
-        monthly: { down: monthlyDown, installment: monthlyAmount }
-      };
-    }
 
     // Highlights only the active tab in accent color and turns others gray
     function updateMobileNavHighlights(activeTab) {
