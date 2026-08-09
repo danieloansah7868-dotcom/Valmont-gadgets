@@ -1,4 +1,4 @@
-const CACHE_NAME = 'valmont-v4';
+const CACHE_NAME = 'valmont-v5';
 const ASSETS = [
   '/',
   '/index.html',
