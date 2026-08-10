@@ -61,7 +61,8 @@ const state = {
   editingProductId: null,
   draggingImageIndex: null,
   draggingCategoryId: null,
-  realtimeChannels: []
+  realtimeChannels: [],
+  smsLeads: []
 };
 
 class ValmontAdminDatabase {
@@ -676,6 +677,9 @@ async function loadAllData() {
       }
     }
     renderEverything();
+    // SMS leads (SMS marketing popup collection) — admin-token gated endpoint.
+    loadSmsLeads();
+    bindSmsCopy();
     db.subscribeToRealtime(async () => {
       await refreshDataSilently();
     });
@@ -712,6 +716,7 @@ function renderEverything() {
   renderSettingsForm();
   renderDeliveryFees();
   renderAuditLog();
+  renderSmsLeads();
   populateCategorySelect();
 }
 
@@ -1288,6 +1293,118 @@ function renderAuditLog() {
     const dateStr = changedAt ? new Date(changedAt).toLocaleString("en-GH") : "";
     return `<tr><td>${escapeHtml(dateStr)}</td><td class="font-bold text-white">${escapeHtml(String(rowKey))}</td><td>${escapeHtml(change)}</td><td>${escapeHtml(String(actor))}</td></tr>`;
   }).join("");
+}
+
+// ─── SMS Leads (SMS marketing popup collection) ─────────────────────────────
+
+/** Resolve the admin token sent to /api/admin/sms-leads (admin-token gated). */
+async function resolveSmsAdminToken() {
+  // Explicit override (must match the SMS_ADMIN_TOKEN env on the server).
+  try {
+    const stored = localStorage.getItem("valmont_sms_admin_token");
+    if (stored) return stored;
+  } catch (_) {}
+  // Fall back to the logged-in admin's Supabase access token — RLS lets the
+  // authenticated (admin) role SELECT sms_leads.
+  try {
+    const { data } = await db.client.auth.getSession();
+    if (data && data.session && data.session.access_token) return data.session.access_token;
+  } catch (_) {}
+  return "";
+}
+
+async function loadSmsLeads() {
+  const stateEl = document.getElementById("smsLoadState");
+  const hintEl = document.getElementById("smsNoTokenHint");
+  const token = await resolveSmsAdminToken();
+  if (!token) {
+    state.smsLeads = [];
+    renderSmsLeads();
+    if (stateEl) stateEl.textContent = "No admin token available";
+    if (hintEl) {
+      hintEl.classList.remove("hidden");
+      hintEl.textContent = "SMS leads need an admin token. Set localStorage \"valmont_sms_admin_token\" (matching the SMS_ADMIN_TOKEN env on the server), or ensure the Supabase admin session is active, then reload.";
+    }
+    return;
+  }
+  try {
+    const res = await fetch("/api/admin/sms-leads", { headers: { "x-admin-token": token } });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      state.smsLeads = [];
+      if (stateEl) stateEl.textContent = "401 — Unauthorized (check admin token)";
+    } else if (res.ok && Array.isArray(data.leads)) {
+      state.smsLeads = data.leads;
+      if (stateEl) stateEl.textContent = `${data.leads.length} lead(s) loaded`;
+    } else {
+      state.smsLeads = [];
+      if (stateEl) stateEl.textContent = "Failed to load SMS leads";
+    }
+  } catch (e) {
+    state.smsLeads = [];
+    if (stateEl) stateEl.textContent = "Network error loading SMS leads";
+  }
+  renderSmsLeads();
+}
+
+function networkBadge(network) {
+  const n = String(network || "").toLowerCase();
+  if (n === "mtn") return "badge-amber";
+  if (n === "telecel") return "badge-green";
+  if (n === "airteltigo") return "";
+  return "";
+}
+
+function renderSmsLeads() {
+  const body = document.getElementById("smsLeadsTableBody");
+  if (!body) return;
+  const leads = Array.isArray(state.smsLeads) ? state.smsLeads : [];
+  const total = leads.length;
+  const count = n => leads.filter(lead => String(lead.network || "").toLowerCase() === n.toLowerCase()).length;
+  const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = String(value); };
+  setText("smsStatTotal", total);
+  setText("smsStatMtn", count("MTN"));
+  setText("smsStatTelecel", count("Telecel"));
+  setText("smsStatAirtelTigo", count("AirtelTigo"));
+  body.innerHTML = leads.length ? leads.map(lead => `
+    <tr>
+      <td class="font-black text-white">${escapeHtml(lead.phone)}</td>
+      <td><span class="badge ${networkBadge(lead.network)}">${escapeHtml(lead.network || "Unknown")}</span></td>
+      <td>${escapeHtml(lead.source || "storefront")}</td>
+      <td>${formatDate(lead.created_at)}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="4">${emptyState("No SMS leads collected yet.")}</td></tr>`;
+}
+
+function bindSmsCopy() {
+  const btn = document.getElementById("copySmsLeadsBtn");
+  if (!btn || btn.dataset.bound) return;
+  btn.dataset.bound = "1";
+  btn.addEventListener("click", async () => {
+    const leads = Array.isArray(state.smsLeads) ? state.smsLeads : [];
+    const csv = leads.map(lead => lead.phone).filter(Boolean).join(", ");
+    if (!csv) { showToast("No numbers to copy yet."); return; }
+    const done = () => {
+      btn.textContent = "✅ Copied";
+      setTimeout(() => { btn.textContent = "📋 Copy all numbers"; }, 1800);
+      showToast(`${leads.length} number(s) copied.`);
+    };
+    try {
+      await navigator.clipboard.writeText(csv);
+      done();
+    } catch (e) {
+      // Legacy fallback for older browsers.
+      const ta = document.createElement("textarea");
+      ta.value = csv;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); done(); }
+      catch (_) { showToast("Could not copy automatically."); }
+      document.body.removeChild(ta);
+    }
+  });
 }
 
 function renderShippingZoneRows() {

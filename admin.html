@@ -94,6 +94,7 @@
         <button class="nav-btn" data-section="categories"><span>Categories</span></button>
         <button class="nav-btn" data-section="content"><span>Site Content</span></button>
         <button class="nav-btn" data-section="delivery"><span>Delivery Fees</span></button>
+        <button class="nav-btn" data-section="sms"><span>SMS Leads</span></button>
         <button class="nav-btn" data-section="settings"><span>Settings</span></button>
       </nav>
       <div class="mt-5 space-y-3 border-t border-slate-800 pt-4">
@@ -243,6 +244,30 @@
           <div class="admin-card p-5">
             <div class="mb-4 flex items-center justify-between"><h2 class="text-sm font-black uppercase tracking-widest text-white">Audit History (latest 50)</h2><span class="badge">admin_audit_log</span></div>
             <div class="table-wrap"><table class="admin-table"><thead><tr><th>Changed At</th><th>Row Key</th><th>Change</th><th>Actor</th></tr></thead><tbody id="auditLogBody"></tbody></table></div>
+          </div>
+        </section>
+
+        <section id="section-sms" class="section-panel space-y-6">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 class="text-2xl font-black text-white">SMS Leads</h1>
+              <p class="mt-1 text-sm font-semibold text-slate-400">Phone numbers collected by the storefront SMS popup, ready to export to your SMS blast platform.</p>
+            </div>
+            <button id="copySmsLeadsBtn" class="btn-gold" type="button">📋 Copy all numbers</button>
+          </div>
+          <div class="grid gap-4 xl:grid-cols-4">
+            <div class="sms-card admin-card p-5"><p class="admin-label">Total Leads</p><h3 id="smsStatTotal" class="text-2xl font-black text-white">0</h3></div>
+            <div class="sms-card admin-card p-5"><p class="admin-label">MTN</p><h3 id="smsStatMtn" class="text-2xl font-black text-white">0</h3></div>
+            <div class="sms-card admin-card p-5"><p class="admin-label">Telecel</p><h3 id="smsStatTelecel" class="text-2xl font-black text-white">0</h3></div>
+            <div class="sms-card admin-card p-5"><p class="admin-label">AirtelTigo</p><h3 id="smsStatAirtelTigo" class="text-2xl font-black text-white">0</h3></div>
+          </div>
+          <div class="admin-card p-4">
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <span class="badge">sms_leads</span>
+              <span id="smsLoadState" class="text-[11px] font-bold text-slate-400"></span>
+            </div>
+            <div class="table-wrap"><table class="admin-table"><thead><tr><th>Phone</th><th>Network</th><th>Source</th><th>Opted In</th></tr></thead><tbody id="smsLeadsTableBody"></tbody></table></div>
+            <p id="smsNoTokenHint" class="hidden mt-3 text-[12px] font-bold text-amber-300"></p>
           </div>
         </section>
 

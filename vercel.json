@@ -3,6 +3,16 @@
   "outputDirectory": ".",
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/api/account/optin",
+      "destination": "/api/valmontpay/initialize?__vmRoute=optin"
+    },
+    {
+      "source": "/api/admin/sms-leads",
+      "destination": "/api/valmontpay/initialize?__vmRoute=sms-leads"
+    }
+  ],
   "redirects": [
     {
       "source": "/(.*)",

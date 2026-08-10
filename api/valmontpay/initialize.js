@@ -66,6 +66,148 @@ function clampText(value, max) {
   return String(value == null ? '' : value).trim().slice(0, max);
 }
 
+// ─── SMS lead collection (SMS marketing popup + admin export) ────────────────
+//
+// Two routes are consolidated into this existing function and routed here via
+// vercel.json rewrites (no new function files):
+//   POST /api/account/optin  -> stores an opted-in Ghana mobile number (public)
+//   GET  /api/admin/sms-leads -> lists collected leads (admin-token gated)
+//
+// Both talk to the `sms_leads` Supabase table. See
+// supabase/migrations/20260810_sms_leads.sql (unique phone + ^0[0-9]{9}$ check,
+// RLS on, anon SELECT revoked).
+
+/** Valid local Ghana mobile prefixes (leading 0, then 2/5 followed by 2 digits). */
+export const GHANA_MOBILE_PREFIXES = ['020', '023', '024', '025', '026', '027', '028', '050', '053', '054', '055', '056', '057', '059'];
+
+/** Prefix -> live network mapping (local 0XXXXXXXXX form). */
+export const GHANA_SMS_NETWORKS = {
+  MTN: ['024', '025', '026', '054', '055', '056', '059'],
+  Telecel: ['020', '050', '053'],
+  AirtelTigo: ['023', '027', '028', '057'],
+};
+
+/** Normalise any user-entered Ghana number to `0XXXXXXXXX`. '' when invalid. */
+export function normalizeGhanaLocalPhone(value) {
+  let digits = String(value == null ? '' : value).replace(/\D/g, '');
+  if (/^233\d{9}$/.test(digits)) digits = '0' + digits.slice(3); // international -> local
+  if (!/^0\d{9}$/.test(digits)) return '';
+  return GHANA_MOBILE_PREFIXES.some((p) => digits.startsWith(p)) ? digits : '';
+}
+
+/** Detect the live mobile network from a validated local number, or null. */
+export function detectGhanaNetwork(phone) {
+  for (const network of Object.keys(GHANA_SMS_NETWORKS)) {
+    if (GHANA_SMS_NETWORKS[network].some((p) => phone.startsWith(p))) return network;
+  }
+  return null;
+}
+
+/**
+ * POST /api/account/optin — store an opted-in SMS marketing number.
+ * Public (no auth). Validates the number before persisting; duplicates are
+ * idempotent and return { ok:true, duplicate:true } (200).
+ *
+ * @param {object} deps
+ * @param {object} deps.body  Parsed JSON body ({ phone, source? }).
+ * @param {Record<string,string|undefined>} deps.env
+ * @param {typeof fetch} deps.fetchImpl
+ * @returns {Promise<{status: number, body: object}>}
+ */
+export async function handleSmsOptinCore({ body, env, fetchImpl, log }) {
+  const emit = log || (() => {});
+  const sbUrl = String(env.SUPABASE_URL || DEFAULT_SUPABASE_URL).replace(/\/$/, '');
+  const sbKey = env.SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
+
+  const phone = normalizeGhanaLocalPhone(body && body.phone);
+  if (!phone) {
+    return { status: 400, body: { ok: false, message: 'Invalid Ghana mobile number. Use the format 0XXXXXXXXX with a valid prefix.' } };
+  }
+  const network = detectGhanaNetwork(phone);
+  const source = clampText(body && body.source, 60) || 'storefront';
+
+  let res;
+  try {
+    res = await fetchImpl(`${sbUrl}/rest/v1/sms_leads`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        apikey: sbKey,
+        authorization: `Bearer ${sbKey}`,
+        prefer: 'return=minimal',
+      },
+      body: JSON.stringify({ phone, network, source }),
+    });
+  } catch (err) {
+    emit(`[SMS-OPTIN] supabase unreachable: ${err && err.message}`);
+    return { status: 503, body: { ok: false, message: 'Could not save your number. Please try again.' } };
+  }
+
+  if (res.ok) {
+    emit(`[SMS-OPTIN] recorded ${phone} (${network}) via ${source}`);
+    return { status: 200, body: { ok: true, duplicate: false, network, source } };
+  }
+
+  // A 409 / unique_violation (23505) means the number already opted in -> idempotent.
+  let errJson = {};
+  try { errJson = await res.json(); } catch (_) { errJson = {}; }
+  if (String(errJson.code) === '23505' || String(errJson.code) === '23514' || res.status === 409) {
+    emit(`[SMS-OPTIN] duplicate ${phone} ignored (idempotent)`);
+    return { status: 200, body: { ok: true, duplicate: true, network, source } };
+  }
+
+  emit(`[SMS-OPTIN] insert failed: HTTP ${res.status} ${errJson.message || ''}`);
+  return { status: 500, body: { ok: false, message: 'Could not save your number. Please try again.' } };
+}
+
+/**
+ * GET /api/admin/sms-leads — list collected SMS leads (newest first).
+ * Admin-token gated: requires `x-admin-token` (or `Authorization: Bearer …`)
+ * holding the admin's Supabase access token. RLS only lets authenticated
+ * (admin) roles SELECT sms_leads, so a missing/invalid token -> 401.
+ *
+ * @param {object} deps
+ * @param {Record<string,string>} deps.headers  Lower-cased request headers.
+ * @param {Record<string,string|undefined>} deps.env
+ * @param {typeof fetch} deps.fetchImpl
+ * @returns {Promise<{status: number, body: object}>}
+ */
+export async function handleSmsLeadsCore({ headers, env, fetchImpl, log }) {
+  const emit = log || (() => {});
+  const auth = String(headers['authorization'] || '');
+  const token = auth.startsWith('Bearer ')
+    ? auth.slice(7).trim()
+    : String(headers['x-admin-token'] || '').trim();
+  if (!token) {
+    return { status: 401, body: { ok: false, message: 'Unauthorized: missing admin token' } };
+  }
+
+  const sbUrl = String(env.SUPABASE_URL || DEFAULT_SUPABASE_URL).replace(/\/$/, '');
+
+  let res;
+  try {
+    res = await fetchImpl(`${sbUrl}/rest/v1/sms_leads?select=*&order=created_at.desc`, {
+      headers: { apikey: token, authorization: `Bearer ${token}` },
+    });
+  } catch (err) {
+    emit(`[SMS-LEADS] supabase unreachable: ${err && err.message}`);
+    return { status: 503, body: { ok: false, message: 'Could not load SMS leads. Please try again.' } };
+  }
+
+  if (res.status === 401 || res.status === 403) {
+    return { status: 401, body: { ok: false, message: 'Unauthorized: invalid or expired admin token' } };
+  }
+  if (!res.ok) {
+    emit(`[SMS-LEADS] select failed: HTTP ${res.status}`);
+    return { status: 500, body: { ok: false, message: 'Could not load SMS leads. Please try again.' } };
+  }
+
+  let rows = [];
+  try { rows = await res.json(); } catch (_) { rows = []; }
+  if (!Array.isArray(rows)) rows = [];
+  return { status: 200, body: { ok: true, count: rows.length, leads: rows } };
+}
+
 /**
  * Builds the exact JSON object POSTed to `POST /rest/v1/orders`.
  *
@@ -492,8 +634,49 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
 }
 
 // ─── Edge entrypoint ────────────────────────────────────────────────────────
+// This single consolidated function also serves the two SMS-lead routes. The
+// vercel.json rewrites below tag each incoming request with a `__vmRoute`
+// query marker so we can dispatch without needing extra function files:
+//   /api/account/optin    -> /api/valmontpay/initialize?__vmRoute=optin
+//   /api/admin/sms-leads  -> /api/valmontpay/initialize?__vmRoute=sms-leads
 
 export default async function handler(request) {
+  const vmRoute = new URL(request.url).searchParams.get('__vmRoute');
+
+  if (vmRoute === 'optin') {
+    if (request.method !== 'POST') {
+      return new Response(JSON.stringify({ ok: false, message: 'Method not allowed' }), { status: 405, headers: JSON_HEADERS });
+    }
+    let body;
+    try {
+      body = await request.json();
+    } catch (_) {
+      return new Response(JSON.stringify({ ok: false, message: 'Invalid JSON body' }), { status: 400, headers: JSON_HEADERS });
+    }
+    try {
+      const result = await handleSmsOptinCore({ body, env: process.env, fetchImpl: fetch, log: (m) => console.log(m) });
+      return new Response(JSON.stringify(result.body), { status: result.status, headers: JSON_HEADERS });
+    } catch (err) {
+      console.error('[SMS-OPTIN] unexpected error:', err && err.message ? err.message : err);
+      return new Response(JSON.stringify({ ok: false, message: 'Internal error. Please try again.' }), { status: 500, headers: JSON_HEADERS });
+    }
+  }
+
+  if (vmRoute === 'sms-leads') {
+    if (request.method !== 'GET') {
+      return new Response(JSON.stringify({ ok: false, message: 'Method not allowed' }), { status: 405, headers: JSON_HEADERS });
+    }
+    const headers = {};
+    request.headers.forEach((value, key) => { headers[key.toLowerCase()] = value; });
+    try {
+      const result = await handleSmsLeadsCore({ headers, env: process.env, fetchImpl: fetch, log: (m) => console.log(m) });
+      return new Response(JSON.stringify(result.body), { status: result.status, headers: JSON_HEADERS });
+    } catch (err) {
+      console.error('[SMS-LEADS] unexpected error:', err && err.message ? err.message : err);
+      return new Response(JSON.stringify({ ok: false, message: 'Internal error. Please try again.' }), { status: 500, headers: JSON_HEADERS });
+    }
+  }
+
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({ status: false, message: 'Method not allowed' }), {
       status: 405,
