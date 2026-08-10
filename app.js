@@ -2991,21 +2991,25 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
 
     // Starts a real OAuth flow with Google via Supabase. No account details are
     // invented or stored until Google has authenticated the shopper.
-    function handleGoogleSignIn() {
+    function handleGoogleSignIn(isHandOff = false) {
       if (!hasSupabase()) {
         showValmontToast('Google sign-in is not configured yet. Please use email sign-in.');
         return;
       }
-      // The account page pre-seeds this key with its own URL before handing off
-      // here, so keep that destination so "Sign up with Google" returns the
-      // shopper to their account. Otherwise default to the current storefront.
-      const oauthReturn = sessionStorage.getItem('valmont_oauth_return') ||
-        `${window.location.origin}${window.location.pathname}`;
+      // The account page pre-seeds valmont_oauth_return with its own URL before
+      // handing off here with ?google_signin=1. Only reuse a stored destination
+      // when we are in that hand-off flow; a direct button click on the storefront
+      // defaults to the current storefront URL so stale sessionStorage destinations
+      // cannot misdirect a homepage sign-in.
+      const handOffFlag = (typeof isHandOff !== 'undefined' && isHandOff === true) || new URLSearchParams(window.location.search).get('google_signin') === '1';
+      const cleanPath = window.location.pathname === '/index.html' ? '/' : window.location.pathname;
+      const currentUrl = `${window.location.origin}${cleanPath}`;
+      const oauthReturn = (handOffFlag && sessionStorage.getItem('valmont_oauth_return')) || currentUrl;
       sessionStorage.setItem('valmont_oauth_return', oauthReturn);
       // Supabase must bounce the shopper back to a URL in the project's
       // redirect allowlist; keep the callback to the bare site page (no query
       // string) so it can never be rejected by the allowlist check.
-      const callbackUrl = `${window.location.origin}${window.location.pathname}`;
+      const callbackUrl = currentUrl;
       const authorizeUrl = `${VALMONT_SUPABASE.url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(callbackUrl)}`;
       window.location.assign(authorizeUrl);
     }
@@ -3026,16 +3030,28 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
       default: 'Google sign-in failed. Please try again or use email sign-up.'
     };
     async function completeGoogleSignIn() {
-      const params = new URLSearchParams(window.location.hash.slice(1));
-      const accessToken = params.get('access_token');
-      const cleanUrl = () => history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+      const hashParams = new URLSearchParams(window.location.hash.slice(1));
+      const searchParams = new URLSearchParams(window.location.search.slice(1));
+      const getParam = (k) => hashParams.get(k) || searchParams.get(k);
+      const accessToken = getParam('access_token');
+      const cleanUrl = () => {
+        try {
+          const u = new URL(window.location.href);
+          u.hash = '';
+          ['access_token', 'refresh_token', 'token_type', 'expires_in', 'error', 'error_description', 'error_code', 'code', 'state'].forEach(k => u.searchParams.delete(k));
+          const searchStr = u.searchParams.toString() ? `?${u.searchParams.toString()}` : '';
+          history.replaceState(null, '', `${u.pathname}${searchStr}`);
+        } catch (e) {
+          history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+        }
+      };
       if (!accessToken) {
         // Google bounced us back without a token (consent denied, sign-up
-        // rejected, expired flow…): clear the fragment so it doesn't linger,
+        // rejected, expired flow…): clear the fragment/search error so it doesn't linger,
         // then tell the shopper exactly why — including the Supabase error
         // code when we don't have a tailored message for it.
-        const error = params.get('error');
-        const errorDescription = params.get('error_description');
+        const error = getParam('error');
+        const errorDescription = getParam('error_description');
         if (error || errorDescription) {
           sessionStorage.removeItem('valmont_oauth_return');
           cleanUrl();
@@ -3055,22 +3071,30 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         });
         if (!response.ok) throw new Error('Unable to verify Google account');
         const account = await response.json();
+        const metadata = account.user_metadata || {};
         currentUser = {
           id: account.id,
-          name: account.user_metadata?.full_name || account.user_metadata?.name || account.email.split('@')[0],
+          name: metadata.full_name || metadata.name || account.email.split('@')[0],
           email: account.email,
-          phone: account.phone || '',
-          address: '',
-          role: account.user_metadata?.role || 'customer'
+          phone: metadata.phone || account.phone || '',
+          address: metadata.address || '',
+          role: metadata.role || 'customer'
         };
         localStorage.setItem('valmont_user', JSON.stringify(currentUser));
         localStorage.setItem('valmont_access_token', accessToken);
+        if (currentUser.role === 'dealer') {
+          isDealerMode = true;
+          const dp = { id: account.id, name: currentUser.name, phone: currentUser.phone, email: currentUser.email, role: 'dealer' };
+          localStorage.setItem('valmont_is_dealer', 'true');
+          localStorage.setItem('valmont_dealer_profile', JSON.stringify(dp));
+        }
         cleanUrl();
         // Hand the shopper back to where they started (e.g. the account page
         // after a "Sign up with Google") instead of stranding them on the store.
         const returnTo = sessionStorage.getItem('valmont_oauth_return');
         sessionStorage.removeItem('valmont_oauth_return');
-        if (returnTo && returnTo !== `${window.location.origin}${window.location.pathname}`) {
+        const currentClean = `${window.location.origin}${window.location.pathname === '/index.html' ? '/' : window.location.pathname}`;
+        if (returnTo && returnTo !== currentClean && returnTo !== `${window.location.origin}${window.location.pathname}`) {
           window.location.assign(returnTo);
           return;
         }
@@ -3085,9 +3109,10 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
     }
 
     completeGoogleSignIn();
-    if (new URLSearchParams(window.location.search).get('google_signin') === '1') {
+    const isGoogleSigninHandOff = new URLSearchParams(window.location.search).get('google_signin') === '1';
+    if (isGoogleSigninHandOff) {
       history.replaceState(null, '', window.location.pathname);
-      handleGoogleSignIn();
+      handleGoogleSignIn(true);
     }
 
     // Consolidated closeLoginModal override (Unified)

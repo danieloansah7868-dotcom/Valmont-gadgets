@@ -41,9 +41,12 @@ function extractFunction(src, signature) {
   return { body: src.slice(open, i + 1), asyncPrefix };
 }
 
-const appHandleGoogleSignIn = extractFunction(appJs, 'function handleGoogleSignIn()');
+const appHandleGoogleSignIn = extractFunction(appJs, 'function handleGoogleSignIn(');
 const appCompleteGoogleSignIn = extractFunction(appJs, 'async function completeGoogleSignIn()');
 const accountHandleGoogleSignIn = extractFunction(accountJs, 'function handleGoogleSignIn()');
+const accountCompleteAccountOAuth = extractFunction(accountJs, 'async function completeAccountOAuth()');
+const accountSaveAuthUser = extractFunction(accountJs, 'function saveAuthUser(');
+const accountNormalizePhone = extractFunction(accountJs, 'function normalizeGhanaLocalPhone(');
 
 // Extract the OAUTH_ERROR_MESSAGES object literal (used by completeGoogleSignIn)
 // so the sandbox has the real mapping.
@@ -101,15 +104,22 @@ function makeStubs({ hash = '', search = '', pathname = '/', origin = 'https://v
   const context = {
     window: { location },
     location, history, sessionStorage, localStorage, fetch,
-    URLSearchParams, console, setTimeout,
+    URL, URLSearchParams, console, setTimeout,
     VALMONT_SUPABASE: { url: 'https://eydsoqnpetqczaeqrscc.supabase.co', anonKey: 'anon-key' },
+    VALMONT_AUTH: { url: 'https://eydsoqnpetqczaeqrscc.supabase.co', anonKey: 'anon-key' },
     hasSupabase: () => true,
     showValmontToast: m => calls.toasts.push(m),
+    showToast: m => calls.toasts.push(m),
+    showAccountScreen: () => { calls.ui.push('account'); },
     updateUserUI: () => { calls.ui.push(1); },
+    GHANA_MOBILE_PREFIXES: ['020', '023', '024', '025', '026', '027', '028', '050', '053', '054', '055', '056', '057', '059'],
     currentUser: null,
+    isDealerMode: false,
   };
   vm.createContext(context);
   vm.runInContext(`OAUTH_ERROR_MESSAGES = ${oauthErrorMessagesLiteral}`, context);
+  vm.runInContext(`function normalizeGhanaLocalPhone(value) ${accountNormalizePhone.body}`, context);
+  vm.runInContext(`function saveAuthUser(account, accessToken) ${accountSaveAuthUser.body}`, context);
   return { context, calls, store };
 }
 
@@ -238,6 +248,71 @@ console.log('\nT7: token exchange failure');
   ok(calls.assign.length === 0, 'no redirect to account page on failure');
   ok(calls.toasts.some(t => t.includes('could not be completed')), 'failure toast shown');
   ok(context.sessionStorage.getItem('valmont_oauth_return') === null, 'stale return destination cleared so it cannot misdirect a later flow');
+}
+
+// ============ TEST 1b: homepage kickoff from /index.html canonicalizes redirect_to to bare root ============
+console.log('\nT1b: homepage kickoff from /index.html canonicalizes redirect_to');
+{
+  const { context, calls } = makeStubs({ pathname: '/index.html' });
+  const fn = run(appHandleGoogleSignIn, context, 'app.js');
+  fn();
+  const authUrl = calls.assign[0];
+  const rt = decodeURIComponent(authUrl.split('redirect_to=')[1]);
+  ok(rt === 'https://valmontgadgets.com/', `/index.html callback redirect_to is canonicalized to site root (got ${rt})`);
+}
+
+// ============ TEST 1c: direct homepage click ignores stale valmont_oauth_return in sessionStorage ============
+console.log('\nT1c: direct homepage click ignores stale valmont_oauth_return');
+{
+  const { context, calls } = makeStubs();
+  context.sessionStorage.setItem('valmont_oauth_return', 'https://valmontgadgets.com/account');
+  const fn = run(appHandleGoogleSignIn, context, 'app.js');
+  fn();
+  ok(context.sessionStorage.getItem('valmont_oauth_return') === 'https://valmontgadgets.com/', 'direct click overwrites stale sessionStorage destination');
+}
+
+// ============ TEST 4b: OAuth callback with error in URI search string ============
+console.log('\nT4b: OAuth error callback in URI query string (?error=access_denied)');
+{
+  const { context, calls, store } = makeStubs({
+    search: '?error=access_denied&error_description=The+user+denied+the+request',
+  });
+  const fn = run(appCompleteGoogleSignIn, context, 'app.js');
+  await fn();
+  ok(calls.toasts.some(t => t.includes('closed the Google sign-in window')), 'shopper told consent was cancelled from query string');
+  ok(store.get('l:valmont_user') === undefined, 'no session persisted on query error');
+  ok(context.location.search === '', 'error query string cleared');
+}
+
+// ============ TEST 8: direct OAuth callback on account.html#access_token=... ============
+console.log('\nT8: direct OAuth callback on account.html#access_token=...');
+{
+  const { context, calls, store } = makeStubs({
+    pathname: '/account.html',
+    hash: '#access_token=ACC_ACCOUNT&token_type=bearer&expires_in=3600',
+    userApiResponse: { id: 'u3', email: 'kwame@gmail.com', user_metadata: { full_name: 'Kwame Mensah', phone: '0241234567' } },
+  });
+  const fn = run(accountCompleteAccountOAuth, context, 'account.js');
+  const handled = await fn();
+  ok(handled === true, 'completeAccountOAuth returns true when handled');
+  ok(JSON.parse(store.get('l:valmont_user')).name === 'Kwame Mensah', 'verified Google profile saved from account page');
+  ok(JSON.parse(store.get('l:valmont_user')).phone === '0241234567', 'Ghana phone number normalized and saved');
+  ok(calls.ui.includes('account'), 'account screen shown directly');
+  ok(context.location.hash === '', 'fragment cleared on account page');
+}
+
+// ============ TEST 8b: direct OAuth error callback on account.html?error=access_denied ============
+console.log('\nT8b: direct OAuth error callback on account.html?error=access_denied');
+{
+  const { context, calls } = makeStubs({
+    pathname: '/account.html',
+    search: '?error=access_denied&error_description=denied',
+  });
+  const fn = run(accountCompleteAccountOAuth, context, 'account.js');
+  const handled = await fn();
+  ok(handled === false, 'completeAccountOAuth returns false on error');
+  ok(calls.toasts.some(t => t.includes('closed the Google sign-in window')), 'error toast displayed on account page');
+  ok(context.location.search === '', 'error search cleared on account page');
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

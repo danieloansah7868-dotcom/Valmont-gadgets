@@ -48,7 +48,78 @@ function saveAuthUser(account, accessToken) {
 
 window.addEventListener('DOMContentLoaded', initAccount);
 
-function initAccount() {
+const OAUTH_ERROR_MESSAGES = {
+  access_denied: 'You closed the Google sign-in window, so no account was created.',
+  user_already_exists: 'An account with this email already exists. Please sign in with your email and password instead.',
+  email_exists: 'An account with this email already exists. Please sign in with your email and password instead.',
+  signup_disabled: 'New account sign-ups are currently disabled on the store. Please contact support.',
+  server_error: 'Google sign-in could not create your account (server error). Please try again or use email sign-up.',
+  invalid_state: 'The Google sign-in session expired. Please try again.',
+  flow_state_not_found: 'The Google sign-in session expired. Please try again.',
+  default: 'Google sign-in failed. Please try again or use email sign-up.'
+};
+
+async function completeAccountOAuth() {
+  const hashParams = new URLSearchParams(window.location.hash.slice(1));
+  const searchParams = new URLSearchParams(window.location.search.slice(1));
+  const getParam = (k) => hashParams.get(k) || searchParams.get(k);
+  const accessToken = getParam('access_token');
+
+  const cleanUrl = () => {
+    try {
+      const url = new URL(window.location.href);
+      url.hash = '';
+      ['access_token', 'refresh_token', 'token_type', 'expires_in', 'error', 'error_description', 'error_code', 'code', 'state'].forEach(k => url.searchParams.delete(k));
+      const searchStr = url.searchParams.toString() ? `?${url.searchParams.toString()}` : '';
+      history.replaceState(null, '', `${url.pathname}${searchStr}`);
+    } catch (e) {
+      history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+    }
+  };
+
+  if (!accessToken) {
+    const error = getParam('error');
+    const errorDescription = getParam('error_description');
+    if (error || errorDescription) {
+      try { sessionStorage.removeItem('valmont_oauth_return'); } catch (e) {}
+      cleanUrl();
+      const code = String(error || '').toLowerCase();
+      const message = OAUTH_ERROR_MESSAGES[code] || OAUTH_ERROR_MESSAGES.default;
+      if (!OAUTH_ERROR_MESSAGES[code]) {
+        console.error('Google OAuth failed — Supabase code:', code, '| description:', errorDescription);
+      }
+      const hint = OAUTH_ERROR_MESSAGES[code] ? '' : ` (Code: ${code})`;
+      showToast(`${message}${hint}`);
+    }
+    return false;
+  }
+
+  try {
+    const response = await fetch(`${VALMONT_AUTH.url}/auth/v1/user`, {
+      headers: { apikey: VALMONT_AUTH.anonKey, Authorization: `Bearer ${accessToken}` }
+    });
+    if (!response.ok) throw new Error('Unable to verify Google account');
+    const account = await response.json();
+    saveAuthUser(account, accessToken);
+    cleanUrl();
+    try { sessionStorage.removeItem('valmont_oauth_return'); } catch (e) {}
+    showAccountScreen();
+    const firstName = currentUser && currentUser.name ? currentUser.name.split(' ')[0] : 'Customer';
+    showToast(`Welcome, ${firstName}!`);
+    return true;
+  } catch (error) {
+    console.error('Google sign-in failed on account page:', error);
+    try { sessionStorage.removeItem('valmont_oauth_return'); } catch (e) {}
+    cleanUrl();
+    showToast('Google sign-in could not be completed. Please try again.');
+    return false;
+  }
+}
+
+async function initAccount() {
+  const oauthHandled = await completeAccountOAuth();
+  if (oauthHandled) return;
+
   currentUser = localStorage.getItem('valmont_access_token') ? safeParseJSON(localStorage.getItem('valmont_user'), null) : null;
   if (!localStorage.getItem('valmont_access_token')) localStorage.removeItem('valmont_user');
   allProducts = safeParseJSON(localStorage.getItem('valmont_products'), []);
