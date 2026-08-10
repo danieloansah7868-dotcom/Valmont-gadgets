@@ -487,37 +487,14 @@ html {
   display: none !important;
 }
 
-/* ===== FLOATING WHATSAPP BUTTON ===== */
-.whatsapp-float {
-  position: fixed;
-  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-  right: 16px;
-  width: 52px;
-  height: 52px;
-  background: #25D366;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 26px;
-  text-decoration: none;
-  box-shadow: 0 4px 12px rgba(11,26,56,0.25);
-  z-index: 9998;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.whatsapp-float:hover {
-  transform: scale(1.08);
-  box-shadow: 0 6px 16px rgba(11,26,56,0.35);
-}
-.whatsapp-float:active {
-  transform: scale(0.95);
-}
+/* ===== FLOATING WHATSAPP BUTTON =====
+   Styles now live in assets/css/community.css (shared across all public
+   pages): bottom-left placement + red notification dot. Loaded after this
+   file on every page. */
 
 /* ===== RESPONSIVE BREAKPOINTS ===== */
 @media (min-width: 768px) {
   .bottom-nav { display: none; }
-  .whatsapp-float { bottom: 24px; right: 24px; z-index: 100; }
   
   .mobile-product-grid {
     grid-template-columns: repeat(4, 1fr);
@@ -893,11 +870,8 @@ a[class*="bg-[#ff8c00]"][class*="hover:bg-orange-600"]:hover {
   #mobileCategoriesOverlay { z-index: 9990 !important; }
   #mobileCategoriesModal { z-index: 9991 !important; }
 
-  /* WhatsApp button above bottom nav, not overlapping */
-  .whatsapp-float {
-    bottom: calc(84px + env(safe-area-inset-bottom, 0px)) !important;
-    right: 16px !important;
-  }
+  /* WhatsApp float: positioned above the bottom nav via
+     assets/css/community.css (bottom-left, no overlap with nav items). */
 
   /* PWA install banner above bottom nav */
   #pwaInstallBanner {

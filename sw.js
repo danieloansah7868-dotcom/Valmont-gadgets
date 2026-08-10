@@ -1,4 +1,4 @@
-const CACHE_NAME = 'valmont-v5';
+const CACHE_NAME = 'valmont-v6';
 const ASSETS = [
   '/',
   '/index.html',
@@ -6,6 +6,7 @@ const ASSETS = [
   '/app.js',
   '/tailwind.min.css',
   '/mobile-fixes.css',
+  '/assets/css/community.css',
   '/logo.svg',
   '/logo.png',
   '/favicon.svg',

@@ -2810,7 +2810,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
             instBtn.classList.remove('hidden');
             instBtn.onclick = () => {
               const text = encodeURIComponent(`Hello Valmont Gadgets, I'm interested in the installment deal for the ${product.name}.\n\nPrice: ${money(plan.totalWithMarkup)}\nDeposit (40%): ${money(plan.weekly.down)}\n\nI have my Ghana Card ready and my Guarantor's number for confirmation. Please link me to the processing unit!`);
-              window.open(`https://wa.me/233542451578?text=${text}`, '_blank');
+              window.open(`https://wa.me/233542451578?text=${text}`, '_blank', 'noopener');
             };
           }
         } else {
