@@ -36,6 +36,15 @@ const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: "chargers", label: "Chargers & Power Banks" },
 ];
 
+/** Official Valmont Group social & support channels */
+const SOCIAL_LINKS = {
+  whatsappChannel: "https://whatsapp.com/channel/0029Vb9DIKG8V0terg2V4K2Y",
+  tiktok: "https://www.tiktok.com/@valmont.group?_r=1&_t=ZS-98lPDWz9Okx",
+  facebook: "https://www.facebook.com/share/1TA1PNVaCP/?mibextid=wwXIfr",
+  whatsappSupport: "https://wa.me/233542451578",
+  supportEmail: "support@valmontdata.com",
+} as const;
+
 const PRODUCTS: Product[] = [
   {
     id: "VG-IP15PM-256",
@@ -513,7 +522,7 @@ export default function Page() {
 
   return (
     <div className={`min-h-screen ${pageBg} antialiased`}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap'); *{font-family:'Inter',sans-serif;} .scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none} .scrollbar-hide::-webkit-scrollbar{display:none} .theme-btn.is-active{background:#0b1a38;color:#fff}`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap'); *{font-family:'Inter',sans-serif;} .scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none} .scrollbar-hide::-webkit-scrollbar{display:none} .theme-btn.is-active{background:#0b1a38;color:#fff} @keyframes vg-wa-dot-pulse{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(239,68,68,.55)}70%{transform:scale(1.07);box-shadow:0 0 0 8px rgba(239,68,68,0)}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(239,68,68,0)}}`}</style>
 
       <div className="bg-[#0b1a38] text-white text-center py-2.5 px-4">
         <p className="text-[10px] md:text-[11px] font-extrabold tracking-[0.14em] uppercase leading-relaxed">
@@ -614,7 +623,72 @@ export default function Page() {
         </div>
       </main>
 
+      {/* COMMUNITY BANNER + FOOTER — official Valmont Group social channels */}
+      <footer className="bg-[#0b1a38] text-white border-t-4 border-[#ff8c00]">
+        <div className="max-w-[1280px] mx-auto px-4 py-8">
+          <a href={SOCIAL_LINKS.whatsappChannel} target="_blank" rel="noopener" aria-label="Join the official Valmont Group WhatsApp Channel" className="flex flex-wrap items-center gap-3.5 rounded-2xl border border-white/15 bg-gradient-to-r from-[#0d4f45] via-[#128C7E] to-[#25D366] px-4 py-3.5 shadow-[0_10px_24px_rgba(18,140,126,.3)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(18,140,126,.42)]">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/30 bg-white/15">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" className="h-6 w-6 fill-white" aria-hidden="true"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L3 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-93.8-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 89.4-184.5 184.6-184.5 46 0 89.3 18 121.9 50.6 32.6 32.5 50.5 75.9 50.5 122.1-.1 101.8-94.9 184.5-184.6 184.5zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="text-[14px] font-extrabold tracking-tight">Join our WhatsApp Channel for Updates</span>
+              <span className="text-[11.5px] font-medium text-white/90">Flash drops, restock alerts &amp; exclusive Valmont Group deals — straight to your WhatsApp.</span>
+            </span>
+            <span className="rounded-full bg-white px-3.5 py-2 text-[10.5px] font-black uppercase tracking-[0.12em] text-[#0b1a38]">Follow Channel&nbsp;&#8594;</span>
+          </a>
 
+          <div className="mt-8 grid grid-cols-1 gap-7 border-b border-white/10 pb-7 md:grid-cols-3">
+            <div>
+              <p className="text-[15px] font-black uppercase tracking-[0.14em] text-[#ff8c00]">Valmont Gadgets</p>
+              <p className="mt-2.5 text-[12px] font-medium leading-relaxed text-gray-300">Ghana&#8217;s trusted marketplace for certified smartphones, executive laptops, premium audio &amp; genuine accessories.</p>
+              <p className="mt-4 mb-3 text-[10px] font-extrabold uppercase tracking-[0.16em] text-gray-400">Follow Valmont Group</p>
+              <div className="flex items-center gap-2.5">
+                <a href={SOCIAL_LINKS.whatsappChannel} target="_blank" rel="noopener" aria-label="Valmont Group WhatsApp Channel" title="WhatsApp Channel" className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:-translate-y-0.5 hover:border-[#25D366] hover:bg-[#25D366]">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" className="h-[19px] w-[19px] fill-current" aria-hidden="true"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L3 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-93.8-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 89.4-184.5 184.6-184.5 46 0 89.3 18 121.9 50.6 32.6 32.5 50.5 75.9 50.5 122.1-.1 101.8-94.9 184.5-184.6 184.5zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
+                </a>
+                <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener" aria-label="Valmont Group on Facebook" title="Facebook" className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:-translate-y-0.5 hover:border-[#1877F2] hover:bg-[#1877F2]">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-[19px] w-[19px] fill-current" aria-hidden="true"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953h-1.513c-1.492 0-1.957.925-1.957 1.874v2.25h3.328l-.532 3.469h-2.796v8.386C19.612 23.027 24 18.061 24 12.073z"/></svg>
+                </a>
+                <a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noopener" aria-label="Valmont Group on TikTok" title="TikTok" className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:-translate-y-0.5 hover:border-[#FE2C55] hover:bg-black">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-[19px] w-[19px] fill-current" aria-hidden="true"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+                </a>
+              </div>
+            </div>
+            <div>
+              <p className="mb-3 text-[10px] font-extrabold uppercase tracking-[0.16em] text-gray-400">Contact Info</p>
+              <ul className="space-y-2.5 text-[12.5px] font-medium text-gray-300">
+                <li className="flex items-center gap-2.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 shrink-0 text-[#ff8c00]" aria-hidden="true"><path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg>
+                  <a href={"mailto:" + SOCIAL_LINKS.supportEmail} className="hover:text-[#ff8c00] hover:underline">{SOCIAL_LINKS.supportEmail}</a>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 shrink-0 text-[#ff8c00]" aria-hidden="true"><path d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+                  <span>Accra, Ghana</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 shrink-0 text-[#ff8c00]" aria-hidden="true"><path d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                  <span>Mon - Sun: 8AM - 9PM</span>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="mb-3 text-[10px] font-extrabold uppercase tracking-[0.16em] text-gray-400">Support</p>
+              <a href={SOCIAL_LINKS.whatsappSupport} target="_blank" rel="noopener" className="text-[12.5px] font-extrabold text-[#25D366] hover:underline">&#128172; WhatsApp Support &#8594;</a>
+              <p className="mt-3 text-[11.5px] font-medium leading-relaxed text-gray-400">Call to order: 054 245 1578 &#8226; MoMo &amp; Card accepted &#8226; 12-month official warranty on every device.</p>
+            </div>
+          </div>
+          <div className="mt-5 flex flex-col items-center justify-between gap-2 text-center text-[10.5px] font-bold uppercase tracking-[0.08em] text-gray-400 md:flex-row">
+            <span>&#169; 2026 Valmont Gadgets &#8212; All rights reserved</span>
+            <span>Accra, Ghana</span>
+          </div>
+        </div>
+      </footer>
+
+      {/* FLOATING WHATSAPP SUPPORT WIDGET — bottom-left with red notification dot */}
+      <a href={SOCIAL_LINKS.whatsappSupport} target="_blank" rel="noopener" aria-label="Chat with Valmont Gadgets support on WhatsApp" className="fixed bottom-5 left-5 z-[70] flex h-[54px] w-[54px] items-center justify-center rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] text-white shadow-[0_6px_16px_rgba(18,140,126,.45)] transition hover:scale-110 active:scale-95">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" className="h-7 w-7 fill-current" aria-hidden="true"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L3 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-93.8-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 89.4-184.5 184.6-184.5 46 0 89.3 18 121.9 50.6 32.6 32.5 50.5 75.9 50.5 122.1-.1 101.8-94.9 184.5-184.6 184.5zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
+        <span aria-hidden="true" className="absolute -top-0.5 -right-0.5 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white bg-[#ef4444] px-1 text-[11px] font-extrabold leading-none text-white" style={{ animation: "vg-wa-dot-pulse 2s ease-out infinite" }}>1</span>
+      </a>
 
       <p className="sr-only" aria-live="polite">THEME ACTIVE: {theme.toUpperCase()}</p>
       {deliveryMessage && <div role="status" className="fixed bottom-5 left-1/2 z-[80] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-xl bg-[#0b1a38] px-4 py-3 text-center text-[11px] font-bold text-white shadow-xl">{deliveryMessage}<button onClick={() => setDeliveryMessage("")} className="ml-3 text-[#ff8c00]" aria-label="Dismiss delivery message">Close</button></div>}
@@ -638,7 +712,7 @@ export default function Page() {
                       <div className="flex gap-2 mt-2">
                         <button onClick={() => setCart((c) => c.map((x) => (x.id === item.id ? { ...x, qty: Math.max(1, x.qty - 1) } : x)))} className="text-[10px] font-bold uppercase px-2 py-1 border border-gray-300 rounded">-</button>
                         <button onClick={() => setCart((c) => c.map((x) => (x.id === item.id ? { ...x, qty: x.qty + 1 } : x)))} className="text-[10px] font-bold uppercase px-2 py-1 border border-gray-300 rounded">+</button>
-                        <a href={buildWALink(prod.name, prod.retail)} target="_blank" className="text-[10px] font-bold uppercase px-2 py-1 bg-[#ff8c00] text-white rounded">WA</a>
+                        <a href={buildWALink(prod.name, prod.retail)} target="_blank" rel="noopener" className="text-[10px] font-bold uppercase px-2 py-1 bg-[#ff8c00] text-white rounded">WA</a>
                         <button onClick={() => setCart((c) => c.filter((x) => x.id !== item.id))} className="text-[10px] font-bold uppercase px-2 py-1 text-[#ff8c00]">Remove</button>
                       </div>
                     </div>

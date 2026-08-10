@@ -1,0 +1,452 @@
+/* =====================================================================
+   VALMONT GADGETS — Community, Social Links & Floating Support Widget
+   ---------------------------------------------------------------------
+   Shared brand-matched styles for every public page:
+     • WhatsApp Channel community banner (footer chip)
+     • Circular social buttons (WhatsApp Channel / Facebook / TikTok)
+     • Footer "Contact Info" blocks
+     • Floating green WhatsApp support widget (bottom-left, red dot)
+   Brand tokens: navy #0b1a38 · orange #ff8c00 · WhatsApp #25D366/#128C7E
+   Self-contained — no Tailwind dependency, safe on drop.html too.
+   ===================================================================== */
+
+:root {
+  --vg-navy: #0b1a38;
+  --vg-navy-2: #13264a;
+  --vg-orange: #ff8c00;
+  --vg-orange-dark: #e67e00;
+  --vg-wa: #25D366;
+  --vg-wa-deep: #128C7E;
+  --vg-line: rgba(255, 255, 255, 0.12);
+  --vg-text-soft: #cbd5e1;
+  --vg-text-mute: #94a3b8;
+}
+
+/* ---------------------------------------------------------------------
+   1. COMMUNITY BANNER — "Join our WhatsApp Channel for Updates"
+   --------------------------------------------------------------------- */
+.vg-community-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(118deg, #0d4f45 0%, #128C7E 48%, #25D366 100%);
+  color: #ffffff;
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgba(18, 140, 126, 0.30);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.vg-community-banner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(18, 140, 126, 0.42);
+}
+.vg-community-banner:focus-visible {
+  outline: 3px solid var(--vg-orange);
+  outline-offset: 3px;
+}
+.vg-community-icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.vg-community-icon svg {
+  width: 24px;
+  height: 24px;
+  fill: #ffffff;
+}
+.vg-community-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.vg-community-title {
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+}
+.vg-community-sub {
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.88);
+}
+.vg-community-cta {
+  flex-shrink: 0;
+  background: #ffffff;
+  color: var(--vg-navy);
+  font-size: 10.5px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 9px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+.vg-community-banner:hover .vg-community-cta {
+  background: var(--vg-navy);
+  color: #ffffff;
+}
+@media (max-width: 520px) {
+  .vg-community-banner {
+    flex-wrap: wrap;
+  }
+  .vg-community-text {
+    flex-basis: calc(100% - 60px);
+  }
+  .vg-community-cta {
+    width: 100%;
+    text-align: center;
+    margin-top: 4px;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   2. CIRCULAR SOCIAL BUTTONS — WhatsApp Channel / Facebook / TikTok
+   --------------------------------------------------------------------- */
+.vg-social-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.vg-social-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  text-decoration: none;
+  transition: transform 0.25s ease, background-color 0.25s ease,
+    border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.vg-social-btn svg {
+  width: 19px;
+  height: 19px;
+  fill: currentColor;
+  display: block;
+}
+.vg-social-btn:hover {
+  transform: translateY(-3px);
+}
+.vg-social-btn:focus-visible {
+  outline: 3px solid var(--vg-orange);
+  outline-offset: 2px;
+}
+.vg-social-btn--whatsapp:hover {
+  background: var(--vg-wa);
+  border-color: var(--vg-wa);
+  box-shadow: 0 8px 18px rgba(37, 211, 102, 0.38);
+}
+.vg-social-btn--facebook:hover {
+  background: #1877F2;
+  border-color: #1877F2;
+  box-shadow: 0 8px 18px rgba(24, 119, 242, 0.38);
+}
+.vg-social-btn--tiktok:hover {
+  background: #010101;
+  border-color: #FE2C55;
+  box-shadow: 0 8px 18px rgba(254, 44, 85, 0.32);
+}
+
+/* ---------------------------------------------------------------------
+   3. FOOTER CONTACT INFO LIST + SUPPORT LINKS
+   --------------------------------------------------------------------- */
+.vg-contact-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.vg-contact-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--vg-text-soft);
+  line-height: 1.45;
+}
+.vg-contact-ic {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(255, 140, 0, 0.12);
+  border: 1px solid rgba(255, 140, 0, 0.32);
+  color: var(--vg-orange);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.vg-contact-ic svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.vg-contact-mail {
+  color: var(--vg-text-soft);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.vg-contact-mail:hover {
+  color: var(--vg-orange);
+  text-decoration: underline;
+}
+.vg-contact-wa {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--vg-wa);
+  text-decoration: none;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  transition: color 0.2s ease;
+}
+.vg-contact-wa:hover {
+  color: #5cf09a;
+  text-decoration: underline;
+}
+.vg-contact-wa:focus-visible {
+  outline: 2px solid var(--vg-orange);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ---------------------------------------------------------------------
+   4. STANDALONE FOOTER SHELL (account / drop / order-confirmed pages)
+   --------------------------------------------------------------------- */
+.vg-footer {
+  background: var(--vg-navy);
+  color: #ffffff;
+  margin-top: 48px;
+  padding: 40px 18px 24px;
+  border-top: 4px solid var(--vg-orange);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+/* Panel variant — used inside narrow app-style pages (e.g., Daily Drop) */
+.vg-footer--panel {
+  margin-top: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-top: 4px solid var(--vg-orange);
+  border-radius: 18px;
+  padding: 28px 20px 20px;
+}
+.vg-footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.vg-footer-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  margin: 26px 0 0;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--vg-line);
+}
+@media (min-width: 640px) {
+  .vg-footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 960px) {
+  .vg-footer-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.vg-foot-brand {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vg-orange);
+}
+.vg-foot-text {
+  margin: 0 0 16px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.7;
+  color: var(--vg-text-soft);
+}
+.vg-foot-title {
+  margin: 0 0 12px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vg-text-mute);
+}
+.vg-foot-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.vg-foot-links a {
+  color: var(--vg-text-soft);
+  font-size: 12.5px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.vg-foot-links a:hover {
+  color: var(--vg-orange);
+}
+.vg-footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-top: 18px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--vg-text-mute);
+  text-align: center;
+}
+@media (max-width: 520px) {
+  .vg-footer-bottom {
+    justify-content: center;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   5. INDEX STOREFRONT FOOTER GRID (replaces Tailwind 3-col grid so the
+      new "Contact Info" column flows: 1 → 2 → 4 columns)
+   --------------------------------------------------------------------- */
+.vg-footer-cols {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+@media (min-width: 768px) {
+  .vg-footer-cols {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .vg-footer-cols {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   6. FLOATING WHATSAPP SUPPORT WIDGET
+      • bottom-left, fixed above all page content (stays visible over the
+        footer while scrolling)
+      • clears the mobile bottom-nav (84px + safe-area offset)
+      • red "1" notification dot with a gentle, reduced-motion-safe pulse
+   --------------------------------------------------------------------- */
+.whatsapp-float {
+  position: fixed;
+  left: 16px;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--vg-wa) 0%, var(--vg-wa-deep) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  text-decoration: none;
+  z-index: 9998;
+  box-shadow: 0 6px 16px rgba(18, 140, 126, 0.45);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.whatsapp-float svg {
+  width: 27px;
+  height: 27px;
+  fill: currentColor;
+}
+.whatsapp-float:hover {
+  transform: scale(1.08);
+  box-shadow: 0 10px 22px rgba(18, 140, 126, 0.5);
+}
+.whatsapp-float:active {
+  transform: scale(0.94);
+}
+.whatsapp-float:focus-visible {
+  outline: 3px solid var(--vg-orange);
+  outline-offset: 3px;
+}
+.whatsapp-float-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ef4444;
+  border: 2px solid #ffffff;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.45;
+  text-align: center;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+  animation: vg-wa-dot-pulse 2s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes vg-wa-dot-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55);
+  }
+  70% {
+    transform: scale(1.07);
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+/* Desktop & tablet: sit in the bottom-left corner of the viewport */
+@media (min-width: 768px) {
+  .whatsapp-float {
+    left: 24px;
+    bottom: 24px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .whatsapp-float,
+  .vg-community-banner,
+  .vg-social-btn {
+    transition: none;
+  }
+  .whatsapp-float-dot {
+    animation: none;
+  }
+}
