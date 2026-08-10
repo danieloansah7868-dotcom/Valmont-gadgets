@@ -2996,9 +2996,17 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         showValmontToast('Google sign-in is not configured yet. Please use email sign-in.');
         return;
       }
-      const returnTo = `${window.location.origin}${window.location.pathname}${window.location.search}`;
-      sessionStorage.setItem('valmont_oauth_return', returnTo);
-      const authorizeUrl = `${VALMONT_SUPABASE.url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(returnTo)}`;
+      // The account page pre-seeds this key with its own URL before handing off
+      // here, so keep that destination so "Sign up with Google" returns the
+      // shopper to their account. Otherwise default to the current storefront.
+      const oauthReturn = sessionStorage.getItem('valmont_oauth_return') ||
+        `${window.location.origin}${window.location.pathname}`;
+      sessionStorage.setItem('valmont_oauth_return', oauthReturn);
+      // Supabase must bounce the shopper back to a URL in the project's
+      // redirect allowlist; keep the callback to the bare site page (no query
+      // string) so it can never be rejected by the allowlist check.
+      const callbackUrl = `${window.location.origin}${window.location.pathname}`;
+      const authorizeUrl = `${VALMONT_SUPABASE.url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(callbackUrl)}`;
       window.location.assign(authorizeUrl);
     }
 
@@ -3008,7 +3016,17 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
     async function completeGoogleSignIn() {
       const params = new URLSearchParams(window.location.hash.slice(1));
       const accessToken = params.get('access_token');
-      if (!accessToken) return;
+      const cleanUrl = () => history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+      if (!accessToken) {
+        // Google bounced us back without a token (consent denied, expired
+        // flow…): clear the fragment so it doesn't linger and tell the shopper.
+        if (params.get('error') || params.get('error_description')) {
+          sessionStorage.removeItem('valmont_oauth_return');
+          cleanUrl();
+          showValmontToast('Google sign-in was not completed. Please try again.');
+        }
+        return;
+      }
       try {
         const response = await fetch(`${VALMONT_SUPABASE.url}/auth/v1/user`, {
           headers: { apikey: VALMONT_SUPABASE.anonKey, Authorization: `Bearer ${accessToken}` }
@@ -3025,12 +3043,21 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         };
         localStorage.setItem('valmont_user', JSON.stringify(currentUser));
         localStorage.setItem('valmont_access_token', accessToken);
-        history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+        cleanUrl();
+        // Hand the shopper back to where they started (e.g. the account page
+        // after a "Sign up with Google") instead of stranding them on the store.
+        const returnTo = sessionStorage.getItem('valmont_oauth_return');
+        sessionStorage.removeItem('valmont_oauth_return');
+        if (returnTo && returnTo !== `${window.location.origin}${window.location.pathname}`) {
+          window.location.assign(returnTo);
+          return;
+        }
         updateUserUI();
         showValmontToast(`Welcome, ${currentUser.name}!`);
       } catch (error) {
         console.error('Google sign-in failed:', error);
-        history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+        sessionStorage.removeItem('valmont_oauth_return');
+        cleanUrl();
         showValmontToast('Google sign-in could not be completed. Please try again.');
       }
     }

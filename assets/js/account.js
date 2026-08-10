@@ -124,7 +124,12 @@ function handlePasswordReset() {
 
 function handleGoogleSignIn() {
   // Google OAuth is handled by the storefront's Supabase integration. Redirect
-  // there rather than creating a pretend signed-in customer locally.
+  // there rather than creating a pretend signed-in customer locally, but tell
+  // the storefront to bring the shopper back here once Google is done so a
+  // "Sign up with Google" finishes on the account page, not the store.
+  try {
+    sessionStorage.setItem('valmont_oauth_return', `${window.location.origin}${window.location.pathname}`);
+  } catch (e) { /* sessionStorage unavailable; storefront falls back to its own URL */ }
   window.location.assign('/?google_signin=1');
 }
 
