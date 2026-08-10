@@ -3013,17 +3013,39 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
     // Supabase returns a real access token in the URL fragment after Google
     // approves the account. Exchange it for the verified profile, then remove
     // the sensitive fragment from the address bar.
+    // Map known Supabase OAuth callback error codes to shopper-friendly
+    // messages so the actual failure is visible instead of a generic toast.
+    const OAUTH_ERROR_MESSAGES = {
+      access_denied: 'You closed the Google sign-in window, so no account was created.',
+      user_already_exists: 'An account with this email already exists. Please sign in with your email and password instead.',
+      email_exists: 'An account with this email already exists. Please sign in with your email and password instead.',
+      signup_disabled: 'New account sign-ups are currently disabled on the store. Please contact support.',
+      server_error: 'Google sign-in could not create your account (server error). Please try again or use email sign-up.',
+      invalid_state: 'The Google sign-in session expired. Please try again.',
+      flow_state_not_found: 'The Google sign-in session expired. Please try again.',
+      default: 'Google sign-in failed. Please try again or use email sign-up.'
+    };
     async function completeGoogleSignIn() {
       const params = new URLSearchParams(window.location.hash.slice(1));
       const accessToken = params.get('access_token');
       const cleanUrl = () => history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
       if (!accessToken) {
-        // Google bounced us back without a token (consent denied, expired
-        // flow…): clear the fragment so it doesn't linger and tell the shopper.
-        if (params.get('error') || params.get('error_description')) {
+        // Google bounced us back without a token (consent denied, sign-up
+        // rejected, expired flow…): clear the fragment so it doesn't linger,
+        // then tell the shopper exactly why — including the Supabase error
+        // code when we don't have a tailored message for it.
+        const error = params.get('error');
+        const errorDescription = params.get('error_description');
+        if (error || errorDescription) {
           sessionStorage.removeItem('valmont_oauth_return');
           cleanUrl();
-          showValmontToast('Google sign-in was not completed. Please try again.');
+          const code = String(error || '').toLowerCase();
+          const message = OAUTH_ERROR_MESSAGES[code] || OAUTH_ERROR_MESSAGES.default;
+          if (!OAUTH_ERROR_MESSAGES[code]) {
+            console.error('Google OAuth failed — Supabase code:', code, '| description:', errorDescription);
+          }
+          const hint = OAUTH_ERROR_MESSAGES[code] ? '' : ` (Code: ${code})`;
+          showValmontToast(`${message}${hint}`);
         }
         return;
       }

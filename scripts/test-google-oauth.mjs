@@ -45,6 +45,21 @@ const appHandleGoogleSignIn = extractFunction(appJs, 'function handleGoogleSignI
 const appCompleteGoogleSignIn = extractFunction(appJs, 'async function completeGoogleSignIn()');
 const accountHandleGoogleSignIn = extractFunction(accountJs, 'function handleGoogleSignIn()');
 
+// Extract the OAUTH_ERROR_MESSAGES object literal (used by completeGoogleSignIn)
+// so the sandbox has the real mapping.
+function extractObjectLiteral(src, name) {
+  const start = src.indexOf(`const ${name} = `);
+  if (start === -1) throw new Error(`const not found: ${name}`);
+  const open = src.indexOf('{', start);
+  let depth = 0, i = open;
+  for (; i < src.length; i++) {
+    if (src[i] === '{') depth++;
+    else if (src[i] === '}') { depth--; if (depth === 0) break; }
+  }
+  return src.slice(open, i + 1);
+}
+const oauthErrorMessagesLiteral = extractObjectLiteral(appJs, 'OAUTH_ERROR_MESSAGES');
+
 let pass = 0, fail = 0;
 const ok = (cond, label) => { console.log(`  ${cond ? '✅' : '❌'} ${label}`); cond ? pass++ : fail++; };
 
@@ -94,6 +109,7 @@ function makeStubs({ hash = '', search = '', pathname = '/', origin = 'https://v
     currentUser: null,
   };
   vm.createContext(context);
+  vm.runInContext(`OAUTH_ERROR_MESSAGES = ${oauthErrorMessagesLiteral}`, context);
   return { context, calls, store };
 }
 
@@ -175,8 +191,36 @@ console.log('\nT6: OAuth error callback (consent denied)');
   });
   const fn = run(appCompleteGoogleSignIn, context, 'app.js');
   await fn();
-  ok(calls.toasts.some(t => t.includes('not completed')), 'shopper informed sign-in was not completed');
+  ok(calls.toasts.some(t => t.includes('closed the Google sign-in window')), 'shopper told consent was cancelled, not a scary error');
   ok(store.get('l:valmont_user') === undefined && store.get('l:valmont_access_token') === undefined, 'no session persisted on denial');
+  ok(context.location.hash === '', 'error fragment cleared');
+}
+
+// ============ TEST 6b: known error codes get tailored, actionable messages ============
+console.log('\nT6b: tailored messages for known Supabase OAuth error codes');
+{
+  const cases = [
+    ['user_already_exists', 'already exists'],
+    ['email_exists', 'already exists'],
+    ['signup_disabled', 'currently disabled on the store'],
+    ['server_error', 'server error'],
+    ['invalid_state', 'session expired'],
+  ];
+  for (const [code, expected] of cases) {
+    const { context, calls } = makeStubs({ hash: `#error=${code}&error_description=test` });
+    const fn = run(appCompleteGoogleSignIn, context, 'app.js');
+    await fn();
+    ok(calls.toasts.some(t => t.includes(expected)), `${code} → "${expected}"`);
+  }
+}
+
+// ============ TEST 6c: unknown error code is surfaced with its raw code ============
+console.log('\nT6c: unknown error code surfaced with raw Supabase code');
+{
+  const { context, calls } = makeStubs({ hash: '#error=weird_code_xyz&error_description=Something+odd' });
+  const fn = run(appCompleteGoogleSignIn, context, 'app.js');
+  await fn();
+  ok(calls.toasts.some(t => t.includes('Code: weird_code_xyz')), 'toast includes the raw Supabase error code');
   ok(context.location.hash === '', 'error fragment cleared');
 }
 
