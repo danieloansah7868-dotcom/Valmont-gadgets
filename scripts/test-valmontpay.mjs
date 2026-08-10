@@ -20,6 +20,8 @@ import {
   toPesewas as initToPesewas,
   generateOrderNumber,
   handleInitializeCore,
+  handleSmsOptinCore,
+  handleSmsLeadsCore,
 } from '../api/valmontpay/initialize.js';
 
 const tests = [];
@@ -805,6 +807,80 @@ test('admin: delivery save handles 401/42501 as not your admin account', async (
   assert.ok(/\.update\(\)\.eq/.test(adminSrc), 'admin must save via .update().eq()');
 });
 
+
+// ─── SMS leads (opt-in + admin export) ──────────────────────────────────────
+// The mock DB mirrors the sms_leads table's UNIQUE(phone) constraint (and the
+// ^0[0-9]{9}$ format check enforced by the handler before any DB call).
+
+function smsRoutes(db) {
+  return [
+    {
+      match: (c) => c.method === 'POST' && c.url.includes('/rest/v1/sms_leads'),
+      respond: (c) => {
+        const phone = c.body && c.body.phone;
+        if (db.some((r) => r.phone === phone)) {
+          return { status: 409, json: { code: '23505', message: 'duplicate key value violates unique constraint "sms_leads_phone_key"' } };
+        }
+        db.push({ id: db.length + 1, phone, network: c.body.network, source: c.body.source, created_at: '2026-08-10T12:00:00Z' });
+        return { status: 201, json: {} };
+      },
+    },
+    {
+      match: (c) => c.method === 'GET' && c.url.includes('/rest/v1/sms_leads'),
+      respond: () => ({ status: 200, json: db }),
+    },
+  ];
+}
+
+test('§ SMS leads: opt-in stores validated number', async () => {
+  const db = [];
+  const { impl } = mockFetch(smsRoutes(db));
+  const env = { SUPABASE_URL: SB_URL, SUPABASE_ANON_KEY: 'anon-test' };
+
+  // Valid MTN number (prefix 024) is stored, network detected.
+  const valid = await handleSmsOptinCore({ body: { phone: '0241234567', source: 'storefront' }, env, fetchImpl: impl, log: () => {} });
+  assert.equal(valid.status, 200);
+  assert.equal(valid.body.ok, true);
+  assert.equal(valid.body.duplicate, false);
+  assert.equal(valid.body.network, 'MTN');
+  assert.equal(db.length, 1);
+  assert.equal(db[0].phone, '0241234567');
+
+  // Duplicate opt-in is idempotent (200, duplicate:true), no extra row.
+  const dup = await handleSmsOptinCore({ body: { phone: '0241234567' }, env, fetchImpl: impl, log: () => {} });
+  assert.equal(dup.status, 200);
+  assert.equal(dup.body.duplicate, true);
+  assert.equal(db.length, 1);
+
+  // Invalid prefix (landline 030) and malformed length -> 400, nothing stored.
+  const badPrefix = await handleSmsOptinCore({ body: { phone: '0301234567' }, env, fetchImpl: impl, log: () => {} });
+  assert.equal(badPrefix.status, 400);
+  const badLength = await handleSmsOptinCore({ body: { phone: '02412345' }, env, fetchImpl: impl, log: () => {} });
+  assert.equal(badLength.status, 400);
+  assert.equal(db.length, 1);
+});
+
+test('admin sms-leads returns it', async () => {
+  const db = [
+    { id: 1, phone: '0241234567', network: 'MTN', source: 'storefront', created_at: '2026-08-10T12:00:00Z' },
+    { id: 2, phone: '0509876543', network: 'Telecel', source: 'campaign-spring', created_at: '2026-08-10T13:00:00Z' },
+  ];
+  const { impl } = mockFetch(smsRoutes(db));
+  const env = { SUPABASE_URL: SB_URL };
+
+  // With an admin token, the collected lead is returned.
+  const result = await handleSmsLeadsCore({ headers: { 'x-admin-token': 'admin-jwt-token' }, env, fetchImpl: impl, log: () => {} });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.ok, true);
+  assert.equal(result.body.count, 2);
+  assert.ok(Array.isArray(result.body.leads));
+  assert.equal(result.body.leads[0].phone, '0241234567');
+  assert.equal(result.body.leads[1].network, 'Telecel');
+
+  // Without an admin token -> 401 and no DB read.
+  const noToken = await handleSmsLeadsCore({ headers: {}, env, fetchImpl: impl, log: () => {} });
+  assert.equal(noToken.status, 401);
+});
 
 // ─── runner ─────────────────────────────────────────────────────────────────
 
