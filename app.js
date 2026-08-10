@@ -2996,19 +2996,59 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         showValmontToast('Google sign-in is not configured yet. Please use email sign-in.');
         return;
       }
-      const returnTo = `${window.location.origin}${window.location.pathname}${window.location.search}`;
-      sessionStorage.setItem('valmont_oauth_return', returnTo);
-      const authorizeUrl = `${VALMONT_SUPABASE.url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(returnTo)}`;
+      // The account page pre-seeds this key with its own URL before handing off
+      // here, so keep that destination so "Sign up with Google" returns the
+      // shopper to their account. Otherwise default to the current storefront.
+      const oauthReturn = sessionStorage.getItem('valmont_oauth_return') ||
+        `${window.location.origin}${window.location.pathname}`;
+      sessionStorage.setItem('valmont_oauth_return', oauthReturn);
+      // Supabase must bounce the shopper back to a URL in the project's
+      // redirect allowlist; keep the callback to the bare site page (no query
+      // string) so it can never be rejected by the allowlist check.
+      const callbackUrl = `${window.location.origin}${window.location.pathname}`;
+      const authorizeUrl = `${VALMONT_SUPABASE.url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(callbackUrl)}`;
       window.location.assign(authorizeUrl);
     }
 
     // Supabase returns a real access token in the URL fragment after Google
     // approves the account. Exchange it for the verified profile, then remove
     // the sensitive fragment from the address bar.
+    // Map known Supabase OAuth callback error codes to shopper-friendly
+    // messages so the actual failure is visible instead of a generic toast.
+    const OAUTH_ERROR_MESSAGES = {
+      access_denied: 'You closed the Google sign-in window, so no account was created.',
+      user_already_exists: 'An account with this email already exists. Please sign in with your email and password instead.',
+      email_exists: 'An account with this email already exists. Please sign in with your email and password instead.',
+      signup_disabled: 'New account sign-ups are currently disabled on the store. Please contact support.',
+      server_error: 'Google sign-in could not create your account (server error). Please try again or use email sign-up.',
+      invalid_state: 'The Google sign-in session expired. Please try again.',
+      flow_state_not_found: 'The Google sign-in session expired. Please try again.',
+      default: 'Google sign-in failed. Please try again or use email sign-up.'
+    };
     async function completeGoogleSignIn() {
       const params = new URLSearchParams(window.location.hash.slice(1));
       const accessToken = params.get('access_token');
-      if (!accessToken) return;
+      const cleanUrl = () => history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+      if (!accessToken) {
+        // Google bounced us back without a token (consent denied, sign-up
+        // rejected, expired flow…): clear the fragment so it doesn't linger,
+        // then tell the shopper exactly why — including the Supabase error
+        // code when we don't have a tailored message for it.
+        const error = params.get('error');
+        const errorDescription = params.get('error_description');
+        if (error || errorDescription) {
+          sessionStorage.removeItem('valmont_oauth_return');
+          cleanUrl();
+          const code = String(error || '').toLowerCase();
+          const message = OAUTH_ERROR_MESSAGES[code] || OAUTH_ERROR_MESSAGES.default;
+          if (!OAUTH_ERROR_MESSAGES[code]) {
+            console.error('Google OAuth failed — Supabase code:', code, '| description:', errorDescription);
+          }
+          const hint = OAUTH_ERROR_MESSAGES[code] ? '' : ` (Code: ${code})`;
+          showValmontToast(`${message}${hint}`);
+        }
+        return;
+      }
       try {
         const response = await fetch(`${VALMONT_SUPABASE.url}/auth/v1/user`, {
           headers: { apikey: VALMONT_SUPABASE.anonKey, Authorization: `Bearer ${accessToken}` }
@@ -3025,12 +3065,21 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         };
         localStorage.setItem('valmont_user', JSON.stringify(currentUser));
         localStorage.setItem('valmont_access_token', accessToken);
-        history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+        cleanUrl();
+        // Hand the shopper back to where they started (e.g. the account page
+        // after a "Sign up with Google") instead of stranding them on the store.
+        const returnTo = sessionStorage.getItem('valmont_oauth_return');
+        sessionStorage.removeItem('valmont_oauth_return');
+        if (returnTo && returnTo !== `${window.location.origin}${window.location.pathname}`) {
+          window.location.assign(returnTo);
+          return;
+        }
         updateUserUI();
         showValmontToast(`Welcome, ${currentUser.name}!`);
       } catch (error) {
         console.error('Google sign-in failed:', error);
-        history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+        sessionStorage.removeItem('valmont_oauth_return');
+        cleanUrl();
         showValmontToast('Google sign-in could not be completed. Please try again.');
       }
     }
