@@ -3009,7 +3009,10 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
       // Supabase must bounce the shopper back to a URL in the project's
       // redirect allowlist; keep the callback to the bare site page (no query
       // string) so it can never be rejected by the allowlist check.
-      const callbackUrl = currentUrl;
+      let callbackUrl = currentUrl;
+      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' && callbackUrl.startsWith('http://')) {
+        callbackUrl = callbackUrl.replace(/^http:\/\//i, 'https://');
+      }
       const authorizeUrl = `${VALMONT_SUPABASE.url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(callbackUrl)}`;
       window.location.assign(authorizeUrl);
     }

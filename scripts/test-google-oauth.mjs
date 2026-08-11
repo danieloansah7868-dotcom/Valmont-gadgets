@@ -83,6 +83,7 @@ function makeStubs({ hash = '', search = '', pathname = '/', origin = 'https://v
   };
   const location = {
     get origin() { return historyStack[historyStack.length - 1].origin; },
+    get hostname() { return new URL(this.href).hostname; },
     get pathname() { return historyStack[historyStack.length - 1].pathname; },
     get search() { return historyStack[historyStack.length - 1].search; },
     get hash() { return historyStack[historyStack.length - 1].hash; },
@@ -269,6 +270,17 @@ console.log('\nT1c: direct homepage click ignores stale valmont_oauth_return');
   const fn = run(appHandleGoogleSignIn, context, 'app.js');
   fn();
   ok(context.sessionStorage.getItem('valmont_oauth_return') === 'https://valmontgadgets.com/', 'direct click overwrites stale sessionStorage destination');
+}
+
+// ============ TEST 1d: non-localhost HTTP origin upgrades redirect_to to HTTPS ============
+console.log('\nT1d: non-localhost HTTP origin upgrades redirect_to to HTTPS');
+{
+  const { context, calls } = makeStubs({ origin: 'http://valmontgadgets.com' });
+  const fn = run(appHandleGoogleSignIn, context, 'app.js');
+  fn();
+  const authUrl = calls.assign[0];
+  const rt = decodeURIComponent(authUrl.split('redirect_to=')[1]);
+  ok(rt === 'https://valmontgadgets.com/', `HTTP origin redirect_to upgraded to HTTPS (got ${rt})`);
 }
 
 // ============ TEST 4b: OAuth callback with error in URI search string ============
