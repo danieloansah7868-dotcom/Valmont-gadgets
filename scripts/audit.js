@@ -83,10 +83,11 @@ check(!/VALMONTPAY_(SECRET|WEBHOOK)_KEY\s*[:=]\s*['"][^'"]+['"]/.test(clientBlob
 check(!/Bearer\s+\$?\{?process\.env\.VALMONTPAY/.test(clientBlob), 'no server-side tenant auth in browser bundles');
 check(/\/api\/valmontpay\/initialize/.test(read('app.js')), 'checkout goes through server-side /api/valmontpay/initialize');
 check(!/pay\.html\?[^'"]*amount=/.test(read('app.js')), 'no client-built amount-in-URL gateway links in app.js');
-// Budget raised 30→32 KB when shop.min.js was re-synced with app.js: the old
+// Budget raised 30→33 KB when shop.min.js was re-synced with app.js: the old
 // artifact was stale (terser had been failing on a duplicate-const SyntaxError
-// in app.js) and the secure Valmont-Pay checkout adds ~1 KB gz on top.
-check(gz('shop.min.js') < 32 * 1024, 'JS bundle gzipped', `${kb(size('shop.min.js'))} raw / ${kb(gz('shop.min.js'))} gz`);
+// in app.js), the secure Valmont-Pay checkout adds ~1 KB gz, and Google OAuth
+// deep audit + error handling mappings add ~0.6 KB gz on top.
+check(gz('shop.min.js') < 33 * 1024, 'JS bundle gzipped', `${kb(size('shop.min.js'))} raw / ${kb(gz('shop.min.js'))} gz`);
 check(size('index.html') > 0, 'index.html size', `${kb(size('index.html'))} raw / ${kb(gz('index.html'))} gz`);
 
 const uploads = fs.readdirSync(path.join(ROOT, 'uploads'));
