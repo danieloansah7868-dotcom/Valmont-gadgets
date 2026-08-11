@@ -137,6 +137,13 @@
   var $ = function(i){ return document.getElementById(i); };
   var all = [];
 
+  // Only the allowlisted owner may view captured Daily Drop leads. RLS is the
+  // authoritative gate; this keeps the UI from showing a broken empty panel.
+  var ADMIN_ALLOWED_EMAILS = ['danieloansah7868@gmail.com'];
+  function isAllowedAdminEmail(email){
+    return ADMIN_ALLOWED_EMAILS.indexOf(String(email || '').trim().toLowerCase()) !== -1;
+  }
+
   function dropDay(){
     var d = new Date();
     if(d.getHours() < 6) d.setDate(d.getDate()-1);
@@ -254,7 +261,8 @@
   $('csvBtn').addEventListener('click', csv);
 
   sb.auth.getSession().then(function(r){
-    if(!r.data.session){
+    var session = r.data.session;
+    if(!session || !isAllowedAdminEmail(session.user && session.user.email)){
       $('main').style.display = 'none';
       $('gate').style.display = 'block';
       return;
