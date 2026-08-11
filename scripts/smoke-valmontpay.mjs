@@ -25,6 +25,8 @@ const server = http.createServer((req, res) => {
       return send(200, [{ id: 'VG-A', name: 'Phone A', price: 19.99, is_active: true }]);
     }
     if (url.startsWith('/rest/v1/customers')) return send(201, []);
+    if (url.startsWith('/rest/v1/rpc/ensure_customer_for_checkout')) return send(200, JSON.parse(raw).p_customer_id || 'cust-1');
+    if (url.startsWith('/rest/v1/rpc/set_order_customer_snapshot')) return send(200, {});
     if (url.startsWith('/rest/v1/orders')) {
       directOrderPosts++;
       return send(500, { code: 'TEST', message: 'direct orders POST must not be used' });

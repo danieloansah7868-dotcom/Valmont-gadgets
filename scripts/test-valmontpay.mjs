@@ -280,6 +280,8 @@ function initRoutes({ gateway = { status: true, message: 'ok', data: { access_co
       ...(productsThrows ? { throw: 'catalog down' } : {}),
     },
     { match: (c) => c.url.endsWith('/rest/v1/customers'), respond: () => ({ status: 201, json: [] }) },
+    { match: (c) => c.url.includes('/rest/v1/rpc/ensure_customer_for_checkout'), respond: () => ({ status: 200, json: 'cust-0542451578' }) },
+    { match: (c) => c.url.includes('/rest/v1/rpc/set_order_customer_snapshot'), respond: () => ({ status: 200, json: {} }) },
     {
       match: (c) => c.url.includes('/rest/v1/rpc/create_pending_order'),
       respond: (c) => {
@@ -321,6 +323,17 @@ test('initialize: recomputes total from DB prices, ignores client amounts', asyn
   assert.equal(result.body.currency, 'GHS');
   assert.equal(result.body.order_id, 'order-1');
   assert.match(result.body.url, /^https:\/\/valmontpay\.app\/pay\.html\?access_code=ac_test$/);
+
+  const customerUpsert = calls.find((c) => c.url.includes('/rest/v1/rpc/ensure_customer_for_checkout'));
+  assert.ok(customerUpsert, 'customer must be ensured through the checkout RPC');
+  assert.equal(customerUpsert.body.p_name, 'Ama Serwaa');
+  assert.equal(customerUpsert.body.p_phone, '0542451578');
+  assert.equal(customerUpsert.body.p_email, 'ama@example.com');
+
+  const customerSnapshot = calls.find((c) => c.url.includes('/rest/v1/rpc/set_order_customer_snapshot'));
+  assert.ok(customerSnapshot, 'order must snapshot checkout contact details');
+  assert.equal(customerSnapshot.body.p_customer_name, 'Ama Serwaa');
+  assert.equal(customerSnapshot.body.p_delivery_address, '12 High St, Osu, Accra');
 
   const orderInsert = calls.find((c) => c.url.includes('/rest/v1/rpc/create_pending_order'));
   assert.ok(orderInsert, 'pending order must be created through the RPC');
@@ -372,7 +385,7 @@ test('initialize: missing tenant secret -> 500', async () => {
 });
 
 test('initialize: gateway rejection -> 502 with gateway message', async () => {
-  const { result } = await runInitialize({ items: [{ id: 'VG-A', qty: 1 }] }, { gateway: { status: false, message: 'Invalid tenant key' }, gatewayStatus: 401 });
+  const { result } = await runInitialize({ items: [{ id: 'VG-A', qty: 1 }], customer: { name: 'Ama', phone: '0540000001', email: 'ama@test.com' } }, { gateway: { status: false, message: 'Invalid tenant key' }, gatewayStatus: 401 });
   assert.equal(result.status, 502);
   assert.match(result.body.detail || '', /Invalid tenant key/);
 });
@@ -383,13 +396,13 @@ test('initialize: catalog unreachable -> 503', async () => {
 });
 
 test('initialize: create_pending_order failure -> 500, gateway never called', async () => {
-  const { result, calls } = await runInitialize({ items: [{ id: 'VG-A', qty: 1 }] }, { orderInsertStatus: 500 });
+  const { result, calls } = await runInitialize({ items: [{ id: 'VG-A', qty: 1 }], customer: { name: 'Ama', phone: '0540000001', email: 'ama@test.com' } }, { orderInsertStatus: 500 });
   assert.equal(result.status, 500);
   assert.equal(calls.some((c) => c.url.includes('/api/transaction/initialize')), false);
 });
 
 test('initialize: raw Postgres code is bracketed in the diagnostic 500 body', async () => {
-  const { result, calls } = await runInitialize({ items: [{ id: 'VG-A', qty: 1 }] }, {
+  const { result, calls } = await runInitialize({ items: [{ id: 'VG-A', qty: 1 }], customer: { name: 'Ama', phone: '0540000001', email: 'ama@test.com' } }, {
     orderInsertStatus: 401,
   });
   assert.equal(result.status, 500);
@@ -625,6 +638,8 @@ function deliveryInitRoutes(opts = {}) {
       respond: () => ({ status: 200, json: CATALOG }),
     },
     { match: (c) => c.url.endsWith('/rest/v1/customers'), respond: () => ({ status: 201, json: [] }) },
+    { match: (c) => c.url.includes('/rest/v1/rpc/ensure_customer_for_checkout'), respond: () => ({ status: 200, json: 'cust-0542451578' }) },
+    { match: (c) => c.url.includes('/rest/v1/rpc/set_order_customer_snapshot'), respond: () => ({ status: 200, json: {} }) },
     {
       match: (c) => c.url.includes('/rest/v1/rpc/create_pending_order'),
       respond: (c) => {
@@ -714,7 +729,7 @@ test('initialize: free over threshold (>=5000) => delivery 0', async () => {
 test('initialize: unknown region fallback to default_fee 50', async () => {
   const { impl } = deliveryInitRoutes({});
   const res = await handleInitializeCore({
-    body: { items: [{ id: 'VG-A', qty: 1 }], customer: { name: 'X', phone: '0540000004' }, delivery_region: 'Atlantis' },
+    body: { items: [{ id: 'VG-A', qty: 1 }], customer: { name: 'Xo', phone: '0540000004' }, delivery_region: 'Atlantis' },
     env: INIT_ENV, fetchImpl: impl, log: () => {}
   });
   assert.equal(res.body.delivery_fee, 50);

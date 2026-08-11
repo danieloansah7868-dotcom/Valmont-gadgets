@@ -77,6 +77,21 @@ function startSchemaServer() {
   };
 
   const server = http.createServer((req, res) => {
+    if (req.url.startsWith('/rest/v1/rpc/ensure_customer_for_checkout') && req.method === 'POST') {
+      let raw = '';
+      req.on('data', (c) => (raw += c));
+      req.on('end', () => {
+        const body = JSON.parse(raw || '{}');
+        if (body.p_customer_id) customers.set(body.p_customer_id, { id: body.p_customer_id, name: body.p_name, phone: body.p_phone, email: body.p_email });
+        return send(res, 200, body.p_customer_id);
+      });
+      return;
+    }
+
+    if (req.url.startsWith('/rest/v1/rpc/set_order_customer_snapshot') && req.method === 'POST') {
+      return send(res, 200, {});
+    }
+
     if (req.url.startsWith('/rest/v1/customers') && req.method === 'POST') {
       let raw = '';
       req.on('data', (c) => (raw += c));
@@ -90,6 +105,21 @@ function startSchemaServer() {
         return send(res, 201, {});
       });
       return;
+    }
+
+    if (req.url.startsWith('/rest/v1/rpc/ensure_customer_for_checkout') && req.method === 'POST') {
+      let raw = '';
+      req.on('data', (c) => (raw += c));
+      req.on('end', () => {
+        const body = JSON.parse(raw || '{}');
+        if (body.p_customer_id) customers.set(body.p_customer_id, { id: body.p_customer_id, name: body.p_name, phone: body.p_phone, email: body.p_email });
+        return send(res, 200, body.p_customer_id);
+      });
+      return;
+    }
+
+    if (req.url.startsWith('/rest/v1/rpc/set_order_customer_snapshot') && req.method === 'POST') {
+      return send(res, 200, {});
     }
 
     if (req.method !== 'POST' || !req.url.startsWith('/rest/v1/orders')) {
@@ -215,16 +245,19 @@ test('end-to-end: handleInitializeCore calls create_pending_order RPC (no direct
 
       if (u.includes('/rest/v1/products')) return json(200, CATALOG);
 
-      // Forward customer POSTs to the schema server so the customer FK is satisfied.
-      if (u.endsWith('/rest/v1/customers') && opts.method === 'POST') {
+      // Customer records are now upserted through a SECURITY DEFINER RPC.
+      if (u.includes('/rest/v1/rpc/ensure_customer_for_checkout') && opts.method === 'POST') {
         captured.customerInsert = JSON.parse(opts.body);
+        const body = captured.customerInsert;
         const upstream = await fetch(`${url}/rest/v1/customers`, {
           method: 'POST',
-          headers: opts.headers,
-          body: opts.body,
+          headers: { ...opts.headers, prefer: 'return=minimal, resolution=ignore-duplicates' },
+          body: JSON.stringify({ id: body.p_customer_id, name: body.p_name, phone: body.p_phone, email: body.p_email }),
         });
-        return { ok: upstream.ok, status: upstream.status, json: () => upstream.json(), text: () => upstream.text() };
+        return { ok: upstream.ok, status: upstream.status, json: async () => body.p_customer_id, text: () => upstream.text() };
       }
+
+      if (u.includes('/rest/v1/rpc/set_order_customer_snapshot')) return json(200, {});
 
       // RPC: create_pending_order — return the order_number that was sent.
       if (u.includes('/rest/v1/rpc/create_pending_order')) {
@@ -253,10 +286,10 @@ test('end-to-end: handleInitializeCore calls create_pending_order RPC (no direct
 
     assert.equal(result.status, 200, `initialize should succeed: ${JSON.stringify(result.body)}`);
     assert.ok(captured.rpcCall, 'handler must call create_pending_order RPC');
-    assert.ok(captured.customerInsert, 'handler must POST /rest/v1/customers');
+    assert.ok(captured.customerInsert, 'handler must ensure a customer through checkout RPC');
 
     // Verify the customer was stored in our mock (satisfying the FK).
-    const custId = captured.customerInsert.id;
+    const custId = captured.customerInsert.p_customer_id;
     assert.ok(customers.has(custId), `customer ${custId} must exist for FK constraint`);
 
     // Verify RPC payload shape.
@@ -564,6 +597,8 @@ test('integration tier: Greater Accra 25 via RPC authoritative path', async () =
       const json = (status, body) => ({ ok: status>=200&&status<300, status, json: async()=>body, text: async()=>JSON.stringify(body) });
       if (s.includes('/rest/v1/products')) return json(200, CAT);
       if (s.endsWith('/rest/v1/customers')) return json(201, []);
+      if (s.includes('/rest/v1/rpc/ensure_customer_for_checkout')) return json(200, JSON.parse(opts.body).p_customer_id);
+      if (s.includes('/rest/v1/rpc/set_order_customer_snapshot')) return json(200, {});
       if (s.includes('/rest/v1/rpc/create_pending_order')) {
         const b = JSON.parse(opts.body);
         assert.equal(b.p_delivery_region, 'Greater Accra');
@@ -581,7 +616,7 @@ test('integration tier: Greater Accra 25 via RPC authoritative path', async () =
       if (s.includes('/rest/v1/rpc/set_order_payment_reference')) return json(200, { result:'ok'});
       throw new Error('unexpected '+s);
     };
-    const res = await handleInitializeCore({ body:{ items:[{id:'VG-TIER', qty:1}], customer:{name:'A', phone:'0540000011'}, delivery_region:'Greater Accra' }, env:{ VALMONTPAY_SECRET_KEY:'sk_test', SUPABASE_URL:url, SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
+    const res = await handleInitializeCore({ body:{ items:[{id:'VG-TIER', qty:1}], customer:{name:'Ama', phone:'0540000011'}, delivery_region:'Greater Accra' }, env:{ VALMONTPAY_SECRET_KEY:'sk_test', SUPABASE_URL:url, SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
     assert.equal(res.status, 200);
     assert.equal(res.body.delivery_fee, fee);
     assert.equal(res.body.total, expectedTotal);
@@ -599,6 +634,8 @@ test('integration tier: Ashanti 40', async () => {
       const json=(st,b)=>({ok:st>=200&&st<300,status:st,json:async()=>b,text:async()=>JSON.stringify(b)});
       if(s.includes('/rest/v1/products')) return json(200,CAT);
       if(s.endsWith('/rest/v1/customers')) return json(201,[]);
+      if(s.includes('/rest/v1/rpc/ensure_customer_for_checkout')) return json(200, JSON.parse(opts.body).p_customer_id);
+      if(s.includes('/rest/v1/rpc/set_order_customer_snapshot')) return json(200,{});
       if(s.includes('/rest/v1/rpc/create_pending_order')){
         const b=JSON.parse(opts.body);
         return json(200,{id:'ord-1',order_number:b.p_order_number,idempotent:false,subtotal,delivery_fee:fee,delivery_region:b.p_delivery_region,total:subtotal+fee,fee_source:'region'});
@@ -607,7 +644,7 @@ test('integration tier: Ashanti 40', async () => {
       if(s.includes('/rest/v1/rpc/set_order_payment_reference')) return json(200,{result:'ok'});
       throw new Error('unexpected '+s);
     };
-    const res = await handleInitializeCore({ body:{ items:[{id:'VG-TIER',qty:1}], delivery_region:'Ashanti' }, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
+    const res = await handleInitializeCore({ body:{ items:[{id:'VG-TIER',qty:1}], customer:{name:'Ama', phone:'0540000011'}, delivery_region:'Ashanti' }, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
     assert.equal(res.body.delivery_fee,40);
     assert.equal(res.body.total,240);
   } finally { await close();}
@@ -622,6 +659,8 @@ test('integration tier: Upper West 70', async () => {
       const json=(st,b)=>({ok:st>=200&&st<300,status:st,json:async()=>b,text:async()=>JSON.stringify(b)});
       if(s.includes('/rest/v1/products')) return json(200,CAT);
       if(s.endsWith('/rest/v1/customers')) return json(201,[]);
+      if(s.includes('/rest/v1/rpc/ensure_customer_for_checkout')) return json(200, JSON.parse(opts.body).p_customer_id);
+      if(s.includes('/rest/v1/rpc/set_order_customer_snapshot')) return json(200,{});
       if(s.includes('/rest/v1/rpc/create_pending_order')){
         const b=JSON.parse(opts.body);
         return json(200,{id:'ord-1',order_number:b.p_order_number,idempotent:false,subtotal:50,delivery_fee:70,delivery_region:'Upper West',total:120,fee_source:'region'});
@@ -630,7 +669,7 @@ test('integration tier: Upper West 70', async () => {
       if(s.includes('/rest/v1/rpc/set_order_payment_reference')) return json(200,{result:'ok'});
       throw new Error('unexpected '+s);
     };
-    const res = await handleInitializeCore({ body:{ items:[{id:'VG-TIER',qty:1}], delivery_region:'Upper West' }, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
+    const res = await handleInitializeCore({ body:{ items:[{id:'VG-TIER',qty:1}], customer:{name:'Ama', phone:'0540000011'}, delivery_region:'Upper West' }, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
     assert.equal(res.body.delivery_fee,70);
   } finally { await close();}
 });
@@ -644,6 +683,8 @@ test('integration tier: >=5000 free', async () => {
       const json=(st,b)=>({ok:st>=200&&st<300,status:st,json:async()=>b,text:async()=>JSON.stringify(b)});
       if(s.includes('/rest/v1/products')) return json(200,CAT);
       if(s.endsWith('/rest/v1/customers')) return json(201,[]);
+      if(s.includes('/rest/v1/rpc/ensure_customer_for_checkout')) return json(200, JSON.parse(opts.body).p_customer_id);
+      if(s.includes('/rest/v1/rpc/set_order_customer_snapshot')) return json(200,{});
       if(s.includes('/rest/v1/rpc/create_pending_order')){
         const b=JSON.parse(opts.body);
         return json(200,{id:'ord-1',order_number:b.p_order_number,idempotent:false,subtotal:5000,delivery_fee:0,delivery_region:b.p_delivery_region,total:5000,fee_source:'free_over'});
@@ -652,7 +693,7 @@ test('integration tier: >=5000 free', async () => {
       if(s.includes('/rest/v1/rpc/set_order_payment_reference')) return json(200,{result:'ok'});
       throw new Error('unexpected '+s);
     };
-    const res = await handleInitializeCore({ body:{ items:[{id:'VG-TIER',qty:1}], delivery_region:'Greater Accra' }, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
+    const res = await handleInitializeCore({ body:{ items:[{id:'VG-TIER',qty:1}], customer:{name:'Ama', phone:'0540000011'}, delivery_region:'Greater Accra' }, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
     assert.equal(res.body.delivery_fee,0);
     assert.equal(res.body.total,5000);
   } finally { await close();}
@@ -667,6 +708,8 @@ test('integration tier: unknown region fallback default 50', async () => {
       const json=(st,b)=>({ok:st>=200&&st<300,status:st,json:async()=>b,text:async()=>JSON.stringify(b)});
       if(s.includes('/rest/v1/products')) return json(200,CAT);
       if(s.endsWith('/rest/v1/customers')) return json(201,[]);
+      if(s.includes('/rest/v1/rpc/ensure_customer_for_checkout')) return json(200, JSON.parse(opts.body).p_customer_id);
+      if(s.includes('/rest/v1/rpc/set_order_customer_snapshot')) return json(200,{});
       if(s.includes('/rest/v1/rpc/create_pending_order')){
         const b=JSON.parse(opts.body);
         assert.equal(b.p_delivery_region,'Atlantis');
@@ -676,7 +719,7 @@ test('integration tier: unknown region fallback default 50', async () => {
       if(s.includes('/rest/v1/rpc/set_order_payment_reference')) return json(200,{result:'ok'});
       throw new Error('unexpected '+s);
     };
-    const res = await handleInitializeCore({ body:{ items:[{id:'VG-TIER',qty:1}], delivery_region:'Atlantis' }, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
+    const res = await handleInitializeCore({ body:{ items:[{id:'VG-TIER',qty:1}], customer:{name:'Ama', phone:'0540000011'}, delivery_region:'Atlantis' }, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
     assert.equal(res.body.delivery_fee,50);
     assert.equal(res.body.fee_source,'default');
   } finally { await close();}
@@ -691,6 +734,8 @@ test('integration tier: tampered client fee ignored (server authoritative)', asy
       const json=(st,b)=>({ok:st>=200&&st<300,status:st,json:async()=>b,text:async()=>JSON.stringify(b)});
       if(s.includes('/rest/v1/products')) return json(200,CAT);
       if(s.endsWith('/rest/v1/customers')) return json(201,[]);
+      if(s.includes('/rest/v1/rpc/ensure_customer_for_checkout')) return json(200, JSON.parse(opts.body).p_customer_id);
+      if(s.includes('/rest/v1/rpc/set_order_customer_snapshot')) return json(200,{});
       if(s.includes('/rest/v1/rpc/create_pending_order')){
         const b=JSON.parse(opts.body);
         // Client never sends fee, but even if they did, server ignores and returns correct tier
@@ -704,7 +749,7 @@ test('integration tier: tampered client fee ignored (server authoritative)', asy
       if(s.includes('/rest/v1/rpc/set_order_payment_reference')) return json(200,{result:'ok'});
       throw new Error('unexpected '+s);
     };
-    const res = await handleInitializeCore({ body:{ items:[{id:'VG-TIER',qty:1}], delivery_region:'Greater Accra' }, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
+    const res = await handleInitializeCore({ body:{ items:[{id:'VG-TIER',qty:1}], customer:{name:'Ama', phone:'0540000011'}, delivery_region:'Greater Accra' }, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
     assert.equal(res.body.delivery_fee,25);
     assert.equal(res.body.total,125);
   } finally { await close();}
@@ -720,6 +765,8 @@ test('integration tier: idempotent retry repricing after fee edit', async () => 
       const json=(st,b)=>({ok:st>=200&&st<300,status:st,json:async()=>b,text:async()=>JSON.stringify(b)});
       if(s.includes('/rest/v1/products')) return json(200,CAT);
       if(s.endsWith('/rest/v1/customers')) return json(201,[]);
+      if(s.includes('/rest/v1/rpc/ensure_customer_for_checkout')) return json(200, JSON.parse(opts.body).p_customer_id);
+      if(s.includes('/rest/v1/rpc/set_order_customer_snapshot')) return json(200,{});
       if(s.includes('/rest/v1/rpc/create_pending_order')){
         callCount++;
         const b=JSON.parse(opts.body);
@@ -736,7 +783,7 @@ test('integration tier: idempotent retry repricing after fee edit', async () => 
       if(s.includes('/rest/v1/rpc/set_order_payment_reference')) return json(200,{result:'ok'});
       throw new Error('unexpected '+s);
     };
-    const body={ items:[{id:'VG-TIER',qty:1}], customer:{name:'A',phone:'0540000012'}, delivery_region:'Ashanti' };
+    const body={ items:[{id:'VG-TIER',qty:1}], customer:{name:'Ama',phone:'0540000012'}, delivery_region:'Ashanti' };
     const first = await handleInitializeCore({ body, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
     assert.equal(first.body.delivery_fee,40);
     const second = await handleInitializeCore({ body, env:{VALMONTPAY_SECRET_KEY:'sk_test',SUPABASE_URL:url,SUPABASE_ANON_KEY:'anon-test'}, fetchImpl: mockFetch, log:()=>{} });
