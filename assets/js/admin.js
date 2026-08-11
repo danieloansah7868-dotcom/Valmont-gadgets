@@ -1780,6 +1780,7 @@ function normalizeOrder(order) {
   }));
   const subtotal = Number(order.subtotal ?? items.reduce((sum, item) => sum + Number(item.line_total || 0), 0));
   const deliveryFee = Number(order.delivery_fee || 0);
+  const customerEmail = order.customer_email || order.email || "";
   return {
     ...order,
     id: order.id || order.order_number || order.reference_code || crypto.randomUUID(),
@@ -1789,7 +1790,9 @@ function normalizeOrder(order) {
       id: order.customer_id || order.customer_phone || order.customer_email || order.id,
       name: order.customer_name || order.name || "Customer",
       phone: order.customer_phone || order.phone || "",
-      email: order.customer_email || order.email || "",
+      email: customerEmail === "sales@valmontgadgets.com" ? "" : customerEmail,
+      area: order.customer_area || order.area || "",
+      street: order.customer_street || order.street || "",
       address: order.delivery_address || [order.customer_area, order.customer_street].filter(Boolean).join(", ") || order.address || ""
     },
     items,
@@ -1805,15 +1808,19 @@ function normalizeOrder(order) {
 }
 
 function normalizeCustomer(customer) {
+  const email = customer.email || customer.customer_email || "";
+  const address = customer.delivery_address || customer.address || [customer.customer_area, customer.customer_street].filter(Boolean).join(", ") || "";
   return {
     ...customer,
-    id: customer.id || customer.phone || customer.email || crypto.randomUUID(),
+    id: customer.id || customer.phone || customer.email || customer.customer_phone || customer.customer_email || crypto.randomUUID(),
     name: customer.name || customer.customer_name || "Customer",
     phone: customer.phone || customer.customer_phone || "",
-    email: customer.email || customer.customer_email || "",
-    addresses: parseJsonMaybe(customer.addresses, []),
+    email: email === "sales@valmontgadgets.com" ? "" : email,
+    addresses: Array.isArray(parseJsonMaybe(customer.addresses, [])) && parseJsonMaybe(customer.addresses, []).length
+      ? parseJsonMaybe(customer.addresses, [])
+      : address ? [{ street: address, zone: customer.customer_area || customer.area || "" }] : [],
     orders: [],
-    total_spent: 0
+    total_spent: Number(customer.total_spent || 0)
   };
 }
 
@@ -1856,14 +1863,27 @@ function mergeCustomersWithOrders(customers, orders) {
   const map = new Map();
   customers.map(normalizeCustomer).forEach(customer => map.set(customerKey(customer), customer));
   orders.map(normalizeOrder).forEach(order => {
-    const base = normalizeCustomer({ id: order.customer.id, name: order.customer.name, phone: order.customer.phone, email: order.customer.email, addresses: order.customer.address ? [{ street: order.customer.address }] : [] });
+    const base = normalizeCustomer({
+      id: order.customer.id,
+      name: order.customer.name,
+      phone: order.customer.phone,
+      email: order.customer.email,
+      customer_area: order.customer.area,
+      customer_street: order.customer.street,
+      delivery_address: order.customer.address,
+      addresses: order.customer.address ? [{ zone: order.customer.area || "", street: order.customer.street || "", address: order.customer.address }] : []
+    });
     const key = customerKey(base);
     const existing = map.get(key) || base;
+    if (!existing.name || existing.name === "Customer") existing.name = base.name;
+    if (!existing.phone && base.phone) existing.phone = base.phone;
+    if (!existing.email && base.email) existing.email = base.email;
+    if (!Array.isArray(existing.addresses) || !existing.addresses.length) existing.addresses = base.addresses;
     existing.orders = existing.orders || [];
-    existing.orders.push(order);
-    existing.total_spent = (existing.total_spent || 0) + (normalizeStatus(order.status) === "Cancelled" ? 0 : Number(order.total || 0));
+    if (!existing.orders.some(item => String(item.id) === String(order.id))) existing.orders.push(order);
+    existing.total_spent = existing.orders.reduce((sum, item) => sum + (normalizeStatus(item.status) === "Cancelled" ? 0 : Number(item.total || 0)), 0);
     const addressText = order.customer.address;
-    if (addressText && !existing.addresses.some(address => formatAddress(address) === addressText)) existing.addresses.push({ street: addressText });
+    if (addressText && !existing.addresses.some(address => formatAddress(address) === addressText)) existing.addresses.push({ zone: order.customer.area || "", street: order.customer.street || "", address: addressText });
     map.set(key, existing);
   });
   return Array.from(map.values()).sort((a, b) => (b.total_spent || 0) - (a.total_spent || 0));

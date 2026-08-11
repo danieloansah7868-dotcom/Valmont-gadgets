@@ -370,11 +370,10 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
   }
 
   const customer = body && typeof body.customer === 'object' && body.customer ? body.customer : {};
-  const name = clampText(customer.name, 120) || 'Customer';
-  const phone = clampText(customer.phone, 40);
+  const name = clampText(customer.name, 120);
+  const phone = normalizeGhanaLocalPhone(customer.phone) || clampText(customer.phone, 40);
   let email = clampText(customer.email, 190).toLowerCase();
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) email = '';
-  if (!email) email = 'sales@valmontgadgets.com';
   const area = clampText(customer.area, 120);
   const street = clampText(customer.street, 190);
   const fullAddress = clampText(customer.full_address, 300);
@@ -421,6 +420,15 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
     };
   }
 
+  // Checkout contact fields are validated after catalog availability so old
+  // tests that probe product-state errors keep their expected precedence.
+  if (!name || name.length < 2) {
+    return { status: 400, body: { status: false, message: 'Please enter the customer name.' } };
+  }
+  if (!phone) {
+    return { status: 400, body: { status: false, message: 'Please enter a valid phone number.' } };
+  }
+
   // ── 2. Build totals in integer pesewas (no float drift) ───────────────────
   const orderItems = normalized.map((item) => {
     const priced = priceMap.get(item.id);
@@ -451,25 +459,37 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
   const phoneDigits = phone.replace(/\D/g, '');
   const customerId = phoneDigits ? `cust-${phoneDigits}` : `cust-anon-${Date.now()}`;
 
-  // ── 3b. Best-effort customer upsert (for the FK) ──────────────────────────
+  // ── 3b. Customer upsert through a narrow SECURITY DEFINER RPC ─────────────
+  // This must succeed: create_pending_order() validates the foreign key, and
+  // the admin Customers page relies on this row not being an anonymous
+  // PostgREST insert that RLS can silently reject.
   try {
-    await fetchImpl(`${sbUrl}/rest/v1/customers`, {
+    const customerRes = await fetchImpl(`${sbUrl}/rest/v1/rpc/ensure_customer_for_checkout`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
         ...sbHeaders,
-        prefer: 'return=minimal, resolution=ignore-duplicates',
+        prefer: 'return=representation',
       },
       body: JSON.stringify({
-        id: customerId,
-        name,
-        phone: phone || null,
-        email: email === 'sales@valmontgadgets.com' ? null : email,
-        addresses: [{ zone: area || null, street: street || null, address: fullAddress || null }],
+        p_customer_id: customerId,
+        p_name: name,
+        p_phone: phone,
+        p_email: email || null,
+        p_area: area || null,
+        p_street: street || null,
+        p_full_address: fullAddress || null,
       }),
     });
+    if (!customerRes.ok) {
+      let detail = '';
+      try { detail = (await customerRes.json()).message || ''; } catch (_) {}
+      emit(`[VALMONTPAY-INIT] customer upsert failed: HTTP ${customerRes.status} ${detail}`);
+      return { status: 500, body: { status: false, message: 'Could not save customer details. Please try again.', detail } };
+    }
   } catch (err) {
-    emit(`[VALMONTPAY-INIT] customer upsert skipped: ${err && err.message}`);
+    emit(`[VALMONTPAY-INIT] customer upsert failed: ${err && err.message}`);
+    return { status: 503, body: { status: false, message: 'Could not save customer details. Please try again.' } };
   }
 
   // ── 3c. Record the Pending order via SECURITY DEFINER RPC ──────────────────
@@ -550,6 +570,28 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
   const rpcTotalPesewas = toPesewas(rpcTotal) ?? 0;
   emit(`[VALMONTPAY-INIT] pending order ${effectiveOrderNumber} ${isIdempotentHit ? 'reused (idempotent)' : 'recorded'}: GHS ${formatCedis(rpcTotalPesewas)} (${orderItems.length} line/s) region=${rpcDeliveryRegion || 'none'} fee=${rpcDeliveryFee} source=${rpcFeeSource || 'unknown'}`);
 
+  // Snapshot the checkout's contact details on the order itself. This keeps
+  // admin order/customer views accurate even if the customer row is later
+  // reused, merged, or edited.
+  try {
+    const snapshotRes = await fetchImpl(`${sbUrl}/rest/v1/rpc/set_order_customer_snapshot`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...sbHeaders },
+      body: JSON.stringify({
+        p_order_number: effectiveOrderNumber,
+        p_customer_name: name,
+        p_customer_phone: phone,
+        p_customer_email: email || null,
+        p_customer_area: area || null,
+        p_customer_street: street || null,
+        p_delivery_address: fullAddress || [area, street].filter(Boolean).join(', ') || null,
+      }),
+    });
+    if (!snapshotRes.ok) emit(`[VALMONTPAY-INIT] customer snapshot not stored for ${effectiveOrderNumber}: HTTP ${snapshotRes.status}`);
+  } catch (err) {
+    emit(`[VALMONTPAY-INIT] customer snapshot not stored for ${effectiveOrderNumber}: ${err && err.message}`);
+  }
+
   // ── 4. Initialize the hosted checkout on the Valmont-Pay gateway ──────────
   const gatewayUrl = `${String(env.VALMONTPAY_GATEWAY_URL || GATEWAY_BASE).replace(/\/$/, '')}${GATEWAY_INITIALIZE_PATH}`;
   let gatewayJson = null;
@@ -564,7 +606,7 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
       },
       body: JSON.stringify({
         amount: rpcTotal, // GHS cedis (major units) — ALWAYS RPC-returned total
-        email,
+        email: email || undefined,
         reference: effectiveOrderNumber,
         callback_url: CALLBACK_URL,
         phone: phone || undefined,
