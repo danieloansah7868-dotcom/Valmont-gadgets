@@ -22,6 +22,9 @@ import {
   handleInitializeCore,
   handleSmsOptinCore,
   handleSmsLeadsCore,
+  ADMIN_ALLOWED_EMAILS,
+  adminEmailFromToken,
+  isAdminToken,
 } from '../api/valmontpay/initialize.js';
 
 const tests = [];
@@ -875,6 +878,14 @@ test('§ SMS leads: opt-in stores validated number', async () => {
   assert.equal(db.length, 1);
 });
 
+/** Build an unsigned JWT carrying the given email claim (shape-only, for tests). */
+function jwtForEmail(email) {
+  const b64 = (obj) => Buffer.from(JSON.stringify(obj)).toString('base64url');
+  return `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ email, role: 'authenticated' })}.sig`;
+}
+
+const ADMIN_JWT = jwtForEmail('danieloansah7868@gmail.com');
+
 test('admin sms-leads returns it', async () => {
   const db = [
     { id: 1, phone: '0241234567', network: 'MTN', source: 'storefront', created_at: '2026-08-10T12:00:00Z' },
@@ -883,8 +894,8 @@ test('admin sms-leads returns it', async () => {
   const { impl } = mockFetch(smsRoutes(db));
   const env = { SUPABASE_URL: SB_URL };
 
-  // With an admin token, the collected lead is returned.
-  const result = await handleSmsLeadsCore({ headers: { 'x-admin-token': 'admin-jwt-token' }, env, fetchImpl: impl, log: () => {} });
+  // With the allowlisted admin's token, the collected lead is returned.
+  const result = await handleSmsLeadsCore({ headers: { 'x-admin-token': ADMIN_JWT }, env, fetchImpl: impl, log: () => {} });
   assert.equal(result.status, 200);
   assert.equal(result.body.ok, true);
   assert.equal(result.body.count, 2);
@@ -895,6 +906,99 @@ test('admin sms-leads returns it', async () => {
   // Without an admin token -> 401 and no DB read.
   const noToken = await handleSmsLeadsCore({ headers: {}, env, fetchImpl: impl, log: () => {} });
   assert.equal(noToken.status, 401);
+});
+
+test('§ admin allowlist: only danieloansah7868@gmail.com is an admin', () => {
+  // Exactly one address is trusted.
+  assert.deepEqual(ADMIN_ALLOWED_EMAILS, ['danieloansah7868@gmail.com']);
+
+  assert.equal(isAdminToken(ADMIN_JWT), true);
+  // Case and surrounding whitespace in the claim must not defeat the check.
+  assert.equal(isAdminToken(jwtForEmail('  DanielOansah7868@Gmail.com  ')), true);
+
+  // A self-registered shopper holds a perfectly valid `authenticated` JWT.
+  assert.equal(isAdminToken(jwtForEmail('shopper@example.com')), false);
+  // Near-miss / lookalike addresses must not slip through.
+  assert.equal(isAdminToken(jwtForEmail('danieloansah7868@gmail.com.evil.com')), false);
+  assert.equal(isAdminToken(jwtForEmail('xdanieloansah7868@gmail.com')), false);
+  assert.equal(isAdminToken(jwtForEmail('')), false);
+
+  // Malformed tokens yield no email and are rejected rather than throwing.
+  assert.equal(adminEmailFromToken('not-a-jwt'), '');
+  assert.equal(adminEmailFromToken(''), '');
+  assert.equal(isAdminToken(undefined), false);
+});
+
+test('§ admin gate: every admin surface checks the allowlisted email', () => {
+  const read = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
+
+  // Each admin entry point must reference the allowlist AND verify the
+  // session's email — a bare getSession() check is not enough, because
+  // shoppers self-register against the same Supabase project.
+  for (const file of ['../assets/js/admin.js', '../admin-login.html', '../admin-drop.html']) {
+    const src = read(file);
+    assert.ok(
+      src.includes('danieloansah7868@gmail.com'),
+      `${file} must pin the admin email`,
+    );
+    assert.ok(
+      /isAllowedAdminEmail\s*\(/.test(src),
+      `${file} must gate on isAllowedAdminEmail()`,
+    );
+  }
+
+  // admin.js must not fall back to showing the panel on a mere session.
+  const adminJs = read('../assets/js/admin.js');
+  assert.ok(
+    adminJs.includes('isAllowedAdminEmail(data.session.user && data.session.user.email)'),
+    'admin.js must verify the session email before revealing the panel',
+  );
+
+  // The RLS migration is the authoritative gate — it must ship alongside.
+  const rls = read('../supabase/migrations/20260811_admin_email_allowlist.sql');
+  assert.ok(rls.includes('is_valmont_admin'), 'migration must define is_valmont_admin()');
+  assert.ok(
+    rls.includes("'danieloansah7868@gmail.com'"),
+    'migration must seed the owner into admin_allowlist',
+  );
+  // The blanket policies this migration replaces must be dropped by name.
+  for (const dropped of [
+    'DROP POLICY IF EXISTS "Authenticated full access orders" ON public.orders',
+    'DROP POLICY IF EXISTS "Authenticated full access customers" ON public.customers',
+  ]) {
+    assert.ok(rls.includes(dropped), `migration must drop: ${dropped}`);
+  }
+});
+
+test('§ admin sms-leads: a signed-in shopper cannot read collected numbers', async () => {
+  const db = [{ id: 1, phone: '0241234567', network: 'MTN', source: 'storefront', created_at: '2026-08-10T12:00:00Z' }];
+  const { impl, calls } = mockFetch(smsRoutes(db));
+  const env = { SUPABASE_URL: SB_URL };
+
+  // Valid customer session token -> 403, and crucially NO query is issued.
+  const shopper = await handleSmsLeadsCore({
+    headers: { 'x-admin-token': jwtForEmail('shopper@example.com') },
+    env, fetchImpl: impl, log: () => {},
+  });
+  assert.equal(shopper.status, 403);
+  assert.equal(shopper.body.ok, false);
+  assert.equal(calls.length, 0, 'a non-admin must never reach the sms_leads table');
+
+  // The Authorization: Bearer form is gated identically.
+  const viaBearer = await handleSmsLeadsCore({
+    headers: { authorization: `Bearer ${jwtForEmail('shopper@example.com')}` },
+    env, fetchImpl: impl, log: () => {},
+  });
+  assert.equal(viaBearer.status, 403);
+  assert.equal(calls.length, 0);
+
+  // The scripted-export shared secret still works when configured.
+  const viaSecret = await handleSmsLeadsCore({
+    headers: { 'x-admin-token': 's3cret-export-token' },
+    env: { ...env, SMS_ADMIN_TOKEN: 's3cret-export-token' },
+    fetchImpl: impl, log: () => {},
+  });
+  assert.equal(viaSecret.status, 200);
 });
 
 // ─── runner ─────────────────────────────────────────────────────────────────

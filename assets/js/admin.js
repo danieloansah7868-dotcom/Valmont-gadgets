@@ -1,6 +1,16 @@
 // Valmont Gadgets complete admin panel
 // Password gate, Supabase CRUD, localStorage fallback, image uploads and responsive UI.
 
+// The ONLY account permitted to use the admin panel. This check is a
+// convenience gate for the UI; the authoritative enforcement lives in Postgres
+// RLS (supabase/migrations/20260811_admin_email_allowlist.sql), because anyone
+// can call PostgREST directly with the public anon key.
+const ADMIN_ALLOWED_EMAILS = ["danieloansah7868@gmail.com"];
+
+function isAllowedAdminEmail(email) {
+  return ADMIN_ALLOWED_EMAILS.includes(String(email || "").trim().toLowerCase());
+}
+
 const SUPABASE_URL = "https://eydsoqnpetqczaeqrscc.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4ODc1NjYsImV4cCI6MjEwMDQ2MzU2Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc";
 const PRODUCT_IMAGE_BUCKET = "product-images";
@@ -599,6 +609,13 @@ async function initAdminPanel() {
     window.location.replace("/admin-login.html");
     return;
   }
+  // A valid Supabase session is NOT enough: shoppers self-register against the
+  // same project. Only the allowlisted owner may see the panel.
+  if (!isAllowedAdminEmail(data.session.user && data.session.user.email)) {
+    try { await sb.auth.signOut(); } catch (_) {}
+    window.location.replace("/admin-login.html?denied=1");
+    return;
+  }
   bindAuthEvents(sb);
   bindNavigationEvents();
   bindFormEvents();
@@ -620,11 +637,21 @@ function bindAuthEvents(sb) {
       const emailInput = document.getElementById("adminEmailInput");
       const email = (emailInput ? emailInput.value : "admin@valmontgadgets.com").trim().toLowerCase();
       const password = input.value.trim();
+      if (!isAllowedAdminEmail(email)) {
+        document.getElementById("loginError")?.classList.remove("hidden");
+        input.select();
+        return;
+      }
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
-      if (data.session) {
+      if (data.session && isAllowedAdminEmail(data.session.user && data.session.user.email)) {
         document.getElementById("loginError")?.classList.add("hidden");
         showAdminApp();
         loadAllData();
+      } else if (data.session) {
+        // Signed in, but not the admin — drop the session immediately.
+        try { await sb.auth.signOut(); } catch (_) {}
+        document.getElementById("loginError")?.classList.remove("hidden");
+        input.select();
       } else {
         document.getElementById("loginError")?.classList.remove("hidden");
         input.select();

@@ -161,10 +161,50 @@ export async function handleSmsOptinCore({ body, env, fetchImpl, log }) {
 }
 
 /**
+ * The only account allowed to administer the store. Mirrors
+ * `public.admin_allowlist` in supabase/migrations/20260811_admin_email_allowlist.sql.
+ */
+export const ADMIN_ALLOWED_EMAILS = ['danieloansah7868@gmail.com'];
+
+/**
+ * Reads the `email` claim out of a Supabase access token WITHOUT verifying the
+ * signature. That is safe here because this is only a fast pre-filter: the
+ * token is forwarded to PostgREST, which verifies the signature and applies
+ * RLS. A forged token fails there, so this can never grant access on its own.
+ *
+ * @param {string} token
+ * @returns {string} lower-cased email, or '' when unreadable.
+ */
+export function adminEmailFromToken(token) {
+  const parts = String(token || '').split('.');
+  if (parts.length !== 3) return '';
+  try {
+    let b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4) b64 += '=';
+    const json = typeof atob === 'function'
+      ? atob(b64)
+      : Buffer.from(b64, 'base64').toString('utf8');
+    const claims = JSON.parse(json);
+    return String(claims.email || '').trim().toLowerCase();
+  } catch (_) {
+    return '';
+  }
+}
+
+/** True when the bearer token belongs to an allowlisted Valmont admin. */
+export function isAdminToken(token) {
+  return ADMIN_ALLOWED_EMAILS.includes(adminEmailFromToken(token));
+}
+
+/**
  * GET /api/admin/sms-leads — list collected SMS leads (newest first).
  * Admin-token gated: requires `x-admin-token` (or `Authorization: Bearer …`)
- * holding the admin's Supabase access token. RLS only lets authenticated
- * (admin) roles SELECT sms_leads, so a missing/invalid token -> 401.
+ * holding the admin's Supabase access token.
+ *
+ * The token must carry the allowlisted admin email. Any shopper can self-
+ * register against the same Supabase project and obtain a valid
+ * `authenticated` JWT, so "has a session" is NOT sufficient authorisation for
+ * reading collected marketing phone numbers.
  *
  * @param {object} deps
  * @param {Record<string,string>} deps.headers  Lower-cased request headers.
@@ -180,6 +220,15 @@ export async function handleSmsLeadsCore({ headers, env, fetchImpl, log }) {
     : String(headers['x-admin-token'] || '').trim();
   if (!token) {
     return { status: 401, body: { ok: false, message: 'Unauthorized: missing admin token' } };
+  }
+
+  // A static shared secret (SMS_ADMIN_TOKEN) stays supported for scripted
+  // exports; otherwise the token must be the allowlisted admin's Supabase JWT.
+  const sharedSecret = String(env.SMS_ADMIN_TOKEN || '').trim();
+  const isSharedSecret = sharedSecret.length > 0 && token === sharedSecret;
+  if (!isSharedSecret && !isAdminToken(token)) {
+    emit('[SMS-LEADS] rejected non-admin token');
+    return { status: 403, body: { ok: false, message: 'Forbidden: not an admin account' } };
   }
 
   const sbUrl = String(env.SUPABASE_URL || DEFAULT_SUPABASE_URL).replace(/\/$/, '');
