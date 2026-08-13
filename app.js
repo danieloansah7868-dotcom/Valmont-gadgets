@@ -2940,15 +2940,6 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
       return data;
     }
 
-    async function handlePasswordReset() {
-      const email = window.prompt('Enter your account email:');
-      if (!email || !email.includes('@')) return;
-      try {
-        await authRequest('recover', { email: email.trim().toLowerCase() });
-        showValmontToast('If an account exists, a password reset email has been sent.');
-      } catch (error) { showValmontToast('Unable to send the reset email. Please try again.'); }
-    }
-
     function setAuthenticatedUser(account, accessToken) {
         const metadata = account.user_metadata || {};
       currentUser = { id: account.id, name: metadata.full_name || metadata.name || account.email.split('@')[0], email: account.email, phone: metadata.phone || account.phone || '', address: metadata.address || '', role: metadata.role || 'customer' };

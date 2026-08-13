@@ -8,6 +8,7 @@ let browsingHistory = [];
 let userWishlist = [];
 let editingProfile = false;
 let allProducts = [];
+let passwordRecovery = ValmontPasswordReset.callbackParams();
 
 const GHANA_MOBILE_PREFIXES = ['020', '023', '024', '025', '026', '027', '028', '050', '053', '054', '055', '056', '057', '059'];
 
@@ -26,12 +27,14 @@ function normalizeGhanaLocalPhone(value) {
 
 const VALMONT_AUTH = {
   url: 'https://eydsoqnpetqczaeqrscc.supabase.co',
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwiaWF0IjoxNzg0ODg3NTY2LCJleHAiOjIxMDA0NjM1Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc'
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4ODc1NjYsImV4cCI6MjEwMDQ2MzU2Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc'
 };
 
-async function authRequest(path, body) {
+async function authRequest(path, body, options = {}) {
+  const headers = { 'Content-Type': 'application/json', apikey: VALMONT_AUTH.anonKey };
+  if (options.accessToken) headers.Authorization = `Bearer ${options.accessToken}`;
   const response = await fetch(`${VALMONT_AUTH.url}/auth/v1/${path}`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json', apikey: VALMONT_AUTH.anonKey }, body: JSON.stringify(body)
+    method: options.method || 'POST', headers, body: JSON.stringify(body)
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error_description || data.msg || data.message || 'Authentication failed');
@@ -117,16 +120,27 @@ async function completeAccountOAuth() {
 }
 
 async function initAccount() {
+  const storedProducts = safeParseJSON(localStorage.getItem('valmont_products'), []);
+  allProducts = Array.isArray(storedProducts) ? storedProducts : [];
+  // Also try from inline PRODUCTS if available
+  if (allProducts.length === 0 && typeof PRODUCTS !== 'undefined') {
+    allProducts = PRODUCTS;
+  }
+
+  // A recovery callback creates a valid Supabase session. Handle it before
+  // OAuth completion or the local "already signed in" branch so neither can
+  // skip the shopper past the set-new-password form.
+  if (passwordRecovery.active) {
+    currentUser = null;
+    showPasswordRecoveryScreen();
+    return;
+  }
+
   const oauthHandled = await completeAccountOAuth();
   if (oauthHandled) return;
 
   currentUser = localStorage.getItem('valmont_access_token') ? safeParseJSON(localStorage.getItem('valmont_user'), null) : null;
   if (!localStorage.getItem('valmont_access_token')) localStorage.removeItem('valmont_user');
-  allProducts = safeParseJSON(localStorage.getItem('valmont_products'), []);
-  // Also try from inline PRODUCTS if available
-  if (allProducts.length === 0 && typeof PRODUCTS !== 'undefined') {
-    allProducts = PRODUCTS;
-  }
 
   if (!currentUser) {
     showAuthScreen();
@@ -145,6 +159,70 @@ function showAccountScreen() {
   document.getElementById('authScreen').classList.add('hidden');
   document.getElementById('accountScreen').classList.remove('hidden');
   loadAllSections();
+}
+
+function showPasswordRecoveryScreen() {
+  showAuthScreen();
+  document.getElementById('passwordResetDefaultView').classList.add('hidden');
+  document.getElementById('passwordResetRequestView').classList.add('hidden');
+  document.getElementById('newPasswordForm').classList.remove('hidden');
+  const errorEl = document.getElementById('newPasswordError');
+  if (!passwordRecovery.accessToken || passwordRecovery.error) {
+    errorEl.textContent = 'This reset link has expired or is invalid. Request a new one.';
+  } else {
+    errorEl.textContent = '';
+    document.getElementById('recoveryNewPassword').focus();
+  }
+}
+
+async function handleNewPassword(e) {
+  e.preventDefault();
+  const next = document.getElementById('recoveryNewPassword').value;
+  const confirm = document.getElementById('recoveryConfirmPassword').value;
+  const errorEl = document.getElementById('newPasswordError');
+  const button = e.currentTarget.querySelector('button[type="submit"]');
+  errorEl.textContent = '';
+
+  if (next.length < 8) {
+    errorEl.textContent = 'Password must be at least 8 characters.';
+    return;
+  }
+  if (next !== confirm) {
+    errorEl.textContent = 'Those passwords do not match.';
+    return;
+  }
+  if (!passwordRecovery.accessToken || passwordRecovery.error) {
+    errorEl.textContent = 'This reset link has expired or is invalid. Request a new one.';
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = 'Updating…';
+  try {
+    const account = await ValmontPasswordReset.auth().updateUser({ password: next }, passwordRecovery.accessToken);
+    // Do not preserve a stale account from before the recovery link was opened.
+    // Return to sign-in so the shopper can authenticate with the new password.
+    localStorage.removeItem('valmont_user');
+    localStorage.removeItem('valmont_access_token');
+    currentUser = null;
+    ValmontPasswordReset.cleanCallbackUrl();
+    passwordRecovery = { active: false, accessToken: '', error: '', errorDescription: '' };
+    document.getElementById('newPasswordForm').classList.add('hidden');
+    document.getElementById('passwordResetDefaultView').classList.remove('hidden');
+    switchAuthTab('signin');
+    const updatedAccount = account && account.user ? account.user : account;
+    if (updatedAccount && updatedAccount.email) document.getElementById('signInEmail').value = updatedAccount.email;
+    document.getElementById('signInPassword').value = '';
+    showToast('Password updated. Sign in with your new password.');
+    document.getElementById('signInPassword').focus();
+  } catch (error) {
+    errorEl.textContent = /expired|jwt|session|token/i.test(String(error && error.message))
+      ? 'This reset link has expired or is invalid. Request a new one.'
+      : 'Unable to update the password. Please try again.';
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Update password';
+  }
 }
 
 function switchAuthTab(tab) {
@@ -182,15 +260,6 @@ async function handleSignUp(e) {
     if (result.session && result.user) { saveAuthUser(result.user, result.session.access_token); showAccountScreen(); showToast('Account created! Welcome, ' + name + '!'); }
     else { switchAuthTab('signin'); showToast('Account created. Check your email to confirm it, then sign in.'); }
   } catch (error) { console.error('Sign-up error:', error); showToast(error.message || 'Unable to create account.'); }
-}
-
-function handlePasswordReset() {
-  const email = prompt('Enter your email address to receive a password reset link:');
-  if (!email) return;
-  if (!email.includes('@')) { showToast('Please enter a valid email'); return; }
-  authRequest('recover', { email }).then(() => {
-    showToast('If an account exists for ' + email + ', a password reset email has been sent.');
-  }).catch(() => showToast('Unable to send the reset email. Please try again.'));
 }
 
 function handleGoogleSignIn() {
