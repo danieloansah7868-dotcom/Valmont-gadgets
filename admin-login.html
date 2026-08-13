@@ -14,6 +14,12 @@
   <style>
     :root{font-family:Inter,system-ui,sans-serif;color:#f8fafc;background:#071126}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 0,#172b55 0,#071126 54%)}
     .card{width:min(100%,420px);padding:40px;background:#0f2044;border:1px solid #263b63;border-radius:20px;box-shadow:0 24px 80px #0008}.brand{display:flex;justify-content:center;align-items:center;gap:10px;margin-bottom:28px}.brand img{width:44px;height:44px}.brand span{font-size:20px;font-weight:800;letter-spacing:.18em;color:#ff8c00}.eyebrow{text-align:center;text-transform:uppercase;letter-spacing:.16em;font-size:11px;color:#94a3b8;font-weight:700}.h1{text-align:center;margin:10px 0 8px;font-size:28px}.intro{text-align:center;color:#94a3b8;font-size:14px;margin:0 0 28px;line-height:1.6}label{display:block;font-size:12px;color:#cbd5e1;font-weight:700;margin:17px 0 7px}input{width:100%;padding:14px 15px;border-radius:10px;border:1px solid #3a4d72;background:#071126;color:#fff;font:inherit;font-size:15px;outline:0}input:focus{border-color:#ff8c00;box-shadow:0 0 0 3px #ff8c0024}button{width:100%;margin-top:24px;padding:14px;border:0;border-radius:10px;background:#ff8c00;color:#071126;font:inherit;font-weight:800;cursor:pointer}button:hover{filter:brightness(1.08)}.error{min-height:20px;margin:12px 0 0;color:#fca5a5;font-size:13px;font-weight:600}.forgot{display:block;margin-top:20px;text-align:center;color:#fbbf24;font-size:13px;text-decoration:none}.forgot:hover{text-decoration:underline}.note{text-align:center;color:#64748b;font-size:11px;margin:26px 0 0;line-height:1.5}@media(max-width:480px){.card{padding:30px 22px}.h1{font-size:24px}}
+    /* Forgot-password / recovery affordances */
+    button.forgot{width:auto;margin:20px auto 0;padding:0;background:0 0;border:0;color:#fbbf24;font:inherit;font-size:13px;font-weight:600;cursor:pointer;display:block}
+    button.forgot:hover{text-decoration:underline;filter:none}
+    button.forgot[disabled]{opacity:.6;cursor:default;text-decoration:none}
+    .status{min-height:20px;margin:12px 0 0;color:#86efac;font-size:13px;font-weight:600;text-align:center}
+    [hidden]{display:none!important}
   </style>
 </head>
 <body>
@@ -30,7 +36,26 @@
       <p id="error" class="error" role="alert" aria-live="polite"></p>
       <button type="submit">Sign In</button>
     </form>
-    <a class="forgot" href="mailto:admin@valmontgadgets.com?subject=Valmont%20admin%20password%20reset">Forgot password?</a>
+    <button type="button" id="forgotBtn" class="forgot">Forgot password?</button>
+
+    <form id="resetForm" hidden novalidate>
+      <label for="resetEmail">Send a reset link to</label>
+      <input id="resetEmail" name="resetEmail" type="email" autocomplete="username" placeholder="you@email.com" required>
+      <p id="resetError" class="error" role="alert" aria-live="polite"></p>
+      <button type="submit">Send reset link</button>
+      <button type="button" id="cancelReset" class="forgot">Back to sign in</button>
+    </form>
+
+    <form id="newPasswordForm" hidden novalidate>
+      <label for="newPassword">New password</label>
+      <input id="newPassword" name="newPassword" type="password" autocomplete="new-password" placeholder="At least 8 characters" required>
+      <label for="confirmPassword">Confirm new password</label>
+      <input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" placeholder="Re-enter new password" required>
+      <p id="newPasswordError" class="error" role="alert" aria-live="polite"></p>
+      <button type="submit">Update password</button>
+    </form>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
     <p class="note">Authorized Valmont Gadgets staff only.</p>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -45,8 +70,38 @@
     const isAllowedAdminEmail = (email) =>
       ADMIN_ALLOWED_EMAILS.includes(String(email || '').trim().toLowerCase());
 
+    const loginForm = document.getElementById('loginForm');
+    const resetForm = document.getElementById('resetForm');
+    const newPasswordForm = document.getElementById('newPasswordForm');
+    const forgotBtn = document.getElementById('forgotBtn');
+    const statusEl = document.getElementById('status');
+
+    // A recovery link (…#access_token=…&type=recovery) signs the user in so the
+    // password can be changed. Detect it BEFORE the auto-redirect below, or the
+    // admin would be bounced to /admin.html without ever setting a password.
+    const hashParams = new URLSearchParams(String(location.hash || '').replace(/^#/, ''));
+    let inRecovery = hashParams.get('type') === 'recovery';
+
+    const showRecoveryUI = () => {
+      inRecovery = true;
+      loginForm.hidden = true;
+      forgotBtn.hidden = true;
+      resetForm.hidden = true;
+      newPasswordForm.hidden = false;
+      statusEl.textContent = 'Choose a new password for your admin account.';
+      document.getElementById('newPassword').focus();
+    };
+
+    if (inRecovery) showRecoveryUI();
+
+    // Supabase fires this once it has parsed the recovery token from the URL.
+    sb.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') showRecoveryUI();
+    });
+
     // If already logged in AS THE ADMIN, redirect straight to admin.
     sb.auth.getSession().then(({ data }) => {
+      if (inRecovery) return; // stay put so the password can be updated
       if (data.session && isAllowedAdminEmail(data.session.user && data.session.user.email)) {
         window.location.replace('/admin.html');
       }
@@ -58,12 +113,123 @@
         'That account is not authorised to access the Valmont admin panel.';
     }
 
-    document.getElementById('loginForm').addEventListener('submit', async function (event) {
+    // ---- Step 1: request a reset link -------------------------------------
+    forgotBtn.addEventListener('click', () => {
+      resetForm.hidden = false;
+      forgotBtn.hidden = true;
+      statusEl.textContent = '';
+      document.getElementById('resetError').textContent = '';
+      const typed = document.getElementById('email').value.trim();
+      if (typed) document.getElementById('resetEmail').value = typed;
+      document.getElementById('resetEmail').focus();
+    });
+
+    document.getElementById('cancelReset').addEventListener('click', () => {
+      resetForm.hidden = true;
+      forgotBtn.hidden = false;
+      statusEl.textContent = '';
+      document.getElementById('resetError').textContent = '';
+    });
+
+    resetForm.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      const email = document.getElementById('resetEmail').value.trim().toLowerCase();
+      const errorEl = document.getElementById('resetError');
+      const btn = resetForm.querySelector('button[type="submit"]');
+      errorEl.textContent = '';
+      statusEl.textContent = '';
+
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        errorEl.textContent = 'Enter a valid email address.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+
+      // Only the admin account can receive an admin reset link. Supabase itself
+      // does not reveal whether an address exists, so we gate it here and still
+      // show the same neutral confirmation either way.
+      if (isAllowedAdminEmail(email)) {
+        const { error: resetError } = await sb.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/admin-login.html'
+        });
+        if (resetError) {
+          errorEl.textContent = resetError.message || 'Could not send the reset link. Try again.';
+          btn.disabled = false;
+          btn.textContent = 'Send reset link';
+          return;
+        }
+      }
+
+      resetForm.hidden = true;
+      statusEl.textContent =
+        'If that address belongs to a Valmont admin account, a reset link is on its way. Check your inbox and spam folder.';
+      btn.disabled = false;
+      btn.textContent = 'Send reset link';
+    });
+
+    // ---- Step 2: set the new password after following the link -------------
+    newPasswordForm.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      const next = document.getElementById('newPassword').value;
+      const confirm = document.getElementById('confirmPassword').value;
+      const errorEl = document.getElementById('newPasswordError');
+      const btn = newPasswordForm.querySelector('button[type="submit"]');
+      errorEl.textContent = '';
+
+      if (next.length < 8) {
+        errorEl.textContent = 'Password must be at least 8 characters.';
+        return;
+      }
+      if (next !== confirm) {
+        errorEl.textContent = 'Those passwords do not match.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Updating…';
+
+      const { data: sessionData } = await sb.auth.getSession();
+      const recoveringEmail = sessionData.session && sessionData.session.user && sessionData.session.user.email;
+
+      if (!sessionData.session) {
+        errorEl.textContent = 'This reset link has expired. Request a new one.';
+        btn.disabled = false;
+        btn.textContent = 'Update password';
+        return;
+      }
+
+      // Never let a non-admin recovery session set a password here.
+      if (!isAllowedAdminEmail(recoveringEmail)) {
+        try { await sb.auth.signOut(); } catch (_) {}
+        errorEl.textContent = 'That account is not authorised to access the Valmont admin panel.';
+        btn.disabled = false;
+        btn.textContent = 'Update password';
+        return;
+      }
+
+      const { error: updateError } = await sb.auth.updateUser({ password: next });
+
+      if (updateError) {
+        errorEl.textContent = updateError.message || 'Could not update the password. Try again.';
+        btn.disabled = false;
+        btn.textContent = 'Update password';
+        return;
+      }
+
+      // Clear the recovery token out of the URL before moving on.
+      history.replaceState(null, '', window.location.pathname);
+      statusEl.textContent = 'Password updated. Taking you to the admin panel…';
+      window.location.replace('/admin.html');
+    });
+
+    loginForm.addEventListener('submit', async function (event) {
       event.preventDefault();
       const email = document.getElementById('email').value.trim().toLowerCase();
       const password = document.getElementById('password').value;
       const error = document.getElementById('error');
-      const btn = document.querySelector('button[type="submit"]');
+      const btn = loginForm.querySelector('button[type="submit"]');
       error.textContent = '';
       btn.disabled = true;
       btn.textContent = 'Signing in…';
