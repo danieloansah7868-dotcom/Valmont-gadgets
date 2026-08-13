@@ -12,6 +12,7 @@
     "verify": "node scripts/verify-hydration.js && node scripts/audit.js",
     "test": "node scripts/test-valmontpay.mjs",
     "test:google": "node scripts/test-google-oauth.mjs",
+    "test:password-reset": "node scripts/test-customer-password-reset.mjs",
     "test:integration": "node scripts/integration-orders.mjs",
     "smoke": "node scripts/smoke-valmontpay.mjs",
     "typecheck": "node scripts/typecheck.js",
