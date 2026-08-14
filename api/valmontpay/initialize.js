@@ -21,23 +21,24 @@
 
 export const config = { runtime: 'edge' };
 
+import { RequestError, SECURE_JSON_HEADERS, rateLimit, rateLimitHeaders, readJson } from '../_security.js';
+
 const GATEWAY_BASE = 'https://valmontpay.app';
 const GATEWAY_INITIALIZE_PATH = '/api/transaction/initialize';
 const CALLBACK_URL = 'https://valmontgadgets.com/order-confirmed.html';
 
 /** Supabase project backing the storefront (same project app.js uses). */
 const DEFAULT_SUPABASE_URL = 'https://eydsoqnpetqczaeqrscc.supabase.co';
-// The anon key is already public: it ships inside app.js/shop.min.js and is
-// confined by RLS (anon can only read active products, INSERT customers and
-// call the three narrow payment RPCs: create_pending_order,
-// set_order_payment_reference). No service-role secret is required — orders
-// are never read or written directly via PostgREST.
+// Public only; used as the API gateway key when forwarding an authenticated
+// administrator's own JWT. All checkout and public-write operations require
+// SUPABASE_SERVICE_ROLE_KEY and never fall back to this browser credential.
 const DEFAULT_SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4ODc1NjYsImV4cCI6MjEwMDQ2MzU2Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc';
 
-const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8' };
+const JSON_HEADERS = SECURE_JSON_HEADERS;
 const MAX_ITEMS = 50;
 const MAX_QTY = 50;
+const MAX_TOTAL_QTY = 100;
 
 // ─── Small helpers ──────────────────────────────────────────────────────────
 
@@ -64,6 +65,38 @@ export function generateOrderNumber(now = Date.now()) {
 
 function clampText(value, max) {
   return String(value == null ? '' : value).trim().slice(0, max);
+}
+
+/**
+ * Resolve an optional Supabase bearer token to a server-verified account ID.
+ * An invalid supplied token fails closed; requests without a token remain
+ * valid guest checkouts.
+ */
+export async function resolveCheckoutAccount({ authorization, env, fetchImpl, log }) {
+  const emit = log || (() => {});
+  const header = String(authorization || '').trim();
+  if (!header) return { supplied: false, accountId: null };
+  const match = /^Bearer\s+([^\s]{20,4096})$/i.exec(header);
+  if (!match) return { supplied: true, accountId: null };
+
+  const sbUrl = String(env.SUPABASE_URL || DEFAULT_SUPABASE_URL).replace(/\/$/, '');
+  const anonKey = String(env.SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY).trim();
+  try {
+    const response = await fetchImpl(`${sbUrl}/auth/v1/user`, {
+      headers: { apikey: anonKey, authorization: `Bearer ${match[1]}` },
+    });
+    if (!response.ok) return { supplied: true, accountId: null };
+    const account = await response.json();
+    const accountId = String(account && account.id || '').trim().toLowerCase();
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(accountId)) {
+      emit('[VALMONTPAY-INIT] verified auth response did not contain a valid account ID');
+      return { supplied: true, accountId: null };
+    }
+    return { supplied: true, accountId };
+  } catch (error) {
+    emit(`[VALMONTPAY-INIT] account verification failed: ${error && error.message ? error.message : error}`);
+    return { supplied: true, accountId: null, unavailable: true };
+  }
 }
 
 // ─── SMS lead collection (SMS marketing popup + admin export) ────────────────
@@ -117,7 +150,11 @@ export function detectGhanaNetwork(phone) {
 export async function handleSmsOptinCore({ body, env, fetchImpl, log }) {
   const emit = log || (() => {});
   const sbUrl = String(env.SUPABASE_URL || DEFAULT_SUPABASE_URL).replace(/\/$/, '');
-  const sbKey = env.SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
+  const sbKey = String(env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+  if (!sbKey) {
+    emit('[SMS-OPTIN] SUPABASE_SERVICE_ROLE_KEY is not configured');
+    return { status: 500, body: { ok: false, message: 'SMS signup is temporarily unavailable.' } };
+  }
 
   const phone = normalizeGhanaLocalPhone(body && body.phone);
   if (!phone) {
@@ -232,11 +269,19 @@ export async function handleSmsLeadsCore({ headers, env, fetchImpl, log }) {
   }
 
   const sbUrl = String(env.SUPABASE_URL || DEFAULT_SUPABASE_URL).replace(/\/$/, '');
+  const apiKey = isSharedSecret
+    ? String(env.SUPABASE_SERVICE_ROLE_KEY || '').trim()
+    : String(env.SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY).trim();
+  const authorization = isSharedSecret ? apiKey : token;
+  if (!apiKey) {
+    emit('[SMS-LEADS] required Supabase server credential is not configured');
+    return { status: 500, body: { ok: false, message: 'SMS lead export is not configured.' } };
+  }
 
   let res;
   try {
     res = await fetchImpl(`${sbUrl}/rest/v1/sms_leads?select=*&order=created_at.desc`, {
-      headers: { apikey: token, authorization: `Bearer ${token}` },
+      headers: { apikey: apiKey, authorization: `Bearer ${authorization}` },
     });
   } catch (err) {
     emit(`[SMS-LEADS] supabase unreachable: ${err && err.message}`);
@@ -296,19 +341,37 @@ export function buildOrderRow({
 }
 
 /**
- * Compute a stable idempotency key from customer + cart contents.
- * Identical carts from the same customer always produce the same key,
- * so retries hit the same Pending order instead of creating duplicates.
+ * Compute a stable, collision-resistant idempotency key from every field that
+ * changes the resulting order. Variant and delivery-region changes must never
+ * reuse an older Pending order. Hashing avoids collisions caused by truncating
+ * long serialized carts to the database column length.
  *
  * @param {string} customerId
- * @param {Array<{id: string, qty: number}>} normalizedItems
- * @returns {string}
+ * @param {Array<{id: string, qty: number, selected_color?: string|null, selected_storage?: string|null}>} normalizedItems
+ * @param {string|null} deliveryRegion
+ * @returns {Promise<string>}
  */
-export function computeIdempotencyKey(customerId, normalizedItems) {
-  const sorted = [...normalizedItems]
-    .map((i) => `${i.id}:${i.qty}`)
-    .sort();
-  return `idem:${customerId}:${sorted.join(',')}`.slice(0, 128);
+export async function computeIdempotencyKey(customerId, normalizedItems, deliveryRegion = null) {
+  const aggregated = new Map();
+  for (const item of normalizedItems) {
+    const identity = JSON.stringify([
+      String(item.id),
+      String(item.selected_color || ''),
+      String(item.selected_storage || ''),
+    ]);
+    aggregated.set(identity, (aggregated.get(identity) || 0) + Number(item.qty));
+  }
+  const canonical = JSON.stringify({
+    version: 2,
+    customer_id: String(customerId),
+    delivery_region: String(deliveryRegion || '').trim(),
+    items: [...aggregated.entries()]
+      .map(([identity, quantity]) => [...JSON.parse(identity), quantity])
+      .sort((left, right) => JSON.stringify(left).localeCompare(JSON.stringify(right))),
+  });
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonical));
+  const hex = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return `idem:v2:${hex}`;
 }
 
 /**
@@ -338,14 +401,16 @@ function buildRpcItems(orderItems) {
  * @param {Record<string,string|undefined>} deps.env
  * @param {typeof fetch} deps.fetchImpl
  * @param {(msg: string) => void} [deps.log]
+ * @param {string|null} [deps.accountId] Server-verified Supabase account UUID.
  * @returns {Promise<{status: number, body: object}>}
  */
-export async function handleInitializeCore({ body, env, fetchImpl, log }) {
+export async function handleInitializeCore({ body, env, fetchImpl, log, accountId = null }) {
   const emit = log || (() => {});
 
-  const secretKey = env.VALMONTPAY_SECRET_KEY;
-  if (!secretKey) {
-    emit('[VALMONTPAY-INIT] VALMONTPAY_SECRET_KEY is not configured');
+  const secretKey = String(env.VALMONTPAY_SECRET_KEY || '').trim();
+  const serviceRoleKey = String(env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+  if (!secretKey || !serviceRoleKey) {
+    emit(`[VALMONTPAY-INIT] missing server secret(s):${!secretKey ? ' VALMONTPAY_SECRET_KEY' : ''}${!serviceRoleKey ? ' SUPABASE_SERVICE_ROLE_KEY' : ''}`);
     return { status: 500, body: { status: false, message: 'Payments are not configured. Please try again later.' } };
   }
 
@@ -417,6 +482,9 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
       selected_storage: clampText(item && item.selected_storage, 60) || null,
     });
   }
+  if (normalized.reduce((sum, item) => sum + item.qty, 0) > MAX_TOTAL_QTY) {
+    return { status: 400, body: { status: false, message: 'Your cart contains too many units.' } };
+  }
 
   const customer = body && typeof body.customer === 'object' && body.customer ? body.customer : {};
   const name = clampText(customer.name, 120);
@@ -429,8 +497,7 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
   const paymentMethod = clampText(body && body.payment_method, 60) || 'Valmont-Pay';
 
   const sbUrl = String(env.SUPABASE_URL || DEFAULT_SUPABASE_URL).replace(/\/$/, '');
-  const sbKey = env.SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
-  const sbHeaders = { apikey: sbKey, authorization: `Bearer ${sbKey}` };
+  const sbHeaders = { apikey: serviceRoleKey, authorization: `Bearer ${serviceRoleKey}` };
 
   // ── 1. Recompute every price from the database ────────────────────────────
   const ids = Array.from(new Set(normalized.map((i) => i.id)));
@@ -506,7 +573,9 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
     return { status: 500, body: { status: false, message: 'Could not issue an order number. Please try again.' } };
   }
   const phoneDigits = phone.replace(/\D/g, '');
-  const customerId = phoneDigits ? `cust-${phoneDigits}` : `cust-anon-${Date.now()}`;
+  const customerId = accountId
+    ? `acct-${accountId}`
+    : phoneDigits ? `cust-${phoneDigits}` : `cust-anon-${Date.now()}`;
 
   // ── 3b. Customer upsert through a narrow SECURITY DEFINER RPC ─────────────
   // This must succeed: create_pending_order() validates the foreign key, and
@@ -534,7 +603,7 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
       let detail = '';
       try { detail = (await customerRes.json()).message || ''; } catch (_) {}
       emit(`[VALMONTPAY-INIT] customer upsert failed: HTTP ${customerRes.status} ${detail}`);
-      return { status: 500, body: { status: false, message: 'Could not save customer details. Please try again.', detail } };
+      return { status: 500, body: { status: false, message: 'Could not save customer details. Please try again.' } };
     }
   } catch (err) {
     emit(`[VALMONTPAY-INIT] customer upsert failed: ${err && err.message}`);
@@ -547,7 +616,7 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
   // idempotent: identical (customer, cart) retries return the same Pending
   // order instead of creating duplicates.
   // When p_delivery_region is supplied the RPC computes fee server-authoritatively.
-  const idempotencyKey = computeIdempotencyKey(customerId, normalized);
+  const idempotencyKey = await computeIdempotencyKey(customerId, normalized, deliveryRegion);
   const rpcItems = buildRpcItems(orderItems);
 
   let orderRes;
@@ -563,6 +632,7 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
       p_payment_method: paymentMethod,
       p_idempotency_key: idempotencyKey,
       p_delivery_region: deliveryRegion,
+      p_account_id: accountId,
     };
     orderRes = await fetchImpl(`${sbUrl}/rest/v1/rpc/create_pending_order`, {
       method: 'POST',
@@ -593,19 +663,22 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
     emit(`[VALMONTPAY-INIT] create_pending_order failed: HTTP ${orderRes.status} [${sqlState}] ${pgMessage}`);
     if (pgHint) emit(`[VALMONTPAY-INIT] PostgreSQL hint: ${pgHint}`);
     if (pgDetails) emit(`[VALMONTPAY-INIT] PostgreSQL details: ${pgDetails}`);
+    const conflict = /insufficient_stock/i.test(pgMessage);
+    const invalidRegion = /invalid_delivery_region/i.test(pgMessage);
     return {
-      status: 500,
+      status: conflict ? 409 : invalidRegion ? 400 : 500,
       body: {
         status: false,
-        message: `Could not record your order [${sqlState}]`,
-        detail: pgMessage || 'Database constraint violation',
-        hint: pgHint || undefined,
-        details: pgDetails || undefined,
+        message: conflict
+          ? 'One or more items are no longer available in the requested quantity.'
+          : invalidRegion
+            ? 'Please choose a valid delivery region.'
+            : 'Could not record your order. Please try again.',
       },
     };
   }
 
-  // The RPC returns {id, order_number, idempotent: bool, subtotal, delivery_fee, delivery_region, total, fee_source}
+  // The RPC returns {id, order_number, idempotent, subtotal, delivery_fee, delivery_region, total, fee_source, pricing_tier}
   // On an idempotent retry, the existing order_number is returned — use it for the gateway.
   // ALWAYS use the RPC-RETURNED subtotal/delivery_fee/total (never locally computed ones).
   const effectiveOrderNumber = String(orderResult.order_number || orderNumber).trim();
@@ -615,6 +688,7 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
   const rpcTotal = orderResult.total != null ? Number(orderResult.total) : rpcSubtotal + rpcDeliveryFee;
   const rpcDeliveryRegion = orderResult.delivery_region != null ? String(orderResult.delivery_region) : deliveryRegion;
   const rpcFeeSource = orderResult.fee_source != null ? String(orderResult.fee_source) : null;
+  const rpcPricingTier = orderResult.pricing_tier === 'dealer' ? 'dealer' : 'retail';
 
   const rpcTotalPesewas = toPesewas(rpcTotal) ?? 0;
   emit(`[VALMONTPAY-INIT] pending order ${effectiveOrderNumber} ${isIdempotentHit ? 'reused (idempotent)' : 'recorded'}: GHS ${formatCedis(rpcTotalPesewas)} (${orderItems.length} line/s) region=${rpcDeliveryRegion || 'none'} fee=${rpcDeliveryFee} source=${rpcFeeSource || 'unknown'}`);
@@ -640,6 +714,23 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
   } catch (err) {
     emit(`[VALMONTPAY-INIT] customer snapshot not stored for ${effectiveOrderNumber}: ${err && err.message}`);
   }
+
+  // If a newly-created checkout cannot be handed to the payment gateway, put
+  // its reserved stock back immediately. Idempotent retries may already have a
+  // live hosted checkout, so they retain their original reservation.
+  const releaseNewReservation = async (reason) => {
+    if (isIdempotentHit) return;
+    try {
+      const response = await fetchImpl(`${sbUrl}/rest/v1/rpc/release_order_reservation`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', ...sbHeaders },
+        body: JSON.stringify({ p_order_number: effectiveOrderNumber, p_reason: reason }),
+      });
+      if (!response.ok) emit(`[VALMONTPAY-INIT] reservation release failed for ${effectiveOrderNumber}: HTTP ${response.status}`);
+    } catch (error) {
+      emit(`[VALMONTPAY-INIT] reservation release failed for ${effectiveOrderNumber}: ${error && error.message}`);
+    }
+  };
 
   // ── 4. Initialize the hosted checkout on the Valmont-Pay gateway ──────────
   const gatewayUrl = `${String(env.VALMONTPAY_GATEWAY_URL || GATEWAY_BASE).replace(/\/$/, '')}${GATEWAY_INITIALIZE_PATH}`;
@@ -671,10 +762,12 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
     if (!gatewayRes.ok || !gatewayJson || gatewayJson.status === false) {
       const message = (gatewayJson && gatewayJson.message) || `Gateway error (HTTP ${gatewayRes.status})`;
       emit(`[VALMONTPAY-INIT] gateway rejected ${effectiveOrderNumber}: ${message}`);
-      return { status: 502, body: { status: false, message: 'The payment gateway could not start your checkout. Please try again.', detail: message } };
+      await releaseNewReservation('gateway_initialization_failed');
+      return { status: 502, body: { status: false, message: 'The payment gateway could not start your checkout. Please try again.' } };
     }
   } catch (err) {
     emit(`[VALMONTPAY-INIT] gateway unreachable for ${effectiveOrderNumber}: ${err && err.message}`);
+    await releaseNewReservation('gateway_unreachable');
     return { status: 502, body: { status: false, message: 'The payment gateway is unreachable. Please try again.' } };
   }
 
@@ -682,7 +775,20 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
   const payUrl = data.pay_url || data.checkout_url || data.paystack_authorization_url || '';
   if (!payUrl) {
     emit(`[VALMONTPAY-INIT] gateway returned no checkout URL for ${effectiveOrderNumber}`);
+    await releaseNewReservation('gateway_missing_checkout_url');
     return { status: 502, body: { status: false, message: 'The payment gateway returned no checkout link. Please try again.' } };
+  }
+  let checkoutUrl;
+  try {
+    checkoutUrl = new URL(payUrl);
+  } catch (_) {
+    await releaseNewReservation('gateway_invalid_checkout_url');
+    return { status: 502, body: { status: false, message: 'The payment gateway returned an invalid checkout link.' } };
+  }
+  if (checkoutUrl.protocol !== 'https:' || checkoutUrl.hostname !== 'valmontpay.app') {
+    emit(`[VALMONTPAY-INIT] refused unexpected checkout origin for ${effectiveOrderNumber}`);
+    await releaseNewReservation('gateway_untrusted_checkout_url');
+    return { status: 502, body: { status: false, message: 'The payment gateway returned an untrusted checkout link.' } };
   }
 
   // ── 5. Store the gateway's VP-… reference on the order ────────────────────
@@ -718,6 +824,7 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
       delivery_fee: rpcDeliveryFee,
       delivery_region: rpcDeliveryRegion,
       fee_source: rpcFeeSource,
+      pricing_tier: rpcPricingTier,
       currency: data.currency || 'GHS',
       idempotent: isIdempotentHit,
     },
@@ -733,56 +840,78 @@ export async function handleInitializeCore({ body, env, fetchImpl, log }) {
 
 export default async function handler(request) {
   const vmRoute = new URL(request.url).searchParams.get('__vmRoute');
+  const emit = (message) => console.log(message);
+  const respond = (body, status, extraHeaders = {}) => new Response(JSON.stringify(body), {
+    status,
+    headers: { ...JSON_HEADERS, ...extraHeaders },
+  });
+
+  const routeConfig = vmRoute === 'optin'
+    ? { namespace: 'sms-optin', limit: 5, windowSeconds: 3600 }
+    : vmRoute === 'sms-leads'
+      ? { namespace: 'sms-leads', limit: 60, windowSeconds: 60 }
+      : { namespace: 'checkout', limit: 12, windowSeconds: 600 };
+  const limited = await rateLimit({ request, env: process.env, ...routeConfig, log: emit });
+  const limitHeaders = rateLimitHeaders(limited);
+  if (!limited.allowed) {
+    return respond(
+      { status: false, ok: false, message: 'Too many requests. Please try again later.' },
+      429,
+      { ...limitHeaders, 'retry-after': String(Math.max(1, Math.ceil((limited.resetAt - Date.now()) / 1000))) }
+    );
+  }
 
   if (vmRoute === 'optin') {
-    if (request.method !== 'POST') {
-      return new Response(JSON.stringify({ ok: false, message: 'Method not allowed' }), { status: 405, headers: JSON_HEADERS });
-    }
+    if (request.method !== 'POST') return respond({ ok: false, message: 'Method not allowed' }, 405, limitHeaders);
     let body;
     try {
-      body = await request.json();
-    } catch (_) {
-      return new Response(JSON.stringify({ ok: false, message: 'Invalid JSON body' }), { status: 400, headers: JSON_HEADERS });
+      body = await readJson(request, 4096);
+    } catch (error) {
+      return respond({ ok: false, message: error instanceof RequestError ? error.message : 'Invalid JSON body' }, error.status || 400, limitHeaders);
     }
     try {
-      const result = await handleSmsOptinCore({ body, env: process.env, fetchImpl: fetch, log: (m) => console.log(m) });
-      return new Response(JSON.stringify(result.body), { status: result.status, headers: JSON_HEADERS });
+      const result = await handleSmsOptinCore({ body, env: process.env, fetchImpl: fetch, log: emit });
+      return respond(result.body, result.status, limitHeaders);
     } catch (err) {
       console.error('[SMS-OPTIN] unexpected error:', err && err.message ? err.message : err);
-      return new Response(JSON.stringify({ ok: false, message: 'Internal error. Please try again.' }), { status: 500, headers: JSON_HEADERS });
+      return respond({ ok: false, message: 'Internal error. Please try again.' }, 500, limitHeaders);
     }
   }
 
   if (vmRoute === 'sms-leads') {
-    if (request.method !== 'GET') {
-      return new Response(JSON.stringify({ ok: false, message: 'Method not allowed' }), { status: 405, headers: JSON_HEADERS });
-    }
+    if (request.method !== 'GET') return respond({ ok: false, message: 'Method not allowed' }, 405, limitHeaders);
     const headers = {};
     request.headers.forEach((value, key) => { headers[key.toLowerCase()] = value; });
     try {
-      const result = await handleSmsLeadsCore({ headers, env: process.env, fetchImpl: fetch, log: (m) => console.log(m) });
-      return new Response(JSON.stringify(result.body), { status: result.status, headers: JSON_HEADERS });
+      const result = await handleSmsLeadsCore({ headers, env: process.env, fetchImpl: fetch, log: emit });
+      return respond(result.body, result.status, limitHeaders);
     } catch (err) {
       console.error('[SMS-LEADS] unexpected error:', err && err.message ? err.message : err);
-      return new Response(JSON.stringify({ ok: false, message: 'Internal error. Please try again.' }), { status: 500, headers: JSON_HEADERS });
+      return respond({ ok: false, message: 'Internal error. Please try again.' }, 500, limitHeaders);
     }
   }
 
-  if (request.method !== 'POST') {
-    return new Response(JSON.stringify({ status: false, message: 'Method not allowed' }), {
-      status: 405,
-      headers: JSON_HEADERS,
-    });
-  }
+  if (request.method !== 'POST') return respond({ status: false, message: 'Method not allowed' }, 405, limitHeaders);
 
   let body;
   try {
-    body = await request.json();
-  } catch (_) {
-    return new Response(JSON.stringify({ status: false, message: 'Invalid JSON body' }), {
-      status: 400,
-      headers: JSON_HEADERS,
-    });
+    body = await readJson(request, 64 * 1024);
+  } catch (error) {
+    return respond({ status: false, message: error instanceof RequestError ? error.message : 'Invalid JSON body' }, error.status || 400, limitHeaders);
+  }
+
+  const account = await resolveCheckoutAccount({
+    authorization: request.headers.get('authorization'),
+    env: process.env,
+    fetchImpl: fetch,
+    log: emit,
+  });
+  if (account.supplied && !account.accountId) {
+    return respond(
+      { status: false, message: account.unavailable ? 'Account verification is temporarily unavailable.' : 'Your session expired. Please sign in again.' },
+      account.unavailable ? 503 : 401,
+      limitHeaders
+    );
   }
 
   try {
@@ -790,14 +919,12 @@ export default async function handler(request) {
       body,
       env: process.env,
       fetchImpl: fetch,
-      log: (msg) => console.log(msg),
+      log: emit,
+      accountId: account.accountId,
     });
-    return new Response(JSON.stringify(result.body), { status: result.status, headers: JSON_HEADERS });
+    return respond(result.body, result.status, limitHeaders);
   } catch (err) {
     console.error('[VALMONTPAY-INIT] unexpected error:', err && err.message ? err.message : err);
-    return new Response(JSON.stringify({ status: false, message: 'Internal error. Please try again.' }), {
-      status: 500,
-      headers: JSON_HEADERS,
-    });
+    return respond({ status: false, message: 'Internal error. Please try again.' }, 500, limitHeaders);
   }
 }

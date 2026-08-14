@@ -16,6 +16,23 @@ const GHANA_MOBILE_PREFIXES = ['020', '023', '024', '025', '026', '027', '028', 
 // localStorage.
 function esc(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 function safeParseJSON(raw, fallback) { try { const v = JSON.parse(raw); return v === undefined ? fallback : v; } catch (e) { return fallback; } }
+function accountStorageKey(base) {
+  // Account-specific browser preferences must not bleed between users sharing
+  // the same device. Authentication is verified before these sections load.
+  return `${base}:${currentUser && currentUser.id ? currentUser.id : 'signed-out'}`;
+}
+
+function safeProductImage(value) {
+  const fallback = 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=400';
+  try {
+    const url = new URL(String(value || ''));
+    const allowed = url.protocol === 'https:' && (
+      url.hostname === 'images.unsplash.com' ||
+      (url.hostname === 'eydsoqnpetqczaeqrscc.supabase.co' && url.pathname.startsWith('/storage/v1/object/public/'))
+    );
+    return allowed ? url.href : fallback;
+  } catch (error) { return fallback; }
+}
 
 function normalizeGhanaLocalPhone(value) {
   let digits = String(value || '').replace(/\D/g, '');
@@ -26,7 +43,7 @@ function normalizeGhanaLocalPhone(value) {
 
 const VALMONT_AUTH = {
   url: 'https://eydsoqnpetqczaeqrscc.supabase.co',
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwiaWF0IjoxNzg0ODg3NTY2LCJleHAiOjIxMDA0NjM1Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc'
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4ODc1NjYsImV4cCI6MjEwMDQ2MzU2Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc'
 };
 
 async function authRequest(path, body) {
@@ -39,11 +56,27 @@ async function authRequest(path, body) {
 }
 
 function saveAuthUser(account, accessToken) {
-  const metadata = account.user_metadata || {};
+  const metadata = account && account.user_metadata || {};
+  const email = account && account.email || '';
   const rawPhone = metadata.phone || account.phone || '';
-  currentUser = { id: account.id, name: metadata.full_name || metadata.name || account.email.split('@')[0], email: account.email, phone: normalizeGhanaLocalPhone(rawPhone) || rawPhone };
+  currentUser = {
+    id: account.id,
+    name: metadata.full_name || metadata.name || (email ? email.split('@')[0] : 'Valmont Customer'),
+    email,
+    phone: normalizeGhanaLocalPhone(rawPhone) || rawPhone,
+  };
   localStorage.setItem('valmont_user', JSON.stringify(currentUser));
   if (accessToken) localStorage.setItem('valmont_access_token', accessToken);
+}
+
+function clearAuthSession() {
+  localStorage.removeItem('valmont_user');
+  localStorage.removeItem('valmont_customer');
+  localStorage.removeItem('valmont_access_token');
+  localStorage.removeItem('valmont_refresh_token');
+  localStorage.removeItem('valmont_token_expires');
+  localStorage.removeItem('valmont_logged_in');
+  currentUser = null;
 }
 
 window.addEventListener('DOMContentLoaded', initAccount);
@@ -120,18 +153,30 @@ async function initAccount() {
   const oauthHandled = await completeAccountOAuth();
   if (oauthHandled) return;
 
-  currentUser = localStorage.getItem('valmont_access_token') ? safeParseJSON(localStorage.getItem('valmont_user'), null) : null;
-  if (!localStorage.getItem('valmont_access_token')) localStorage.removeItem('valmont_user');
   allProducts = safeParseJSON(localStorage.getItem('valmont_products'), []);
-  // Also try from inline PRODUCTS if available
-  if (allProducts.length === 0 && typeof PRODUCTS !== 'undefined') {
-    allProducts = PRODUCTS;
+  if (allProducts.length === 0 && typeof PRODUCTS !== 'undefined') allProducts = PRODUCTS;
+
+  const accessToken = localStorage.getItem('valmont_access_token');
+  if (!accessToken) {
+    clearAuthSession();
+    showAuthScreen();
+    return;
   }
 
-  if (!currentUser) {
-    showAuthScreen();
-  } else {
+  try {
+    const response = await fetch(`${VALMONT_AUTH.url}/auth/v1/user`, {
+      headers: { apikey: VALMONT_AUTH.anonKey, Authorization: `Bearer ${accessToken}` }
+    });
+    if (!response.ok) throw new Error('Session verification failed');
+    const account = await response.json();
+    if (!account || !account.id) throw new Error('Invalid account response');
+    // The server-verified user, not editable browser storage, is authoritative.
+    saveAuthUser(account);
     showAccountScreen();
+  } catch (error) {
+    clearAuthSession();
+    showAuthScreen();
+    showToast('Your session could not be verified. Please sign in again.');
   }
 }
 
@@ -204,11 +249,20 @@ function handleGoogleSignIn() {
   window.location.assign('/?google_signin=1');
 }
 
-function handleLogout() {
-  if (confirm('Sign out of your account?')) {
-    localStorage.removeItem('valmont_user');
-    localStorage.removeItem('valmont_access_token');
-    currentUser = null;
+async function handleLogout() {
+  if (!confirm('Sign out of your account?')) return;
+  const token = localStorage.getItem('valmont_access_token');
+  try {
+    if (token) {
+      await fetch(`${VALMONT_AUTH.url}/auth/v1/logout`, {
+        method: 'POST',
+        headers: { apikey: VALMONT_AUTH.anonKey, Authorization: `Bearer ${token}` }
+      });
+    }
+  } catch (error) {
+    console.warn('Remote session revocation was unavailable; clearing this device session.', error);
+  } finally {
+    clearAuthSession();
     showAuthScreen();
   }
 }
@@ -241,24 +295,38 @@ function toggleProfileEdit() {
   document.getElementById('profileForm').classList.toggle('hidden', !editingProfile);
 }
 
-function saveProfile(e) {
+async function saveProfile(e) {
   e.preventDefault();
   const name = document.getElementById('editName').value.trim();
-  const email = document.getElementById('editEmail').value.trim();
-  const phone = document.getElementById('editPhone').value.trim();
-  if (!name || !email) { showToast('Name and email are required'); return; }
-  currentUser.name = name;
-  currentUser.email = email;
-  currentUser.phone = phone;
-  localStorage.setItem('valmont_user', JSON.stringify(currentUser));
-  loadProfile();
-  toggleProfileEdit();
-  showToast('Profile updated!');
+  const email = document.getElementById('editEmail').value.trim().toLowerCase();
+  const phoneInput = document.getElementById('editPhone').value.trim();
+  const phone = phoneInput ? normalizeGhanaLocalPhone(phoneInput) : '';
+  if (!name || !/^\S+@\S+\.\S+$/.test(email)) { showToast('A valid name and email are required'); return; }
+  if (phoneInput && !phone) { showToast('Enter a valid Ghana mobile number.'); return; }
+
+  const token = localStorage.getItem('valmont_access_token');
+  if (!token) { clearAuthSession(); showAuthScreen(); return; }
+  try {
+    const response = await fetch(`${VALMONT_AUTH.url}/auth/v1/user`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', apikey: VALMONT_AUTH.anonKey, Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ email, data: { full_name: name, phone } })
+    });
+    const account = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(account.msg || account.message || 'Profile update failed');
+    saveAuthUser(account);
+    loadProfile();
+    toggleProfileEdit();
+    const pendingEmail = account.new_email || (account.email !== email ? email : '');
+    showToast(pendingEmail ? `Profile saved. Confirm ${pendingEmail} to change your email.` : 'Profile updated!');
+  } catch (error) {
+    showToast(error.message || 'Unable to update your profile.');
+  }
 }
 
 // ===== ADDRESSES =====
 function loadAddresses() {
-  customerAddresses = safeParseJSON(localStorage.getItem('valmont_customer_addresses'), []);
+  customerAddresses = safeParseJSON(localStorage.getItem(accountStorageKey('valmont_customer_addresses')), []);
   renderAddresses();
 }
 
@@ -278,9 +346,9 @@ function renderAddresses() {
         ${addr.landmark ? '<p style="font-size:11px;color:#94a3b8;">Landmark: ' + esc(addr.landmark) + '</p>' : ''}
       </div>
       <div class="addr-actions">
-        <button class="addr-action-btn edit" onclick="editAddress('${addr.id}')">Edit</button>
-        <button class="addr-action-btn delete" onclick="deleteAddress('${addr.id}')">Del</button>
-        ${!addr.is_default ? `<button class="addr-action-btn set-default" onclick="setDefaultAddress('${addr.id}')">Default</button>` : ''}
+        <button class="addr-action-btn edit" data-account-action="edit-address" data-id="${esc(addr.id)}">Edit</button>
+        <button class="addr-action-btn delete" data-account-action="delete-address" data-id="${esc(addr.id)}">Del</button>
+        ${!addr.is_default ? `<button class="addr-action-btn set-default" data-account-action="default-address" data-id="${esc(addr.id)}">Default</button>` : ''}
       </div>
     </div>
   `).join('');
@@ -349,7 +417,7 @@ function saveAddress(e) {
       customerAddresses[idx] = { ...customerAddresses[idx], ...addr };
     }
   }
-  localStorage.setItem('valmont_customer_addresses', JSON.stringify(customerAddresses));
+  localStorage.setItem(accountStorageKey('valmont_customer_addresses'), JSON.stringify(customerAddresses));
   closeAddressForm();
   renderAddresses();
   showToast('Address saved!');
@@ -360,21 +428,21 @@ function editAddress(id) { openAddressForm(id); }
 function deleteAddress(id) {
   if (!confirm('Delete this address?')) return;
   customerAddresses = customerAddresses.filter(a => a.id !== id);
-  localStorage.setItem('valmont_customer_addresses', JSON.stringify(customerAddresses));
+  localStorage.setItem(accountStorageKey('valmont_customer_addresses'), JSON.stringify(customerAddresses));
   renderAddresses();
   showToast('Address deleted');
 }
 
 function setDefaultAddress(id) {
   customerAddresses.forEach(a => a.is_default = a.id === id);
-  localStorage.setItem('valmont_customer_addresses', JSON.stringify(customerAddresses));
+  localStorage.setItem(accountStorageKey('valmont_customer_addresses'), JSON.stringify(customerAddresses));
   renderAddresses();
   showToast('Default address updated');
 }
 
 // ===== ORDERS =====
 function loadPaymentPreference() {
-  const preference = safeParseJSON(localStorage.getItem('valmont_payment_preference'), null);
+  const preference = safeParseJSON(localStorage.getItem(accountStorageKey('valmont_payment_preference')), null);
   if (!preference) return;
   const method = document.getElementById('savedPaymentMethod');
   const network = document.getElementById('savedMomoNetwork');
@@ -393,19 +461,39 @@ function savePaymentPreference(event) {
   const phone = document.getElementById('savedMomoPhone').value.trim();
   if (method === 'momo' && !phone) { showToast('Enter your Mobile Money phone number.'); return; }
   const preference = { method, network, phone };
-  localStorage.setItem('valmont_payment_preference', JSON.stringify(preference));
+  localStorage.setItem(accountStorageKey('valmont_payment_preference'), JSON.stringify(preference));
   loadPaymentPreference();
   showToast('Payment preference saved securely.');
 }
 
-function loadOrders() {
-  const allOrders = safeParseJSON(localStorage.getItem('valmont_orders'), []);
-  customerOrders = allOrders.filter(o => {
-    if (!currentUser) return false;
-    return (o.customer_phone && currentUser.phone && o.customer_phone.includes(currentUser.phone.slice(-8))) ||
-           (o.customer_name && currentUser.name && o.customer_name.toLowerCase() === currentUser.name.toLowerCase());
-  });
-  renderOrders();
+async function loadOrders() {
+  const container = document.getElementById('orderHistoryList');
+  const token = localStorage.getItem('valmont_access_token');
+  if (!currentUser || !token) {
+    customerOrders = [];
+    renderOrders();
+    return;
+  }
+  if (container) container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-secondary);font-size:13px;">Loading your orders…</div>';
+
+  try {
+    const response = await fetch(`${VALMONT_AUTH.url}/rest/v1/rpc/get_my_orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: VALMONT_AUTH.anonKey,
+        Authorization: `Bearer ${token}`,
+      },
+      body: '{}',
+    });
+    if (!response.ok) throw new Error(response.status === 401 ? 'Your session expired.' : 'Order history is temporarily unavailable.');
+    const orders = await response.json();
+    customerOrders = Array.isArray(orders) ? orders : [];
+    renderOrders();
+  } catch (error) {
+    customerOrders = [];
+    if (container) container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-secondary);font-size:13px;">${esc(error.message || 'Unable to load order history.')}</div>`;
+  }
 }
 
 function renderOrders() {
@@ -420,11 +508,13 @@ function renderOrders() {
     const itemCount = (order.items || []).length || 1;
     const itemName = order.items?.[0]?.name || order.item || 'Product';
     const statusClass = getStatusClass(order.status);
+    const orderId = order.id || order.order_number || order.reference_code;
+    const orderRef = order.order_number || order.reference_code || order.id;
     return `
-      <div class="order-card" onclick="viewOrderDetail('${order.id || order.reference_code}')">
+      <div class="order-card" data-account-action="view-order" data-id="${esc(orderId)}" role="button" tabindex="0">
         <div class="order-card-top">
           <div>
-            <div class="order-card-ref">#${esc(order.reference_code || order.id)}</div>
+            <div class="order-card-ref">#${esc(orderRef)}</div>
             <div class="order-card-date">${date}</div>
           </div>
           <span class="order-status ${statusClass}">${esc(order.status || 'Pending')}</span>
@@ -448,10 +538,10 @@ function getStatusClass(status) {
 }
 
 function viewOrderDetail(orderId) {
-  const order = customerOrders.find(o => o.id === orderId || o.reference_code === orderId);
+  const order = customerOrders.find(o => o.id === orderId || o.order_number === orderId || o.reference_code === orderId);
   if (!order) return;
 
-  document.getElementById('orderDetailRef').textContent = 'Order #' + (order.reference_code || order.id);
+  document.getElementById('orderDetailRef').textContent = 'Order #' + (order.order_number || order.reference_code || order.id);
   const items = order.items || [];
   const subtotal = items.reduce((sum, i) => sum + ((i.price || i.unit_price || 0) * (i.qty || i.quantity || 1)), 0);
   const delivery = (order.total_amount || 0) >= 5000 ? 0 : 150;
@@ -474,7 +564,7 @@ function viewOrderDetail(orderId) {
       ${items.length === 0 ? '<p style="font-size:13px;color:var(--text-secondary);">No items listed.</p>' : items.map(item => `
         <div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
           <div style="width:48px;height:48px;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
-            <img src="${esc(item.image_url || 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=100')}" style="max-width:100%;max-height:100%;object-fit:contain;" alt="">
+            <img src="${esc(safeProductImage(item.image_url || item.product_image))}" style="max-width:100%;max-height:100%;object-fit:contain;" alt="">
           </div>
           <div style="flex:1;">
             <div style="font-size:12px;font-weight:700;">${esc(item.name || item.product_name || 'Product')}</div>
@@ -499,7 +589,7 @@ function viewOrderDetail(orderId) {
       </div>
     </div>
 
-    <button onclick="reorderItems('${orderId}')" style="width:100%;margin-top:16px;background:#0b1a38;color:white;border:none;padding:14px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Reorder Items</button>
+    <button data-account-action="reorder" data-id="${esc(orderId)}" style="width:100%;margin-top:16px;background:#0b1a38;color:white;border:none;padding:14px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Reorder Items</button>
   `;
 
   document.getElementById('orderDetailOverlay').classList.add('open');
@@ -527,10 +617,10 @@ function closeOrderDetail() {
 }
 
 function reorderItems(orderId) {
-  const order = customerOrders.find(o => o.id === orderId || o.reference_code === orderId);
+  const order = customerOrders.find(o => o.id === orderId || o.order_number === orderId || o.reference_code === orderId);
   if (!order || !order.items) { showToast('Unable to reorder'); return; }
 
-  let cart = safeParseJSON(localStorage.getItem('valmont_cart'), []);
+  let cart = safeParseJSON(localStorage.getItem(accountStorageKey('valmont_cart')), []);
   order.items.forEach(item => {
     const existing = cart.findIndex(c => c.id === item.id && c.selected_color === (item.selected_color || '') && c.selected_storage === (item.selected_storage || ''));
     if (existing !== -1) {
@@ -548,7 +638,7 @@ function reorderItems(orderId) {
       });
     }
   });
-  localStorage.setItem('valmont_cart', JSON.stringify(cart));
+  localStorage.setItem(accountStorageKey('valmont_cart'), JSON.stringify(cart));
   closeOrderDetail();
   showToast('Items added to cart!');
   setTimeout(() => { window.location.href = 'index.html'; }, 800);
@@ -556,7 +646,7 @@ function reorderItems(orderId) {
 
 // ===== WISHLIST =====
 function loadWishlist() {
-  userWishlist = safeParseJSON(localStorage.getItem('valmont_wishlist'), []);
+  userWishlist = safeParseJSON(localStorage.getItem(accountStorageKey('valmont_wishlist')), []);
   renderWishlist();
 }
 
@@ -571,7 +661,7 @@ function renderWishlist() {
   }
 
   container.innerHTML = saved.map(p => {
-    const img = p.image || p.image_url || 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=400';
+    const img = safeProductImage(p.image || p.image_url);
     return `
       <div class="wishlist-item">
         <div class="wishlist-item-img">
@@ -582,8 +672,8 @@ function renderWishlist() {
           <div class="price">GH₵ ${(p.retail || p.price || 0).toLocaleString()}</div>
         </div>
         <div class="wishlist-item-actions">
-          <button class="wl-move-btn" onclick="moveToCart('${p.id}')">Move to Cart</button>
-          <button class="wl-remove-btn" onclick="removeFromWishlist('${p.id}')">×</button>
+          <button class="wl-move-btn" data-account-action="move-to-cart" data-id="${esc(p.id)}">Move to Cart</button>
+          <button class="wl-remove-btn" data-account-action="remove-wishlist" data-id="${esc(p.id)}" aria-label="Remove ${esc(p.name)} from wishlist">×</button>
         </div>
       </div>
     `;
@@ -593,7 +683,7 @@ function renderWishlist() {
 function moveToCart(productId) {
   const prod = allProducts.find(p => p.id === productId);
   if (!prod) return;
-  let cart = safeParseJSON(localStorage.getItem('valmont_cart'), []);
+  let cart = safeParseJSON(localStorage.getItem(accountStorageKey('valmont_cart')), []);
   const existing = cart.findIndex(c => c.id === productId);
   if (existing !== -1) {
     cart[existing].qty++;
@@ -609,23 +699,23 @@ function moveToCart(productId) {
       price_adjustment: 0
     });
   }
-  localStorage.setItem('valmont_cart', JSON.stringify(cart));
+  localStorage.setItem(accountStorageKey('valmont_cart'), JSON.stringify(cart));
   userWishlist = userWishlist.filter(id => id !== productId);
-  localStorage.setItem('valmont_wishlist', JSON.stringify(userWishlist));
+  localStorage.setItem(accountStorageKey('valmont_wishlist'), JSON.stringify(userWishlist));
   renderWishlist();
   showToast('Moved to cart!');
 }
 
 function removeFromWishlist(productId) {
   userWishlist = userWishlist.filter(id => id !== productId);
-  localStorage.setItem('valmont_wishlist', JSON.stringify(userWishlist));
+  localStorage.setItem(accountStorageKey('valmont_wishlist'), JSON.stringify(userWishlist));
   renderWishlist();
   showToast('Removed from wishlist');
 }
 
 // ===== BROWSING HISTORY =====
 function loadHistory() {
-  browsingHistory = safeParseJSON(localStorage.getItem('valmont_recently_viewed'), []);
+  browsingHistory = safeParseJSON(localStorage.getItem(accountStorageKey('valmont_recently_viewed')), []);
   renderHistory();
 }
 
@@ -642,9 +732,9 @@ function renderHistory() {
     return;
   }
   container.innerHTML = items.map(p => {
-    const img = p.image || p.image_url || 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=400';
+    const img = safeProductImage(p.image || p.image_url);
     return `
-      <div class="history-item" onclick="window.location.href='index.html'">
+      <div class="history-item" data-account-action="shop" role="link" tabindex="0">
         <div class="history-item-img">
           <img src="${esc(img)}" alt="${esc(p.name)}" loading="lazy">
         </div>
@@ -659,7 +749,7 @@ function renderHistory() {
 
 function clearHistory() {
   if (!confirm('Clear all browsing history?')) return;
-  localStorage.removeItem('valmont_recently_viewed');
+  localStorage.removeItem(accountStorageKey('valmont_recently_viewed'));
   browsingHistory = [];
   renderHistory();
   showToast('History cleared');
@@ -667,16 +757,16 @@ function clearHistory() {
 
 // ===== SETTINGS =====
 function loadSettings() {
-  const settings = safeParseJSON(localStorage.getItem('valmont_settings'), {notifications: true, email: true, dark: false});
+  const settings = safeParseJSON(localStorage.getItem(accountStorageKey('valmont_settings')), {notifications: true, email: true, dark: false});
   updateToggle('toggleNotif', settings.notifications !== false);
   updateToggle('toggleEmail', settings.email !== false);
   updateToggle('toggleDark', settings.dark === true);
 }
 
 function toggleSetting(key) {
-  const settings = safeParseJSON(localStorage.getItem('valmont_settings'), {notifications: true, email: true, dark: false});
+  const settings = safeParseJSON(localStorage.getItem(accountStorageKey('valmont_settings')), {notifications: true, email: true, dark: false});
   settings[key] = !settings[key];
-  localStorage.setItem('valmont_settings', JSON.stringify(settings));
+  localStorage.setItem(accountStorageKey('valmont_settings'), JSON.stringify(settings));
   const elId = key === 'notifications' ? 'toggleNotif' : key === 'email' ? 'toggleEmail' : 'toggleDark';
   updateToggle(elId, settings[key]);
   showToast(key.charAt(0).toUpperCase() + key.slice(1) + ': ' + (settings[key] ? 'ON' : 'OFF'));
@@ -706,6 +796,69 @@ async function changePassword(e) {
     showToast('Password changed successfully!');
   } catch (error) { showToast('Unable to change password. Please sign in again.'); }
 }
+
+// ===== DELEGATED ACCOUNT INTERACTIONS =====
+// Keeping identifiers in inert data attributes prevents executable HTML from
+// being created when account/order data originates outside this page.
+document.addEventListener('click', event => {
+  const overlay = event.target.closest('[data-account-overlay]');
+  if (overlay && event.target === overlay) {
+    if (overlay.dataset.accountOverlay === 'order-detail') closeOrderDetail();
+    if (overlay.dataset.accountOverlay === 'address-form') closeAddressForm();
+    return;
+  }
+
+  const control = event.target.closest('[data-account-action]');
+  if (!control) return;
+  const action = control.dataset.accountAction;
+  const id = control.dataset.id || '';
+  const handlers = {
+    'auth-tab': () => switchAuthTab(control.dataset.tab),
+    'google-sign-in': handleGoogleSignIn,
+    'password-reset': handlePasswordReset,
+    logout: handleLogout,
+    'toggle-profile': toggleProfileEdit,
+    'add-address': () => openAddressForm(),
+    'clear-history': clearHistory,
+    'toggle-setting': () => toggleSetting(control.dataset.setting),
+    'close-order': closeOrderDetail,
+    'close-address': closeAddressForm,
+    'edit-address': () => editAddress(id),
+    'delete-address': () => deleteAddress(id),
+    'default-address': () => setDefaultAddress(id),
+    'view-order': () => viewOrderDetail(id),
+    reorder: () => reorderItems(id),
+    'move-to-cart': () => moveToCart(id),
+    'remove-wishlist': () => removeFromWishlist(id),
+    shop: () => { window.location.href = 'index.html'; },
+  };
+  if (handlers[action]) {
+    event.preventDefault();
+    handlers[action]();
+  }
+});
+
+document.addEventListener('keydown', event => {
+  if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('[data-account-action][role="button"], [data-account-action][role="link"]')) {
+    event.preventDefault();
+    event.target.click();
+  }
+});
+
+document.addEventListener('submit', event => {
+  const form = event.target.closest('[data-account-form]');
+  if (!form) return;
+  const handlers = {
+    'sign-in': handleSignIn,
+    'sign-up': handleSignUp,
+    'save-profile': saveProfile,
+    'save-payment': savePaymentPreference,
+    'change-password': changePassword,
+    'save-address': saveAddress,
+  };
+  const handler = handlers[form.dataset.accountForm];
+  if (handler) handler(event);
+});
 
 // ===== TOAST =====
 function showToast(msg) {

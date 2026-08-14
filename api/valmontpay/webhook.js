@@ -30,18 +30,16 @@
 
 export const config = { runtime: 'edge' };
 
+import { SECURE_JSON_HEADERS } from '../_security.js';
+
 /** This storefront's tenant key on https://valmontpay.app (LIVE). */
 export const TENANT_KEY = 'valmont-gadget';
 
 /** Supabase project backing the storefront (same project app.js uses). */
 const DEFAULT_SUPABASE_URL = 'https://eydsoqnpetqczaeqrscc.supabase.co';
-// The anon key is already public: it ships inside app.js/shop.min.js and is
-// confined by RLS (anon can only INSERT orders and call the two narrow RPCs).
-// Referencing it server-side adds no new exposure.
-const DEFAULT_SUPABASE_ANON_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZHNvcW5wZXRxY3phZXFyc2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4ODc1NjYsImV4cCI6MjEwMDQ2MzU2Nn0.ISD7IRYWwr_VMb8YutGlyJuWjBF9UWm1tijzMBAEBmc';
-
-const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8' };
+// Payment transitions are privileged. The service role key must exist only in
+// the deployment environment; there is deliberately no public-key fallback.
+const JSON_HEADERS = SECURE_JSON_HEADERS;
 
 // ─── Crypto helpers (WebCrypto: works on Edge and Node >= 19) ───────────────
 
@@ -91,6 +89,36 @@ export function toPesewas(value) {
   const n = Number(value);
   if (!Number.isFinite(n) || n < 0) return null;
   return Math.round(n * 100);
+}
+
+/**
+ * Convert ISO strings or Unix seconds/milliseconds to a canonical UTC value.
+ * Invalid, implausibly old, or far-future metadata becomes null so PostgreSQL
+ * can safely use its receipt time rather than repeatedly rejecting a valid,
+ * signed payment notification because of a non-authoritative timestamp field.
+ */
+export function normalizePaidAt(value, now = Date.now()) {
+  if (value === null || value === undefined || value === '') return null;
+  let milliseconds;
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    milliseconds = value < 1e12 ? value * 1000 : value;
+  } else if (typeof value === 'string' && value.length <= 100) {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    if (/^\d{10,13}$/.test(trimmed)) {
+      const numeric = Number(trimmed);
+      milliseconds = trimmed.length <= 10 ? numeric * 1000 : numeric;
+    } else {
+      milliseconds = Date.parse(trimmed);
+    }
+  } else {
+    return null;
+  }
+  if (!Number.isFinite(milliseconds)) return null;
+  const minimum = Date.UTC(2000, 0, 1);
+  const maximum = now + 10 * 60 * 1000;
+  if (milliseconds < minimum || milliseconds > maximum) return null;
+  return new Date(milliseconds).toISOString();
 }
 
 // ─── Core handler (exported for unit tests) ─────────────────────────────────
@@ -158,9 +186,12 @@ export async function handleWebhookCore({ rawBodyBytes, headers, env, fetchImpl,
     };
   }
 
-  const reference = String(data.reference || data.gateway_reference || '').trim();
-  if (!reference) {
-    return { status: 400, body: { status: false, message: 'Payload is missing data.reference' } };
+  const reference = String(data.reference || '').trim();
+  if (!/^VG-[A-Z0-9-]{8,64}$/.test(reference)) {
+    return { status: 400, body: { status: false, message: 'Payload has an invalid data.reference' } };
+  }
+  if (String(data.currency || '').toUpperCase() !== 'GHS') {
+    return { status: 400, body: { status: false, message: 'Payload has an invalid currency' } };
   }
   const amountPesewas = toPesewas(data.amount);
   if (amountPesewas === null || amountPesewas <= 0) {
@@ -171,7 +202,11 @@ export async function handleWebhookCore({ rawBodyBytes, headers, env, fetchImpl,
   //    SECURITY DEFINER and re-checks the pesewa total itself, so even a
   //    logic bug here can never mark the wrong amount Paid.
   const sbUrl = String(env.SUPABASE_URL || DEFAULT_SUPABASE_URL).replace(/\/$/, '');
-  const sbKey = env.SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
+  const sbKey = String(env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+  if (!sbKey) {
+    emit('[VALMONTPAY-WEBHOOK] SUPABASE_SERVICE_ROLE_KEY is not configured');
+    return { status: 500, body: { status: false, message: 'Payment processing is not configured — retry' } };
+  }
 
   let res;
   try {
@@ -186,6 +221,8 @@ export async function handleWebhookCore({ rawBodyBytes, headers, env, fetchImpl,
       body: JSON.stringify({
         p_reference: reference,
         p_expected_total: amountPesewas / 100,
+        p_gateway_reference: String(data.gateway_reference || '').trim().slice(0, 128) || null,
+        p_paid_at: normalizePaidAt(data.paid_at),
       }),
     });
   } catch (err) {
@@ -224,9 +261,14 @@ export async function handleWebhookCore({ rawBodyBytes, headers, env, fetchImpl,
     return { status: 200, body: { status: true, result: 'amount_mismatch', reference } };
   }
   if (outcome === 'not_found') {
-    // Retryable: the pending-order INSERT may still be in flight. The gateway
-    // retries with backoff for ~24h, so the row will be picked up once it lands.
+    // Retryable: the pending-order transaction may still be in flight.
     return { status: 503, body: { status: false, message: 'Order not recorded yet — retry' } };
+  }
+  if (['gateway_reference_mismatch', 'invalid_status', 'insufficient_stock'].includes(outcome)) {
+    // A valid, signed payment reached a terminal condition that cannot be fixed
+    // by retries. Keep the order out of Paid and alert operators via logs.
+    emit(`[VALMONTPAY-WEBHOOK] MANUAL REVIEW required for ${reference}: ${outcome}`);
+    return { status: 200, body: { status: true, result: 'manual_review', reference } };
   }
   return { status: 500, body: { status: false, message: 'Unexpected database result — retry' } };
 }
@@ -242,7 +284,14 @@ export default async function handler(request) {
   }
 
   try {
+    const declaredLength = Number(request.headers.get('content-length') || 0);
+    if (Number.isFinite(declaredLength) && declaredLength > 64 * 1024) {
+      return new Response(JSON.stringify({ status: false, message: 'Payload too large' }), { status: 413, headers: JSON_HEADERS });
+    }
     const rawBodyBytes = new Uint8Array(await request.arrayBuffer());
+    if (rawBodyBytes.byteLength > 64 * 1024) {
+      return new Response(JSON.stringify({ status: false, message: 'Payload too large' }), { status: 413, headers: JSON_HEADERS });
+    }
     const headers = {};
     request.headers.forEach((value, key) => {
       headers[key.toLowerCase()] = value;

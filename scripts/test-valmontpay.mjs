@@ -13,12 +13,14 @@ import {
   hmacSha512Hex,
   timingSafeEqualHex,
   toPesewas as hookToPesewas,
+  normalizePaidAt,
   handleWebhookCore,
 } from '../api/valmontpay/webhook.js';
 
 import {
   toPesewas as initToPesewas,
   generateOrderNumber,
+  resolveCheckoutAccount,
   handleInitializeCore,
   handleSmsOptinCore,
   handleSmsLeadsCore,
@@ -53,7 +55,7 @@ function signedHookRequest(payload, opts = {}) {
   return { rawBodyBytes, headers };
 }
 
-function chargeSuccessPayload({ reference = 'VG-TEST-1', amount = 23.5, event = 'charge.success' } = {}) {
+function chargeSuccessPayload({ reference = 'VG-TEST-ABCDEFGHI', amount = 23.5, event = 'charge.success' } = {}) {
   return {
     event,
     data: {
@@ -103,7 +105,7 @@ async function runWebhook(payload, rpcResult, opts = {}) {
   const result = await handleWebhookCore({
     rawBodyBytes,
     headers,
-    env: { VALMONTPAY_WEBHOOK_SECRET: opts.secret === null ? undefined : WEBHOOK_SECRET, SUPABASE_URL: SB_URL, SUPABASE_ANON_KEY: 'anon-test' },
+    env: { VALMONTPAY_WEBHOOK_SECRET: opts.secret === null ? undefined : WEBHOOK_SECRET, SUPABASE_URL: SB_URL, SUPABASE_SERVICE_ROLE_KEY: 'service-role-test' },
     fetchImpl: impl,
     log: () => {},
   });
@@ -141,11 +143,52 @@ test('toPesewas converts cedis -> integer pesewas and rejects junk', () => {
   }
 });
 
+test('normalizePaidAt canonicalizes valid gateway times and rejects unsafe metadata', () => {
+  const now = Date.parse('2026-08-14T12:00:00Z');
+  assert.equal(normalizePaidAt('2026-08-05T12:00:00+00:00', now), '2026-08-05T12:00:00.000Z');
+  assert.equal(normalizePaidAt(1785931200, now), '2026-08-05T12:00:00.000Z');
+  assert.equal(normalizePaidAt('not-a-date', now), null);
+  assert.equal(normalizePaidAt('1999-12-31T23:59:59Z', now), null);
+  assert.equal(normalizePaidAt('2027-01-01T00:00:00Z', now), null);
+});
+
 test('generateOrderNumber is unique and sortable', () => {
   const seen = new Set();
   for (let i = 0; i < 500; i++) seen.add(generateOrderNumber());
   assert.equal(seen.size, 500);
   assert.match([...seen][0], /^VG-[A-Z0-9]+-[A-Z0-9]{9}$/);
+});
+
+test('resolveCheckoutAccount accepts only a Supabase-verified account UUID', async () => {
+  const none = await resolveCheckoutAccount({ authorization: '', env: {}, fetchImpl: () => { throw new Error('must not fetch'); } });
+  assert.deepEqual(none, { supplied: false, accountId: null });
+
+  const malformed = await resolveCheckoutAccount({ authorization: 'Bearer short', env: {}, fetchImpl: () => { throw new Error('must not fetch'); } });
+  assert.deepEqual(malformed, { supplied: true, accountId: null });
+
+  const verifiedId = '00000000-0000-4000-8000-000000000001';
+  const { impl: verifiedFetch, calls } = mockFetch([{
+    match: (call) => call.url.endsWith('/auth/v1/user'),
+    respond: () => ({ status: 200, json: { id: verifiedId.toUpperCase() } }),
+  }]);
+  const verified = await resolveCheckoutAccount({
+    authorization: `Bearer ${'x'.repeat(24)}`,
+    env: { SUPABASE_URL: SB_URL, SUPABASE_ANON_KEY: 'anon-test' },
+    fetchImpl: verifiedFetch,
+  });
+  assert.deepEqual(verified, { supplied: true, accountId: verifiedId });
+  assert.equal(calls[0].headers.apikey, 'anon-test');
+  assert.equal(calls[0].headers.authorization, `Bearer ${'x'.repeat(24)}`);
+
+  const { impl: rejectedFetch } = mockFetch([{
+    match: (call) => call.url.endsWith('/auth/v1/user'),
+    respond: () => ({ status: 401, json: { message: 'invalid token' } }),
+  }]);
+  assert.deepEqual(await resolveCheckoutAccount({
+    authorization: `Bearer ${'y'.repeat(24)}`,
+    env: { SUPABASE_URL: SB_URL },
+    fetchImpl: rejectedFetch,
+  }), { supplied: true, accountId: null });
 });
 
 // ─── webhook: auth gate ─────────────────────────────────────────────────────
@@ -195,23 +238,31 @@ test('webhook: secret not configured -> 500 (retryable)', async () => {
 // ─── webhook: event handling ────────────────────────────────────────────────
 
 test('webhook: signed charge.success marks order Paid via RPC (pesewa total)', async () => {
-  const { result, calls } = await runWebhook(chargeSuccessPayload({ reference: 'VG-ABC-123', amount: 139.98 }), { result: 'paid', order_number: 'VG-ABC-123' });
+  const { result, calls } = await runWebhook(chargeSuccessPayload({ reference: 'VG-ABC-ABCDEFGHI', amount: 139.98 }), { result: 'paid', order_number: 'VG-ABC-ABCDEFGHI' });
   assert.equal(result.status, 200);
   assert.equal(result.body.result, 'paid');
   assert.equal(calls.length, 1);
   assert.match(calls[0].url, /\/rest\/v1\/rpc\/confirm_order_paid$/);
-  assert.equal(calls[0].body.p_reference, 'VG-ABC-123');
+  assert.equal(calls[0].body.p_reference, 'VG-ABC-ABCDEFGHI');
   assert.equal(calls[0].body.p_expected_total, 139.98);
 });
 
+test('webhook: malformed paid_at cannot poison the database transition', async () => {
+  const payload = chargeSuccessPayload();
+  payload.data.paid_at = 'not-a-date';
+  const { result, calls } = await runWebhook(payload, { result: 'paid', order_number: 'VG-TEST-ABCDEFGHI' });
+  assert.equal(result.status, 200);
+  assert.equal(calls[0].body.p_paid_at, null);
+});
+
 test('webhook: repeat delivery (already_paid) -> plain 200 (idempotent)', async () => {
-  const { result } = await runWebhook(chargeSuccessPayload(), { result: 'already_paid', order_number: 'VG-TEST-1' });
+  const { result } = await runWebhook(chargeSuccessPayload(), { result: 'already_paid', order_number: 'VG-TEST-ABCDEFGHI' });
   assert.equal(result.status, 200);
   assert.equal(result.body.result, 'already_paid');
 });
 
 test('webhook: pesewa mismatch never flips order -> terminal 200, not Paid', async () => {
-  const { result } = await runWebhook(chargeSuccessPayload({ amount: 100 }), { result: 'amount_mismatch', order_number: 'VG-TEST-1', order_total: 139.98 });
+  const { result } = await runWebhook(chargeSuccessPayload({ amount: 100 }), { result: 'amount_mismatch', order_number: 'VG-TEST-ABCDEFGHI', order_total: 139.98 });
   assert.equal(result.status, 200);
   assert.equal(result.body.result, 'amount_mismatch');
   assert.notEqual(result.body.result, 'paid');
@@ -260,7 +311,7 @@ test('webhook: database unreachable -> 503 (retryable)', async () => {
   const result = await handleWebhookCore({
     rawBodyBytes: signed.rawBodyBytes,
     headers: signed.headers,
-    env: { VALMONTPAY_WEBHOOK_SECRET: WEBHOOK_SECRET, SUPABASE_URL: SB_URL },
+    env: { VALMONTPAY_WEBHOOK_SECRET: WEBHOOK_SECRET, SUPABASE_URL: SB_URL, SUPABASE_SERVICE_ROLE_KEY: 'service-role-test' },
     fetchImpl: impl,
     log: () => {},
   });
@@ -275,7 +326,7 @@ const CATALOG = [
   { id: 'VG-OFF', name: 'Deactivated', price: 50, is_active: false },
 ];
 
-function initRoutes({ gateway = { status: true, message: 'ok', data: { access_code: 'ac_test', reference: 'VG-ORDER-1', gateway_reference: 'VP-MB3K7Z1A-9F4C2E18', pay_url: 'https://valmontpay.app/pay.html?access_code=ac_test', checkout_url: 'https://valmontpay.app/checkout.html?reference=VG-ORDER-1' } }, gatewayStatus = 200, orderInsertStatus = 200, productsThrows = false, idempotentExisting = null } = {}) {
+function initRoutes({ gateway = { status: true, message: 'ok', data: { access_code: 'ac_test', reference: 'VG-ORDER-1', gateway_reference: 'VP-MB3K7Z1A-9F4C2E18', pay_url: 'https://valmontpay.app/pay.html?access_code=ac_test', checkout_url: 'https://valmontpay.app/checkout.html?reference=VG-ORDER-1' } }, gatewayStatus = 200, orderInsertStatus = 200, productsThrows = false, idempotentExisting = null, authoritativeOrder = null } = {}) {
   return mockFetch([
     {
       match: (c) => c.url.includes('/rest/v1/products?'),
@@ -296,7 +347,15 @@ function initRoutes({ gateway = { status: true, message: 'ok', data: { access_co
         if (idempotentExisting) {
           return { status: 200, json: { id: idempotentExisting.id, order_number: idempotentExisting.order_number, idempotent: true } };
         }
-        return { status: 200, json: { id: 'order-1', order_number: c.body.p_order_number, idempotent: false } };
+        return {
+          status: 200,
+          json: {
+            id: 'order-1',
+            order_number: c.body.p_order_number,
+            idempotent: false,
+            ...(authoritativeOrder || {}),
+          },
+        };
       },
     },
     { match: (c) => c.url.includes('/api/transaction/initialize'), respond: () => ({ status: gatewayStatus, json: gateway }) },
@@ -304,11 +363,17 @@ function initRoutes({ gateway = { status: true, message: 'ok', data: { access_co
   ]);
 }
 
-const INIT_ENV = { VALMONTPAY_SECRET_KEY: 'sk_valmont_test', SUPABASE_URL: SB_URL, SUPABASE_ANON_KEY: 'anon-test' };
+const INIT_ENV = { VALMONTPAY_SECRET_KEY: 'sk_valmont_test', SUPABASE_URL: SB_URL, SUPABASE_SERVICE_ROLE_KEY: 'service-role-test' };
 
 async function runInitialize(body, opts = {}) {
   const { impl, calls } = initRoutes(opts);
-  const result = await handleInitializeCore({ body, env: opts.env || INIT_ENV, fetchImpl: impl, log: () => {} });
+  const result = await handleInitializeCore({
+    body,
+    env: opts.env || INIT_ENV,
+    fetchImpl: impl,
+    log: () => {},
+    accountId: opts.accountId || null,
+  });
   return { result, calls };
 }
 
@@ -325,6 +390,7 @@ test('initialize: recomputes total from DB prices, ignores client amounts', asyn
   assert.equal(result.body.total, 139.98); // 2x19.99 + 100, cedis
   assert.equal(result.body.currency, 'GHS');
   assert.equal(result.body.order_id, 'order-1');
+  assert.equal(result.body.pricing_tier, 'retail');
   assert.match(result.body.url, /^https:\/\/valmontpay\.app\/pay\.html\?access_code=ac_test$/);
 
   const customerUpsert = calls.find((c) => c.url.includes('/rest/v1/rpc/ensure_customer_for_checkout'));
@@ -359,6 +425,43 @@ test('initialize: recomputes total from DB prices, ignores client amounts', asyn
   assert.equal(refStore.body.p_order_number, orderInsert.body.p_order_number);
 });
 
+test('initialize: anonymous, pending, suspended, and approved pricing follows the authoritative RPC', async () => {
+  const verifiedAccountId = '00000000-0000-4000-8000-000000000001';
+  const cases = [
+    { status: 'anonymous', accountId: null, tier: 'retail', subtotal: 19.99 },
+    { status: 'pending', accountId: verifiedAccountId, tier: 'retail', subtotal: 19.99 },
+    { status: 'suspended', accountId: verifiedAccountId, tier: 'retail', subtotal: 19.99 },
+    { status: 'approved', accountId: verifiedAccountId, tier: 'dealer', subtotal: 15 },
+  ];
+  for (const entry of cases) {
+    const { result, calls } = await runInitialize({
+      items: [{ id: 'VG-A', qty: 1 }],
+      customer: { name: 'Contract Buyer', phone: '0542451578' },
+      // Browser claims are deliberately ignored. Only the server-verified
+      // accountId argument is forwarded to the authoritative SQL function.
+      account_id: '00000000-0000-4000-8000-000000000099',
+      dealer: true,
+    }, {
+      accountId: entry.accountId,
+      authoritativeOrder: {
+        subtotal: entry.subtotal,
+        delivery_fee: 0,
+        total: entry.subtotal,
+        fee_source: 'none',
+        pricing_tier: entry.tier,
+      },
+    });
+    assert.equal(result.status, 200, entry.status);
+    assert.equal(result.body.pricing_tier, entry.tier, entry.status);
+    assert.equal(result.body.total, entry.subtotal, entry.status);
+    const orderRpc = calls.find((call) => call.url.includes('/rest/v1/rpc/create_pending_order'));
+    assert.equal(orderRpc.body.p_account_id, entry.accountId, entry.status);
+    assert.equal(orderRpc.body.p_subtotal, 19.99, 'browser/server pre-calculation remains retail');
+    const gateway = calls.find((call) => call.url.includes('/api/transaction/initialize'));
+    assert.equal(gateway.body.amount, entry.subtotal, `${entry.status} gateway amount`);
+  }
+});
+
 test('initialize: unknown product -> 400, gateway never called', async () => {
   const { result, calls } = await runInitialize({ items: [{ id: 'VG-NOPE', qty: 1 }], customer: {} });
   assert.equal(result.status, 400);
@@ -387,10 +490,11 @@ test('initialize: missing tenant secret -> 500', async () => {
   assert.equal(result.status, 500);
 });
 
-test('initialize: gateway rejection -> 502 with gateway message', async () => {
+test('initialize: gateway rejection -> sanitized 502', async () => {
   const { result } = await runInitialize({ items: [{ id: 'VG-A', qty: 1 }], customer: { name: 'Ama', phone: '0540000001', email: 'ama@test.com' } }, { gateway: { status: false, message: 'Invalid tenant key' }, gatewayStatus: 401 });
   assert.equal(result.status, 502);
-  assert.match(result.body.detail || '', /Invalid tenant key/);
+  assert.equal(result.body.message, 'The payment gateway could not start your checkout. Please try again.');
+  assert.equal(JSON.stringify(result.body).includes('Invalid tenant key'), false);
 });
 
 test('initialize: catalog unreachable -> 503', async () => {
@@ -404,13 +508,14 @@ test('initialize: create_pending_order failure -> 500, gateway never called', as
   assert.equal(calls.some((c) => c.url.includes('/api/transaction/initialize')), false);
 });
 
-test('initialize: raw Postgres code is bracketed in the diagnostic 500 body', async () => {
+test('initialize: database failures are sanitized', async () => {
   const { result, calls } = await runInitialize({ items: [{ id: 'VG-A', qty: 1 }], customer: { name: 'Ama', phone: '0540000001', email: 'ama@test.com' } }, {
     orderInsertStatus: 401,
   });
   assert.equal(result.status, 500);
-  assert.match(result.body.message, /\[42501\]/);
-  assert.match(result.body.detail || result.body.message, /insert failed/);
+  assert.equal(result.body.message, 'Could not record your order. Please try again.');
+  assert.equal(JSON.stringify(result.body).includes('42501'), false);
+  assert.equal(JSON.stringify(result.body).includes('insert failed'), false);
   assert.equal(calls.some((c) => c.url.includes('/api/transaction/initialize')), false);
 });
 
@@ -495,16 +600,25 @@ test('initialize: idempotent retry returns the SAME order_number (no duplicate)'
   assert.equal(firstRpc.body.p_idempotency_key, secondRpc.body.p_idempotency_key, 'same cart → same idempotency key');
 });
 
-test('computeIdempotencyKey: same customer+cart → same key, different cart → different key', async () => {
+test('computeIdempotencyKey covers customer, cart, variants, and delivery region', async () => {
   const { computeIdempotencyKey } = await import('../api/valmontpay/initialize.js');
   const cust = 'cust-0542451578';
-  const cartA = [{ id: 'VG-A', qty: 2 }, { id: 'VG-B', qty: 1 }];
-  const cartB = [{ id: 'VG-B', qty: 1 }, { id: 'VG-A', qty: 2 }]; // same items, different order
-  const cartC = [{ id: 'VG-A', qty: 3 }]; // different qty
+  const cartA = [{ id: 'VG-A', qty: 2, selected_color: 'Blue' }, { id: 'VG-B', qty: 1 }];
+  const cartB = [{ id: 'VG-B', qty: 1 }, { id: 'VG-A', qty: 2, selected_color: 'Blue' }];
+  const cartC = [{ id: 'VG-A', qty: 2, selected_color: 'Black' }, { id: 'VG-B', qty: 1 }];
 
-  assert.equal(computeIdempotencyKey(cust, cartA), computeIdempotencyKey(cust, cartB), 'same items in different order → same key');
-  assert.notEqual(computeIdempotencyKey(cust, cartA), computeIdempotencyKey(cust, cartC), 'different qty → different key');
-  assert.notEqual(computeIdempotencyKey(cust, cartA), computeIdempotencyKey('cust-other', cartA), 'different customer → different key');
+  const [keyA, reordered, changedVariant, changedCustomer, changedRegion] = await Promise.all([
+    computeIdempotencyKey(cust, cartA, 'Greater Accra'),
+    computeIdempotencyKey(cust, cartB, 'Greater Accra'),
+    computeIdempotencyKey(cust, cartC, 'Greater Accra'),
+    computeIdempotencyKey('cust-other', cartA, 'Greater Accra'),
+    computeIdempotencyKey(cust, cartA, 'Ashanti'),
+  ]);
+  assert.equal(keyA, reordered, 'same items in different order → same key');
+  assert.notEqual(keyA, changedVariant, 'different variant → different key');
+  assert.notEqual(keyA, changedCustomer, 'different customer → different key');
+  assert.notEqual(keyA, changedRegion, 'different delivery region → different key');
+  assert.match(keyA, /^idem:v2:[a-f0-9]{64}$/);
 });
 
 // ─── CI grep gate: no direct /rest/v1/orders access in initialize/webhook ──
@@ -853,7 +967,7 @@ function smsRoutes(db) {
 test('§ SMS leads: opt-in stores validated number', async () => {
   const db = [];
   const { impl } = mockFetch(smsRoutes(db));
-  const env = { SUPABASE_URL: SB_URL, SUPABASE_ANON_KEY: 'anon-test' };
+  const env = { SUPABASE_URL: SB_URL, SUPABASE_SERVICE_ROLE_KEY: 'service-role-test' };
 
   // Valid MTN number (prefix 024) is stored, network detected.
   const valid = await handleSmsOptinCore({ body: { phone: '0241234567', source: 'storefront' }, env, fetchImpl: impl, log: () => {} });
@@ -935,7 +1049,7 @@ test('§ admin gate: every admin surface checks the allowlisted email', () => {
   // Each admin entry point must reference the allowlist AND verify the
   // session's email — a bare getSession() check is not enough, because
   // shoppers self-register against the same Supabase project.
-  for (const file of ['../assets/js/admin.js', '../admin-login.html', '../admin-drop.html']) {
+  for (const file of ['../assets/js/admin.js', '../assets/js/admin-login.js', '../assets/js/admin-drop.js']) {
     const src = read(file);
     assert.ok(
       src.includes('danieloansah7868@gmail.com'),
@@ -995,7 +1109,7 @@ test('§ admin sms-leads: a signed-in shopper cannot read collected numbers', as
   // The scripted-export shared secret still works when configured.
   const viaSecret = await handleSmsLeadsCore({
     headers: { 'x-admin-token': 's3cret-export-token' },
-    env: { ...env, SMS_ADMIN_TOKEN: 's3cret-export-token' },
+    env: { ...env, SMS_ADMIN_TOKEN: 's3cret-export-token', SUPABASE_SERVICE_ROLE_KEY: 'service-role-test' },
     fetchImpl: impl, log: () => {},
   });
   assert.equal(viaSecret.status, 200);

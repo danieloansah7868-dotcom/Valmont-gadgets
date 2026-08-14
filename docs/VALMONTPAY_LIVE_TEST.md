@@ -1,99 +1,169 @@
-# Valmont-Pay LIVE GH₵1 test plan (tenant `valmont-gadget`)
+# Controlled Valmont-Pay live GH₵1 test
 
-End-to-end verification against the **real** gateway and **real** Supabase
-production project, using a temporary GH₵1 product so no customer or ledger
-exposure exceeds one cedi. Run AFTER the migration is applied and the
-webhook URL is registered on the gateway.
+Run this against production only after the migration, post-checks, application deployment, and non-payment smoke tests pass. Keep public checkout in maintenance mode until cleanup is complete. Use a unique release identifier and a dedicated operations phone/email; never use invented customer contact data.
 
-## 0. Preconditions
+The test creates an active GH₵1 product and a zero-fee release-validation region so the exact payment is GH₵1. These records must exist only during the maintenance window.
 
-- [ ] Vercel Production deployed with `api/valmontpay/*` (check `https://valmontgadgets.com/api/valmontpay/webhook` with `GET` → **405**).
-- [ ] `supabase/migrations/20260805_valmontpay_pipeline.sql` and
-      `supabase/migrations/20260806_create_pending_order.sql` applied.
-- [ ] Env vars present in Vercel Production: `VALMONTPAY_SECRET_KEY`, `VALMONTPAY_PUBLIC_KEY`, `VALMONTPAY_WEBHOOK_SECRET`.
-- [ ] Gateway tenant `valmont-gadget` (LIVE): webhook URL = `https://valmontgadgets.com/api/valmontpay/webhook`, allowed domains include `valmontgadgets.com`.
+## 1. Preconditions
 
-## 1. Create the temp GH₵1 product
+- [ ] A named operator and reviewer are present.
+- [ ] The release ticket contains the exact commit/deployment/migration checksum and backup/PITR reference.
+- [ ] The externally deployed webhook returns 405 to GET and 401 to an unsigned POST.
+- [ ] The Valmont-Pay tenant webhook is `https://valmontgadgets.com/api/valmontpay/webhook`.
+- [ ] Production secrets are configured and no production secret is exposed to browser code.
+- [ ] Public checkout is disabled for maintenance.
+- [ ] Gateway/refund access and Vercel/Supabase logs are open for observation.
 
-Supabase SQL editor:
+Choose a unique lowercase identifier such as `vp-live-20260814-a`; use it below as `<RELEASE_ID>`.
+
+## 2. Create narrowly scoped test configuration
+
+Run in the Supabase SQL editor and retain the result:
 
 ```sql
-INSERT INTO public.products (id, name, slug, price, compare_at_price, badge, stock, is_active)
-VALUES ('vp-live-test-1ghc', 'VP Live Test — GH₵1 (do not fulfill)', 'vp-live-test-1ghc',
-        1.00, 1.00, 'TEST', 5, true);
+INSERT INTO public.delivery_fees (region, fee, sort_order, is_active)
+VALUES ('Release validation only', 0, 99999, true)
+ON CONFLICT (region) DO UPDATE
+SET fee = 0, sort_order = 99999, is_active = true, updated_at = timezone('utc', now());
+
+INSERT INTO public.products (
+  id, name, slug, price, compare_at_price, wholesale_price,
+  description, badge, stock, images, colors, storage_options, is_active
+)
+VALUES (
+  '<RELEASE_ID>', 'Release payment validation — do not fulfil', '<RELEASE_ID>',
+  1.00, 1.00, 1.00, 'Operations-only live payment validation', 'TEST',
+  5, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, true
+);
 ```
 
-Free-delivery check: delivery is arranged post-payment (delivery_fee = 0 at
-checkout), so nothing extra to configure — the charge must be exactly **GH₵1.00**.
+The unique product insert must fail rather than overwrite an existing product. If it conflicts, choose a new identifier.
 
-## 2. Checkout
+## 3. Initialize through the real public API
 
-1. Open https://valmontgadgets.com (hard refresh), add **“VP Live Test — GH₵1”** to the bag.
-2. Open checkout → fill shipping (any valid Ghana phone/email) → **Submit Secure Order**.
-3. Expected:
-   - Button shows “Opening secure payment…”, no client-side amount in the URL.
-   - Redirect lands on `https://valmontpay.app/pay.html?access_code=ac_…`.
-   - Gateway page shows merchant branding for Valmont Gadgets and amount **GH₵ 1.00** (not 100).
-4. In Supabase (Table editor → orders), find the newest row:
-   - `status = Pending`, `total = 1.00`, `order_number = VG-…`
-   - `payment_reference` starts with the gateway reference (VP-/access ref) once initialize returns.
+From the production site's browser console, substitute the test operator's valid contact fields and release ID. Do not include `amount`, `price`, `subtotal`, `total`, or `delivery_fee` anywhere in the request.
 
-## 3. Pay GH₵1 (test channel or smallest real charge)
+```js
+const response = await fetch('/api/valmontpay/initialize', {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({
+    items: [{ id: '<RELEASE_ID>', qty: 1 }],
+    customer: {
+      name: 'Valmont Release Operator',
+      phone: '<VALID_GHANA_PHONE>',
+      email: '<OPERATIONS_EMAIL>',
+      area: 'Release validation',
+      street: 'Operations',
+      full_address: 'Operations-only live payment validation'
+    },
+    payment_method: 'Valmont-Pay',
+    delivery_region: 'Release validation only'
+  })
+});
+const result = await response.json();
+console.log(response.status, result);
+```
 
-Complete the payment on the gateway page with any successful LIVE/test-capable
-method the tenant supports.
+Expected result:
 
-## 4. Verify the round trip
+- HTTP 200 and `status: true`;
+- `subtotal: 1`, `delivery_fee: 0`, `total: 1`;
+- an `order_number` beginning `VG-` and a non-empty gateway `reference`;
+- an HTTPS `url` on `valmontpay.app`;
+- no secret, stack trace, or service-role detail in the response.
 
-Within ~60s (gateway forwards after Paystack confirmation):
+Record the order number/reference, then navigate manually to `result.url`. The hosted page must display **GH₵1.00** and Valmont Gadgets tenant branding.
 
-- [ ] Return screen (`order-confirmed.html?reference=VG-…&status=success`) shows **“Order Received — Pending Confirmation”** (never “paid”).
-- [ ] Vercel function logs show `[VALMONTPAY-WEBHOOK] charge.success VG-… -> paid (pesewas=100)`.
-- [ ] Supabase orders row: `status = Paid`, `admin_notes` contains `[Valmont-Pay] … charge.success verified for …`.
-- [ ] Supabase products row `vp-live-test-1ghc`: `stock` decremented 5 → **4** (exactly once).
-- [ ] Gateway dashboard → webhook deliveries: 200 recorded for the tenant.
+Before paying, verify in Supabase:
 
-## 5. Idempotency probe
+```sql
+SELECT order_number, status, subtotal, delivery_fee, total,
+       delivery_region, payment_reference,
+       inventory_reserved_at, inventory_released_at, reservation_expires_at
+FROM public.orders
+WHERE order_number = '<ORDER_NUMBER>';
 
-Replay the same delivery from the gateway admin (“Redeliver”) or wait for a
-gateway retry:
+SELECT id, stock, is_active
+FROM public.products
+WHERE id = '<RELEASE_ID>';
+```
 
-- [ ] Receiver returns 200 (`already_paid`), order stays Paid, stock stays **4** (no double decrement).
+Expected: Pending, 1/0/1 totals, correct region/reference, active reservation, no release, and product stock 4 (reserved once).
 
-## 6. Negative probes (optional but recommended)
+## 4. Pay and verify
+
+Complete the GH₵1 payment using an approved live method.
+
+Within the gateway retry window:
+
+- [ ] The return page says **“Order Received — Pending Confirmation”**, never that the redirect itself proves payment.
+- [ ] Gateway delivery history records a signed `charge.success` with HTTP 200.
+- [ ] Vercel logs record the order/reference outcome without secrets or full payloads.
+- [ ] The order is Paid, `paid_at` is populated, and its stored reference is unchanged.
+- [ ] Product stock remains 4; payment confirmation does not decrement a reservation a second time.
+
+```sql
+SELECT order_number, status, total, payment_reference, paid_at,
+       inventory_reserved_at, inventory_released_at, admin_notes
+FROM public.orders
+WHERE order_number = '<ORDER_NUMBER>';
+
+SELECT id, stock FROM public.products WHERE id = '<RELEASE_ID>';
+```
+
+## 5. Replay/idempotency test
+
+Use the gateway's authenticated **redeliver** action for that same event. Never reconstruct the production signature by copying its secret into a terminal.
+
+Expected:
+
+- receiver returns HTTP 200 with the already-paid outcome;
+- order/reference/paid timestamp remain stable;
+- product stock remains exactly 4;
+- no duplicate order is created.
+
+## 6. Negative signature probe
+
+An unsigned fake event must return 401 and make no database change:
 
 ```bash
-# Unsigned request → must be a clean 401, no 5xx
 curl -i -X POST https://valmontgadgets.com/api/valmontpay/webhook \
   -H 'content-type: application/json' \
-  -d '{"event":"charge.success","data":{"reference":"VG-FAKE","status":"success","amount":1}}'
-
-# Wrong tenant → 401 even with a valid signature for another secret
+  -d '{"event":"charge.success","data":{"reference":"VG-FAKE","status":"success","amount":100}}'
 ```
 
-## 7. Cleanup
+Do not send guessed signatures or real payment/customer payloads.
+
+## 7. Cleanup and refund
+
+Preserve the Paid order as an immutable financial/audit record. Do **not** relabel it Cancelled or delete it.
 
 ```sql
-UPDATE public.orders SET status = 'Cancelled',
-  admin_notes = coalesce(admin_notes,'') || ' [LIVE-TEST cleanup]'
-WHERE order_number LIKE 'VG-%' AND total = 1.00
-  AND order_number = (SELECT order_number FROM public.orders
-                      WHERE customer_id LIKE 'cust-%' ORDER BY created_at DESC LIMIT 1); -- narrow to the test order
+BEGIN;
 
-DELETE FROM public.products WHERE id = 'vp-live-test-1ghc';
+UPDATE public.products
+SET is_active = false,
+    badge = 'COMPLETED TEST',
+    updated_at = timezone('utc', now())
+WHERE id = '<RELEASE_ID>';
+
+UPDATE public.delivery_fees
+SET is_active = false,
+    updated_at = timezone('utc', now())
+WHERE region = 'Release validation only';
+
+COMMIT;
 ```
 
-- Refund/void the GH₵1 charge on the gateway/Paystack side if it was a real charge.
-- Remove the test product from any cached storefront views (hard refresh / bump `CACHE_NAME` if needed).
+Then:
 
-## Pass criteria (summary)
+- refund/void the GH₵1 transaction through the gateway/processor and record the refund reference;
+- verify the test product and region are inactive;
+- remove checkout maintenance mode;
+- monitor checkout/webhook logs for at least 30 minutes;
+- attach redacted initialization, database, gateway delivery/replay, refund, and cleanup evidence to the release ticket.
 
-| Step | Expected |
-|---|---|
-| Checkout redirect | hosted pay.html, amount GH₵ 1.00, access_code flow |
-| Order before payment | `Pending`, total 1.00, VP reference stored |
-| Return screen | “Pending Confirmation” wording |
-| Webhook | signature verified, pesewas=100 matches, → Paid |
-| Stock | decremented exactly once |
-| Replay | 200, no state change |
-| Unsigned POST | bare 401 |
+## Pass criteria
+
+Every check must pass: server-computed GH₵1 total, Pending reservation, hosted gateway origin, signed Paid transition, stable reference, one stock decrement total, replay idempotency, unsigned 401, audit-safe cleanup, and refund. If any check fails, disable checkout and follow the rollback/incident section of [PRODUCTION_RUNBOOK.md](PRODUCTION_RUNBOOK.md).

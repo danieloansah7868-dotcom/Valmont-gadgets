@@ -73,8 +73,8 @@ check(!/<script>[^<]{500,}/.test(html), 'no large inline <script> block');
 const deferred = qa('script[src]').filter((s) => s.defer || s.async);
 check(qa('script[src]').length === deferred.length, 'all external scripts defer/async');
 check(!/js\.paystack\.co/.test(html), 'Paystack not eagerly loaded in HTML');
-check(/loadPaystackScript/.test(read('shop.min.js')), 'Paystack lazy-loader present in bundle');
-const clientSurfaces = ['app.js', 'shop.min.js', 'index.html', 'order-confirmed.html', 'account.html', 'drop.html', 'assets/js/gadgets.js', 'assets/js/admin.js', 'assets/js/account.js', 'assets/js/analytics.js']
+check(!/loadPaystackScript|js\.paystack\.co|PaystackPop/.test(read('shop.min.js')), 'legacy Paystack SDK absent from bundle');
+const clientSurfaces = ['app.js', 'shop.min.js', 'index.html', 'order-confirmed.html', 'account.html', 'drop.html', 'assets/js/catalog.js', 'assets/js/catalog.min.js', 'assets/js/gadgets.js', 'assets/js/admin.js', 'assets/js/account.js', 'assets/js/analytics.js']
   .filter((f) => fs.existsSync(path.join(ROOT, f)))
   .map((f) => read(f));
 const clientBlob = clientSurfaces.join('\n');
@@ -83,11 +83,15 @@ check(!/VALMONTPAY_(SECRET|WEBHOOK)_KEY\s*[:=]\s*['"][^'"]+['"]/.test(clientBlob
 check(!/Bearer\s+\$?\{?process\.env\.VALMONTPAY/.test(clientBlob), 'no server-side tenant auth in browser bundles');
 check(/\/api\/valmontpay\/initialize/.test(read('app.js')), 'checkout goes through server-side /api/valmontpay/initialize');
 check(!/pay\.html\?[^'"]*amount=/.test(read('app.js')), 'no client-built amount-in-URL gateway links in app.js');
-// Budget raised 30→33 KB when shop.min.js was re-synced with app.js: the old
-// artifact was stale (terser had been failing on a duplicate-const SyntaxError
-// in app.js), the secure Valmont-Pay checkout adds ~1 KB gz, and Google OAuth
-// deep audit + error handling mappings add ~0.6 KB gz on top.
-check(gz('shop.min.js') < 33 * 1024, 'JS bundle gzipped', `${kb(size('shop.min.js'))} raw / ${kb(gz('shop.min.js'))} gz`);
+check(/rpc\/get_storefront_catalog/.test(read('app.js')), 'storefront catalog uses reviewed public projection RPC');
+check(/get_my_dealer_prices/.test(read('app.js')), 'dealer prices use approved authenticated RPC');
+check(!/"(?:wholesale|wholesale_price|deliveryCost|paymentCost)"\s*:/.test(read('assets/js/catalog.js')), 'public fallback catalog contains no private costs');
+check((read('app.js').match(/function openDealerModal\s*\(/g) || []).length === 1, 'one dealer portal implementation');
+// Keep application logic and the public catalog under independent budgets.
+// This prevents duplicated/dead storefront code or embedded private pricing
+// data from being hidden by a single aggregate threshold.
+check(gz('shop.min.js') < 33 * 1024, 'storefront application JS gzipped', `${kb(size('shop.min.js'))} raw / ${kb(gz('shop.min.js'))} gz`);
+check(gz('assets/js/catalog.min.js') < 7 * 1024, 'public catalog JS gzipped', `${kb(size('assets/js/catalog.min.js'))} raw / ${kb(gz('assets/js/catalog.min.js'))} gz`);
 check(size('index.html') > 0, 'index.html size', `${kb(size('index.html'))} raw / ${kb(gz('index.html'))} gz`);
 
 const uploads = fs.readdirSync(path.join(ROOT, 'uploads'));
