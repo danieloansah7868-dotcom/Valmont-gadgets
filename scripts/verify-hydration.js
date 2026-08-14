@@ -62,8 +62,10 @@ async function main() {
   // forever; neutralise the repeating ones so this script can exit.
   window.setInterval = () => 0;
 
+  const catalog = fs.readFileSync(path.join(ROOT, 'assets/js/catalog.js'), 'utf8');
   const app = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
   try {
+    window.eval(catalog);
     window.eval(app);
   } catch (e) {
     console.warn('app.js threw during eval (may be benign in jsdom):', e.message);

@@ -2,7 +2,7 @@
 /**
  * Task 3 — Option A: build-time server rendering of the product grid.
  *
- * Reads `const PRODUCTS = [...]` out of app.js (single source of truth),
+ * Reads the public catalog from assets/js/catalog.js (single source of truth),
  * renders static markup for every SKU into #productGrid in index.html,
  * and regenerates the Product JSON-LD @graph so the two can never drift.
  *
@@ -22,26 +22,16 @@ const GRID_END = '<!-- PRERENDER:PRODUCTS:END -->';
 const LD_START = '<!-- PRERENDER:PRODUCT-JSONLD:START -->';
 const LD_END = '<!-- PRERENDER:PRODUCT-JSONLD:END -->';
 
-/** Pull the PRODUCTS literal out of app.js and evaluate it in isolation. */
+/** Evaluate the inert public catalog against an isolated window object. */
 function loadProducts() {
-  const src = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
-  const start = src.indexOf('const PRODUCTS');
-  if (start === -1) throw new Error('Could not locate `const PRODUCTS` in app.js');
-  const open = src.indexOf('[', start);
-  let depth = 0;
-  let end = -1;
-  for (let i = open; i < src.length; i++) {
-    const c = src[i];
-    if (c === '[') depth++;
-    else if (c === ']') {
-      depth--;
-      if (depth === 0) { end = i; break; }
-    }
-  }
-  if (end === -1) throw new Error('Unbalanced PRODUCTS array in app.js');
+  const src = fs.readFileSync(path.join(ROOT, 'assets/js/catalog.js'), 'utf8');
+  const isolatedWindow = {};
   // eslint-disable-next-line no-new-func
-  const products = new Function(`return ${src.slice(open, end + 1)};`)();
-  return normalise(products);
+  new Function('window', src)(isolatedWindow);
+  if (!Array.isArray(isolatedWindow.VALMONT_CATALOG)) {
+    throw new Error('assets/js/catalog.js did not expose VALMONT_CATALOG');
+  }
+  return normalise(isolatedWindow.VALMONT_CATALOG.map((product) => ({ ...product })));
 }
 
 /**
@@ -143,8 +133,8 @@ function card(p, index) {
   const reviews = p.reviews_count || 0;
 
   return `
-            <div role="button" tabindex="0" class="bg-white rounded-[4px] overflow-hidden border border-gray-200 hover:shadow-md transition duration-200 flex flex-col justify-between group relative cursor-pointer" onclick="openProductDetail('${id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProductDetail('${id}')}">
-              <button type="button" onclick="event.stopPropagation(); toggleWishlist('${id}')" class="absolute top-2.5 right-2 h-7 w-7 rounded-full bg-white/95 shadow-sm border border-gray-50 flex items-center justify-center z-10 transition" aria-label="Add ${esc(p.name)} to wishlist">
+            <div role="button" tabindex="0" data-open-product="${id}" class="bg-white rounded-[4px] overflow-hidden border border-gray-200 hover:shadow-md transition duration-200 flex flex-col justify-between group relative cursor-pointer">
+              <button type="button" data-wishlist-product="${id}" class="absolute top-2.5 right-2 h-7 w-7 rounded-full bg-white/95 shadow-sm border border-gray-50 flex items-center justify-center z-10 transition" aria-label="Toggle ${esc(p.name)} in saved items">
                 <svg class="h-4.5 w-4.5 text-gray-400 hover:text-red-500" aria-hidden="true"><use href="#i-heart"/></svg>
               </button>
 
@@ -176,7 +166,7 @@ function card(p, index) {
                 </div>
               </div>
               <div class="px-3 pb-3 hidden md:block">
-                <button type="button" onclick="event.stopPropagation(); addToCart('${id}')" class="w-full bg-[#ff8c00] hover:bg-orange-600 text-white font-bold text-[11px] py-2 rounded-[4px] uppercase transition tracking-widest shadow-sm">
+                <button type="button" data-add-product="${id}" class="w-full bg-[#ff8c00] hover:bg-orange-600 text-white font-bold text-[11px] py-2 rounded-[4px] uppercase transition tracking-widest shadow-sm">
                   Add To Bag
                 </button>
               </div>

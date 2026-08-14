@@ -1,4 +1,3 @@
-
 // ACCESSIBLE MODAL FOCUS TRAPPING AND ESCAPE-TO-CLOSE
 document.addEventListener("keydown", function(e) {
   if (e.key === "Escape") {
@@ -49,6 +48,76 @@ document.addEventListener("keydown", function(e) {
   }
 });
 
+// Static and prerendered controls use inert data attributes rather than inline
+// JavaScript. This keeps product identifiers out of executable HTML and allows
+// an enforced Content Security Policy without `unsafe-inline` scripts.
+document.addEventListener('click', event => {
+  const control = event.target.closest('[data-store-action]');
+  if (!control) return;
+  const action = control.dataset.storeAction;
+  const productId = control.dataset.productId || '';
+  const policyMessages = {
+    warranty: 'Our 12-Month Official Warranty policy applies to all genuine smartphones, laptops, and tablets purchased directly from Valmont Gadgets.',
+    delivery: 'We offer express courier delivery across Accra on the same day for orders placed before 3:00 PM.',
+    returns: 'We allow returns and replacements within 7 days of delivery for sealed items or items with manufacturer defects.',
+  };
+  const handlers = {
+    'open-mobile-menu': openMobileMenuModal,
+    'open-login': openLoginModal,
+    'open-wishlist': openWishlistModal,
+    logout: handleLogout,
+    'open-dealer': openDealerModal,
+    'product-detail': () => openProductDetail(productId),
+    'toggle-wishlist': () => toggleWishlist(productId),
+    'add-to-cart': () => addToCart(productId),
+    'toggle-review-form': toggleReviewForm,
+    'close-wishlist': closeWishlistModal,
+    'wishlist-to-cart': addWishlistToCart,
+    'close-login': closeLoginModal,
+    'login-tab': () => setLoginTab(control.dataset.loginTab),
+    'password-reset': () => window.handlePasswordReset(),
+    'cancel-password-reset': () => window.cancelPasswordReset(),
+    'google-sign-in': handleGoogleSignIn,
+    'close-dealer': closeDealerModal,
+    'deactivate-dealer': deactivateDealerMode,
+    'mobile-home': mobileGoHome,
+    'open-mobile-categories': openMobileCategoriesModal,
+    'open-cart': openCart,
+    'close-mobile-categories': closeMobileCategoriesModal,
+    'close-mobile-menu': closeMobileMenuModal,
+    'mobile-login': () => { closeMobileMenuModal(); openLoginModal(); },
+    'mobile-wishlist': () => { closeMobileMenuModal(); openWishlistModal(); },
+    'mobile-dealer': () => { closeMobileMenuModal(); openDealerModal(); },
+    policy: () => { closeMobileMenuModal(); window.alert(policyMessages[control.dataset.policy] || 'Please contact support for policy details.'); },
+    'dismiss-pwa': dismissPwaBanner,
+    'close-pwa-instructions': closePwaInstructionsModal,
+    'view-bag': () => { openCart(); hideValmontToast(); },
+  };
+  const handler = handlers[action];
+  if (!handler) return;
+  event.preventDefault();
+  event.stopPropagation();
+  handler();
+});
+
+document.addEventListener('keydown', event => {
+  if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('[data-store-action][role="button"]')) {
+    event.preventDefault();
+    event.target.click();
+  }
+});
+
+document.addEventListener('submit', event => {
+  const form = event.target.closest('[data-store-form]');
+  if (!form) return;
+  const handlers = {
+    'login-submit': handleLoginSubmit,
+    'password-reset-request': (submitEvent) => window.handlePasswordResetRequest(submitEvent),
+  };
+  const handler = handlers[form.dataset.storeForm];
+  if (handler) handler(event);
+});
+
 // Legacy Paystack inline loader removed. All online payments now flow
 // through the central Valmont-Pay gateway (https://valmontpay.app/pay.html)
 // via a full-page redirect. No third-party payment SDK is loaded from this app.
@@ -65,993 +134,11 @@ document.addEventListener("keydown", function(e) {
     }
   
 
-    // PRIVATE COST LEDGER
-    const PRIVATE_COST_LEDGER = {};
-
-    // REAL STORE PRODUCTS DATA
-    const PRODUCTS = [
-      {
-        id: 'VG-IP15PM-256',
-        name: 'iPhone 15 Pro Max 256GB — Dual SIM',
-        category: 'iphones',
-        retail: 16500,
-        compareAt: 18000,
-        badge: 'HOT',
-        specs: 'Titanium • A17 Pro • Sealed • eSIM + Physical SIM',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1696446703255-020d67fa2f3b?q=80&w=800&auto=format&fit=crop',
-        wholesale: 13900,
-        deliveryCost: 120,
-        paymentCost: 280,
-        has_installments: true
-      },
-      {
-        id: 'iphone-15-pro-128-uk-used-92',
-        name: 'iPhone 15 Pro 128GB Natural Titanium — UK Used',
-        category: 'iphones',
-        retail: 11200, compareAt: 14500, badge: 'UK USED • BH 92%', stock: '1 in stock • UK Used • 12m Warranty',
-        specs: '128GB • Natural Titanium • BH 92% Original • Face ID & True Tone OK • Europe Standard',
-        description: 'Solid Europe-standard iPhone 15 Pro with a clean body, original 92% battery health, Face ID and True Tone working. Cable included. Grade A+ UK used—not brand-new sealed. Swap accepted.',
-        features: ['128GB', 'BH 92% Original', 'Natural Titanium', 'Face ID OK', 'Swap Allowed', 'Europe Standard'],
-        tags: ['iphone 15 pro', 'uk used', 'refurbished', '128gb', 'bh92'],
-        image: 'uploads/clean_15_pro.png',
-        images: ['uploads/clean_15_pro.png'],
-        wholesale: 0, deliveryCost: 80, paymentCost: 224,
-        has_installments: true
-      },
-      {
-        id: 'VG-IP14PM-256',
-        name: 'iPhone 14 Pro Max 256GB — Deep Purple',
-        category: 'iphones',
-        retail: 13500,
-        compareAt: 15000,
-        badge: 'DEAL',
-        specs: 'A16 Bionic • Dynamic Island • Physical Dual SIM',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1678911820864-e2c567c655d7?q=80&w=800&auto=format&fit=crop',
-        wholesale: 11400,
-        deliveryCost: 120,
-        paymentCost: 229
-      },
-      {
-        id: 'VG-IP13-128',
-        name: 'iPhone 13 128GB — Midnight',
-        category: 'iphones',
-        retail: 6800,
-        compareAt: 7500,
-        badge: 'HOT',
-        specs: 'A15 Bionic • 6.1-inch • Sealed US Variant',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1632661674596-df8be070a5c5?q=80&w=800&auto=format&fit=crop',
-        wholesale: 5650,
-        deliveryCost: 100,
-        paymentCost: 115
-      },
-      {
-        id: 'VG-IP15-128',
-        name: 'iPhone 15 128GB — Blue Dual SIM',
-        category: 'iphones',
-        retail: 9900,
-        compareAt: 11000,
-        badge: 'SEALED',
-        specs: 'A16 • USB-C • Pink / Blue / Black • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=800&auto=format&fit=crop',
-        wholesale: 8300,
-        deliveryCost: 110,
-        paymentCost: 168
-      },
-      {
-        id: 'VG-SS24U-512',
-        name: 'Samsung Galaxy S24 Ultra 512GB',
-        category: 'samsung',
-        retail: 15200,
-        compareAt: 16800,
-        badge: 'HOT',
-        specs: 'Titanium Black • S Pen • 200MP • Snapdragon 8 Gen 3',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=800&auto=format&fit=crop',
-        wholesale: 12800,
-        deliveryCost: 120,
-        paymentCost: 258
-      },
-      {
-        id: 'VG-SS23U-256',
-        name: 'Samsung Galaxy S23 Ultra 256GB',
-        category: 'samsung',
-        retail: 11500,
-        compareAt: 13000,
-        badge: 'DEAL',
-        specs: 'Phantom Black • 12GB RAM • 5000mAh • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1610945264803-c22b62d2a7b3?q=80&w=800&auto=format&fit=crop',
-        wholesale: 9600,
-        deliveryCost: 110,
-        paymentCost: 195
-      },
-      {
-        id: 'VG-SS24-256',
-        name: 'Samsung Galaxy S24 256GB — Marble Gray',
-        category: 'samsung',
-        retail: 8900,
-        compareAt: 9800,
-        badge: 'SEALED',
-        specs: '8GB RAM • Exynos 2400 • Galaxy AI • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1585060544812-6b45742d762f?q=80&w=800&auto=format&fit=crop',
-        wholesale: 7450,
-        deliveryCost: 100,
-        paymentCost: 151
-      },
-      {
-        id: 'VG-SSA55-256',
-        name: 'Samsung Galaxy A55 256GB — Awesome Navy',
-        category: 'samsung',
-        retail: 4200,
-        compareAt: 4800,
-        badge: 'DEAL',
-        specs: '8GB RAM • 120Hz AMOLED • IP67 • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=800&auto=format&fit=crop',
-        wholesale: 3480,
-        deliveryCost: 80,
-        paymentCost: 71
-      },
-      {
-        id: 'VG-SSFOLD5-512',
-        name: 'Samsung Galaxy Z Fold 5 512GB',
-        category: 'samsung',
-        retail: 18500,
-        compareAt: 20500,
-        badge: 'HOT',
-        specs: 'Phantom Black • 12GB RAM • Foldable • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1662948402327-e5ef1ac44e93?q=80&w=800&auto=format&fit=crop',
-        wholesale: 15600,
-        deliveryCost: 150,
-        paymentCost: 314
-      },
-      {
-        id: 'VG-MBP-M3-16-512',
-        name: 'MacBook Pro M3 16GB/512GB — Space Black',
-        category: 'laptops',
-        retail: 22500,
-        compareAt: 24500,
-        badge: 'SEALED',
-        specs: '14-inch Liquid Retina XDR • M3 Chip • 22H Battery',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=800&auto=format&fit=crop',
-        wholesale: 19200,
-        deliveryCost: 200,
-        paymentCost: 382
-      },
-      {
-        id: 'VG-MBP-M3P-18-512',
-        name: 'MacBook Pro M3 Pro 18GB/512GB — Space Black',
-        category: 'laptops',
-        retail: 28900,
-        compareAt: 31000,
-        badge: 'HOT',
-        specs: '14-inch • M3 Pro 11-Core • Sealed Apple Warranty',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?q=80&w=800&auto=format&fit=crop',
-        wholesale: 24900,
-        deliveryCost: 200,
-        paymentCost: 491
-      },
-      {
-        id: 'VG-MBA-M2-13-256',
-        name: 'MacBook Air M2 13-inch 8GB/256GB — Midnight',
-        category: 'laptops',
-        retail: 12800,
-        compareAt: 14000,
-        badge: 'DEAL',
-        specs: 'M2 Chip • 13.6-inch • 8GB/256GB • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=800&auto=format&fit=crop',
-        wholesale: 10850,
-        deliveryCost: 180,
-        paymentCost: 217
-      },
-      {
-        id: 'VG-MBA-M2-15-512',
-        name: 'MacBook Air M2 15-inch 8GB/512GB — Starlight',
-        category: 'laptops',
-        retail: 16900,
-        compareAt: 18200,
-        badge: 'SEALED',
-        specs: '15.3-inch Liquid Retina • M2 • Sealed Apple',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?q=80&w=800&auto=format&fit=crop',
-        wholesale: 14450,
-        deliveryCost: 180,
-        paymentCost: 287
-      },
-      {
-        id: 'VG-HP-SPECTRE-16-1T',
-        name: 'HP Spectre x360 13.5-inch i7 16GB/1TB',
-        category: 'laptops',
-        retail: 14500,
-        compareAt: 16000,
-        badge: 'DEAL',
-        specs: 'OLED Touch • Intel i7-1355U • Convertible • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1583223667854-e0e05b1ad2ad?q=80&w=800&auto=format&fit=crop',
-        wholesale: 12200,
-        deliveryCost: 180,
-        paymentCost: 246
-      },
-      {
-        id: 'VG-DELL-XPS13P',
-        name: 'Dell XPS 13 Plus i7 16GB/512GB — Platinum',
-        category: 'laptops',
-        retail: 13200,
-        compareAt: 14800,
-        badge: 'SEALED',
-        specs: '13.4-inch OLED • i7-1360P • InfinityEdge • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?q=80&w=800&auto=format&fit=crop',
-        wholesale: 11100,
-        deliveryCost: 180,
-        paymentCost: 224
-      },
-      {
-        id: 'VG-IPAD-PRO11-M4-256',
-        name: 'iPad Pro 11-inch M4 256GB — WiFi',
-        category: 'tablets',
-        retail: 12500,
-        compareAt: 13800,
-        badge: 'HOT',
-        specs: 'Ultra Retina XDR • M4 Chip • Space Black • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=800&auto=format&fit=crop',
-        wholesale: 10600,
-        deliveryCost: 100,
-        paymentCost: 212
-      },
-      {
-        id: 'VG-IPAD-AIR-M2-128',
-        name: 'iPad Air M2 11-inch 128GB — Blue',
-        category: 'tablets',
-        retail: 6900,
-        compareAt: 7600,
-        badge: 'SEALED',
-        specs: 'M2 Chip • Liquid Retina • Touch ID • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=800&auto=format&fit=crop',
-        wholesale: 5780,
-        deliveryCost: 90,
-        paymentCost: 117
-      },
-      {
-        id: 'VG-AIRPODS-PRO2-USBC',
-        name: 'AirPods Pro 2nd Gen USB-C',
-        category: 'audio',
-        retail: 3200,
-        compareAt: 3800,
-        badge: 'HOT',
-        specs: 'MagSafe • Adaptive Smart Audio • H2 Chip • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?q=80&w=800&auto=format&fit=crop',
-        wholesale: 2550,
-        deliveryCost: 40,
-        paymentCost: 54
-      },
-      {
-        id: 'VG-AIRPODS-MAX-SG',
-        name: 'AirPods Max — Space Gray',
-        category: 'audio',
-        retail: 6500,
-        compareAt: 7200,
-        badge: 'SEALED',
-        specs: 'High-Fidelity • Active Noise Cancellation • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=800&auto=format&fit=crop',
-        wholesale: 5450,
-        deliveryCost: 60,
-        paymentCost: 110
-      },
-      {
-        id: 'VG-SONY-XM5-BLK',
-        name: 'Sony WH-1000XM5 Wireless Headset — Black',
-        category: 'audio',
-        retail: 4100,
-        compareAt: 4600,
-        badge: 'DEAL',
-        specs: 'Industry Leading ANC • 30H Battery • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=800&auto=format&fit=crop',
-        wholesale: 3380,
-        deliveryCost: 50,
-        paymentCost: 69
-      },
-      {
-        id: 'VG-JBL-CHARGE5-BLK',
-        name: 'JBL Charge 5 Bluetooth Speaker — Black',
-        category: 'audio',
-        retail: 1650,
-        compareAt: 1950,
-        badge: 'HOT',
-        specs: 'IP67 Waterproof • 20H Play • PartyBoost • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e11?q=80&w=800&auto=format&fit=crop',
-        wholesale: 1280,
-        deliveryCost: 50,
-        paymentCost: 28
-      },
-      {
-        id: 'VG-ANKER-PB-20K-65W',
-        name: 'Anker 20,000mAh 65W Power Bank — PowerCore 24K',
-        category: 'chargers',
-        retail: 1250,
-        compareAt: 1500,
-        badge: 'SEALED',
-        specs: '65W Fast Charge • PowerCore 24K • LED Display • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop',
-        wholesale: 960,
-        deliveryCost: 40,
-        paymentCost: 21
-      },
-      {
-        id: 'VG-APPLE-67W-CABLE',
-        name: 'Apple 67W USB-C Power Adapter + 2M Cable',
-        category: 'chargers',
-        retail: 850,
-        compareAt: 1050,
-        badge: 'DEAL',
-        specs: 'Genuine Apple • Fast Charge MacBook Air • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop',
-        wholesale: 630,
-        deliveryCost: 30,
-        paymentCost: 14
-      },
-      {
-        id: 'VG-SS-45W-BLK',
-        name: 'Samsung Galaxy 45W Super Fast Charger — Black',
-        category: 'chargers',
-        retail: 450,
-        compareAt: 600,
-        badge: 'SEALED',
-        specs: 'Super Fast Charging 2.0 • USB-C • Sealed Original',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop',
-        wholesale: 310,
-        deliveryCost: 20,
-        paymentCost: 7
-      },
-      {
-        id: 'VG-AW-17AIR',
-        name: 'iPhone 17 Air 256GB — Ultra Slim (White)',
-        category: 'iphones',
-        retail: 19500,
-        compareAt: 21500,
-        badge: 'NEW',
-        specs: 'Concept Air Edition • 256GB Storage • 6.1" Ultra-Thin Titanium Frame • Sealed Box',
-        stock: 'In stock • Sealed Box • 12m Official Warranty',
-        image: 'uploads/clean_17_air.png',
-        wholesale: 16500,
-        deliveryCost: 150,
-        paymentCost: 350
-      },
-      {
-        id: 'VG-AW-16SNAP',
-        name: 'iPhone 16 128GB — White (Snapchat Banned)',
-        category: 'iphones',
-        retail: 8500,
-        compareAt: 11000,
-        badge: 'BARGAIN',
-        specs: '128GB Storage • Very Neat & Solid UK Used • Snapchat App Lock Only • falaa price!',
-        stock: 'In stock • UK Used • 6m Store Warranty',
-        image: 'uploads/clean_16_snapchat.png',
-        wholesale: 7100,
-        deliveryCost: 80,
-        paymentCost: 154
-      },
-      {
-        id: 'VG-AW-17PROMAX',
-        name: 'iPhone 17 Pro Max 256GB — Premium Titanium',
-        category: 'iphones',
-        retail: 22000,
-        compareAt: 24000,
-        badge: 'NEW',
-        specs: 'Concept Pro Max Edition • 256GB Storage • Titanium Chassis • Factory Sim Unlocked • Swapping Allowed',
-        stock: 'In stock • Pristine Boxed • 12m Official Warranty',
-        image: 'uploads/clean_17_promax.png',
-        wholesale: 18500,
-        deliveryCost: 150,
-        paymentCost: 390
-      },
-      {
-        id: 'iphone-13-pro-max-128-uk-used',
-        name: 'iPhone 13 Pro Max 128GB — UK Used Sierra Blue / Gold',
-        category: 'iphones',
-        retail: 7900, compareAt: 8800, badge: 'UK USED • SWAP ALLOWED', stock: '5 in stock • UK Used • 12m Warranty',
-        specs: '128GB • Sierra Blue / Gold • 85%+ Battery • Face ID & True Tone Active • Grade A',
-        description: 'Very solid Grade A UK-used iPhone 13 Pro Max with a clean body and no dents. Sierra Blue and Gold available. Battery health is 85%+, with True Tone and Face ID active. Not brand-new sealed; price reflects its used condition.',
-        features: ['128GB', 'Sierra Blue / Gold', 'UK Used', '85%+ Battery', 'Swap Allowed'],
-        tags: ['13 pro max', 'uk used', 'refurbished'],
-        image: 'uploads/clean_13_promax.png',
-        images: ['uploads/clean_13_promax.png'],
-        wholesale: 6700, deliveryCost: 80, paymentCost: 132
-      },
-      {
-        id: 'VG-AW-13',
-        name: 'iPhone 13 128GB — UK Used Multi-Colors',
-        category: 'iphones',
-        retail: 5600,
-        compareAt: 6400,
-        badge: 'UK USED',
-        specs: 'Red / Product Blue / Midnight • 128GB Storage • Excellent Condition • Swapping Allowed',
-        stock: 'In stock • UK Used • 6m Store Warranty',
-        image: 'uploads/clean_13.png',
-        wholesale: 4800,
-        deliveryCost: 60,
-        paymentCost: 95
-      },
-      {
-        id: 'VG-AW-AIRPODS4',
-        name: 'Apple AirPods 4 — Sealed Box',
-        category: 'audio',
-        retail: 2200,
-        compareAt: 2600,
-        badge: 'SEALED',
-        specs: 'Active Noise Cancellation • Personalized Spatial Audio • USB-C Charger Box • Dynamic Head Tracking',
-        stock: 'In stock • Sealed Box • 12m Official Warranty',
-        image: 'uploads/clean_airpods_4.png',
-        wholesale: 1750,
-        deliveryCost: 40,
-        paymentCost: 44
-      },
-      {
-        id: 'VG-AW-AIRPODSPRO3',
-        name: 'Apple AirPods Pro 3 — Sealed Box',
-        category: 'audio',
-        retail: 3800,
-        compareAt: 4400,
-        badge: 'SEALED',
-        specs: 'Next-Gen Active Noise Cancellation • H3 SIP Chip • Adaptive Audio • Sealed Box',
-        stock: 'In stock • Sealed Box • 12m Official Warranty',
-        image: 'uploads/clean_airpods_pro3.png',
-        wholesale: 3100,
-        deliveryCost: 50,
-        paymentCost: 76
-      },
-      {
-        id: 'VG-IPX-256',
-        name: 'iPhone X 256GB — Silver',
-        category: 'iphones',
-        retail: 2950,
-        compareAt: 3400,
-        badge: 'CLASSIC',
-        specs: '5.8-inch Super Retina OLED • Dual 12MP Cameras • Face ID • A11 Bionic',
-        stock: 'In stock • Pristine Condition • 6m Store Warranty',
-        image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=800&auto=format&fit=crop',
-        wholesale: 2300,
-        deliveryCost: 50,
-        paymentCost: 49
-      },
-      {
-        id: 'VG-IPXSMAX-256',
-        name: 'iPhone XS Max 256GB — Space Gray',
-        category: 'iphones',
-        retail: 3900,
-        compareAt: 4400,
-        badge: 'CLASSIC',
-        specs: '6.5-inch Super Retina OLED • Dual 12MP Cameras • Face ID • A12 Bionic',
-        stock: 'In stock • Pristine Condition • 6m Store Warranty',
-        image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=800&auto=format&fit=crop',
-        wholesale: 3100,
-        deliveryCost: 50,
-        paymentCost: 66
-      },
-      {
-        id: 'VG-IP11-128',
-        name: 'iPhone 11 128GB — White',
-        category: 'iphones',
-        retail: 4400,
-        compareAt: 4900,
-        badge: 'DEAL',
-        specs: '6.1-inch Liquid Retina • Dual 12MP Cameras • A13 Bionic • Best Seller in Ghana',
-        stock: 'In stock • Excellent Condition • 6m Store Warranty',
-        image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=800&auto=format&fit=crop',
-        wholesale: 3550,
-        deliveryCost: 60,
-        paymentCost: 74
-      },
-      {
-        id: 'VG-IP11PM-256',
-        name: 'iPhone 11 Pro Max 256GB — Midnight Green',
-        category: 'iphones',
-        retail: 5800,
-        compareAt: 6500,
-        badge: 'HOT',
-        specs: '6.5-inch Super Retina XDR OLED • Triple 12MP Cameras • Face ID • A13 Bionic',
-        stock: 'In stock • Pristine Condition • 6m Store Warranty',
-        image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=800&auto=format&fit=crop',
-        wholesale: 4800,
-        deliveryCost: 70,
-        paymentCost: 110
-      },
-      {
-        id: 'VG-IP12-128',
-        name: 'iPhone 12 128GB — Black',
-        category: 'iphones',
-        retail: 6200,
-        compareAt: 6800,
-        badge: 'HOT',
-        specs: '6.1-inch Super Retina XDR • Dual 12MP • A14 Bionic • 5G Support',
-        stock: 'In stock • Excellent Condition • 6m Store Warranty',
-        image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=800&auto=format&fit=crop',
-        wholesale: 5200,
-        deliveryCost: 70,
-        paymentCost: 112
-      },
-      {
-        id: 'VG-IP12PM-128',
-        name: 'iPhone 12 Pro Max 128GB — Pacific Blue',
-        category: 'iphones',
-        retail: 8900,
-        compareAt: 9800,
-        badge: 'DEAL',
-        specs: '6.7-inch Super Retina XDR OLED • Triple 12MP • LiDAR Scanner • Face ID',
-        stock: 'In stock • Pristine Condition • 6m Store Warranty',
-        image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=800&auto=format&fit=crop',
-        wholesale: 7450,
-        deliveryCost: 80,
-        paymentCost: 151
-      },
-      {
-        id: 'VG-IP14P-128',
-        name: 'iPhone 14 Pro 128GB — Space Black',
-        category: 'iphones',
-        retail: 11500,
-        compareAt: 12500,
-        badge: 'SEALED',
-        specs: 'A16 Bionic • Dynamic Island • 48MP Triple Pro Camera • 120Hz ProMotion',
-        stock: 'In stock • Sealed Box • 12m Official Warranty',
-        image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=800&auto=format&fit=crop',
-        wholesale: 9700,
-        deliveryCost: 100,
-        paymentCost: 195
-      },
-      {
-        id: 'VG-SSA05S-128',
-        name: 'Samsung Galaxy A05s 128GB — Light Green',
-        category: 'samsung',
-        retail: 1450,
-        compareAt: 1800,
-        badge: 'DEAL',
-        specs: '4GB RAM • 6.7-inch Full HD+ • Snapdragon 680 • 50MP Triple Camera',
-        stock: 'In stock • Sealed Box • 12m Official Warranty',
-        image: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=800&auto=format&fit=crop',
-        wholesale: 1120,
-        deliveryCost: 40,
-        paymentCost: 22
-      },
-      {
-        id: 'VG-SSA22-128',
-        name: 'Samsung Galaxy A22 5G 128GB — Gray',
-        category: 'samsung',
-        retail: 1800,
-        compareAt: 2200,
-        badge: 'SEALED',
-        specs: '6GB RAM • 6.6-inch 90Hz Display • Triple 48MP Camera • 5G Support',
-        stock: 'In stock • Sealed Box • 12m Official Warranty',
-        image: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=800&auto=format&fit=crop',
-        wholesale: 1390,
-        deliveryCost: 40,
-        paymentCost: 31
-      },
-      {
-        id: 'VG-SSA15-128',
-        name: 'Samsung Galaxy A15 128GB — Awesome Blue',
-        category: 'samsung',
-        retail: 2100,
-        compareAt: 2500,
-        badge: 'HOT',
-        specs: '4GB RAM • 6.5-inch Super AMOLED • 50MP Triple Camera • 25W Fast Charge',
-        stock: 'In stock • Sealed Box • 12m Official Warranty',
-        image: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=800&auto=format&fit=crop',
-        wholesale: 1680,
-        deliveryCost: 50,
-        paymentCost: 38
-      },
-      {
-        id: 'VG-SSA16-128',
-        name: 'Samsung Galaxy A16 5G 128GB — Awesome Black',
-        category: 'samsung',
-        retail: 2900,
-        compareAt: 3400,
-        badge: 'SEALED',
-        specs: '6GB RAM • 6.7-inch AMOLED • 50MP Main Lens • 5000mAh Battery • 5G',
-        stock: 'In stock • Sealed Box • 12m Official Warranty',
-        image: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=800&auto=format&fit=crop',
-        wholesale: 2280,
-        deliveryCost: 50,
-        paymentCost: 52
-      },
-      {
-        id: 'VG-GEVEY-RSIM18',
-        name: 'R-SIM 18 Club Gevey Unlock Chip for iPhones',
-        category: 'phone_parts',
-        retail: 380,
-        compareAt: 500,
-        badge: 'HOT',
-        specs: 'QPE eSIM Unlocking • iOS 17/18 Compatible • Multi-Network Support (AT&T, T-Mobile to MTN/Telecel)',
-        stock: 'In stock • Original Chip • 3m Store Warranty',
-        image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop',
-        wholesale: 240,
-        deliveryCost: 20,
-        paymentCost: 6
-      },
-      {
-        id: 'VG-PARTS-SIM-PIN',
-        name: 'Heavy-Duty SIM Ejector Pin Keyring (5-Pack)',
-        category: 'phone_parts',
-        retail: 90,
-        compareAt: 150,
-        badge: 'SEALED',
-        specs: 'Stainless Steel • Safe SIM Removal Tool • Includes Keyring Holder • Universal Fit',
-        stock: 'In stock • Original Accessory',
-        image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop',
-        wholesale: 35,
-        deliveryCost: 20,
-        paymentCost: 2
-      },
-      {
-        id: 'VG-CASE-SPG-15PM',
-        name: 'Spigen Rugged Armor Case for iPhone 15 Pro Max',
-        category: 'phone_acc',
-        retail: 350,
-        compareAt: 450,
-        badge: 'HOT',
-        specs: 'Matte Black • Carbon Fiber Accents • Military Grade Drop Protection • Case Friendly',
-        stock: 'In stock • Sealed • Original Spigen',
-        image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop',
-        wholesale: 220,
-        deliveryCost: 30,
-        paymentCost: 7
-      },
-      {
-        id: 'VG-CASE-APL-MS',
-        name: 'Apple MagSafe Silicone Case for iPhone 15 Pro Max',
-        category: 'phone_acc',
-        retail: 450,
-        compareAt: 600,
-        badge: 'SEALED',
-        specs: 'Liquid Silicone • Perfect MagSafe Alignment • Soft Microfiber Lining • Original Sealed Packaging',
-        stock: 'In stock • Sealed • Genuine Apple',
-        image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop',
-        wholesale: 310,
-        deliveryCost: 30,
-        paymentCost: 8
-      },
-      {
-        id: 'VG-GLASS-SPG-EZ',
-        name: 'Spigen EZ Fit Tempered Glass Screen Protector (2-Pack)',
-        category: 'phone_acc',
-        retail: 250,
-        compareAt: 350,
-        badge: 'DEAL',
-        specs: '9H Hardness Glass • EZ Align Auto-Installation Tray • Oleophobic Anti-Fingerprint Shield',
-        stock: 'In stock • Sealed • Original Spigen',
-        image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop',
-        wholesale: 160,
-        deliveryCost: 20,
-        paymentCost: 5
-      },
-      {
-        id: 'VG-CAR-BASEUS-MS',
-        name: 'Baseus 15W MagSafe Magnetic Car Charger Mount',
-        category: 'travel_acc',
-        retail: 550,
-        compareAt: 750,
-        badge: 'HOT',
-        specs: 'Air Vent & Dashboard Clamp • Strong N52 MagSafe Magnets • 360 Rotation • Fast Charge',
-        stock: 'In stock • Sealed • Original Baseus',
-        image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop',
-        wholesale: 390,
-        deliveryCost: 40,
-        paymentCost: 11
-      },
-      {
-        id: 'VG-APL-AIRTAG-1',
-        name: 'Apple AirTag Bluetooth Tracker (1-Pack)',
-        category: 'travel_acc',
-        retail: 550,
-        compareAt: 700,
-        badge: 'SEALED',
-        specs: 'Find My Network Compatible • Precision Finding • IP67 Water Resistant • Genuine Sealed',
-        stock: 'In stock • Sealed • Genuine Apple',
-        image: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=800&auto=format&fit=crop',
-        wholesale: 380,
-        deliveryCost: 30,
-        paymentCost: 11
-      },
-      {
-        id: 'VG-PIX-8P',
-        name: 'Google Pixel 8 Pro 128GB — Obsidian',
-        category: 'android',
-        retail: 8500,
-        compareAt: 9500,
-        badge: 'HOT',
-        specs: 'Google Tensor G3 • 50MP Triple Camera • 120Hz OLED • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=800&auto=format&fit=crop',
-        wholesale: 7100,
-        deliveryCost: 80,
-        paymentCost: 154
-      },
-      {
-        id: 'VG-OP12-256',
-        name: 'OnePlus 12 256GB — Silky Black',
-        category: 'android',
-        retail: 9200,
-        compareAt: 10200,
-        badge: 'HOT',
-        specs: 'Snapdragon 8 Gen 3 • 100W SuperVOOC • 16GB RAM • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=800&auto=format&fit=crop',
-        wholesale: 7800,
-        deliveryCost: 80,
-        paymentCost: 168
-      },
-      {
-        id: 'VG-XIA-RN13P',
-        name: 'Xiaomi Redmi Note 13 Pro+ 5G 256GB',
-        category: 'android',
-        retail: 4800,
-        compareAt: 5400,
-        badge: 'DEAL',
-        specs: '200MP Camera • 120W HyperCharge • IP68 Waterproof • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=800&auto=format&fit=crop',
-        wholesale: 3950,
-        deliveryCost: 80,
-        paymentCost: 81
-      },
-      {
-        id: 'VG-ANK-8IN1',
-        name: 'Anker 8-in-1 USB-C Hub Adapter',
-        category: 'laptop_acc',
-        retail: 950,
-        compareAt: 1200,
-        badge: 'SEALED',
-        specs: '4K HDMI • 100W Power Delivery • 2x USB-A • SD Card slots',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop',
-        wholesale: 710,
-        deliveryCost: 30,
-        paymentCost: 16
-      },
-      {
-        id: 'VG-LOGI-MX3S',
-        name: 'Logitech MX Master 3S Wireless Mouse',
-        category: 'laptop_acc',
-        retail: 1450,
-        compareAt: 1750,
-        badge: 'HOT',
-        specs: '8K DPI Anywhere Tracking • Quiet Clicks • USB-C Charging',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop',
-        wholesale: 1120,
-        deliveryCost: 40,
-        paymentCost: 24
-      },
-      {
-        id: 'VG-UG-STAND',
-        name: 'Ugreen Ergonomic Aluminum Laptop Stand',
-        category: 'laptop_acc',
-        retail: 450,
-        compareAt: 600,
-        badge: 'DEAL',
-        specs: 'Adjustable Height • Multi-Angle Folding • Sturdy Metal Build',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop',
-        wholesale: 310,
-        deliveryCost: 30,
-        paymentCost: 8
-      },
-      {
-        id: 'VG-PARTS-15PM-SCR',
-        name: 'Original iPhone 15 Pro Max Replacement Screen',
-        category: 'phone_parts',
-        retail: 3200,
-        compareAt: 3800,
-        badge: 'HOT',
-        specs: 'Super Retina XDR OLED • Ceramic Shield Glass • Original Part',
-        stock: 'In stock • Original Part • 3m Store Warranty',
-        image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop',
-        wholesale: 2450,
-        deliveryCost: 40,
-        paymentCost: 55
-      },
-      {
-        id: 'VG-PARTS-IP13-BAT',
-        name: 'Original iPhone 13 Replacement Battery',
-        category: 'phone_parts',
-        retail: 650,
-        compareAt: 800,
-        badge: 'SEALED',
-        specs: '3227mAh Capacity • 100% Health Verification Chip • Zero Cycles',
-        stock: 'In stock • Original Part • 3m Store Warranty',
-        image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop',
-        wholesale: 480,
-        deliveryCost: 20,
-        paymentCost: 11
-      },
-      {
-        id: 'VG-PARTS-S24U-CAM',
-        name: 'Original Samsung Galaxy S24 Ultra Camera Glass',
-        category: 'phone_parts',
-        retail: 350,
-        compareAt: 500,
-        badge: 'DEAL',
-        specs: 'Sapphire Crystal Lens • Triple Camera Lens Housing Kit',
-        stock: 'In stock • Original Part • 3m Store Warranty',
-        image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop',
-        wholesale: 220,
-        deliveryCost: 20,
-        paymentCost: 6
-      },
-      {
-        id: 'VG-AW-S9-45',
-        name: 'Apple Watch Series 9 GPS 45mm',
-        category: 'smartwatches',
-        retail: 5500,
-        compareAt: 6200,
-        badge: 'HOT',
-        specs: 'Midnight Aluminum • S9 SIP • Always-On Retina • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?q=80&w=800&auto=format&fit=crop',
-        wholesale: 4600,
-        deliveryCost: 50,
-        paymentCost: 93
-      },
-      {
-        id: 'VG-GW6-44',
-        name: 'Samsung Galaxy Watch 6 44mm — Graphite',
-        category: 'smartwatches',
-        retail: 3900,
-        compareAt: 4400,
-        badge: 'SEALED',
-        specs: 'Super AMOLED • Sleep Tracking • Body Composition • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?q=80&w=800&auto=format&fit=crop',
-        wholesale: 3200,
-        deliveryCost: 50,
-        paymentCost: 66
-      },
-      {
-        id: 'ps5-1tb-new-sealed-slim',
-        name: 'PS5 1TB Slim — Brand New Sealed — Disc Edition',
-        category: 'gaming',
-        retail: 7800, compareAt: 8500, badge: 'SEALED — NEW', stock: '4 in stock • Sealed • 12m Warranty',
-        specs: '1TB SSD Slim • Disc Edition • European Stock • Includes DualSense, cables & stand',
-        description: 'Brand-new sealed 2024 Slim model. Listing is for one console. Includes console, DualSense controller, cables and stand, with receipt and 12-month Valmont warranty.',
-        features: ['1TB SSD Slim', 'Disc Version', 'Sealed', '1 Year Warranty'],
-        tags: ['ps5', 'new', 'sealed', 'slim'],
-        image: 'uploads/clean_ps5.png',
-        images: ['uploads/clean_ps5.png'],
-        wholesale: 6700, deliveryCost: 150, paymentCost: 132
-      },
-      {
-        id: 'ps5-1tb-very-neat-used-001',
-        name: 'PS5 1TB — UK Used Very Neat — 1 Controller',
-        category: 'gaming',
-        retail: 5800, compareAt: 6800, badge: 'REFURBISHED • VERY NEAT', stock: '2 in stock • Refurbished • 12m Warranty',
-        specs: '1TB SSD • Original DualSense • Fully Tested • Clean Body • Europe Standard',
-        description: 'Very neat 9.5/10 UK-used Europe-standard PS5. This listing is for one fully tested console with clean body, one original DualSense controller, HDMI cable and power cable. Refurbished/used, not sealed new.',
-        features: ['1TB SSD', 'Includes DualSense', 'Tested 100%', '12mo warranty', 'Accra delivery', 'Not sealed — refurbished'],
-        tags: ['ps5', 'gaming', 'uk used', 'refurbished', 'very neat'],
-        image: 'uploads/clean_ps5.png',
-        images: ['uploads/clean_ps5.png'],
-        wholesale: 0, deliveryCost: 150, paymentCost: 0
-      },
-      {
-        id: 'hp-elitebook-1030-g2-x360',
-        name: 'HP EliteBook 1030 G2 x360 — i7 7th Gen, 8GB / 256GB',
-        category: 'laptops',
-        retail: 3900, compareAt: 4500, badge: 'x360 TOUCH • REFURBISHED', stock: '3 in stock • Refurbished • Warranty Included',
-        specs: 'i7 7th Gen • 8GB RAM • 256GB SSD • 13.3-inch FHD Touch • Windows 11 Pro',
-        description: 'Very neat UK business-grade HP EliteBook 1030 G2 x360. This touchscreen convertible has a backlit keyboard, fingerprint reader, 360-degree hinge and activated Windows 11 Pro. Includes charger. Refurbished, not brand new.',
-        features: ['i7 7th Gen', '8GB / 256GB SSD', '13.3-inch Touch x360', 'Backlit Keyboard', 'Fingerprint', 'Windows 11 Pro'],
-        tags: ['laptop', 'hp', 'elitebook', 'x360', 'touch', 'refurbished'],
-        image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=800&auto=format&fit=crop',
-        images: ['https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=800&auto=format&fit=crop'],
-        wholesale: 0, deliveryCost: 100, paymentCost: 0
-      },
-      {
-        id: 'VG-NS-OLED',
-        name: 'Nintendo Switch OLED Model — Neon Blue/Red',
-        category: 'gaming',
-        retail: 4200,
-        compareAt: 4800,
-        badge: 'DEAL',
-        specs: '7-inch Vibrant OLED Screen • 64GB • Wired LAN Dock',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?q=80&w=800&auto=format&fit=crop',
-        wholesale: 3500,
-        deliveryCost: 80,
-        paymentCost: 71
-      },
-      {
-        id: 'VG-SH-BULB-01',
-        name: 'TP-Link Tapo Smart Wi-Fi Bulb — Colour',
-        category: 'smart_home',
-        retail: 380, compareAt: 500, badge: 'NEW',
-        specs: 'Wi-Fi Control • 16 Million Colours • Voice Assistant Compatible',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1550985543-f47f8d7a8c8e?q=80&w=800&auto=format&fit=crop',
-        wholesale: 290, deliveryCost: 20, paymentCost: 6
-      },
-      {
-        id: 'VG-SH-CAM-01',
-        name: 'TP-Link Tapo C210 Indoor Security Camera',
-        category: 'smart_home',
-        retail: 950, compareAt: 1200, badge: 'DEAL',
-        specs: '2K Pan/Tilt • Night Vision • Motion Alerts • Two-Way Audio',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1557597774-9d273605dfa9?q=80&w=800&auto=format&fit=crop',
-        wholesale: 760, deliveryCost: 30, paymentCost: 15
-      },
-      {
-        id: 'VG-NET-AX1500',
-        name: 'TP-Link Archer AX1500 Wi-Fi 6 Router',
-        category: 'networking',
-        retail: 1450, compareAt: 1750, badge: 'HOT',
-        specs: 'Wi-Fi 6 • Dual Band • Gigabit Ports • Home Coverage',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1647427060118-4911c9821b82?q=80&w=800&auto=format&fit=crop',
-        wholesale: 1150, deliveryCost: 40, paymentCost: 23
-      },
-      {
-        id: 'VG-NET-MESH-02',
-        name: 'TP-Link Deco Mesh Wi-Fi System — 2 Pack',
-        category: 'networking',
-        retail: 2850, compareAt: 3300, badge: 'DEAL',
-        specs: 'Whole-Home Mesh • Dual Band • Easy App Setup • 2 Units',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1606904825846-647eb07f5be2?q=80&w=800&auto=format&fit=crop',
-        wholesale: 2300, deliveryCost: 50, paymentCost: 46
-      },
-      {
-        id: 'VG-CAM-RING-01',
-        name: 'LED Ring Light with Tripod — Creator Kit',
-        category: 'cameras',
-        retail: 650, compareAt: 850, badge: 'DEAL',
-        specs: '12-inch LED • 3 Light Modes • Phone Holder • Adjustable Tripod',
-        stock: 'In stock • 6m Store Warranty',
-        image: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?q=80&w=800&auto=format&fit=crop',
-        wholesale: 480, deliveryCost: 30, paymentCost: 10
-      },
-      {
-        id: 'VG-CAM-MIC-01',
-        name: 'Wireless Lavalier Microphone — USB-C',
-        category: 'cameras',
-        retail: 780, compareAt: 1000, badge: 'HOT',
-        specs: 'Noise Reduction • Plug & Play • 2 Transmitters • Charging Case',
-        stock: 'In stock • Sealed • 6m Store Warranty',
-        image: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=800&auto=format&fit=crop',
-        wholesale: 590, deliveryCost: 25, paymentCost: 12
-      },
-      {
-        id: 'VG-ANKER-735-65W',
-        name: 'Anker 735 65W GaN Charger — 3 Port',
-        category: 'chargers',
-        retail: 750,
-        compareAt: 950,
-        badge: 'HOT',
-        specs: 'GaNPrime • 2x USB-C + USB-A • Foldable • Sealed',
-        stock: 'In stock • Sealed • 12m Warranty',
-        image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop',
-        wholesale: 540,
-        deliveryCost: 20,
-        paymentCost: 12
-      }
-    ];
+    // Public fallback data is loaded before this application. It intentionally
+    // excludes supplier costs and approved-dealer prices.
+    const PRODUCTS = Array.isArray(window.VALMONT_CATALOG)
+      ? window.VALMONT_CATALOG.map((product) => ({ ...product }))
+      : [];
 
     PRODUCTS.forEach((p, index) => {
       const name = p.name.toLowerCase();
@@ -1185,12 +272,6 @@ document.addEventListener("keydown", function(e) {
       return `<img src="${safeSrc}" alt="${safeAlt}" width="${size}" height="${size}"${lazy}${prio} decoding="async" class="${cls}" />`;
     }
 
-    // Populate private costs
-    PRODUCTS.forEach(p => {
-      PRIVATE_COST_LEDGER[p.id] = { wholesale: p.wholesale, delivery: p.deliveryCost, payment: p.paymentCost };
-    });
-
-    
     // === SUPABASE DATABASE INTEGRATION CONFIGURATION ===
     const VALMONT_SUPABASE = {
       url: 'https://eydsoqnpetqczaeqrscc.supabase.co',
@@ -1204,29 +285,39 @@ document.addEventListener("keydown", function(e) {
              !VALMONT_SUPABASE.anonKey.includes('PASTE_');
     };
 
-    async function supabaseInsert(table, body) {
-      const response = await fetch(`${VALMONT_SUPABASE.url.replace(/\/$/, '')}/rest/v1/${table}`, {
+    async function authenticatedSupabaseRpc(functionName, body) {
+      if (!/^[a-z][a-z0-9_]*$/.test(functionName)) throw new Error('Invalid RPC name');
+      const accessToken = localStorage.getItem('valmont_access_token');
+      if (!accessToken) throw new Error('Please sign in before continuing.');
+      const response = await fetch(`${VALMONT_SUPABASE.url.replace(/\/$/, '')}/rest/v1/rpc/${functionName}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'apikey': VALMONT_SUPABASE.anonKey,
-          'Authorization': `Bearer ${VALMONT_SUPABASE.anonKey}`,
-          'Prefer': 'return=representation'
+          'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify(body)
       });
-      if (!response.ok) throw new Error(await response.text());
-      return response.json();
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        if (response.status === 401) throw new Error('Your session expired. Please sign in again.');
+        throw new Error(data?.message || 'The request could not be completed.');
+      }
+      return data;
     }
 
-    async function supabaseFetch(endpoint) {
+    async function supabaseFetch(endpoint, options = {}) {
       if (!hasSupabase()) throw new Error('Supabase not configured');
+      const method = options.method || 'GET';
+      const headers = {
+        'apikey': VALMONT_SUPABASE.anonKey,
+        'Authorization': `Bearer ${VALMONT_SUPABASE.anonKey}`
+      };
+      if (options.body !== undefined) headers['content-type'] = 'application/json';
       const response = await fetch(`${VALMONT_SUPABASE.url.replace(/\/$/, '')}/rest/v1/${endpoint}`, {
-        method: 'GET',
-        headers: {
-          'apikey': VALMONT_SUPABASE.anonKey,
-          'Authorization': `Bearer ${VALMONT_SUPABASE.anonKey}`
-        }
+        method,
+        headers,
+        body: options.body === undefined ? undefined : JSON.stringify(options.body)
       });
       if (!response.ok) throw new Error(await response.text());
       return response.json();
@@ -1238,7 +329,9 @@ document.addEventListener("keydown", function(e) {
     async function syncProductsFromSupabase() {
       if (!hasSupabase()) return;
       try {
-        const remote = await supabaseFetch('products?is_active=eq.true&order=created_at.desc');
+        // Product tables are admin-only. This reviewed RPC exposes only the
+        // customer-visible catalog and cannot return dealer or supplier costs.
+        const remote = await supabaseFetch('rpc/get_storefront_catalog', { method: 'POST', body: {} });
         if (!Array.isArray(remote) || !remote.length) return;
 
         const existingIds = new Set(PRODUCTS.map(p => String(p.id)));
@@ -1264,9 +357,6 @@ document.addEventListener("keydown", function(e) {
             tags: [],
             image: imageUrl,
             images: [imageUrl, ...otherImages].filter(Boolean),
-            wholesale: Number(rp.wholesale_price || 0),
-            deliveryCost: 80,
-            paymentCost: 0,
             reviews_count: Number(rp.reviews_count || 0),
             stock_quantity: Number(rp.stock ?? rp.stock_quantity ?? 0),
             colors: (() => { const v = typeof rp.colors === 'string' ? safeParseJSON(rp.colors, []) : (rp.colors || []); return Array.isArray(v) ? v : []; })(),
@@ -1294,26 +384,18 @@ document.addEventListener("keydown", function(e) {
           if (p.stock_quantity == null) p.stock_quantity = 6 + (index % 12);
         });
 
-        // Re-render with merged data
-        renderProducts();
-        renderFlashSales();
+        // Re-evaluate account pricing after adding remote SKUs so a catalog/auth
+        // race cannot display retail while authoritative checkout uses dealer.
+        if (currentUser) await refreshDealerAuthorization();
+        else {
+          renderProducts();
+          renderFlashSales();
+        }
         console.info(`Synced ${remote.length} product(s) from Supabase.`);
       } catch (e) {
         console.warn('Supabase product sync skipped:', e.message || e);
       }
     }
-
-    window.loadPaystackScript = function loadPaystackScript() {
-      return new Promise((resolve, reject) => {
-        if (window.PaystackPop) return resolve(window.PaystackPop);
-        const script = document.createElement('script');
-        script.src = 'https://js.paystack.co/v1/inline.js';
-        script.async = true;
-        script.onload = () => resolve(window.PaystackPop);
-        script.onerror = reject;
-        document.head.appendChild(script);
-      });
-    };
 
     // APP STATE
     const initialFilters = new URLSearchParams(location.search);
@@ -1322,19 +404,71 @@ document.addEventListener("keydown", function(e) {
     let activeSort = initialFilters.get('sort') || 'popular';
     let currentProductPage = Math.max(1, Number(initialFilters.get('page') || 1));
     let searchQuery = '';
-    let cart = safeParseJSON(localStorage.getItem('valmont_cart'), []);
+    let shopperStorageScope = 'guest';
+    const shopperStorageKey = (base, scope = shopperStorageScope) => `${base}:${scope}`;
+    function readShopperStorage(base, fallback, scope = shopperStorageScope) {
+      let raw = localStorage.getItem(shopperStorageKey(base, scope));
+      // One-time migration of pre-hardening browser data into the guest scope.
+      if (raw == null && scope === 'guest') {
+        raw = localStorage.getItem(base);
+        if (raw != null) {
+          localStorage.setItem(shopperStorageKey(base, 'guest'), raw);
+          localStorage.removeItem(base);
+        }
+      }
+      return safeParseJSON(raw, fallback);
+    }
+    const writeShopperStorage = (base, value) => localStorage.setItem(shopperStorageKey(base), JSON.stringify(value));
+
+    let cart = readShopperStorage('valmont_cart', []);
     if (!Array.isArray(cart)) cart = [];
-    let wishlist = safeParseJSON(localStorage.getItem('valmont_wishlist'), []);
+    let wishlist = readShopperStorage('valmont_wishlist', []);
     if (!Array.isArray(wishlist)) wishlist = [];
-    let recentlyViewed = safeParseJSON(localStorage.getItem('valmont_recently_viewed'), []);
+    let recentlyViewed = readShopperStorage('valmont_recently_viewed', []);
     if (!Array.isArray(recentlyViewed)) recentlyViewed = [];
-    let currentUser = localStorage.getItem('valmont_access_token') ? safeParseJSON(localStorage.getItem('valmont_user'), null) : null;
-    // Legacy local-only profiles were not authenticated accounts; do not treat them as signed in.
-    if (!localStorage.getItem('valmont_access_token')) localStorage.removeItem('valmont_user');
+    // Cached browser objects are display caches only, never authentication.
+    let currentUser = null;
+    localStorage.removeItem('valmont_user');
+    localStorage.removeItem('valmont_is_dealer');
+    localStorage.removeItem('valmont_dealer_profile');
     let isResellerMode = false;
     let selectedDetailProduct = null;
     let isDealerMode = false;
     let dealerProfile = null;
+
+    function activateShopperStorage(accountId, mergeGuest = false) {
+      const nextScope = accountId || 'guest';
+      if (nextScope === shopperStorageScope) return;
+      const guestCart = mergeGuest ? readShopperStorage('valmont_cart', [], 'guest') : [];
+      const guestWishlist = mergeGuest ? readShopperStorage('valmont_wishlist', [], 'guest') : [];
+      shopperStorageScope = nextScope;
+      cart = readShopperStorage('valmont_cart', []);
+      wishlist = readShopperStorage('valmont_wishlist', []);
+      recentlyViewed = readShopperStorage('valmont_recently_viewed', []);
+      if (!Array.isArray(cart)) cart = [];
+      if (!Array.isArray(wishlist)) wishlist = [];
+      if (!Array.isArray(recentlyViewed)) recentlyViewed = [];
+
+      // Preserve a guest's active shopping intent on first sign-in, then clear
+      // the guest data so a later user on the device cannot see it.
+      if (mergeGuest && Array.isArray(guestCart)) {
+        for (const item of guestCart) {
+          const existing = cart.find(entry => entry.id === item.id &&
+            (entry.selected_color || '') === (item.selected_color || '') &&
+            (entry.selected_storage || '') === (item.selected_storage || ''));
+          if (existing) existing.qty = Math.min(99, Number(existing.qty || 0) + Number(item.qty || 1));
+          else cart.push(item);
+        }
+        wishlist = [...new Set([...wishlist, ...(Array.isArray(guestWishlist) ? guestWishlist : [])])];
+        writeShopperStorage('valmont_cart', cart);
+        writeShopperStorage('valmont_wishlist', wishlist);
+        localStorage.removeItem(shopperStorageKey('valmont_cart', 'guest'));
+        localStorage.removeItem(shopperStorageKey('valmont_wishlist', 'guest'));
+      }
+      if (typeof updateCartCount === 'function') updateCartCount();
+      if (typeof updateWishlistUI === 'function') updateWishlistUI();
+      if (typeof renderRecentlyViewed === 'function') renderRecentlyViewed();
+    }
 
     // ── Delivery-fee live config (Task 2) ──────────────────────────────────
     // Fetched once per checkout open via anon RPC get_delivery_config().
@@ -1443,6 +577,34 @@ document.addEventListener("keydown", function(e) {
     // Elements
     const productGrid = document.getElementById('productGrid');
     const flashGrid = document.getElementById('flashProductsRow');
+
+    function handleProductGridAction(event) {
+      const wishlistButton = event.target.closest('[data-wishlist-product]');
+      if (wishlistButton) {
+        event.stopPropagation();
+        toggleWishlist(wishlistButton.dataset.wishlistProduct);
+        return;
+      }
+      const addButton = event.target.closest('[data-add-product]');
+      if (addButton) {
+        event.stopPropagation();
+        addToCart(addButton.dataset.addProduct);
+        return;
+      }
+      const card = event.target.closest('[data-open-product]');
+      if (card) openProductDetail(card.dataset.openProduct);
+    }
+
+    productGrid?.addEventListener('click', handleProductGridAction);
+    flashGrid?.addEventListener('click', handleProductGridAction);
+    function handleProductCardKeydown(event) {
+      if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('[data-open-product]')) {
+        event.preventDefault();
+        openProductDetail(event.target.dataset.openProduct);
+      }
+    }
+    productGrid?.addEventListener('keydown', handleProductCardKeydown);
+    flashGrid?.addEventListener('keydown', handleProductCardKeydown);
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
     const cartCountBadge = document.getElementById('cartBadgeCount');
@@ -1627,9 +789,9 @@ document.addEventListener("keydown", function(e) {
           const heartColor = isWishlisted ? 'text-red-500 fill-red-500' : 'text-gray-400 hover:text-red-500';
           
           return `
-            <div role="button" tabindex="0" class="bg-white rounded-[4px] overflow-hidden border border-gray-200 hover:shadow-md transition duration-200 flex flex-col justify-between group relative cursor-pointer" onclick="openProductDetail('${p.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProductDetail('${p.id}')}">
+            <div role="button" tabindex="0" data-open-product="${escapeHtml(p.id)}" class="bg-white rounded-[4px] overflow-hidden border border-gray-200 hover:shadow-md transition duration-200 flex flex-col justify-between group relative cursor-pointer">
               <!-- Wishlist heart button overlay -->
-              <button onclick="event.stopPropagation(); toggleWishlist('${p.id}')" class="absolute top-2.5 right-2 h-7 w-7 rounded-full bg-white/95 shadow-sm border border-gray-50 flex items-center justify-center z-10 transition">
+              <button type="button" data-wishlist-product="${escapeHtml(p.id)}" aria-label="Toggle ${escapeHtml(p.name)} in saved items" class="absolute top-2.5 right-2 h-7 w-7 rounded-full bg-white/95 shadow-sm border border-gray-50 flex items-center justify-center z-10 transition">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5 ${heartColor}" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
                 </svg>
@@ -1672,7 +834,7 @@ document.addEventListener("keydown", function(e) {
                 </div>
               </div>
               <div class="px-3 pb-3 hidden md:block">
-                <button onclick="event.stopPropagation(); addToCart('${p.id}')" class="w-full bg-[#ff8c00] hover:bg-orange-600 text-white font-bold text-[11px] py-2 rounded-[4px] uppercase transition tracking-widest shadow-sm">
+                <button type="button" data-add-product="${escapeHtml(p.id)}" class="w-full bg-[#ff8c00] hover:bg-orange-600 text-white font-bold text-[11px] py-2 rounded-[4px] uppercase transition tracking-widest shadow-sm">
                   Add To Bag
                 </button>
               </div>
@@ -1714,7 +876,7 @@ document.addEventListener("keydown", function(e) {
       flashGrid.innerHTML = flashItems.map(p => {
         const discount = safeDiscountPercent(p.retail, p.compareAt);
         return `
-          <div class="bg-white rounded-[4px] p-2.5 border border-gray-100 hover:border-orange-200/50 shrink-0 w-[145px] hover:shadow transition relative cursor-pointer" onclick="openProductDetail('${p.id}')">
+          <div role="button" tabindex="0" data-open-product="${escapeHtml(p.id)}" class="bg-white rounded-[4px] p-2.5 border border-gray-100 hover:border-orange-200/50 shrink-0 w-[145px] hover:shadow transition relative cursor-pointer">
             <div class="product-image-frame h-[100px] w-full flex items-center justify-center overflow-hidden mb-1 bg-gray-50 rounded-[4px]">
               ${productImg(p.image, p.name, 100)}
             </div>
@@ -1726,7 +888,7 @@ document.addEventListener("keydown", function(e) {
                 <span class="text-[9px] text-[#ff8c00] font-black">-${discount}%</span>
               </span>
             </div>
-            <button type="button" class="flash-add" onclick="event.stopPropagation(); addToCart('${p.id}')">Add to Bag</button>
+            <button type="button" class="flash-add" data-add-product="${escapeHtml(p.id)}">Add to Bag</button>
           </div>
         `;
       }).join('');
@@ -1740,7 +902,7 @@ document.addEventListener("keydown", function(e) {
       } else {
         wishlist.push(id);
       }
-      localStorage.setItem('valmont_wishlist', JSON.stringify(wishlist));
+      writeShopperStorage('valmont_wishlist', wishlist);
       updateWishlistUI();
       renderProducts();
     }
@@ -1818,10 +980,10 @@ document.addEventListener("keydown", function(e) {
               <p class="text-[11px] text-gray-500 font-black mt-0.5">${money(p.retail)}</p>
             </div>
             <div class="flex gap-2 shrink-0">
-              <button onclick="addToCart('${p.id}'); closeWishlistModal();" class="bg-[#ff8c00] hover:bg-orange-600 text-white font-bold text-[10px] px-3.5 py-2 rounded-[4px] uppercase transition">
+              <button type="button" data-wishlist-add="${escapeHtml(p.id)}" class="bg-[#ff8c00] hover:bg-orange-600 text-white font-bold text-[10px] px-3.5 py-2 rounded-[4px] uppercase transition">
                 Add To Bag
               </button>
-              <button onclick="toggleWishlist('${p.id}'); renderWishlistModal();" class="text-gray-400 hover:text-red-500 text-sm">
+              <button type="button" data-wishlist-remove="${escapeHtml(p.id)}" aria-label="Remove ${escapeHtml(p.name)} from saved items" class="text-gray-400 hover:text-red-500 text-sm">
                 x
               </button>
             </div>
@@ -1829,6 +991,20 @@ document.addEventListener("keydown", function(e) {
         `;
       }).join('');
     }
+
+    wishlistModalItems?.addEventListener('click', event => {
+      const addButton = event.target.closest('[data-wishlist-add]');
+      if (addButton) {
+        addToCart(addButton.dataset.wishlistAdd);
+        closeWishlistModal();
+        return;
+      }
+      const removeButton = event.target.closest('[data-wishlist-remove]');
+      if (removeButton) {
+        toggleWishlist(removeButton.dataset.wishlistRemove);
+        renderWishlistModal();
+      }
+    });
 
     function addWishlistToCart() {
       wishlist.forEach(id => {
@@ -1842,7 +1018,7 @@ document.addEventListener("keydown", function(e) {
           }
         }
       });
-      localStorage.setItem('valmont_cart', JSON.stringify(cart));
+      writeShopperStorage('valmont_cart', cart);
       updateCartCount();
       closeWishlistModal();
       openCart();
@@ -1861,7 +1037,7 @@ document.addEventListener("keydown", function(e) {
       // Limit to 6 items
       if (recentlyViewed.length > 6) recentlyViewed.pop();
       
-      localStorage.setItem('valmont_recently_viewed', JSON.stringify(recentlyViewed));
+      writeShopperStorage('valmont_recently_viewed', recentlyViewed);
       renderRecentlyViewed();
     }
 
@@ -1877,7 +1053,7 @@ document.addEventListener("keydown", function(e) {
       recentlyViewedGrid.innerHTML = items.map(p => {
         const discount = safeDiscountPercent(p.retail, p.compareAt);
         return `
-          <div class="bg-white rounded-[4px] p-2 border border-gray-100 shrink-0 w-[130px] hover:shadow transition cursor-pointer" onclick="openProductDetail('${p.id}')">
+          <div role="button" tabindex="0" data-recent-product="${escapeHtml(p.id)}" class="bg-white rounded-[4px] p-2 border border-gray-100 shrink-0 w-[130px] hover:shadow transition cursor-pointer">
             <div class="h-[90px] w-full flex items-center justify-center overflow-hidden mb-1 bg-gray-50 rounded-[4px]">
               ${productImg(p.image, p.name, 100)}
             </div>
@@ -1889,14 +1065,36 @@ document.addEventListener("keydown", function(e) {
     }
 
 
+    recentlyViewedGrid?.addEventListener('click', event => {
+      const card = event.target.closest('[data-recent-product]');
+      if (card) openProductDetail(card.dataset.recentProduct);
+    });
+    recentlyViewedGrid?.addEventListener('keydown', event => {
+      if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('[data-recent-product]')) {
+        event.preventDefault();
+        openProductDetail(event.target.dataset.recentProduct);
+      }
+    });
+
     // JUMIA SHOPPING CART DRAWER MANAGEMENT
     const cartOverlay = document.getElementById('cartOverlay');
     const cartDrawer = document.getElementById('cartDrawer');
     const closeCartBtn = document.getElementById('closeCartBtn');
     const checkoutActionBtn = document.getElementById('checkoutActionBtn');
     const backActionBtn = document.getElementById('backActionBtn');
+    const cartItemsList = document.getElementById('cartItemsList');
 
     let checkoutStep = 1;
+
+    cartItemsList?.addEventListener('click', event => {
+      const quantityButton = event.target.closest('[data-cart-quantity]');
+      if (quantityButton) {
+        changeQty(quantityButton.dataset.cartQuantity, Number(quantityButton.dataset.delta));
+        return;
+      }
+      const removeButton = event.target.closest('[data-cart-remove]');
+      if (removeButton) removeFromCart(removeButton.dataset.cartRemove);
+    });
 
     function openCart() {
       // Close categories modal if open
@@ -1928,8 +1126,7 @@ document.addEventListener("keydown", function(e) {
     cartOverlay.addEventListener('click', closeCart);
 
     function addExpressDelivery(product) {
-      const expressFee = Math.ceil((Number(product.deliveryCost) || 0) * 1.3);
-      const message = `Valmont Express Delivery selected for ${product.name}. Estimated delivery fee: ${money(expressFee)}. Our team will confirm dispatch details.`;
+      const message = `Valmont Express Delivery selected for ${product.name}. Choose your region at checkout to see the authoritative delivery fee.`;
       if (typeof showValmontToast === 'function') showValmontToast(message);
       else alert(message);
     }
@@ -1946,10 +1143,12 @@ document.addEventListener("keydown", function(e) {
       if (existing) {
         existing.qty++;
       } else {
-        cart.push({ ...product, retail: activePrice, qty: 1 });
+        const cartProduct = { ...product, retail: activePrice, qty: 1 };
+        delete cartProduct.wholesale;
+        cart.push(cartProduct);
       }
       
-      localStorage.setItem('valmont_cart', JSON.stringify(cart));
+      writeShopperStorage('valmont_cart', cart);
       updateCartCount();
       const cartIcon = document.getElementById('cartBtn') || document.getElementById('mobileCartBtn');
       if (cartIcon) { cartIcon.classList.remove('pulse'); void cartIcon.offsetWidth; cartIcon.classList.add('pulse'); }
@@ -1970,7 +1169,7 @@ document.addEventListener("keydown", function(e) {
 
     function removeFromCart(id) {
       cart = cart.filter(item => item.id !== id);
-      localStorage.setItem('valmont_cart', JSON.stringify(cart));
+      writeShopperStorage('valmont_cart', cart);
       updateCartCount();
       renderCartUI();
     }
@@ -2002,7 +1201,7 @@ document.addEventListener("keydown", function(e) {
       } else {
         renderCartUI();
       }
-      localStorage.setItem('valmont_cart', JSON.stringify(cart));
+      writeShopperStorage('valmont_cart', cart);
       updateCartCount();
     }
 
@@ -2038,12 +1237,12 @@ document.addEventListener("keydown", function(e) {
               <p class="text-[11px] text-gray-500 font-black mt-0.5">${money(item.retail)}</p>
               
               <div class="flex items-center gap-2.5 mt-1.5">
-                <button onclick="changeQty('${item.id}', -1)" class="bg-gray-100 hover:bg-gray-200 h-6 w-6 font-bold flex items-center justify-center rounded text-[12px]">-</button>
+                <button type="button" data-cart-quantity="${escapeHtml(item.id)}" data-delta="-1" aria-label="Reduce ${escapeHtml(item.name)} quantity" class="bg-gray-100 hover:bg-gray-200 h-6 w-6 font-bold flex items-center justify-center rounded text-[12px]">-</button>
                 <span class="text-[12px] font-black text-gray-700">${item.qty}</span>
-                <button onclick="changeQty('${item.id}', 1)" class="bg-gray-100 hover:bg-gray-200 h-6 w-6 font-bold flex items-center justify-center rounded text-[12px]">+</button>
+                <button type="button" data-cart-quantity="${escapeHtml(item.id)}" data-delta="1" aria-label="Increase ${escapeHtml(item.name)} quantity" class="bg-gray-100 hover:bg-gray-200 h-6 w-6 font-bold flex items-center justify-center rounded text-[12px]">+</button>
               </div>
             </div>
-            <button onclick="removeFromCart('${item.id}')" class="text-red-400 hover:text-red-600 text-[11px] font-black uppercase">
+            <button type="button" data-cart-remove="${escapeHtml(item.id)}" class="text-red-400 hover:text-red-600 text-[11px] font-black uppercase">
               Remove
             </button>
           </div>
@@ -2371,11 +1570,20 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
       try {
         if (checkoutActionBtn) checkoutActionBtn.disabled = true;
         if (btnSpan) btnSpan.textContent = 'Opening secure payment…';
+        const checkoutToken = localStorage.getItem('valmont_access_token');
         const res = await fetch('/api/valmontpay/initialize', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(checkoutToken ? { 'Authorization': `Bearer ${checkoutToken}` } : {})
+          },
           body: JSON.stringify({
-            items: ctx.items.map(i => ({ id: i.id, qty: i.qty })),
+            items: ctx.items.map(i => ({
+              id: i.id,
+              qty: i.qty,
+              selected_color: i.selected_color || null,
+              selected_storage: i.selected_storage || null
+            })),
             customer: { name: ctx.name, phone: ctx.phone, email: email, area: ctx.area, street: ctx.street, full_address: ctx.fullAddress },
             payment_method: ctx.paymentMethod,
             delivery_region: ctx.delivery_region || selectedDeliveryRegion || null
@@ -2475,33 +1683,6 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
     // ==============================================================================
     // VERIFIED CUSTOMER REVIEWS & 5-STAR RATINGS SYSTEM
     // ==============================================================================
-    const DEFAULT_SEED_REVIEWS = [
-      {
-        customer_name: "Abena Osei",
-        rating: 5,
-        comment: "Super fast delivery in Accra! Product was 100% brand new and sealed with full warranty. Highly recommended!",
-        is_verified_buyer: true,
-        is_approved: true,
-        created_at: "2026-07-28T10:15:00Z"
-      },
-      {
-        customer_name: "Kofi Mensah",
-        rating: 5,
-        comment: "Excellent device quality and fantastic customer service. Delivery rider arrived within 2 hours.",
-        is_verified_buyer: true,
-        is_approved: true,
-        created_at: "2026-07-25T14:30:00Z"
-      },
-      {
-        customer_name: "Emmanuel Appiah",
-        rating: 4,
-        comment: "Great gadget, came exactly as described. Valmont Gadgets is my go-to store now.",
-        is_verified_buyer: true,
-        is_approved: true,
-        created_at: "2026-07-20T09:45:00Z"
-      }
-    ];
-
     function escapeHtml(str) {
       if (!str) return '';
       return String(str)
@@ -2510,6 +1691,26 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+    }
+
+    const REVIEW_PHOTO_HOSTS = new Set([
+      'images.unsplash.com',
+      'eydsoqnpetqczaeqrscc.supabase.co'
+    ]);
+
+    function normalizeReviewPhotoUrl(value) {
+      const candidate = String(value || '').trim();
+      if (!candidate) return '';
+      try {
+        const parsed = new URL(candidate);
+        if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.port) return '';
+        if (!REVIEW_PHOTO_HOSTS.has(parsed.hostname.toLowerCase())) return '';
+        if (parsed.hostname.toLowerCase().endsWith('.supabase.co') &&
+            !parsed.pathname.startsWith('/storage/v1/object/public/')) return '';
+        return parsed.href;
+      } catch (_) {
+        return '';
+      }
     }
 
     function renderStarRatingSVG(rating) {
@@ -2543,29 +1744,8 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         }
       }
 
-      // 2. Combine with local reviews from localStorage
-      try {
-        const localReviews = safeParseJSON(localStorage.getItem('valmont_reviews'), []);
-        const matchingLocal = localReviews.filter(r => (r.product_id === product.id || r.product_id === product.slug) && r.is_approved !== false);
-        
-        const existingIds = new Set(reviews.map(r => String(r.id)));
-        matchingLocal.forEach(r => {
-          if (!existingIds.has(String(r.id))) {
-            reviews.unshift(r);
-          }
-        });
-      } catch (e) {
-        console.warn('Local reviews read error:', e);
-      }
-
-      // 3. Fallback to seed reviews if no custom reviews present
-      if (reviews.length === 0) {
-        reviews = DEFAULT_SEED_REVIEWS.map((sr, idx) => ({
-          ...sr,
-          id: `seed-${product.id}-${idx}`,
-          product_id: product.id
-        }));
-      }
+      // Reviews are loaded only from the moderated database view. Browser
+      // storage is not a source of truth and cannot create a "verified" badge.
 
       // Calculate average rating score
       const totalRating = reviews.reduce((sum, r) => sum + Math.max(1, Math.min(5, Number(r.rating || 5))), 0);
@@ -2580,7 +1760,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
       if (avgEl) avgEl.textContent = avgRating;
 
       const countEl = document.getElementById('detailReviewsCount');
-      if (countEl) countEl.textContent = `(${reviews.length} verified review${reviews.length === 1 ? '' : 's'})`;
+      if (countEl) countEl.textContent = `(${reviews.length} review${reviews.length === 1 ? '' : 's'})`;
 
       const detailRevCount = document.getElementById('detailReviews');
       if (detailRevCount) detailRevCount.textContent = reviews.length;
@@ -2594,10 +1774,16 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
       const container = document.getElementById('detailReviewsList');
       if (!container) return;
 
+      if (reviews.length === 0) {
+        container.innerHTML = '<p class="text-xs font-semibold text-gray-500">No approved reviews yet. Be the first to submit one.</p>';
+        return;
+      }
+
       container.innerHTML = reviews.map(r => {
         const ratingNum = Math.max(1, Math.min(5, Number(r.rating || 5)));
         const formattedDate = r.created_at ? new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recently';
-        const isVerified = r.is_verified_buyer !== false;
+        const isVerified = r.is_verified_buyer === true;
+        const approvedPhotoUrl = normalizeReviewPhotoUrl(r.photo_url);
         
         return `
           <div class="bg-white border border-gray-150 rounded-xl p-4 shadow-xs">
@@ -2620,10 +1806,10 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
 
             <p class="text-xs text-gray-700 leading-relaxed font-medium">${escapeHtml(r.comment || '')}</p>
 
-            ${r.photo_url ? `
+            ${approvedPhotoUrl ? `
               <div class="mt-3">
-                <a href="${escapeHtml(r.photo_url)}" target="_blank" rel="noopener" class="inline-block">
-                  <img src="${escapeHtml(r.photo_url)}" alt="Customer review photo" class="w-16 h-16 object-cover rounded-lg border border-gray-200 hover:opacity-90 transition" />
+                <a href="${escapeHtml(approvedPhotoUrl)}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" class="inline-block">
+                  <img src="${escapeHtml(approvedPhotoUrl)}" alt="Customer review photo" referrerpolicy="no-referrer" loading="lazy" decoding="async" class="w-16 h-16 object-cover rounded-lg border border-gray-200 hover:opacity-90 transition" />
                 </a>
               </div>
             ` : ''}
@@ -2683,77 +1869,53 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
     }
 
     async function handleReviewSubmit(event) {
-      if (event && event.preventDefault) event.preventDefault();
-      const productId = document.getElementById('reviewProductId')?.value || (selectedDetailProduct ? selectedDetailProduct.id : '');
-      const customerName = document.getElementById('reviewCustomerName')?.value.trim();
-      const customerEmail = document.getElementById('reviewCustomerEmail')?.value.trim() || null;
+      if (event?.preventDefault) event.preventDefault();
+      const productId = document.getElementById('reviewProductId')?.value || selectedDetailProduct?.id || '';
       const rating = Number(document.getElementById('reviewRatingInput')?.value || 5);
-      const comment = document.getElementById('reviewComment')?.value.trim();
-      const photoUrl = document.getElementById('reviewPhotoUrl')?.value.trim() || null;
+      const comment = document.getElementById('reviewComment')?.value.trim() || '';
+      const photoInput = document.getElementById('reviewPhotoUrl')?.value.trim() || '';
+      const photoUrl = normalizeReviewPhotoUrl(photoInput) || null;
 
-      if (!productId || !customerName || !comment) {
-        alert('Please fill out all required fields (*)');
+      if (!currentUser || !localStorage.getItem('valmont_access_token')) {
+        showValmontToast('Please sign in before submitting a review.');
+        openLoginModal();
+        return;
+      }
+      if (!productId || comment.length < 10 || comment.length > 2000 || rating < 1 || rating > 5) {
+        showValmontToast('Write a review of 10–2,000 characters and choose a rating.');
+        return;
+      }
+      if (photoInput && !photoUrl) {
+        showValmontToast('Review photos must use an approved HTTPS image host.');
         return;
       }
 
-      const newReview = {
-        id: `rev-${Date.now()}`,
-        product_id: productId,
-        customer_name: customerName,
-        customer_email: customerEmail,
-        rating: rating,
-        comment: comment,
-        photo_url: photoUrl,
-        is_verified_buyer: true,
-        is_approved: true,
-        created_at: new Date().toISOString()
-      };
-
       const submitBtn = document.getElementById('submitReviewBtn');
       if (submitBtn) submitBtn.disabled = true;
-
-      // 1. Send to Supabase if available
-      if (hasSupabase()) {
-        try {
-          await supabaseInsert('reviews', {
-            product_id: newReview.product_id,
-            customer_name: newReview.customer_name,
-            customer_email: newReview.customer_email,
-            rating: newReview.rating,
-            comment: newReview.comment,
-            photo_url: newReview.photo_url,
-            is_verified_buyer: true,
-            is_approved: true
-          });
-        } catch (e) {
-          console.warn('Supabase review insert fallback:', e);
+      try {
+        await authenticatedSupabaseRpc('submit_product_review', {
+          p_product_id: productId,
+          p_rating: rating,
+          p_comment: comment,
+          p_photo_url: photoUrl
+        });
+        const successMsg = document.getElementById('reviewSuccessMsg');
+        if (successMsg) {
+          successMsg.classList.remove('hidden');
+          setTimeout(() => successMsg.classList.add('hidden'), 5000);
         }
+        document.getElementById('productReviewForm')?.reset();
+        initInteractiveStarRating(5);
+        setTimeout(toggleReviewForm, 900);
+      } catch (error) {
+        console.warn('Review submission failed:', error);
+        showValmontToast(error.message || 'Your review could not be submitted.');
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
       }
-
-      // 2. Save locally
-      let localReviews = safeParseJSON(localStorage.getItem('valmont_reviews'), []);
-      localReviews.unshift(newReview);
-      localStorage.setItem('valmont_reviews', JSON.stringify(localReviews));
-
-      // 3. Show success message
-      const successMsg = document.getElementById('reviewSuccessMsg');
-      if (successMsg) {
-        successMsg.classList.remove('hidden');
-        setTimeout(() => successMsg.classList.add('hidden'), 4000);
-      }
-
-      // 4. Reset form & re-render
-      document.getElementById('productReviewForm')?.reset();
-      if (submitBtn) submitBtn.disabled = false;
-      
-      setTimeout(() => {
-        toggleReviewForm();
-        if (selectedDetailProduct) {
-          loadAndRenderProductReviews(selectedDetailProduct);
-        }
-      }, 800);
     }
 
+    document.getElementById('productReviewForm')?.addEventListener('submit', handleReviewSubmit);
     window.toggleReviewForm = toggleReviewForm;
     window.handleReviewSubmit = handleReviewSubmit;
     window.loadAndRenderProductReviews = loadAndRenderProductReviews;
@@ -2940,17 +2102,99 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
       return data;
     }
 
-    function setAuthenticatedUser(account, accessToken) {
-        const metadata = account.user_metadata || {};
-      currentUser = { id: account.id, name: metadata.full_name || metadata.name || account.email.split('@')[0], email: account.email, phone: metadata.phone || account.phone || '', address: metadata.address || '', role: metadata.role || 'customer' };
-      localStorage.setItem('valmont_user', JSON.stringify(currentUser));
-      if (currentUser.role === 'dealer') {
-        isDealerMode = true;
-        dealerProfile = { id: account.id, name: currentUser.name, phone: currentUser.phone, email: currentUser.email, role: 'dealer' };
-        localStorage.setItem('valmont_is_dealer', 'true');
-        localStorage.setItem('valmont_dealer_profile', JSON.stringify(dealerProfile));
+    function clearDealerPricing() {
+      PRODUCTS.forEach((product) => { delete product.wholesale; });
+      cart.forEach((item) => {
+        const product = PRODUCTS.find((candidate) => candidate.id === item.id);
+        if (product) item.retail = product.retail;
+        delete item.wholesale;
+        delete item.wholesale_price;
+      });
+      writeShopperStorage('valmont_cart', cart);
+    }
+
+    function repriceCartForCurrentMode() {
+      cart.forEach((item) => {
+        const product = PRODUCTS.find((candidate) => candidate.id === item.id);
+        if (product) item.retail = effectiveUnitPrice(product, isDealerMode);
+        delete item.wholesale;
+        delete item.wholesale_price;
+      });
+      writeShopperStorage('valmont_cart', cart);
+      if (typeof renderCartUI === 'function') renderCartUI();
+    }
+
+    async function loadApprovedDealerPrices() {
+      const prices = await authenticatedSupabaseRpc('get_my_dealer_prices', {});
+      if (!Array.isArray(prices)) throw new Error('Dealer pricing service returned an invalid response.');
+      clearDealerPricing();
+      const byId = new Map(prices.map((entry) => [String(entry.product_id), Number(entry.wholesale_price)]));
+      PRODUCTS.forEach((product) => {
+        const price = byId.get(String(product.id));
+        if (Number.isFinite(price) && price > 0) product.wholesale = price;
+      });
+    }
+
+    async function refreshDealerAuthorization() {
+      isDealerMode = false;
+      dealerProfile = null;
+      clearDealerPricing();
+      try {
+        const profile = await authenticatedSupabaseRpc('get_my_dealer_profile', {});
+        if (profile && profile.status === 'approved') {
+          // Pricing is fetched only after PostgreSQL confirms this account is
+          // approved. Any profile or price failure leaves retail mode active.
+          await loadApprovedDealerPrices();
+          isDealerMode = true;
+          dealerProfile = {
+            id: currentUser.id,
+            name: profile.business_name,
+            phone: profile.phone,
+            email: profile.email,
+            status: profile.status,
+          };
+        } else if (profile) {
+          dealerProfile = {
+            id: currentUser.id,
+            name: profile.business_name,
+            phone: profile.phone,
+            email: profile.email,
+            status: profile.status,
+          };
+        }
+      } catch (error) {
+        // Failure is deliberately fail-closed: cached metadata cannot enable
+        // dealer pricing when authorization is unavailable.
+        clearDealerPricing();
+        dealerProfile = null;
+        console.warn('Dealer authorization unavailable:', error.message || error);
       }
+      repriceCartForCurrentMode();
+      updateDealerUI();
+      if (isDealerMode) showDealerAnnouncementBanner();
+      else document.getElementById('dealerBanner')?.remove();
+      renderProducts();
+      renderFlashSales();
+    }
+
+    async function setAuthenticatedUser(account, accessToken, mergeGuest = true) {
+      const metadata = account && account.user_metadata || {};
+      const email = account && account.email || '';
+      currentUser = {
+        id: account.id,
+        name: metadata.full_name || metadata.name || (email ? email.split('@')[0] : 'Valmont Customer'),
+        email,
+        phone: metadata.phone || account.phone || '',
+        address: metadata.address || '',
+        role: 'customer',
+      };
+      localStorage.setItem('valmont_user', JSON.stringify(currentUser));
+      localStorage.removeItem('valmont_is_dealer');
+      localStorage.removeItem('valmont_dealer_profile');
       if (accessToken) localStorage.setItem('valmont_access_token', accessToken);
+      activateShopperStorage(account.id, mergeGuest);
+      await refreshDealerAuthorization();
+      populateAuthenticatedCheckout();
     }
 
     async function handleLoginSubmit(event) {
@@ -2962,8 +2206,8 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
           const email = document.getElementById('loginEmail').value.trim().toLowerCase();
           const password = document.getElementById('loginPassword').value;
           const result = await authRequest('token?grant_type=password', { email, password });
-          setAuthenticatedUser(result.user, result.access_token);
-          if (currentUser.role === 'dealer') { showDealerAnnouncementBanner(); updateDealerUI(); renderProducts(); renderFlashSales(); }
+          await setAuthenticatedUser(result.user, result.access_token);
+          if (isDealerMode) showDealerAnnouncementBanner();
           updateUserUI(); closeLoginModal(); showValmontToast(`Welcome back, ${currentUser.name}!`);
         } else {
           const name = document.getElementById('signUpName').value.trim();
@@ -2971,9 +2215,9 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
           const phone = document.getElementById('signUpPhone').value.trim();
           const password = document.getElementById('signUpPassword').value;
           const address = document.getElementById('signUpAddress').value.trim();
-          const result = await authRequest('signup', { email, password, data: { full_name: name, phone, address, role: 'customer' } });
+          const result = await authRequest('signup', { email, password, data: { full_name: name, phone, address } });
           if (result.session && result.user) {
-            setAuthenticatedUser(result.user, result.session.access_token); updateUserUI(); closeLoginModal(); showValmontToast(`Account created. Welcome, ${name}!`);
+            await setAuthenticatedUser(result.user, result.session.access_token); updateUserUI(); closeLoginModal(); showValmontToast(`Account created. Welcome, ${name}!`);
           } else { setLoginTab('signin'); showValmontToast('Account created. Check your email to confirm it, then sign in.'); }
         }
       } catch (error) { console.error('Authentication error:', error); showValmontToast(error.message || 'Unable to authenticate. Please try again.'); }
@@ -3057,7 +2301,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
           const hint = OAUTH_ERROR_MESSAGES[code] ? '' : ` (Code: ${code})`;
           showValmontToast(`${message}${hint}`);
         }
-        return;
+        return false;
       }
       try {
         const response = await fetch(`${VALMONT_SUPABASE.url}/auth/v1/user`, {
@@ -3065,23 +2309,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         });
         if (!response.ok) throw new Error('Unable to verify Google account');
         const account = await response.json();
-        const metadata = account.user_metadata || {};
-        currentUser = {
-          id: account.id,
-          name: metadata.full_name || metadata.name || account.email.split('@')[0],
-          email: account.email,
-          phone: metadata.phone || account.phone || '',
-          address: metadata.address || '',
-          role: metadata.role || 'customer'
-        };
-        localStorage.setItem('valmont_user', JSON.stringify(currentUser));
-        localStorage.setItem('valmont_access_token', accessToken);
-        if (currentUser.role === 'dealer') {
-          isDealerMode = true;
-          const dp = { id: account.id, name: currentUser.name, phone: currentUser.phone, email: currentUser.email, role: 'dealer' };
-          localStorage.setItem('valmont_is_dealer', 'true');
-          localStorage.setItem('valmont_dealer_profile', JSON.stringify(dp));
-        }
+        await setAuthenticatedUser(account, accessToken);
         cleanUrl();
         // Hand the shopper back to where they started (e.g. the account page
         // after a "Sign up with Google") instead of stranding them on the store.
@@ -3090,19 +2318,47 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         const currentClean = `${window.location.origin}${window.location.pathname === '/index.html' ? '/' : window.location.pathname}`;
         if (returnTo && returnTo !== currentClean && returnTo !== `${window.location.origin}${window.location.pathname}`) {
           window.location.assign(returnTo);
-          return;
+          return true;
         }
         updateUserUI();
         showValmontToast(`Welcome, ${currentUser.name}!`);
+        return true;
       } catch (error) {
         console.error('Google sign-in failed:', error);
         sessionStorage.removeItem('valmont_oauth_return');
         cleanUrl();
         showValmontToast('Google sign-in could not be completed. Please try again.');
+        return false;
       }
     }
 
-    completeGoogleSignIn();
+    async function restoreAuthenticatedSession() {
+      const accessToken = localStorage.getItem('valmont_access_token');
+      if (!accessToken) return;
+      try {
+        const response = await fetch(`${VALMONT_SUPABASE.url}/auth/v1/user`, {
+          headers: { apikey: VALMONT_SUPABASE.anonKey, Authorization: `Bearer ${accessToken}` }
+        });
+        if (!response.ok) throw new Error('Session expired');
+        const account = await response.json();
+        if (!account || !account.id) throw new Error('Invalid account response');
+        await setAuthenticatedUser(account, null, true);
+        updateUserUI();
+      } catch (error) {
+        currentUser = null;
+        isDealerMode = false;
+        dealerProfile = null;
+        localStorage.removeItem('valmont_user');
+        localStorage.removeItem('valmont_access_token');
+        localStorage.removeItem('valmont_refresh_token');
+        activateShopperStorage(null);
+        updateUserUI();
+      }
+    }
+
+    completeGoogleSignIn().then(completed => {
+      if (!completed) restoreAuthenticatedSession();
+    });
     const isGoogleSigninHandOff = new URLSearchParams(window.location.search).get('google_signin') === '1';
     if (isGoogleSigninHandOff) {
       history.replaceState(null, '', window.location.pathname);
@@ -3137,17 +2393,33 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
       updateMobileAccountLabel();
     }
 
-    function handleLogout() {
-      currentUser = null;
-      localStorage.removeItem('valmont_user');
-      localStorage.removeItem('valmont_access_token');
-      localStorage.removeItem('valmont_is_dealer');
-      localStorage.removeItem('valmont_dealer_profile');
-      isDealerMode = false;
-      dealerProfile = null;
-      updateUserUI();
-      closeLoginModal();
-      alert("Logged out of your customer profile successfully.");
+    async function handleLogout() {
+      const accessToken = localStorage.getItem('valmont_access_token');
+      try {
+        if (accessToken) {
+          await fetch(`${VALMONT_SUPABASE.url}/auth/v1/logout`, {
+            method: 'POST',
+            headers: { apikey: VALMONT_SUPABASE.anonKey, Authorization: `Bearer ${accessToken}` }
+          });
+        }
+      } catch (error) {
+        console.warn('Remote sign-out could not be confirmed; clearing this device session.', error);
+      } finally {
+        currentUser = null;
+        localStorage.removeItem('valmont_user');
+        localStorage.removeItem('valmont_access_token');
+        localStorage.removeItem('valmont_refresh_token');
+        localStorage.removeItem('valmont_is_dealer');
+        localStorage.removeItem('valmont_dealer_profile');
+        isDealerMode = false;
+        dealerProfile = null;
+        clearDealerPricing();
+        if (isResellerMode) showCustomerMode();
+        activateShopperStorage(null);
+        updateUserUI();
+        closeLoginModal();
+        showValmontToast('You have been signed out successfully.');
+      }
     }
 
 
@@ -3204,12 +2476,39 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
         
         const form = document.getElementById('dealerRegForm');
         const activeProf = document.getElementById('dealerActiveProfile');
-        if (isDealerMode && dealerProfile) {
+        if (dealerProfile?.status === 'approved') {
           if (form) form.classList.add('hidden');
           if (activeProf) activeProf.classList.remove('hidden');
+          const modeButton = activeProf && activeProf.querySelector('[data-store-action="deactivate-dealer"]');
+          if (modeButton) modeButton.textContent = isDealerMode
+            ? 'Use Retail Prices'
+            : 'Activate Approved Dealer Prices';
+          const name = document.getElementById('dlProfileName');
+          const phone = document.getElementById('dlProfilePhone');
+          const email = document.getElementById('dlProfileEmail');
+          if (name) name.textContent = dealerProfile.name || '';
+          if (phone) phone.textContent = dealerProfile.phone || '';
+          if (email) email.textContent = dealerProfile.email || '';
         } else {
           if (form) form.classList.remove('hidden');
           if (activeProf) activeProf.classList.add('hidden');
+          const emailInput = document.getElementById('dlEmailInput');
+          const passwordInput = document.getElementById('dlPasswordInput');
+          const passwordGroup = passwordInput && passwordInput.closest('div');
+          const submitButton = form && form.querySelector('button[type="submit"]');
+          if (currentUser) {
+            if (emailInput) { emailInput.value = currentUser.email || ''; emailInput.readOnly = true; }
+            if (passwordInput) { passwordInput.required = false; passwordInput.value = ''; }
+            if (passwordGroup) passwordGroup.classList.add('hidden');
+            if (submitButton) submitButton.textContent = dealerProfile?.status === 'pending'
+              ? 'Update Pending Application'
+              : 'Submit Dealer Application';
+          } else {
+            if (emailInput) emailInput.readOnly = false;
+            if (passwordInput) passwordInput.required = true;
+            if (passwordGroup) passwordGroup.classList.remove('hidden');
+            if (submitButton) submitButton.textContent = 'Create Account & Submit Application';
+          }
         }
       }
     }
@@ -3403,13 +2702,17 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
     // Merge products added via admin panel (async, re-renders on completion)
     syncProductsFromSupabase();
 
-    // Auto-fill checkout fields from the authenticated profile and saved default address.
-    if (currentUser) {
-      document.getElementById('shippingName').value = currentUser.name;
-      document.getElementById('shippingPhone').value = currentUser.phone;
-      if (currentUser.email && document.getElementById('shippingEmail')) document.getElementById('shippingEmail').value = currentUser.email;
+    // Auto-fill checkout fields only after Supabase has verified the account.
+    function populateAuthenticatedCheckout() {
+      if (!currentUser) return;
+      const shippingName = document.getElementById('shippingName');
+      const shippingPhone = document.getElementById('shippingPhone');
+      const shippingEmail = document.getElementById('shippingEmail');
+      if (shippingName) shippingName.value = currentUser.name;
+      if (shippingPhone) shippingPhone.value = currentUser.phone;
+      if (shippingEmail && currentUser.email) shippingEmail.value = currentUser.email;
       try {
-        const savedAddresses = safeParseJSON(localStorage.getItem('valmont_customer_addresses'), []);
+        const savedAddresses = safeParseJSON(localStorage.getItem(shopperStorageKey('valmont_customer_addresses')), []);
         const address = savedAddresses.find(item => item.is_default) || savedAddresses[0];
         if (address) {
           const city = document.getElementById('shippingCity');
@@ -3419,7 +2722,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
           if (town) town.value = address.name || '';
           if (street) street.value = [address.street, address.landmark].filter(Boolean).join(', ');
         }
-        const preference = safeParseJSON(localStorage.getItem('valmont_payment_preference'), null);
+        const preference = safeParseJSON(localStorage.getItem(shopperStorageKey('valmont_payment_preference')), null);
         if (preference?.method) {
           const paymentRadio = document.querySelector(`input[name="paymentOption"][value="${preference.method}"]`);
           if (paymentRadio) paymentRadio.checked = true;
@@ -3660,10 +2963,9 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
           if (product) {
             if (wholesaleInput) wholesaleInput.value = product.wholesale || 0;
             if (retailInput) retailInput.value = product.retail || 0;
-            if (costsInput) {
-              const otherCost = (product.deliveryCost || 0) + (product.paymentCost || 0);
-              costsInput.value = otherCost;
-            }
+            // Dealer operating costs are user-entered. Supplier delivery and
+            // payment expenses are never embedded in the public storefront.
+            if (costsInput) costsInput.value = 0;
             calculateResellerProfit();
           }
         });
@@ -3748,40 +3050,11 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
     setupResellerOrdersButton();
     setupResellerFAQs();
   
-  // === INTEGRATED DEALER ACCESS & WHOLESALE PRICING LOGIC ===
-  isDealerMode = Boolean(localStorage.getItem('valmont_access_token')) && localStorage.getItem('valmont_is_dealer') === 'true';
-  dealerProfile = isDealerMode ? safeParseJSON(localStorage.getItem('valmont_dealer_profile'), null) : null;
-  if (!isDealerMode) { localStorage.removeItem('valmont_is_dealer'); localStorage.removeItem('valmont_dealer_profile'); }
-
-  let dealerOverlay = document.getElementById('dealerOverlay');
-  let dealerModal = document.getElementById('dealerModal');
-  let dealerRegForm = document.getElementById('dealerRegForm');
-  let dealerActiveProfile = document.getElementById('dealerActiveProfile');
-  let dealerBtnLabel = document.getElementById('dealerBtnLabel');
-
-  function openDealerModal() {
-    if (dealerOverlay) {
-      dealerOverlay.classList.remove('hidden');
-      setTimeout(() => dealerOverlay.classList.add('opacity-100'), 10);
-    }
-    if (dealerModal) { dealerModal.classList.remove('hidden'); }
-
-    if (isDealerMode && dealerProfile) {
-      if (dealerRegForm) dealerRegForm.classList.add('hidden');
-      if (dealerActiveProfile) dealerActiveProfile.classList.remove('hidden');
-      document.getElementById('dlProfileName').textContent = dealerProfile.name;
-      document.getElementById('dlProfilePhone').textContent = dealerProfile.phone;
-      document.getElementById('dlProfileEmail').textContent = dealerProfile.email;
-    } else {
-      if (dealerRegForm) dealerRegForm.classList.remove('hidden');
-      if (dealerActiveProfile) dealerActiveProfile.classList.add('hidden');
-    }
-  }
-
-  function closeDealerModal() { closeDealerRegistrationPopup(); return;
-    dealerOverlay.classList.remove('opacity-100');
-    setTimeout(() => dealerOverlay.classList.add('hidden'), 300);
-    dealerModal.classList.add('hidden');
+  // === AUTHORITATIVE DEALER APPLICATION & PRICING ===
+  // Account creation never grants dealer access. PostgreSQL owns application
+  // status, approval and the price list returned to an approved account.
+  function closeDealerModal() {
+    closeDealerRegistrationPopup();
   }
 
   async function registerDealerAccount(event) {
@@ -3793,57 +3066,92 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
     const normalizedPhone = phone.replace(/[\s()-]/g, '');
     if (!/^[\p{L}][\p{L} .&'\-]{1,79}$/u.test(name)) return showValmontToast('Enter a valid business name only.');
     if (!/^\+233\d{9}$/.test(normalizedPhone) && !/^0\d{9}$/.test(normalizedPhone)) return showValmontToast('Enter a valid Ghana phone number.');
-    if (password.length < 6) return showValmontToast('Password must be at least 6 characters.');
+    if (!currentUser && password.length < 6) return showValmontToast('Password must be at least 6 characters.');
+    if (!currentUser && !/^\S+@\S+\.\S+$/.test(email)) return showValmontToast('Enter a valid email address.');
+
     const button = event.currentTarget.querySelector('button[type="submit"]');
     if (button) button.disabled = true;
     try {
-      const result = await authRequest('signup', { email, password, data: { full_name: name, phone, role: 'dealer' } });
-      if (result.session && result.user) {
-        setAuthenticatedUser(result.user, result.session.access_token); isDealerMode = true;
-        dealerProfile = { id: result.user.id, name, phone, email, role: 'dealer' };
-        localStorage.setItem('valmont_is_dealer', 'true'); localStorage.setItem('valmont_dealer_profile', JSON.stringify(dealerProfile));
-        showDealerAnnouncementBanner(); updateDealerUI(); renderProducts(); renderFlashSales(); closeDealerModal(); showValmontToast(`Dealer account created for ${name}. Wholesale pricing is active.`);
-      } else showValmontToast('Dealer account created. Check your email to confirm it, then sign in.');
-    } catch (error) { console.error('Dealer registration error:', error); showValmontToast(error.message || 'Dealer registration failed.'); }
-    finally { if (button) button.disabled = false; }
+      if (!currentUser) {
+        const result = await authRequest('signup', {
+          email,
+          password,
+          data: { full_name: name, phone: normalizedPhone }
+        });
+        if (!result.session || !result.user) {
+          closeDealerModal();
+          showValmontToast('Account created. Confirm your email, sign in, then submit your dealer application.');
+          return;
+        }
+        await setAuthenticatedUser(result.user, result.session.access_token);
+        updateUserUI();
+      }
+
+      const application = await authenticatedSupabaseRpc('apply_for_dealer', {
+        p_business_name: name,
+        p_phone: normalizedPhone
+      });
+      await refreshDealerAuthorization();
+      closeDealerModal();
+      if (application?.status === 'approved' && isDealerMode) {
+        showDealerAnnouncementBanner();
+        showValmontToast('Your approved dealer pricing is active.');
+      } else {
+        showValmontToast('Dealer application submitted for review. Retail pricing remains active until approval.');
+      }
+    } catch (error) {
+      console.error('Dealer application error:', error);
+      showValmontToast(error.message || 'Dealer application failed.');
+    } finally {
+      if (button) button.disabled = false;
+    }
   }
 
-  function deactivateDealerMode() {
-    isDealerMode = false;
-    dealerProfile = null;
-    localStorage.removeItem('valmont_is_dealer');
-    localStorage.removeItem('valmont_dealer_profile');
-
-    // Remove announcement banner
-    const banner = document.getElementById('dealerBanner');
-    if (banner) banner.remove();
-
-    updateDealerUI();
-    renderProducts();
-    renderFlashSales();
-    closeDealerModal();
-    alert("Returned to standard retail shopping mode.");
+  async function deactivateDealerMode() {
+    try {
+      if (!isDealerMode && dealerProfile?.status === 'approved') {
+        await loadApprovedDealerPrices();
+        isDealerMode = true;
+        repriceCartForCurrentMode();
+        showDealerAnnouncementBanner();
+        showValmontToast('Approved dealer pricing is active.');
+      } else {
+        isDealerMode = false;
+        clearDealerPricing();
+        repriceCartForCurrentMode();
+        const banner = document.getElementById('dealerBanner');
+        if (banner) banner.remove();
+        if (isResellerMode) showCustomerMode();
+        showValmontToast('Retail pricing is active on this device.');
+      }
+      updateDealerUI();
+      renderProducts();
+      renderFlashSales();
+      closeDealerModal();
+    } catch (error) {
+      isDealerMode = false;
+      clearDealerPricing();
+      updateDealerUI();
+      showValmontToast('Dealer pricing could not be verified. Retail pricing remains active.');
+    }
   }
 
   function updateDealerUI() {
-    if (isDealerMode && dealerProfile) {
-      dealerBtnLabel.textContent = `Dealer: ${dealerProfile.name.split(' ')[0]}`;
-    } else {
-      dealerBtnLabel.textContent = "Dealer Portal";
-    }
+    const label = document.getElementById('dealerBtnLabel');
+    if (label) label.textContent = isDealerMode && dealerProfile
+      ? `Dealer: ${(dealerProfile.name || 'Approved').split(' ')[0]}`
+      : 'Dealer Portal';
   }
 
   function showDealerAnnouncementBanner() {
     const existing = document.getElementById('dealerBanner');
     if (existing) existing.remove();
-
+    if (!isDealerMode || dealerProfile?.status !== 'approved') return;
     const banner = document.createElement('div');
     banner.id = 'dealerBanner';
-    banner.className = "bg-green-600 text-white text-center py-2.5 px-4 text-xs font-bold tracking-wide transition-all uppercase";
-    banner.innerHTML = ` AUTHORIZED DEALER ACCESS ACTIVE — SPECIAL WHOLESALE PRICING APPLIED DIRECTLY`;
-    
-    // Insert right below the top notice banner
-    document.body.insertBefore(banner, document.body.children[1]);
+    banner.className = 'bg-green-600 text-white text-center py-2.5 px-4 text-xs font-bold tracking-wide transition-all uppercase';
+    banner.textContent = 'AUTHORIZED DEALER ACCESS ACTIVE — APPROVED WHOLESALE PRICING APPLIED';
+    document.body.insertBefore(banner, document.body.children[1] || null);
   }
 
     // Hook local dealer calculator
@@ -3869,12 +3177,6 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
       [dlWholesale, dlMarkup].forEach(inp => inp.addEventListener('input', calculateDealerPrice));
       calculateDealerPrice();
     }
-
-  // Run on startup
-  if (isDealerMode && dealerProfile) {
-    showDealerAnnouncementBanner();
-    updateDealerUI();
-  }
 
   // === VALMONT PREMIUM MOBILE NATIVE-UX UPGRADES ===
   function showProductSkeletons() {
@@ -3919,6 +3221,10 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
   let mobileMenuModal = document.getElementById('mobileMenuModal');
   let mobileCategoriesModal = document.getElementById('mobileCategoriesModal');
   let mobileCategoryGrid = document.getElementById('mobileCategoryGrid');
+  mobileCategoryGrid?.addEventListener('click', event => {
+    const button = event.target.closest('[data-mobile-category]');
+    if (button) selectMobileCategory(button.dataset.mobileCategory);
+  });
 
   function mobileGoHome() {
     activeFilter = 'all';
@@ -3966,8 +3272,8 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
       const isSelected = activeFilter === key;
       const activeClass = isSelected ? 'bg-orange-50 border-[#ff8c00] text-[#ff8c00] font-bold' : 'bg-gray-50 border-gray-100 text-gray-700 font-medium';
       return `
-        <button onclick="selectMobileCategory('${key}')" class="border p-3 rounded-lg text-[12px] text-center transition ${activeClass} shadow-sm truncate">
-          ${CATEGORY_LABELS[key]}
+        <button type="button" data-mobile-category="${escapeHtml(key)}" class="border p-3 rounded-lg text-[12px] text-center transition ${activeClass} shadow-sm truncate">
+          ${escapeHtml(CATEGORY_LABELS[key])}
         </button>
       `;
     }).join('');
@@ -4047,13 +3353,9 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
     }
   }
 
-  // Reassign DOM elements once fully parsed to prevent null reference errors on mobile
+  // Resolve deferred controls once the document is fully parsed.
   document.addEventListener('DOMContentLoaded', () => {
-    dealerOverlay = document.getElementById('dealerOverlay');
-    dealerModal = document.getElementById('dealerModal');
-    dealerRegForm = document.getElementById('dealerRegForm');
-    dealerActiveProfile = document.getElementById('dealerActiveProfile');
-    dealerBtnLabel = document.getElementById('dealerBtnLabel');
+    const parsedDealerForm = document.getElementById('dealerRegForm');
 
     mobileCategoriesOverlay = document.getElementById('mobileCategoriesOverlay');
     pwaInstructionsOverlay = document.getElementById('pwaInstructionsOverlay');
@@ -4064,7 +3366,7 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
     mobileCategoriesModal = document.getElementById('mobileCategoriesModal');
     mobileCategoryGrid = document.getElementById('mobileCategoryGrid');
 
-    if (dealerRegForm) dealerRegForm.addEventListener('submit', registerDealerAccount);
+    if (parsedDealerForm) parsedDealerForm.addEventListener('submit', registerDealerAccount);
   });
 
 

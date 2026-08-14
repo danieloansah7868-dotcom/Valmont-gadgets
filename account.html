@@ -819,11 +819,11 @@
 
     <div id="passwordResetDefaultView">
     <div class="auth-tabs">
-      <button id="tabSignIn" class="auth-tab active" onclick="switchAuthTab('signin')">Sign In</button>
-      <button id="tabSignUp" class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+      <button id="tabSignIn" class="auth-tab active" data-account-action="auth-tab" data-tab="signin">Sign In</button>
+      <button id="tabSignUp" class="auth-tab" data-account-action="auth-tab" data-tab="signup">Sign Up</button>
     </div>
 
-    <form id="formSignIn" class="auth-form" onsubmit="handleSignIn(event)">
+    <form id="formSignIn" class="auth-form" data-account-form="sign-in">
       <div class="auth-field">
         <label>Email Address</label>
         <input type="email" id="signInEmail" placeholder="you@email.com" required>
@@ -835,7 +835,7 @@
       <button type="submit" class="auth-submit">Sign In</button>
     </form>
 
-    <form id="formSignUp" class="auth-form hidden" onsubmit="handleSignUp(event)">
+    <form id="formSignUp" class="auth-form hidden" data-account-form="sign-up">
       <div class="auth-field">
         <label>Full Name</label>
         <input type="text" id="signUpName" placeholder="Enter your full name" required>
@@ -857,7 +857,7 @@
 
     <!-- Google OAuth — hands off to the storefront's Supabase provider -->
     <div class="auth-divider">Or log in with</div>
-    <button type="button" class="auth-google" onclick="handleGoogleSignIn()">
+    <button type="button" class="auth-google" data-account-action="google-sign-in">
       <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
         <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/>
         <path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/>
@@ -868,11 +868,11 @@
     </button>
 
     <div class="auth-forgot">
-      <button type="button" onclick="handlePasswordReset()">Forgot Password?</button>
+      <button data-account-action="password-reset">Forgot Password?</button>
     </div>
     </div>
 
-    <form id="passwordResetRequestView" class="auth-form hidden" data-email-source="signInEmail" onsubmit="handlePasswordResetRequest(event)" novalidate>
+    <form id="passwordResetRequestView" class="auth-form hidden" data-email-source="signInEmail" data-account-form="password-reset-request" novalidate>
       <h2 class="auth-heading">Reset your password</h2>
       <p class="auth-intro">Enter your account email and we’ll send a secure link to choose a new password.</p>
       <div class="auth-field">
@@ -882,10 +882,10 @@
       <p id="passwordResetError" class="auth-error" role="alert" aria-live="polite"></p>
       <p id="passwordResetStatus" class="auth-status" role="status" aria-live="polite"></p>
       <button type="submit" class="auth-submit">Send reset link</button>
-      <button type="button" class="auth-secondary" onclick="cancelPasswordReset()">Back to sign in</button>
+      <button type="button" class="auth-secondary" data-account-action="cancel-password-reset">Back to sign in</button>
     </form>
 
-    <form id="newPasswordForm" class="auth-form hidden" onsubmit="handleNewPassword(event)" novalidate>
+    <form id="newPasswordForm" class="auth-form hidden" data-account-form="new-password" novalidate>
       <h2 class="auth-heading">Choose a new password</h2>
       <p class="auth-intro">Use at least 8 characters, then sign in with your new password.</p>
       <div class="auth-field">
@@ -916,20 +916,20 @@
       Store
     </a>
     <h1>My Account</h1>
-    <button class="logout-btn" onclick="handleLogout()">Sign Out</button>
+    <button class="logout-btn" data-account-action="logout">Sign Out</button>
   </header>
 
   <div class="account-content">
 
     <!-- Profile Section -->
     <section id="sectionProfile" class="account-section">
-      <h2><span>👤 Profile</span> <button class="profile-edit-btn" onclick="toggleProfileEdit()">✏️ Edit</button></h2>
+      <h2><span>👤 Profile</span> <button class="profile-edit-btn" data-account-action="toggle-profile">✏️ Edit</button></h2>
       <div id="profileView">
         <div style="font-size:15px;font-weight:800;margin-bottom:4px;" id="displayName">--</div>
         <div style="font-size:13px;color:var(--text-secondary);margin-bottom:2px;" id="displayEmail">--</div>
         <div style="font-size:13px;color:var(--text-secondary);" id="displayPhone">--</div>
       </div>
-      <form id="profileForm" class="hidden" onsubmit="saveProfile(event)">
+      <form id="profileForm" class="hidden" data-account-form="save-profile">
         <div class="profile-grid">
           <div class="profile-field">
             <label>Full Name</label>
@@ -946,7 +946,7 @@
         </div>
         <div style="display:flex;gap:8px;margin-top:12px;">
           <button type="submit" class="profile-edit-btn">💾 Save</button>
-          <button type="button" onclick="toggleProfileEdit()" style="background:var(--border);border:none;padding:10px 16px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Cancel</button>
+          <button type="button" data-account-action="toggle-profile" style="background:var(--border);border:none;padding:10px 16px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Cancel</button>
         </div>
       </form>
     </section>
@@ -961,7 +961,7 @@
 
     <!-- Saved Addresses -->
     <section class="account-section">
-      <h2><span>📍 Saved Addresses</span> <button class="add-btn" onclick="openAddressForm()">+ Add</button></h2>
+      <h2><span>📍 Saved Addresses</span> <button class="add-btn" data-account-action="add-address">+ Add</button></h2>
       <div id="addressesList">
         <div style="text-align:center;padding:24px;color:var(--text-secondary);font-size:13px;">No addresses saved yet.</div>
       </div>
@@ -971,7 +971,7 @@
     <section class="account-section">
       <h2><span>💳 Payment Preferences</span></h2>
       <p style="font-size:12px;color:var(--text-secondary);margin:-8px 0 14px;">Save your Mobile Money details for faster checkout. Card numbers are never stored here.</p>
-      <form onsubmit="savePaymentPreference(event)" class="profile-grid">
+      <form data-account-form="save-payment" class="profile-grid">
         <div class="profile-field">
           <label>Preferred Method</label>
           <select id="savedPaymentMethod"><option value="momo">Mobile Money</option><option value="card">Card at Valmont-Pay</option></select>
@@ -1003,7 +1003,7 @@
     <section class="account-section">
       <h2>
         <span>🕐 Browsing History</span>
-        <button class="clear-btn" onclick="clearHistory()">Clear All</button>
+        <button class="clear-btn" data-account-action="clear-history">Clear All</button>
       </h2>
       <div class="history-scroll" id="historyScroll">
         <div style="padding:24px;color:var(--text-secondary);font-size:13px;">No browsing history yet.</div>
@@ -1018,27 +1018,27 @@
           <div class="settings-label">Push Notifications</div>
           <div class="settings-desc">Get alerts for flash deals and order updates</div>
         </div>
-        <button class="settings-toggle on" id="toggleNotif" onclick="toggleSetting('notifications')"></button>
+        <button class="settings-toggle on" id="toggleNotif" data-account-action="toggle-setting" data-setting="notifications"></button>
       </div>
       <div class="settings-item">
         <div>
           <div class="settings-label">Email Updates</div>
           <div class="settings-desc">Receive new arrivals and exclusive offers</div>
         </div>
-        <button class="settings-toggle on" id="toggleEmail" onclick="toggleSetting('email')"></button>
+        <button class="settings-toggle on" id="toggleEmail" data-account-action="toggle-setting" data-setting="email"></button>
       </div>
       <div class="settings-item">
         <div>
           <div class="settings-label">Dark Mode</div>
           <div class="settings-desc">Switch to dark color theme</div>
         </div>
-        <button class="settings-toggle" id="toggleDark" onclick="toggleSetting('dark')"></button>
+        <button class="settings-toggle" id="toggleDark" data-account-action="toggle-setting" data-setting="dark"></button>
       </div>
       <div class="settings-item">
         <div style="width:100%;">
           <div class="settings-label">Change Password</div>
           <div class="settings-desc">Update your account password</div>
-          <form onsubmit="changePassword(event)" style="display:flex;gap:8px;margin-top:8px;">
+          <form data-account-form="change-password" style="display:flex;gap:8px;margin-top:8px;">
             <input type="password" id="newPassword" placeholder="New password" required style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none;">
             <button type="submit" style="background:var(--accent);color:white;border:none;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Update</button>
           </form>
@@ -1050,21 +1050,21 @@
 </div>
 
 <!-- Order Detail Modal -->
-<div id="orderDetailOverlay" class="modal-overlay" onclick="closeOrderDetail()">
-  <div class="modal-sheet" onclick="event.stopPropagation()">
+<div id="orderDetailOverlay" class="modal-overlay" data-account-overlay="order-detail">
+  <div class="modal-sheet">
     <div class="modal-sheet-header">
       <h3 id="orderDetailRef">Order #--</h3>
-      <button class="modal-close" onclick="closeOrderDetail()">×</button>
+      <button class="modal-close" data-account-action="close-order">×</button>
     </div>
     <div id="orderDetailContent"></div>
   </div>
 </div>
 
 <!-- Address Form Modal -->
-<div id="addressFormOverlay" class="form-modal" onclick="closeAddressForm()">
-  <div class="form-modal-card" onclick="event.stopPropagation()">
+<div id="addressFormOverlay" class="form-modal" data-account-overlay="address-form">
+  <div class="form-modal-card">
     <h3 id="addressFormTitle">Add New Address</h3>
-    <form id="addressFormElem" onsubmit="saveAddress(event)">
+    <form id="addressFormElem" data-account-form="save-address">
       <input type="hidden" id="addrFormId">
       <div class="form-field">
         <label>Address Label</label>
@@ -1103,7 +1103,7 @@
         <label style="font-size:12px;font-weight:600;text-transform:none;letter-spacing:0;">Set as default delivery address</label>
       </div>
       <div class="form-modal-actions">
-        <button type="button" class="cancel-btn" onclick="closeAddressForm()">Cancel</button>
+        <button type="button" class="cancel-btn" data-account-action="close-address">Cancel</button>
         <button type="submit" class="save-btn">Save Address</button>
       </div>
     </form>
@@ -1170,8 +1170,8 @@
 <!-- Toast -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/js/password-reset.js"></script>
-<script src="assets/js/account.js"></script>
+<script src="assets/js/password-reset.js" defer></script>
+<script src="assets/js/account.js" defer></script>
 
 <!-- FLOATING WHATSAPP SUPPORT WIDGET (bottom-left; stays above the footer, clears mobile nav) -->
 <a href="https://wa.me/233542451578" target="_blank" rel="noopener" class="whatsapp-float" aria-label="Chat with Valmont Gadgets support on WhatsApp">

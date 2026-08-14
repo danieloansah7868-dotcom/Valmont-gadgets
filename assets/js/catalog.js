@@ -1,0 +1,894 @@
+/**
+ * Public storefront fallback catalog. Contains customer-visible merchandising
+ * data only; approved dealer prices are loaded from an authenticated RPC.
+ */
+(function exposeCatalog(global) {
+  'use strict';
+  const catalog = [
+  {
+    "id": "VG-IP15PM-256",
+    "name": "iPhone 15 Pro Max 256GB — Dual SIM",
+    "category": "iphones",
+    "retail": 16500,
+    "compareAt": 18000,
+    "badge": "HOT",
+    "specs": "Titanium • A17 Pro • Sealed • eSIM + Physical SIM",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1696446703255-020d67fa2f3b?q=80&w=800&auto=format&fit=crop",
+    "has_installments": true
+  },
+  {
+    "id": "iphone-15-pro-128-uk-used-92",
+    "name": "iPhone 15 Pro 128GB Natural Titanium — UK Used",
+    "category": "iphones",
+    "retail": 11200,
+    "compareAt": 14500,
+    "badge": "UK USED • BH 92%",
+    "stock": "1 in stock • UK Used • 12m Warranty",
+    "specs": "128GB • Natural Titanium • BH 92% Original • Face ID & True Tone OK • Europe Standard",
+    "description": "Solid Europe-standard iPhone 15 Pro with a clean body, original 92% battery health, Face ID and True Tone working. Cable included. Grade A+ UK used—not brand-new sealed. Swap accepted.",
+    "features": [
+      "128GB",
+      "BH 92% Original",
+      "Natural Titanium",
+      "Face ID OK",
+      "Swap Allowed",
+      "Europe Standard"
+    ],
+    "tags": [
+      "iphone 15 pro",
+      "uk used",
+      "refurbished",
+      "128gb",
+      "bh92"
+    ],
+    "image": "uploads/clean_15_pro.png",
+    "images": [
+      "uploads/clean_15_pro.png"
+    ],
+    "has_installments": true
+  },
+  {
+    "id": "VG-IP14PM-256",
+    "name": "iPhone 14 Pro Max 256GB — Deep Purple",
+    "category": "iphones",
+    "retail": 13500,
+    "compareAt": 15000,
+    "badge": "DEAL",
+    "specs": "A16 Bionic • Dynamic Island • Physical Dual SIM",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1678911820864-e2c567c655d7?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-IP13-128",
+    "name": "iPhone 13 128GB — Midnight",
+    "category": "iphones",
+    "retail": 6800,
+    "compareAt": 7500,
+    "badge": "HOT",
+    "specs": "A15 Bionic • 6.1-inch • Sealed US Variant",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1632661674596-df8be070a5c5?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-IP15-128",
+    "name": "iPhone 15 128GB — Blue Dual SIM",
+    "category": "iphones",
+    "retail": 9900,
+    "compareAt": 11000,
+    "badge": "SEALED",
+    "specs": "A16 • USB-C • Pink / Blue / Black • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-SS24U-512",
+    "name": "Samsung Galaxy S24 Ultra 512GB",
+    "category": "samsung",
+    "retail": 15200,
+    "compareAt": 16800,
+    "badge": "HOT",
+    "specs": "Titanium Black • S Pen • 200MP • Snapdragon 8 Gen 3",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-SS23U-256",
+    "name": "Samsung Galaxy S23 Ultra 256GB",
+    "category": "samsung",
+    "retail": 11500,
+    "compareAt": 13000,
+    "badge": "DEAL",
+    "specs": "Phantom Black • 12GB RAM • 5000mAh • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1610945264803-c22b62d2a7b3?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-SS24-256",
+    "name": "Samsung Galaxy S24 256GB — Marble Gray",
+    "category": "samsung",
+    "retail": 8900,
+    "compareAt": 9800,
+    "badge": "SEALED",
+    "specs": "8GB RAM • Exynos 2400 • Galaxy AI • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1585060544812-6b45742d762f?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-SSA55-256",
+    "name": "Samsung Galaxy A55 256GB — Awesome Navy",
+    "category": "samsung",
+    "retail": 4200,
+    "compareAt": 4800,
+    "badge": "DEAL",
+    "specs": "8GB RAM • 120Hz AMOLED • IP67 • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-SSFOLD5-512",
+    "name": "Samsung Galaxy Z Fold 5 512GB",
+    "category": "samsung",
+    "retail": 18500,
+    "compareAt": 20500,
+    "badge": "HOT",
+    "specs": "Phantom Black • 12GB RAM • Foldable • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1662948402327-e5ef1ac44e93?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-MBP-M3-16-512",
+    "name": "MacBook Pro M3 16GB/512GB — Space Black",
+    "category": "laptops",
+    "retail": 22500,
+    "compareAt": 24500,
+    "badge": "SEALED",
+    "specs": "14-inch Liquid Retina XDR • M3 Chip • 22H Battery",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-MBP-M3P-18-512",
+    "name": "MacBook Pro M3 Pro 18GB/512GB — Space Black",
+    "category": "laptops",
+    "retail": 28900,
+    "compareAt": 31000,
+    "badge": "HOT",
+    "specs": "14-inch • M3 Pro 11-Core • Sealed Apple Warranty",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-MBA-M2-13-256",
+    "name": "MacBook Air M2 13-inch 8GB/256GB — Midnight",
+    "category": "laptops",
+    "retail": 12800,
+    "compareAt": 14000,
+    "badge": "DEAL",
+    "specs": "M2 Chip • 13.6-inch • 8GB/256GB • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-MBA-M2-15-512",
+    "name": "MacBook Air M2 15-inch 8GB/512GB — Starlight",
+    "category": "laptops",
+    "retail": 16900,
+    "compareAt": 18200,
+    "badge": "SEALED",
+    "specs": "15.3-inch Liquid Retina • M2 • Sealed Apple",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-HP-SPECTRE-16-1T",
+    "name": "HP Spectre x360 13.5-inch i7 16GB/1TB",
+    "category": "laptops",
+    "retail": 14500,
+    "compareAt": 16000,
+    "badge": "DEAL",
+    "specs": "OLED Touch • Intel i7-1355U • Convertible • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1583223667854-e0e05b1ad2ad?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-DELL-XPS13P",
+    "name": "Dell XPS 13 Plus i7 16GB/512GB — Platinum",
+    "category": "laptops",
+    "retail": 13200,
+    "compareAt": 14800,
+    "badge": "SEALED",
+    "specs": "13.4-inch OLED • i7-1360P • InfinityEdge • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-IPAD-PRO11-M4-256",
+    "name": "iPad Pro 11-inch M4 256GB — WiFi",
+    "category": "tablets",
+    "retail": 12500,
+    "compareAt": 13800,
+    "badge": "HOT",
+    "specs": "Ultra Retina XDR • M4 Chip • Space Black • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-IPAD-AIR-M2-128",
+    "name": "iPad Air M2 11-inch 128GB — Blue",
+    "category": "tablets",
+    "retail": 6900,
+    "compareAt": 7600,
+    "badge": "SEALED",
+    "specs": "M2 Chip • Liquid Retina • Touch ID • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-AIRPODS-PRO2-USBC",
+    "name": "AirPods Pro 2nd Gen USB-C",
+    "category": "audio",
+    "retail": 3200,
+    "compareAt": 3800,
+    "badge": "HOT",
+    "specs": "MagSafe • Adaptive Smart Audio • H2 Chip • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-AIRPODS-MAX-SG",
+    "name": "AirPods Max — Space Gray",
+    "category": "audio",
+    "retail": 6500,
+    "compareAt": 7200,
+    "badge": "SEALED",
+    "specs": "High-Fidelity • Active Noise Cancellation • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-SONY-XM5-BLK",
+    "name": "Sony WH-1000XM5 Wireless Headset — Black",
+    "category": "audio",
+    "retail": 4100,
+    "compareAt": 4600,
+    "badge": "DEAL",
+    "specs": "Industry Leading ANC • 30H Battery • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-JBL-CHARGE5-BLK",
+    "name": "JBL Charge 5 Bluetooth Speaker — Black",
+    "category": "audio",
+    "retail": 1650,
+    "compareAt": 1950,
+    "badge": "HOT",
+    "specs": "IP67 Waterproof • 20H Play • PartyBoost • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1608043152269-423dbba4e7e11?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-ANKER-PB-20K-65W",
+    "name": "Anker 20,000mAh 65W Power Bank — PowerCore 24K",
+    "category": "chargers",
+    "retail": 1250,
+    "compareAt": 1500,
+    "badge": "SEALED",
+    "specs": "65W Fast Charge • PowerCore 24K • LED Display • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-APPLE-67W-CABLE",
+    "name": "Apple 67W USB-C Power Adapter + 2M Cable",
+    "category": "chargers",
+    "retail": 850,
+    "compareAt": 1050,
+    "badge": "DEAL",
+    "specs": "Genuine Apple • Fast Charge MacBook Air • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-SS-45W-BLK",
+    "name": "Samsung Galaxy 45W Super Fast Charger — Black",
+    "category": "chargers",
+    "retail": 450,
+    "compareAt": 600,
+    "badge": "SEALED",
+    "specs": "Super Fast Charging 2.0 • USB-C • Sealed Original",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-AW-17AIR",
+    "name": "iPhone 17 Air 256GB — Ultra Slim (White)",
+    "category": "iphones",
+    "retail": 19500,
+    "compareAt": 21500,
+    "badge": "NEW",
+    "specs": "Concept Air Edition • 256GB Storage • 6.1\" Ultra-Thin Titanium Frame • Sealed Box",
+    "stock": "In stock • Sealed Box • 12m Official Warranty",
+    "image": "uploads/clean_17_air.png"
+  },
+  {
+    "id": "VG-AW-16SNAP",
+    "name": "iPhone 16 128GB — White (Snapchat Banned)",
+    "category": "iphones",
+    "retail": 8500,
+    "compareAt": 11000,
+    "badge": "BARGAIN",
+    "specs": "128GB Storage • Very Neat & Solid UK Used • Snapchat App Lock Only • falaa price!",
+    "stock": "In stock • UK Used • 6m Store Warranty",
+    "image": "uploads/clean_16_snapchat.png"
+  },
+  {
+    "id": "VG-AW-17PROMAX",
+    "name": "iPhone 17 Pro Max 256GB — Premium Titanium",
+    "category": "iphones",
+    "retail": 22000,
+    "compareAt": 24000,
+    "badge": "NEW",
+    "specs": "Concept Pro Max Edition • 256GB Storage • Titanium Chassis • Factory Sim Unlocked • Swapping Allowed",
+    "stock": "In stock • Pristine Boxed • 12m Official Warranty",
+    "image": "uploads/clean_17_promax.png"
+  },
+  {
+    "id": "iphone-13-pro-max-128-uk-used",
+    "name": "iPhone 13 Pro Max 128GB — UK Used Sierra Blue / Gold",
+    "category": "iphones",
+    "retail": 7900,
+    "compareAt": 8800,
+    "badge": "UK USED • SWAP ALLOWED",
+    "stock": "5 in stock • UK Used • 12m Warranty",
+    "specs": "128GB • Sierra Blue / Gold • 85%+ Battery • Face ID & True Tone Active • Grade A",
+    "description": "Very solid Grade A UK-used iPhone 13 Pro Max with a clean body and no dents. Sierra Blue and Gold available. Battery health is 85%+, with True Tone and Face ID active. Not brand-new sealed; price reflects its used condition.",
+    "features": [
+      "128GB",
+      "Sierra Blue / Gold",
+      "UK Used",
+      "85%+ Battery",
+      "Swap Allowed"
+    ],
+    "tags": [
+      "13 pro max",
+      "uk used",
+      "refurbished"
+    ],
+    "image": "uploads/clean_13_promax.png",
+    "images": [
+      "uploads/clean_13_promax.png"
+    ]
+  },
+  {
+    "id": "VG-AW-13",
+    "name": "iPhone 13 128GB — UK Used Multi-Colors",
+    "category": "iphones",
+    "retail": 5600,
+    "compareAt": 6400,
+    "badge": "UK USED",
+    "specs": "Red / Product Blue / Midnight • 128GB Storage • Excellent Condition • Swapping Allowed",
+    "stock": "In stock • UK Used • 6m Store Warranty",
+    "image": "uploads/clean_13.png"
+  },
+  {
+    "id": "VG-AW-AIRPODS4",
+    "name": "Apple AirPods 4 — Sealed Box",
+    "category": "audio",
+    "retail": 2200,
+    "compareAt": 2600,
+    "badge": "SEALED",
+    "specs": "Active Noise Cancellation • Personalized Spatial Audio • USB-C Charger Box • Dynamic Head Tracking",
+    "stock": "In stock • Sealed Box • 12m Official Warranty",
+    "image": "uploads/clean_airpods_4.png"
+  },
+  {
+    "id": "VG-AW-AIRPODSPRO3",
+    "name": "Apple AirPods Pro 3 — Sealed Box",
+    "category": "audio",
+    "retail": 3800,
+    "compareAt": 4400,
+    "badge": "SEALED",
+    "specs": "Next-Gen Active Noise Cancellation • H3 SIP Chip • Adaptive Audio • Sealed Box",
+    "stock": "In stock • Sealed Box • 12m Official Warranty",
+    "image": "uploads/clean_airpods_pro3.png"
+  },
+  {
+    "id": "VG-IPX-256",
+    "name": "iPhone X 256GB — Silver",
+    "category": "iphones",
+    "retail": 2950,
+    "compareAt": 3400,
+    "badge": "CLASSIC",
+    "specs": "5.8-inch Super Retina OLED • Dual 12MP Cameras • Face ID • A11 Bionic",
+    "stock": "In stock • Pristine Condition • 6m Store Warranty",
+    "image": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-IPXSMAX-256",
+    "name": "iPhone XS Max 256GB — Space Gray",
+    "category": "iphones",
+    "retail": 3900,
+    "compareAt": 4400,
+    "badge": "CLASSIC",
+    "specs": "6.5-inch Super Retina OLED • Dual 12MP Cameras • Face ID • A12 Bionic",
+    "stock": "In stock • Pristine Condition • 6m Store Warranty",
+    "image": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-IP11-128",
+    "name": "iPhone 11 128GB — White",
+    "category": "iphones",
+    "retail": 4400,
+    "compareAt": 4900,
+    "badge": "DEAL",
+    "specs": "6.1-inch Liquid Retina • Dual 12MP Cameras • A13 Bionic • Best Seller in Ghana",
+    "stock": "In stock • Excellent Condition • 6m Store Warranty",
+    "image": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-IP11PM-256",
+    "name": "iPhone 11 Pro Max 256GB — Midnight Green",
+    "category": "iphones",
+    "retail": 5800,
+    "compareAt": 6500,
+    "badge": "HOT",
+    "specs": "6.5-inch Super Retina XDR OLED • Triple 12MP Cameras • Face ID • A13 Bionic",
+    "stock": "In stock • Pristine Condition • 6m Store Warranty",
+    "image": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-IP12-128",
+    "name": "iPhone 12 128GB — Black",
+    "category": "iphones",
+    "retail": 6200,
+    "compareAt": 6800,
+    "badge": "HOT",
+    "specs": "6.1-inch Super Retina XDR • Dual 12MP • A14 Bionic • 5G Support",
+    "stock": "In stock • Excellent Condition • 6m Store Warranty",
+    "image": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-IP12PM-128",
+    "name": "iPhone 12 Pro Max 128GB — Pacific Blue",
+    "category": "iphones",
+    "retail": 8900,
+    "compareAt": 9800,
+    "badge": "DEAL",
+    "specs": "6.7-inch Super Retina XDR OLED • Triple 12MP • LiDAR Scanner • Face ID",
+    "stock": "In stock • Pristine Condition • 6m Store Warranty",
+    "image": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-IP14P-128",
+    "name": "iPhone 14 Pro 128GB — Space Black",
+    "category": "iphones",
+    "retail": 11500,
+    "compareAt": 12500,
+    "badge": "SEALED",
+    "specs": "A16 Bionic • Dynamic Island • 48MP Triple Pro Camera • 120Hz ProMotion",
+    "stock": "In stock • Sealed Box • 12m Official Warranty",
+    "image": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-SSA05S-128",
+    "name": "Samsung Galaxy A05s 128GB — Light Green",
+    "category": "samsung",
+    "retail": 1450,
+    "compareAt": 1800,
+    "badge": "DEAL",
+    "specs": "4GB RAM • 6.7-inch Full HD+ • Snapdragon 680 • 50MP Triple Camera",
+    "stock": "In stock • Sealed Box • 12m Official Warranty",
+    "image": "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-SSA22-128",
+    "name": "Samsung Galaxy A22 5G 128GB — Gray",
+    "category": "samsung",
+    "retail": 1800,
+    "compareAt": 2200,
+    "badge": "SEALED",
+    "specs": "6GB RAM • 6.6-inch 90Hz Display • Triple 48MP Camera • 5G Support",
+    "stock": "In stock • Sealed Box • 12m Official Warranty",
+    "image": "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-SSA15-128",
+    "name": "Samsung Galaxy A15 128GB — Awesome Blue",
+    "category": "samsung",
+    "retail": 2100,
+    "compareAt": 2500,
+    "badge": "HOT",
+    "specs": "4GB RAM • 6.5-inch Super AMOLED • 50MP Triple Camera • 25W Fast Charge",
+    "stock": "In stock • Sealed Box • 12m Official Warranty",
+    "image": "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-SSA16-128",
+    "name": "Samsung Galaxy A16 5G 128GB — Awesome Black",
+    "category": "samsung",
+    "retail": 2900,
+    "compareAt": 3400,
+    "badge": "SEALED",
+    "specs": "6GB RAM • 6.7-inch AMOLED • 50MP Main Lens • 5000mAh Battery • 5G",
+    "stock": "In stock • Sealed Box • 12m Official Warranty",
+    "image": "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-GEVEY-RSIM18",
+    "name": "R-SIM 18 Club Gevey Unlock Chip for iPhones",
+    "category": "phone_parts",
+    "retail": 380,
+    "compareAt": 500,
+    "badge": "HOT",
+    "specs": "QPE eSIM Unlocking • iOS 17/18 Compatible • Multi-Network Support (AT&T, T-Mobile to MTN/Telecel)",
+    "stock": "In stock • Original Chip • 3m Store Warranty",
+    "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-PARTS-SIM-PIN",
+    "name": "Heavy-Duty SIM Ejector Pin Keyring (5-Pack)",
+    "category": "phone_parts",
+    "retail": 90,
+    "compareAt": 150,
+    "badge": "SEALED",
+    "specs": "Stainless Steel • Safe SIM Removal Tool • Includes Keyring Holder • Universal Fit",
+    "stock": "In stock • Original Accessory",
+    "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-CASE-SPG-15PM",
+    "name": "Spigen Rugged Armor Case for iPhone 15 Pro Max",
+    "category": "phone_acc",
+    "retail": 350,
+    "compareAt": 450,
+    "badge": "HOT",
+    "specs": "Matte Black • Carbon Fiber Accents • Military Grade Drop Protection • Case Friendly",
+    "stock": "In stock • Sealed • Original Spigen",
+    "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-CASE-APL-MS",
+    "name": "Apple MagSafe Silicone Case for iPhone 15 Pro Max",
+    "category": "phone_acc",
+    "retail": 450,
+    "compareAt": 600,
+    "badge": "SEALED",
+    "specs": "Liquid Silicone • Perfect MagSafe Alignment • Soft Microfiber Lining • Original Sealed Packaging",
+    "stock": "In stock • Sealed • Genuine Apple",
+    "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-GLASS-SPG-EZ",
+    "name": "Spigen EZ Fit Tempered Glass Screen Protector (2-Pack)",
+    "category": "phone_acc",
+    "retail": 250,
+    "compareAt": 350,
+    "badge": "DEAL",
+    "specs": "9H Hardness Glass • EZ Align Auto-Installation Tray • Oleophobic Anti-Fingerprint Shield",
+    "stock": "In stock • Sealed • Original Spigen",
+    "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-CAR-BASEUS-MS",
+    "name": "Baseus 15W MagSafe Magnetic Car Charger Mount",
+    "category": "travel_acc",
+    "retail": 550,
+    "compareAt": 750,
+    "badge": "HOT",
+    "specs": "Air Vent & Dashboard Clamp • Strong N52 MagSafe Magnets • 360 Rotation • Fast Charge",
+    "stock": "In stock • Sealed • Original Baseus",
+    "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-APL-AIRTAG-1",
+    "name": "Apple AirTag Bluetooth Tracker (1-Pack)",
+    "category": "travel_acc",
+    "retail": 550,
+    "compareAt": 700,
+    "badge": "SEALED",
+    "specs": "Find My Network Compatible • Precision Finding • IP67 Water Resistant • Genuine Sealed",
+    "stock": "In stock • Sealed • Genuine Apple",
+    "image": "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-PIX-8P",
+    "name": "Google Pixel 8 Pro 128GB — Obsidian",
+    "category": "android",
+    "retail": 8500,
+    "compareAt": 9500,
+    "badge": "HOT",
+    "specs": "Google Tensor G3 • 50MP Triple Camera • 120Hz OLED • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-OP12-256",
+    "name": "OnePlus 12 256GB — Silky Black",
+    "category": "android",
+    "retail": 9200,
+    "compareAt": 10200,
+    "badge": "HOT",
+    "specs": "Snapdragon 8 Gen 3 • 100W SuperVOOC • 16GB RAM • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-XIA-RN13P",
+    "name": "Xiaomi Redmi Note 13 Pro+ 5G 256GB",
+    "category": "android",
+    "retail": 4800,
+    "compareAt": 5400,
+    "badge": "DEAL",
+    "specs": "200MP Camera • 120W HyperCharge • IP68 Waterproof • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-ANK-8IN1",
+    "name": "Anker 8-in-1 USB-C Hub Adapter",
+    "category": "laptop_acc",
+    "retail": 950,
+    "compareAt": 1200,
+    "badge": "SEALED",
+    "specs": "4K HDMI • 100W Power Delivery • 2x USB-A • SD Card slots",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-LOGI-MX3S",
+    "name": "Logitech MX Master 3S Wireless Mouse",
+    "category": "laptop_acc",
+    "retail": 1450,
+    "compareAt": 1750,
+    "badge": "HOT",
+    "specs": "8K DPI Anywhere Tracking • Quiet Clicks • USB-C Charging",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-UG-STAND",
+    "name": "Ugreen Ergonomic Aluminum Laptop Stand",
+    "category": "laptop_acc",
+    "retail": 450,
+    "compareAt": 600,
+    "badge": "DEAL",
+    "specs": "Adjustable Height • Multi-Angle Folding • Sturdy Metal Build",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-PARTS-15PM-SCR",
+    "name": "Original iPhone 15 Pro Max Replacement Screen",
+    "category": "phone_parts",
+    "retail": 3200,
+    "compareAt": 3800,
+    "badge": "HOT",
+    "specs": "Super Retina XDR OLED • Ceramic Shield Glass • Original Part",
+    "stock": "In stock • Original Part • 3m Store Warranty",
+    "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-PARTS-IP13-BAT",
+    "name": "Original iPhone 13 Replacement Battery",
+    "category": "phone_parts",
+    "retail": 650,
+    "compareAt": 800,
+    "badge": "SEALED",
+    "specs": "3227mAh Capacity • 100% Health Verification Chip • Zero Cycles",
+    "stock": "In stock • Original Part • 3m Store Warranty",
+    "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-PARTS-S24U-CAM",
+    "name": "Original Samsung Galaxy S24 Ultra Camera Glass",
+    "category": "phone_parts",
+    "retail": 350,
+    "compareAt": 500,
+    "badge": "DEAL",
+    "specs": "Sapphire Crystal Lens • Triple Camera Lens Housing Kit",
+    "stock": "In stock • Original Part • 3m Store Warranty",
+    "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-AW-S9-45",
+    "name": "Apple Watch Series 9 GPS 45mm",
+    "category": "smartwatches",
+    "retail": 5500,
+    "compareAt": 6200,
+    "badge": "HOT",
+    "specs": "Midnight Aluminum • S9 SIP • Always-On Retina • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-GW6-44",
+    "name": "Samsung Galaxy Watch 6 44mm — Graphite",
+    "category": "smartwatches",
+    "retail": 3900,
+    "compareAt": 4400,
+    "badge": "SEALED",
+    "specs": "Super AMOLED • Sleep Tracking • Body Composition • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "ps5-1tb-new-sealed-slim",
+    "name": "PS5 1TB Slim — Brand New Sealed — Disc Edition",
+    "category": "gaming",
+    "retail": 7800,
+    "compareAt": 8500,
+    "badge": "SEALED — NEW",
+    "stock": "4 in stock • Sealed • 12m Warranty",
+    "specs": "1TB SSD Slim • Disc Edition • European Stock • Includes DualSense, cables & stand",
+    "description": "Brand-new sealed 2024 Slim model. Listing is for one console. Includes console, DualSense controller, cables and stand, with receipt and 12-month Valmont warranty.",
+    "features": [
+      "1TB SSD Slim",
+      "Disc Version",
+      "Sealed",
+      "1 Year Warranty"
+    ],
+    "tags": [
+      "ps5",
+      "new",
+      "sealed",
+      "slim"
+    ],
+    "image": "uploads/clean_ps5.png",
+    "images": [
+      "uploads/clean_ps5.png"
+    ]
+  },
+  {
+    "id": "ps5-1tb-very-neat-used-001",
+    "name": "PS5 1TB — UK Used Very Neat — 1 Controller",
+    "category": "gaming",
+    "retail": 5800,
+    "compareAt": 6800,
+    "badge": "REFURBISHED • VERY NEAT",
+    "stock": "2 in stock • Refurbished • 12m Warranty",
+    "specs": "1TB SSD • Original DualSense • Fully Tested • Clean Body • Europe Standard",
+    "description": "Very neat 9.5/10 UK-used Europe-standard PS5. This listing is for one fully tested console with clean body, one original DualSense controller, HDMI cable and power cable. Refurbished/used, not sealed new.",
+    "features": [
+      "1TB SSD",
+      "Includes DualSense",
+      "Tested 100%",
+      "12mo warranty",
+      "Accra delivery",
+      "Not sealed — refurbished"
+    ],
+    "tags": [
+      "ps5",
+      "gaming",
+      "uk used",
+      "refurbished",
+      "very neat"
+    ],
+    "image": "uploads/clean_ps5.png",
+    "images": [
+      "uploads/clean_ps5.png"
+    ]
+  },
+  {
+    "id": "hp-elitebook-1030-g2-x360",
+    "name": "HP EliteBook 1030 G2 x360 — i7 7th Gen, 8GB / 256GB",
+    "category": "laptops",
+    "retail": 3900,
+    "compareAt": 4500,
+    "badge": "x360 TOUCH • REFURBISHED",
+    "stock": "3 in stock • Refurbished • Warranty Included",
+    "specs": "i7 7th Gen • 8GB RAM • 256GB SSD • 13.3-inch FHD Touch • Windows 11 Pro",
+    "description": "Very neat UK business-grade HP EliteBook 1030 G2 x360. This touchscreen convertible has a backlit keyboard, fingerprint reader, 360-degree hinge and activated Windows 11 Pro. Includes charger. Refurbished, not brand new.",
+    "features": [
+      "i7 7th Gen",
+      "8GB / 256GB SSD",
+      "13.3-inch Touch x360",
+      "Backlit Keyboard",
+      "Fingerprint",
+      "Windows 11 Pro"
+    ],
+    "tags": [
+      "laptop",
+      "hp",
+      "elitebook",
+      "x360",
+      "touch",
+      "refurbished"
+    ],
+    "image": "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=800&auto=format&fit=crop",
+    "images": [
+      "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=800&auto=format&fit=crop"
+    ]
+  },
+  {
+    "id": "VG-NS-OLED",
+    "name": "Nintendo Switch OLED Model — Neon Blue/Red",
+    "category": "gaming",
+    "retail": 4200,
+    "compareAt": 4800,
+    "badge": "DEAL",
+    "specs": "7-inch Vibrant OLED Screen • 64GB • Wired LAN Dock",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-SH-BULB-01",
+    "name": "TP-Link Tapo Smart Wi-Fi Bulb — Colour",
+    "category": "smart_home",
+    "retail": 380,
+    "compareAt": 500,
+    "badge": "NEW",
+    "specs": "Wi-Fi Control • 16 Million Colours • Voice Assistant Compatible",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1550985543-f47f8d7a8c8e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-SH-CAM-01",
+    "name": "TP-Link Tapo C210 Indoor Security Camera",
+    "category": "smart_home",
+    "retail": 950,
+    "compareAt": 1200,
+    "badge": "DEAL",
+    "specs": "2K Pan/Tilt • Night Vision • Motion Alerts • Two-Way Audio",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1557597774-9d273605dfa9?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-NET-AX1500",
+    "name": "TP-Link Archer AX1500 Wi-Fi 6 Router",
+    "category": "networking",
+    "retail": 1450,
+    "compareAt": 1750,
+    "badge": "HOT",
+    "specs": "Wi-Fi 6 • Dual Band • Gigabit Ports • Home Coverage",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1647427060118-4911c9821b82?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-NET-MESH-02",
+    "name": "TP-Link Deco Mesh Wi-Fi System — 2 Pack",
+    "category": "networking",
+    "retail": 2850,
+    "compareAt": 3300,
+    "badge": "DEAL",
+    "specs": "Whole-Home Mesh • Dual Band • Easy App Setup • 2 Units",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1606904825846-647eb07f5be2?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-CAM-RING-01",
+    "name": "LED Ring Light with Tripod — Creator Kit",
+    "category": "cameras",
+    "retail": 650,
+    "compareAt": 850,
+    "badge": "DEAL",
+    "specs": "12-inch LED • 3 Light Modes • Phone Holder • Adjustable Tripod",
+    "stock": "In stock • 6m Store Warranty",
+    "image": "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-CAM-MIC-01",
+    "name": "Wireless Lavalier Microphone — USB-C",
+    "category": "cameras",
+    "retail": 780,
+    "compareAt": 1000,
+    "badge": "HOT",
+    "specs": "Noise Reduction • Plug & Play • 2 Transmitters • Charging Case",
+    "stock": "In stock • Sealed • 6m Store Warranty",
+    "image": "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "VG-ANKER-735-65W",
+    "name": "Anker 735 65W GaN Charger — 3 Port",
+    "category": "chargers",
+    "retail": 750,
+    "compareAt": 950,
+    "badge": "HOT",
+    "specs": "GaNPrime • 2x USB-C + USB-A • Foldable • Sealed",
+    "stock": "In stock • Sealed • 12m Warranty",
+    "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop"
+  }
+];
+  global.VALMONT_CATALOG = Object.freeze(catalog.map((product) => Object.freeze(product)));
+})(window);

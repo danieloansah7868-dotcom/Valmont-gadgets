@@ -8,13 +8,19 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const SITE = 'https://valmontgadgets.com';
-const today = new Date().toISOString().slice(0, 10);
+const outputPath = path.resolve(ROOT, process.argv[2] || 'sitemap.xml');
+const existing = fs.existsSync(outputPath) ? fs.readFileSync(outputPath, 'utf8') : '';
+const existingDate = existing.match(/<lastmod>(\d{4}-\d{2}-\d{2})<\/lastmod>/)?.[1];
+const lastmod = process.env.SITEMAP_LASTMOD || existingDate || '2026-08-14';
+if (!/^\d{4}-\d{2}-\d{2}$/.test(lastmod)) {
+  throw new Error('SITEMAP_LASTMOD must use YYYY-MM-DD');
+}
 
 // Mirrors CATEGORY_LABELS in app.js (minus `all`, which is the homepage).
 const CATEGORIES = [
   'iphones', 'samsung', 'android', 'tablets', 'smartwatches', 'laptops',
   'laptop_acc', 'audio', 'gaming', 'phone_acc', 'phone_parts',
-  'travel_acc', 'chargers',
+  'travel_acc', 'chargers', 'smart_home', 'networking', 'cameras',
 ];
 
 const urls = [
@@ -24,7 +30,7 @@ const urls = [
     priority: '0.8',
     changefreq: 'weekly',
   })),
-  { loc: `${SITE}/account.html`, priority: '0.3', changefreq: 'yearly' },
+  { loc: `${SITE}/drop.html`, priority: '0.6', changefreq: 'daily' },
 ];
 
 const xml =
@@ -35,7 +41,7 @@ const xml =
       (u) =>
         `  <url>\n` +
         `    <loc>${u.loc.replace(/&/g, '&amp;')}</loc>\n` +
-        `    <lastmod>${today}</lastmod>\n` +
+        `    <lastmod>${lastmod}</lastmod>\n` +
         `    <changefreq>${u.changefreq}</changefreq>\n` +
         `    <priority>${u.priority}</priority>\n` +
         `  </url>`
@@ -43,5 +49,6 @@ const xml =
     .join('\n') +
   `\n</urlset>\n`;
 
-fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), xml);
-console.log(`Wrote sitemap.xml with ${urls.length} URLs (lastmod ${today})`);
+fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+fs.writeFileSync(outputPath, xml);
+console.log(`Wrote ${path.relative(ROOT, outputPath)} with ${urls.length} URLs (lastmod ${lastmod})`);
