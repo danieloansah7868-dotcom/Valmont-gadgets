@@ -1898,10 +1898,11 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0b1a38">
   <!-- Valmont-Pay checkout integration -->
-    <script src="assets/js/analytics.js" defer=""></script>
-    <script src="assets/js/storefront.js" defer=""></script>
-    <script src="assets/js/catalog.min.js" defer=""></script>
-    <script src="app.js" defer=""></script>
+    <script src="assets/js/analytics.js" defer></script>
+    <script src="assets/js/storefront.js" defer></script>
+    <script src="assets/js/catalog.min.js" defer></script>
+    <script src="assets/js/password-reset.js" defer></script>
+    <script src="app.js" defer></script>
 </head>
 <body class="bg-[#f1f1f2] text-[#333333] pb-20 md:pb-0">
 
@@ -3550,6 +3551,7 @@
 
     <!-- Login/Signup Tabbed Forms (If logged out) - VALMONT BRANDED -->
     <div id="loginFormContainer">
+      <div id="passwordResetDefaultView">
       <!-- Centered Valmont Logo in Circle -->
       <div class="flex justify-center mb-4">
         <div class="h-16 w-16 bg-white border border-gray-100 rounded-full flex items-center justify-center shadow-md animate-pulse p-1.5">
@@ -3624,6 +3626,22 @@
           </svg>
           Continue with Google
         </button>
+      </form>
+      </div>
+
+      <form id="passwordResetRequestView" class="hidden space-y-4" data-email-source="loginEmail" data-store-form="password-reset-request" novalidate>
+        <div>
+          <h4 class="font-black text-[15px] text-[#0b1a38]">Reset your password</h4>
+          <p class="text-[12px] text-gray-500 mt-1 leading-relaxed">Enter your account email and we’ll send a secure link to choose a new password.</p>
+        </div>
+        <div>
+          <label for="passwordResetEmail" class="block text-[10px] font-black uppercase text-gray-500 mb-1">Email Address *</label>
+          <input id="passwordResetEmail" type="email" autocomplete="email" placeholder="you@email.com" class="w-full border border-gray-300 p-3.5 rounded-[4px] text-[16px] md:text-[13px] outline-none font-semibold focus:border-[#ff8c00]" required />
+        </div>
+        <p id="passwordResetError" class="min-h-5 text-[12px] font-bold text-red-600" role="alert" aria-live="polite"></p>
+        <p id="passwordResetStatus" class="text-[12px] font-bold text-green-700 leading-relaxed" role="status" aria-live="polite"></p>
+        <button type="submit" class="w-full bg-[#ff8c00] hover:bg-orange-600 text-white font-extrabold text-[12px] tracking-widest uppercase py-3.5 rounded-[4px] transition shadow-sm">Send reset link</button>
+        <button type="button" data-store-action="cancel-password-reset" class="w-full text-[#0b1a38] font-bold text-[12px] py-2 hover:underline">Back to sign in</button>
       </form>
     </div>
   </div>

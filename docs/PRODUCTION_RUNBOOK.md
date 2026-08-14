@@ -20,8 +20,9 @@ Before any production change:
 2. Confirm the gateway webhook signing secret and hosting value match without exposing either value.
 3. Confirm `VALMONTPAY_SECRET_KEY`, `VALMONTPAY_WEBHOOK_SECRET`, and `SUPABASE_SERVICE_ROLE_KEY` exist in the target hosting environment. Configure the Upstash REST pair for a distributed production rate limit.
 4. Confirm gateway callback allowlists include only the intended production host and its required `www` alias.
-5. Confirm no incident or migration is already in progress.
-6. Schedule a short checkout maintenance window. The migration revokes insecure legacy RPC privileges, so an old client may be unable to check out after the migration. Security must fail closed during this interval.
+5. Confirm Supabase Authentication URL Configuration includes both exact production recovery URLs in [`AUTH_REDIRECTS.md`](AUTH_REDIRECTS.md). Do not begin rollout if either callback is absent.
+6. Confirm no incident or migration is already in progress.
+7. Schedule a short checkout maintenance window. The migration revokes insecure legacy RPC privileges, so an old client may be unable to check out after the migration. Security must fail closed during this interval.
 
 ## 2. Freeze and qualify the release
 
@@ -149,8 +150,9 @@ Deploy the same commit to a protected staging URL with staging-only credentials,
 9. Create a Pending test order through checkout. Confirm authoritative price, delivery, reservation, account UUID, and idempotency behavior in the database.
 10. Run a staging/test-channel payment and replay its webhook. Confirm one Paid transition and no second stock change.
 11. Confirm bad amount and bad gateway-reference probes never mark an order Paid.
-12. Confirm admin login, product management, and Daily Drop access with an allowlisted admin; deny the same calls to a normal account.
-13. Check logs for raw tokens, keys, full webhook bodies, stack traces, or personal data. None should be present.
+12. Request a customer password reset from both the storefront and account page. Confirm both emails return to `/account.html`, an expired link fails closed, a valid link updates the password, and the new password can sign in.
+13. Confirm admin login, product management, and Daily Drop access with an allowlisted admin; deny the same calls to a normal account. Verify the neutral admin reset flow returns only the allowlisted admin to `/admin-login.html`, rejects customer recovery sessions, and updates the admin password with a valid link.
+14. Check logs for raw tokens, keys, full webhook bodies, stack traces, or personal data. None should be present.
 
 Do not use production service-role or gateway secrets in staging.
 

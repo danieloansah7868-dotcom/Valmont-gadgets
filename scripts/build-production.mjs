@@ -43,6 +43,7 @@ const assetSources = new Map([
   ['assets/js/drop.js', 'assets/js/drop.js'],
   ['assets/js/order-confirmed.js', 'assets/js/order-confirmed.js'],
   ['assets/js/page-init.js', 'assets/js/page-init.js'],
+  ['assets/js/password-reset.js', 'assets/js/password-reset.js'],
   ['assets/js/storefront.js', 'assets/js/storefront.js'],
   ['assets/js/vendor/supabase-2.112.1.min.js', 'assets/js/vendor/supabase-2.112.1.min.js'],
   // Production uses the generated/minified storefront, never app.js directly.

@@ -193,6 +193,21 @@
       font-family: inherit;
     }
     .auth-google:hover { background: #f8fafc; }
+    .auth-heading { margin: 0; font-size: 18px; font-weight: 800; color: var(--text-primary); }
+    .auth-intro { margin: -8px 0 2px; color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
+    .auth-error, .auth-status { min-height: 18px; margin: -4px 0; font-size: 12px; font-weight: 600; line-height: 1.5; }
+    .auth-error { color: var(--danger); }
+    .auth-status { color: #15803d; }
+    .auth-secondary {
+      border: none;
+      background: none;
+      color: var(--text-primary);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: underline;
+    }
 
     /* ---- Mobile Account Header ---- */
     .account-header {
@@ -802,6 +817,7 @@
       <img src="logo.svg" alt="Valmont Gadgets" width="140" height="42" />
     </div>
 
+    <div id="passwordResetDefaultView">
     <div class="auth-tabs">
       <button id="tabSignIn" class="auth-tab active" data-account-action="auth-tab" data-tab="signin">Sign In</button>
       <button id="tabSignUp" class="auth-tab" data-account-action="auth-tab" data-tab="signup">Sign Up</button>
@@ -854,6 +870,36 @@
     <div class="auth-forgot">
       <button data-account-action="password-reset">Forgot Password?</button>
     </div>
+    </div>
+
+    <form id="passwordResetRequestView" class="auth-form hidden" data-email-source="signInEmail" data-account-form="password-reset-request" novalidate>
+      <h2 class="auth-heading">Reset your password</h2>
+      <p class="auth-intro">Enter your account email and we’ll send a secure link to choose a new password.</p>
+      <div class="auth-field">
+        <label for="passwordResetEmail">Email Address</label>
+        <input type="email" id="passwordResetEmail" autocomplete="email" placeholder="you@email.com" required>
+      </div>
+      <p id="passwordResetError" class="auth-error" role="alert" aria-live="polite"></p>
+      <p id="passwordResetStatus" class="auth-status" role="status" aria-live="polite"></p>
+      <button type="submit" class="auth-submit">Send reset link</button>
+      <button type="button" class="auth-secondary" data-account-action="cancel-password-reset">Back to sign in</button>
+    </form>
+
+    <form id="newPasswordForm" class="auth-form hidden" data-account-form="new-password" novalidate>
+      <h2 class="auth-heading">Choose a new password</h2>
+      <p class="auth-intro">Use at least 8 characters, then sign in with your new password.</p>
+      <div class="auth-field">
+        <label for="recoveryNewPassword">New Password</label>
+        <input type="password" id="recoveryNewPassword" autocomplete="new-password" placeholder="At least 8 characters" minlength="8" required>
+      </div>
+      <div class="auth-field">
+        <label for="recoveryConfirmPassword">Confirm New Password</label>
+        <input type="password" id="recoveryConfirmPassword" autocomplete="new-password" placeholder="Re-enter new password" minlength="8" required>
+      </div>
+      <p id="newPasswordError" class="auth-error" role="alert" aria-live="polite"></p>
+      <button type="submit" class="auth-submit">Update password</button>
+    </form>
+
     <div style="text-align:center;margin-top:16px;">
       <a href="index.html" style="font-size:12px;color:var(--text-secondary);font-weight:600;text-decoration:none;">← Back to Store</a>
     </div>
@@ -1124,6 +1170,7 @@
 <!-- Toast -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="assets/js/password-reset.js" defer></script>
 <script src="assets/js/account.js" defer></script>
 
 <!-- FLOATING WHATSAPP SUPPORT WIDGET (bottom-left; stays above the footer, clears mobile nav) -->

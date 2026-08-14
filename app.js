@@ -75,7 +75,8 @@ document.addEventListener('click', event => {
     'wishlist-to-cart': addWishlistToCart,
     'close-login': closeLoginModal,
     'login-tab': () => setLoginTab(control.dataset.loginTab),
-    'password-reset': handlePasswordReset,
+    'password-reset': () => window.handlePasswordReset(),
+    'cancel-password-reset': () => window.cancelPasswordReset(),
     'google-sign-in': handleGoogleSignIn,
     'close-dealer': closeDealerModal,
     'deactivate-dealer': deactivateDealerMode,
@@ -108,7 +109,13 @@ document.addEventListener('keydown', event => {
 
 document.addEventListener('submit', event => {
   const form = event.target.closest('[data-store-form]');
-  if (form && form.dataset.storeForm === 'login-submit') handleLoginSubmit(event);
+  if (!form) return;
+  const handlers = {
+    'login-submit': handleLoginSubmit,
+    'password-reset-request': (submitEvent) => window.handlePasswordResetRequest(submitEvent),
+  };
+  const handler = handlers[form.dataset.storeForm];
+  if (handler) handler(event);
 });
 
 // Legacy Paystack inline loader removed. All online payments now flow
@@ -2093,15 +2100,6 @@ _Stock is verified before dispatch. We will contact you to finalize your deliver
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error_description || data.msg || data.message || 'Authentication failed');
       return data;
-    }
-
-    async function handlePasswordReset() {
-      const email = window.prompt('Enter your account email:');
-      if (!email || !email.includes('@')) return;
-      try {
-        await authRequest('recover', { email: email.trim().toLowerCase() });
-        showValmontToast('If an account exists, a password reset email has been sent.');
-      } catch (error) { showValmontToast('Unable to send the reset email. Please try again.'); }
     }
 
     function clearDealerPricing() {

@@ -56,6 +56,7 @@ Do not configure `VALMONTPAY_GATEWAY_URL` in production; it exists for isolated 
 ## Release and operations
 
 - [Production migration, release, verification, incident response, and rollback runbook](docs/PRODUCTION_RUNBOOK.md)
+- [Required Supabase authentication recovery redirects](docs/AUTH_REDIRECTS.md)
 - [Valmont-Pay endpoint and trust-boundary reference](docs/VALMONTPAY.md)
 - [Controlled GH₵1 live-payment test](docs/VALMONTPAY_LIVE_TEST.md)
 
