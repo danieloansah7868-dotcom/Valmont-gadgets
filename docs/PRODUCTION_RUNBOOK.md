@@ -135,18 +135,25 @@ Expected results:
 
 Investigate any extra overload. Do not approve based only on a matching function name.
 
-### Platform tables (`20260828_platform_tables.sql`)
+### Platform tables (`20260829_platform_security.sql`)
 
-The swap & sell marketplace, UK/US used board, wholesale portal and partner
-program ship their own migration. It depends on `is_valmont_admin()` from
-`20260811_admin_email_allowlist.sql`, so apply it **after** that one:
+The swap & sell marketplace, UK/US used board, wholesale portal and partner program
+ship their tables in `20260828_platform_tables.sql` and the security model that
+actually governs them in `20260829_platform_security.sql`. The follow-up must run
+after both `20260811_admin_email_allowlist.sql` (it supplies `is_valmont_admin()`)
+and the platform tables migration:
 
 ```bash
 psql "$STAGING_DATABASE_URL" \
   --set=ON_ERROR_STOP=1 \
   --single-transaction \
-  --file=supabase/migrations/20260828_platform_tables.sql
+  --file=supabase/migrations/20260829_platform_security.sql
 ```
+
+The follow-up converges the earlier file (drops its TO-less policies, rebuilds any
+platform table whose columns do not match) and **refuses to run if one of those
+tables already holds rows**: it prints which table, how many rows, and which
+columns are missing or must go. Empty the table after exporting it, then re-run.
 
 Then set the identity pepper **once per project** (it salts the Ghana Card
 fingerprint; without it the fingerprint is an unsalted SHA-256 of an

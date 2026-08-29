@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Contract test for supabase/migrations/20260828_platform_tables.sql.
+ * Contract test for supabase/migrations/20260829_platform_security.sql.
  *
  * PGlite is a disposable Postgres here — the same role model PostgREST uses
  * (anon / authenticated / service_role) and the same `request.jwt.claim.*`
@@ -23,8 +23,9 @@ import { readFile } from 'node:fs/promises';
 import { PGlite } from '@electric-sql/pglite';
 import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
 
+const migrationPath = '../supabase/migrations/20260829_platform_security.sql';
 const migration = await readFile(
-  new URL('../supabase/migrations/20260828_platform_tables.sql', import.meta.url),
+  new URL(migrationPath, import.meta.url),
   'utf8',
 );
 
@@ -41,6 +42,9 @@ const bootstrapSql = `
   CREATE TABLE auth.users (id uuid PRIMARY KEY, email text);
   CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$
     SELECT nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
+  $$;
+  CREATE FUNCTION auth.email() RETURNS text LANGUAGE sql STABLE AS $$
+    SELECT nullif(current_setting('request.jwt.claim.email', true), '')
   $$;
   CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$
     SELECT coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb, '{}'::jsonb)
@@ -73,6 +77,12 @@ const bootstrapSql = `
     created_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
     updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
   );
+
+  -- Two objects the ALREADY-APPLIED migration (20260828) touches and the admin
+  -- predicate historically read; the follow-up drops its policies, so the test
+  -- needs them to exist in order to model the live database.
+  CREATE TABLE public.site_settings (key text PRIMARY KEY, value jsonb);
+  CREATE TABLE public.admin_allowlist (email text PRIMARY KEY);
 `;
 
 const db = new PGlite({ extensions: { pgcrypto } });
@@ -679,6 +689,76 @@ step('re-running the migration is safe after data exists', async () => {
   assert.equal((await value('SELECT public.get_my_wholesale_account()')).status, 'approved',
     'existing approvals survive a re-apply');
 });
+
+// ── the live project ran 20260828 first ──────────────────────────────────────
+// A fresh checkout only ever runs the follow-up, which is what every step above
+// tests. These two steps model the project that already applied
+// 20260828_platform_tables.sql — the shape that is actually deployed.
+const legacyMigration = await readFile(
+  new URL('../supabase/migrations/20260828_platform_tables.sql', import.meta.url),
+  'utf8',
+);
+
+async function liveShapedDb() {
+  const local = new PGlite({ extensions: { pgcrypto } });
+  await local.exec('CREATE EXTENSION pgcrypto');
+  await local.exec(bootstrapSql);
+  await local.exec(legacyMigration);
+  return local;
+}
+
+step('converging the deployed shape keeps the board an operator typed', async () => {
+  const local = await liveShapedDb();
+  // The legacy demo signup wrote a password and a card number; the used board was
+  // typed in by hand; a legacy policy referenced admin_allowlist directly.
+  await local.exec(`INSERT INTO public.used_inventory (id, origin, brand, name, price, is_sold)
+                     VALUES ('unit-1', 'uk', 'Apple', 'iPhone 13 (typed by the team)', 5200, false),
+                            ('unit-2', 'uk', 'Apple', 'iPhone 12 (already sold)', 4200, true);
+                    INSERT INTO public.sellers (id, name, phone, password_hash, ghana_card, role)
+                     VALUES ('seller-1', 'Kwame', '+233201112222', '5f4dcc3b5aa7', 'GHA-1002003004-0', 'seller');
+                    INSERT INTO public.swap_listings (id, seller_id, seller_name, seller_phone, brand, model, price, status)
+                     VALUES ('listing-1', 'seller-1', 'Kwame', '+233201112222', 'Apple', 'iPhone 13', 5000, 'active');`);
+  // Marketplace rows whose shape is security-relevant are emptied (the operator
+  // exports them first, which is what the runbook tells them to do).
+  await local.exec('DELETE FROM public.swap_listings; DELETE FROM public.sellers;');
+  await local.exec(migration);
+
+  const cols = await local.query(`SELECT coalesce(jsonb_agg(column_name ORDER BY column_name), '[]'::jsonb) ->> 0 AS probe,
+    count(*) FILTER (WHERE column_name = 'password_hash') AS legacy_credentials,
+    count(*) FILTER (WHERE column_name = 'auth_user_id') AS keyed_to_auth
+    FROM information_schema.columns WHERE table_schema='public' AND table_name='sellers'`);
+  assert.equal(cols.rows[0].legacy_credentials, 0, 'the credential column does not survive convergence');
+  assert.equal(cols.rows[0].keyed_to_auth, 1, 'the seller table is keyed to Supabase Auth');
+  const kept = await local.query(`SELECT count(*)::int AS n FROM public.used_inventory WHERE is_sold = false`);
+  assert.equal(kept.rows[0].n, 1, 'stock already typed up is preserved, not rebuilt');
+  const sold = await local.query(`SELECT sold_at FROM public.used_inventory WHERE id = 'unit-2'`);
+  assert.equal(sold.rows[0].sold_at, null, 'the new sold_at column is not back-filled with an invented date');
+  const policyRows = await local.query(`SELECT policyname FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'used_inventory' ORDER BY policyname`);
+  assert.deepEqual(policyRows.rows.map((row) => row.policyname),
+    ['Admin full access used inventory', 'Public reads available used stock'],
+    'the TO-less legacy policies were replaced, not stacked on top of the new ones');
+  const board = await local.query(`SELECT jsonb_array_length(public.get_used_inventory('uk')) AS n`);
+  assert.equal(board.rows[0].n, 1, 'the migrated board reads through the new RPC');
+  const paidDefault = await local.query(`SELECT column_default FROM information_schema.columns
+    WHERE table_schema='public' AND table_name='ad_payments' AND column_name='status'`);
+  assert.match(String(paidDefault.rows[0].column_default), /pending/,
+    'a payment row can no longer be completed-by-default');
+  await local.close();
+});
+
+step('convergence refuses to rebuild a table that still holds rows', async () => {
+  const local = await liveShapedDb();
+  await local.exec(`INSERT INTO public.sellers (id, name, phone, password_hash, ghana_card, role)
+                    VALUES ('seller-1', 'Kwame', '+233201112222', '5f4dcc3b5aa7', 'GHA-1002003004-0', 'seller');`);
+  await assert.rejects(() => local.exec(migration),
+    /has 1 row\(s\) and does not match the reviewed shape/,
+    'it must stop and explain instead of dropping data');
+  const still = await local.query(`SELECT count(*)::int AS n FROM public.sellers`);
+  assert.equal(still.rows[0].n, 1, 'the aborted migration left the rows alone');
+  await local.close();
+});
+
 
 let failures = 0;
 for (const { name, fn } of steps) {
