@@ -273,13 +273,13 @@
       esc(row.unit_count || 0),
       esc(cedis(row.total)),
       pill(row.status),
-      `<select data-order-status="${esc(row.id)}" aria-label="Order status">
+      `<select data-order-id="${esc(row.id)}" aria-label="Order status">
         ${['pending', 'processing', 'shipped', 'delivered', 'cancelled'].map((status) => `<option value="${status}" ${status === row.status ? 'selected' : ''}>${status}</option>`).join('')}
        </select>`,
     ]), 'No dealer orders yet.');
 
-    target.querySelectorAll('[data-order-status]').forEach((select) => {
-      select.addEventListener('change', () => act('set_order_status', select.dataset.orderStatus, { p_status: select.value }));
+    target.querySelectorAll('[data-order-id]').forEach((select) => {
+      select.addEventListener('change', () => act('set_order_status', select.dataset.orderId, { p_status: select.value }));
     });
   }
 
@@ -325,14 +325,16 @@
     activate_promo: 'p_payment_id',
     decline_promo: 'p_payment_id',
     stop_promo: 'p_payment_id',
-    sold_used: 'p_used_id',
+    unban_seller: 'p_seller_id',
     restock_used: 'p_used_id',
     delete_used: 'p_used_id',
+    sold_used: 'p_used_id',
     verify_seller: 'p_seller_id',
     ban_seller: 'p_seller_id',
     approve_dealer: 'p_dealer_id',
     reject_dealer: 'p_dealer_id',
     revoke_dealer: 'p_dealer_id',
+    set_order_status: 'p_order_id',
     approve_partner: 'p_partner_id',
     reject_partner: 'p_partner_id',
   };

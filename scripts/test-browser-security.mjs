@@ -256,5 +256,46 @@ async function loadStore({ token = '', profile = null, dealerPrices = [], userSt
   dom.window.close();
 }
 
+// ── the admin console may only name actions the database actually allows ──────
+// Every button in admin-control.html becomes public.admin(p_name, p_params); the
+// allowlist lives in admin_private_execute's CASE. If the console grows a name
+// the SQL does not have, the operator sees "unsupported admin action"; if the SQL
+// drops one, a button silently dies. Both are caught here instead.
+{
+  const migrationSql = await readFile(
+    join(ROOT, 'supabase/migrations/20260829_platform_security.sql'), 'utf8');
+  const body = migrationSql.slice(
+    migrationSql.indexOf('FUNCTION public.admin_private_execute'),
+    migrationSql.indexOf('FUNCTION public.admin('));
+  const sqlActions = new Set([...body.matchAll(/WHEN\s+'([a-z0-9_]+)'/g)].map((m) => m[1]));
+  const sqlParams = new Set([...body.matchAll(/->>?\s*'(p_[a-z0-9_]+)'/g)].map((m) => m[1]));
+  assert.ok(sqlActions.size >= 15, `the SQL allowlist looks truncated (${sqlActions.size} actions)`);
+
+  const pageActions = new Set([...adminConsoleSource.matchAll(/act\('([a-z0-9_]+)'/g)].map((m) => m[1]));
+  for (const match of adminConsoleSource.matchAll(/rpc\.admin\('([a-z0-9_]+)'/g)) pageActions.add(match[1]);
+  for (const match of adminConsoleHtml.matchAll(/data-act="([a-z0-9_]+)"/g)) pageActions.add(match[1]);
+  const unknown = [...pageActions].filter((name) => !sqlActions.has(name));
+  assert.deepEqual(unknown, [], 'the console offers actions the database refuses: ' + unknown.join(', '));
+
+  // The id a button carries must be the parameter the SQL reads for that action.
+  const idParamBlock = adminConsoleSource.slice(
+    adminConsoleSource.indexOf('const ID_PARAM'), adminConsoleSource.indexOf('async function act('));
+  const idParams = new Map([...idParamBlock.matchAll(/(\w+):\s*'(p_[a-z0-9_]+)'/g)].map((m) => [m[1], m[2]]));
+  for (const [action, key] of idParams) {
+    assert.ok(sqlActions.has(action), `ID_PARAM names an action that does not exist: ${action}`);
+    assert.ok(sqlParams.has(key), `${action} sends ${key}, which admin_private_execute never reads`);
+  }
+  // Anything the page sends as a payload key must be read by the SQL too.
+  // \b matters: without it, the ID_PARAM key `stop_promo:` reads as a payload
+  // parameter called `p_promo`.
+  for (const match of adminConsoleSource.matchAll(/\b(p_[a-z0-9_]+):/g)) {
+    assert.ok(sqlParams.has(match[1]), `the console sends ${match[1]}, which the SQL ignores`);
+  }
+  // One dispatcher, never a guessed per-action endpoint (that 404s on PostgREST).
+  assert.doesNotMatch(clientSource, /callRpc\(\s*`admin_/, 'admin actions must go through public.admin()');
+  assert.match(clientSource, /callRpc\('admin',\s*\{\s*p_name/, 'the client must call the admin dispatcher');
+  console.log(`✓ admin console actions match the SQL allowlist (${sqlActions.size} actions, ${idParams.size} id params)`);
+}
+
 console.log('✓ browser identity, dealer authorization, logout, and storage isolation');
 console.log('✓ production pages contain no executable inline event handlers/scripts');

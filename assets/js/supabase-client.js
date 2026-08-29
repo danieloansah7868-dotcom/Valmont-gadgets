@@ -307,7 +307,11 @@
     requestPromotion: (listingId, hours) => callRpc('request_listing_promotion', { p_listing_id: listingId, p_plan_hours: hours }),
     addLead: (listingId, message) => callRpc('create_swap_lead', { p_listing_id: listingId, p_message: message }),
     listingViews: (listingId) => callRpc('record_listing_view', { p_listing_id: listingId }),
-    admin: (name, params) => callRpc(`admin_${name}`, params || {}),
+    // One dispatcher, not one RPC per button: the SQL allowlist in
+    // admin_private_execute() decides what an admin may do, and this is the only
+    // name the console is allowed to call. Sending `admin_${name}` would ask
+    // PostgREST for a function that does not exist.
+    admin: (name, params) => callRpc('admin', { p_name: name, p_params: params || {} }),
     partnerApply: (application) => callRpc('apply_store_partner', { p_application: application }),
     wholesaleApply: (business) => callRpc('apply_wholesale_account', { p_business: business }),
     wholesaleProfile: () => callRpc('get_my_wholesale_account', {}),
