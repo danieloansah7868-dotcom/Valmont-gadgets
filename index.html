@@ -1896,7 +1896,11 @@
 
   <!-- PWA Manifest & Service Worker Registration -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0b1a38">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="X-XSS-Protection" content="1; mode=block">
+<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+<meta name="theme-color" content="#0b1a38">
   <!-- Valmont-Pay checkout integration -->
     <script src="assets/js/analytics.js" defer></script>
     <script src="assets/js/storefront.js" defer></script>
@@ -2004,7 +2008,28 @@
           <span id="wishlistCountBadge" class="absolute -top-1.5 -right-2 bg-red-500 text-white text-[9px] font-black rounded-full h-4 w-4 flex items-center justify-center hidden">0</span>
         </button>
 
+        <a href="used.html" class="flex items-center gap-1.5 font-semibold text-[14px] text-gray-700 hover:text-[#ff8c00] py-1 transition hidden md:flex" aria-label="UK & US Used Phones">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5.5 h-5.5 text-[#1e40af]">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5a17.92 17.92 0 0 1-8.716-2.247m0 0A9 9 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418"></path>
+          </svg>
+          <span class="tracking-wide">UK/US Used</span>
+        </a>
+
+        <a href="swap.html" class="flex items-center gap-1.5 font-semibold text-[14px] text-gray-700 hover:text-[#ff8c00] py-1 transition hidden md:flex" aria-label="Phone Swap">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5.5 h-5.5 text-[#ff8c00]">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"></path>
+          </svg>
+          <span class="tracking-wide">Swap</span>
+        </a>
+
         <!-- Desktop Dealer Portal Link -->
+        <a href="partner.html" class="flex items-center gap-1.5 font-semibold text-[14px] text-gray-700 hover:text-[#ff8c00] py-1 transition hidden md:flex" aria-label="Partner Program">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5.5 h-5.5 text-[#7c3aed]">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72L4.318 3.44A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72m-13.5 8.65h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .415.336.75.75.75Z"></path>
+          </svg>
+          <span class="tracking-wide">Partner</span>
+        </a>
+
         <button id="btnToggleDealer" class="flex items-center gap-1.5 font-semibold text-[14px] text-gray-700 hover:text-[#ff8c00] py-1 transition hidden md:flex" data-store-action="open-dealer">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-6 h-6 text-[#ff8c00]">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5m-3-12h13.5m-13.5 6h13.5m-13.5 6h13.5"></path>
@@ -2037,6 +2062,30 @@
       </div>
     </a>
     
+    <a href="swap.html" class="flex-1 block no-underline" style="text-decoration:none">
+      <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#ecfdf5,#d1fae5);
+                  border:1px solid #6ee7b7;border-radius:12px;padding:11px 14px;">
+        <span style="font-size:19px;line-height:1">🔄</span>
+        <span style="flex:1;color:#065f46;font-size:13.5px;line-height:1.35">
+          <b style="color:#047857">Phone Swap is live</b> — Trade your phone for an upgrade.
+          <b style="color:#047857">Valmont Certified</b> grading on every swap.
+        </span>
+        <span style="color:#047857;font-weight:800;font-size:13px;white-space:nowrap">Swap now →</span>
+      </div>
+    </a>
+
+    <a href="used.html" class="flex-1 block no-underline" style="text-decoration:none">
+      <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#eff6ff,#dbeafe);
+                  border:1px solid #93c5fd;border-radius:12px;padding:11px 14px;">
+        <span style="font-size:19px;line-height:1">🌍</span>
+        <span style="flex:1;color:#1e3a5f;font-size:13.5px;line-height:1.35">
+          <b style="color:#1e40af">UK & US Used Phones</b> — Graded daily stock.
+          <b style="color:#1e40af">Sold out = gone.</b> New arrivals every day.
+        </span>
+        <span style="color:#1e40af;font-weight:800;font-size:13px;white-space:nowrap">Browse →</span>
+      </div>
+    </a>
+    
     <button id="installmentCatalogTrigger" type="button" data-open-installments="" class="flex-1 block no-underline text-left" style="text-decoration:none" aria-haspopup="dialog" aria-controls="installmentModal">
       <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#eef2ff,#e0e7ff);
                   border:1px solid #c7d2fe;border-radius:12px;padding:11px 14px;">
@@ -2048,6 +2097,47 @@
         <span style="color:#4338ca;font-weight:800;font-size:13px;white-space:nowrap">View Plans →</span>
       </div>
     </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- WHAT DO YOU WANT TO DO? — Clear entry points -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="max-w-[1200px] mx-auto mb-4 px-4">
+    <div style="background:#fff;border-radius:14px;padding:18px 16px;box-shadow:0 2px 10px rgba(0,0,0,.05);border:1px solid #e5e7eb">
+      <h2 style="font-size:15px;font-weight:900;color:#0b1a38;margin:0 0 12px;text-align:center;letter-spacing:-.3px">What do you want to do?</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+        <!-- Buy -->
+        <a href="#store-feed" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:#fff7ed;border:1.5px solid #fed7aa;border-radius:12px;text-decoration:none;transition:all .15s">
+          <span style="font-size:28px">🛒</span>
+          <span style="font-size:12px;font-weight:800;color:#0b1a38">Buy a Phone</span>
+          <span style="font-size:10px;color:#6b7280;text-align:center">Sealed & genuine with warranty</span>
+        </a>
+        <!-- Sell -->
+        <a href="swap.html" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:#ecfdf5;border:1.5px solid #a7f3d0;border-radius:12px;text-decoration:none;transition:all .15s">
+          <span style="font-size:28px">💰</span>
+          <span style="font-size:12px;font-weight:800;color:#0b1a38">Sell Your Phone</span>
+          <span style="font-size:10px;color:#6b7280;text-align:center">List free, set your price</span>
+        </a>
+        <!-- Swap -->
+        <a href="swap.html" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:12px;text-decoration:none;transition:all .15s">
+          <span style="font-size:28px">🔄</span>
+          <span style="font-size:12px;font-weight:800;color:#0b1a38">Swap / Trade</span>
+          <span style="font-size:10px;color:#6b7280;text-align:center">Trade for an upgrade, free</span>
+        </a>
+        <!-- UK/US Used -->
+        <a href="used.html" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:12px;text-decoration:none;transition:all .15s">
+          <span style="font-size:28px">🌍</span>
+          <span style="font-size:12px;font-weight:800;color:#0b1a38">UK/US Used</span>
+          <span style="font-size:10px;color:#6b7280;text-align:center">Graded daily stock</span>
+        </a>
+        <!-- Dealer -->
+        <button data-store-action="open-dealer" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:#fef3c7;border:1.5px solid #fde68a;border-radius:12px;cursor:pointer;transition:all .15s;border-width:1.5px;border-style:solid">
+          <span style="font-size:28px">🏪</span>
+          <span style="font-size:12px;font-weight:800;color:#0b1a38">Become a Dealer</span>
+          <span style="font-size:10px;color:#6b7280;text-align:center">Wholesale pricing & bulk</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- 3. JUMIA HOME CONTAINER LAYOUT -->
@@ -2231,6 +2321,37 @@
         <!-- Flash Sales Products Row (Horizontal Scroll) -->
         <div id="flashProductsRow" class="flex gap-4 overflow-x-auto pb-1.5 no-scrollbar">
           <!-- Populated via Javascript dynamically -->
+        </div>
+      </div>
+
+      <!-- VALMONT CERTIFIED GRADING BANNER -->
+      <div class="bg-gradient-to-r from-[#ecfdf5] to-[#d1fae5] rounded-[4px] p-4 mb-6 card-shadow border-l-4 border-[#10b981]">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="text-2xl">🛡️</span>
+          <div>
+            <h3 class="font-extrabold text-[14px] uppercase tracking-wider text-[#065f46]">Valmont Certified — Every Device Inspected</h3>
+            <p class="text-[11px] text-[#047857] font-semibold">Transparent condition grading. No surprises. 30-day swap warranty on all certified devices.</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="bg-white rounded-lg p-3 border border-[#a7f3d0]">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black bg-[#dcfce7] text-[#166534] uppercase tracking-wider">🟢 Grade A</span>
+            </div>
+            <p class="text-[11px] text-gray-600 font-medium">Pristine condition. No scratches, dents, or marks. Battery health 90%+. Like new.</p>
+          </div>
+          <div class="bg-white rounded-lg p-3 border border-[#93c5fd]">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black bg-[#dbeafe] text-[#1e40af] uppercase tracking-wider">🔵 Grade B</span>
+            </div>
+            <p class="text-[11px] text-gray-600 font-medium">Excellent condition. Minor surface wear only visible on close inspection. Battery 80%+.</p>
+          </div>
+          <div class="bg-white rounded-lg p-3 border border-[#fde68a]">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black bg-[#fef9c3] text-[#854d0e] uppercase tracking-wider">🟡 Grade C</span>
+            </div>
+            <p class="text-[11px] text-gray-600 font-medium">Good condition. Visible cosmetic wear — light scratches or scuffs. Fully functional. Battery 70%+.</p>
+          </div>
         </div>
       </div>
 
@@ -3159,6 +3280,8 @@
       <div>
         <h4 class="font-extrabold text-[12px] uppercase text-gray-400 tracking-widest mb-4">Support Pages</h4>
         <ul class="text-[12px] space-y-2 text-gray-300 font-medium">
+          <li><a href="used.html" class="hover:text-[#ff8c00] font-bold text-[#1e40af]">🇬🇧🇺🇸 UK & US Used Phones — Daily Stock</a></li>
+          <li><a href="swap.html" class="hover:text-[#ff8c00] font-bold text-[#ff8c00]">🔄 Phone Swap — Trade Your Device</a></li>
           <li><a href="#faq" class="hover:text-[#ff8c00]" data-store-action="open-dealer">12-Month Official Warranty policy</a></li>
           <li><a href="#" class="hover:text-[#ff8c00]">Express delivery across Greater Accra</a></li>
           <li><a href="#" class="hover:text-[#ff8c00]">Secure payments on delivery with MoMo</a></li>
@@ -3744,6 +3867,18 @@
       <span>Categories</span>
     </button>
 
+    <!-- Swap -->
+    <a href="swap.html" class="bottom-nav-item" id="navSwap">
+      <span class="icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"></path></svg></span>
+      <span>Swap</span>
+    </a>
+
+    <!-- UK/US Used -->
+    <a href="used.html" class="bottom-nav-item" id="navUsed">
+      <span class="icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5a17.92 17.92 0 0 1-8.716-2.247m0 0A9 9 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418"></path></svg></span>
+      <span>Used</span>
+    </a>
+
     <!-- Saved / Wishlist -->
     <button class="bottom-nav-item" id="navSaved" data-store-action="open-wishlist">
       <span class="icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"></path></svg></span>
@@ -3966,7 +4101,8 @@
     <span id="valmontToastText" class="flex-1 min-w-0 truncate">Item added to your bag!</span>
     <button class="text-[#ff8c00] font-black uppercase text-[11px] hover:underline shrink-0" data-store-action="view-bag">View Bag</button>
   </div>
-  <script src="assets/js/page-init.js" defer=""></script>
+  <script src="assets/js/security.js" defer=""></script>
+<script src="assets/js/page-init.js" defer=""></script>
 
 
 </body></html>

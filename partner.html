@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Bring Your Store Online — Valmont Gadgets Partner Program</title>
+<meta name="description" content="Have a physical phone shop? Bring it online with Valmont Gadgets. Get your own store page, reach thousands of customers, and sell more phones. Premium partner program for Ghana phone dealers.">
+<link rel="canonical" href="https://valmontgadgets.com/partner.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Bring Your Store Online | Valmont Gadgets Partner Program">
+<meta property="og:description" content="Physical phone shop? Get online with Valmont. Your own store page, thousands of customers, premium support.">
+<meta property="og:url" content="https://valmontgadgets.com/partner.html">
+<meta property="og:image" content="https://valmontgadgets.com/uploads/clean_15_pro.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="X-XSS-Protection" content="1; mode=block">
+<link rel="icon" href="favicon.svg">
+<link rel="stylesheet" href="tailwind.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="assets/js/security.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/db-adapter.js"></script>
+<style>
+:root{--navy:#0b1a38;--navy2:#122649;--orange:#ff8c00;--green:#047857;--blue:#1e40af;--purple:#7c3aed}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#f1f1f2;color:#333;min-height:100vh}
+
+/* ── Hero ── */
+.hero{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:60px 20px 50px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(255,140,0,.08) 0%,transparent 60%);animation:pulse 8s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.hero .brand{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--orange);font-weight:800;position:relative}
+.hero h1{font-size:clamp(28px,7vw,48px);margin:14px 0 10px;font-weight:900;line-height:1.15;position:relative}
+.hero h1 span{color:var(--orange)}
+.hero .sub{color:#94a3b8;font-size:15px;max-width:560px;margin:0 auto;line-height:1.6;position:relative}
+.hero-stats{display:flex;gap:20px;justify-content:center;margin-top:28px;flex-wrap:wrap;position:relative}
+.hero-stat{text-align:center}
+.hero-stat .n{font-size:32px;font-weight:900;color:var(--orange)}
+.hero-stat .l{font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+
+/* ── Sections ── */
+.section{max-width:960px;margin:0 auto;padding:40px 20px}
+.section-title{text-align:center;margin-bottom:32px}
+.section-title h2{font-size:24px;font-weight:900;color:var(--navy);margin-bottom:6px}
+.section-title p{font-size:14px;color:#6b7280;max-width:500px;margin:0 auto}
+
+/* ── Problem/Solution ── */
+.problem-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:40px}
+@media(max-width:640px){.problem-grid{grid-template-columns:1fr}}
+.problem-card{background:#fff;border-radius:16px;padding:24px;border:1px solid #e5e7eb}
+.problem-card h3{font-size:15px;font-weight:900;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.problem-card ul{list-style:none;padding:0}
+.problem-card li{font-size:13px;color:#374151;padding:6px 0;border-bottom:1px solid #f3f4f6;display:flex;align-items:flex-start;gap:8px;line-height:1.4}
+.problem-card li:last-child{border:0}
+
+/* ── Pricing ── */
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.price-card{background:#fff;border-radius:16px;padding:28px 24px;border:2px solid #e5e7eb;position:relative;transition:all .2s}
+.price-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.1)}
+.price-card.popular{border-color:var(--orange);box-shadow:0 0 0 1px var(--orange),0 8px 30px rgba(255,140,0,.15)}
+.price-card .badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--orange);color:#fff;font-size:10px;font-weight:900;padding:4px 14px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.price-card .name{font-size:18px;font-weight:900;color:var(--navy);margin-bottom:4px}
+.price-card .desc{font-size:12px;color:#6b7280;margin-bottom:16px}
+.price-card .price{font-size:36px;font-weight:900;color:var(--navy);margin-bottom:4px}
+.price-card .price span{font-size:14px;font-weight:600;color:#6b7280}
+.price-card .features{list-style:none;padding:0;margin:20px 0}
+.price-card .features li{font-size:13px;color:#374151;padding:8px 0;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:8px}
+.price-card .features li:last-child{border:0}
+.price-card .features .check{color:var(--green);font-weight:900}
+.price-card .features .cross{color:#d1d5db}
+.price-card .cta{display:block;width:100%;padding:14px;border:0;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;text-align:center;text-decoration:none;transition:all .15s;margin-top:16px}
+.price-card .cta.primary{background:var(--orange);color:#fff}.price-card .cta.primary:hover{background:#e67e00}
+.price-card .cta.outline{background:#fff;color:var(--navy);border:2px solid #d1d5db}.price-card .cta.outline:hover{border-color:var(--orange);color:var(--orange)}
+
+/* ── How It Works ── */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.step{background:#fff;border-radius:14px;padding:20px;text-align:center;border:1px solid #e5e7eb}
+.step .num{width:40px;height:40px;background:var(--orange);color:#fff;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;margin:0 auto 12px}
+.step h4{font-size:14px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.step p{font-size:12px;color:#6b7280;line-height:1.4}
+
+/* ── Features ── */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.feature{background:#fff;border-radius:14px;padding:20px;border:1px solid #e5e7eb;display:flex;gap:14px;align-items:flex-start}
+.feature .icon{font-size:28px;flex-shrink:0}
+.feature h4{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.feature p{font-size:12px;color:#6b7280;line-height:1.4}
+
+/* ── Testimonial ── */
+.testimonial{background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:16px;padding:32px;color:#fff;text-align:center;max-width:600px;margin:0 auto}
+.testimonial .quote{font-size:16px;font-weight:600;line-height:1.6;color:#e2e8f0;margin-bottom:16px;font-style:italic}
+.testimonial .author{font-size:13px;font-weight:800;color:var(--orange)}
+.testimonial .role{font-size:11px;color:#94a3b8}
+
+/* ── FAQ ── */
+.faq-item{background:#fff;border-radius:12px;margin-bottom:10px;border:1px solid #e5e7eb;overflow:hidden}
+.faq-q{padding:16px 18px;font-size:14px;font-weight:800;color:var(--navy);cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.faq-q::after{content:'+';font-size:18px;color:var(--orange);transition:transform .2s}
+.faq-item.open .faq-q::after{transform:rotate(45deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .3s;padding:0 18px}
+.faq-item.open .faq-a{max-height:200px;padding:0 18px 16px}
+.faq-a p{font-size:13px;color:#6b7280;line-height:1.6}
+
+/* ── CTA ── */
+.cta-section{background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:20px;padding:40px;text-align:center;color:#fff}
+.cta-section h2{font-size:24px;font-weight:900;margin-bottom:8px}
+.cta-section p{font-size:14px;color:#94a3b8;margin-bottom:20px}
+.cta-section .btn{display:inline-block;background:var(--orange);color:#fff;padding:14px 32px;border-radius:10px;font-size:14px;font-weight:800;text-decoration:none;transition:all .15s}
+.cta-section .btn:hover{background:#e67e00}
+
+/* ── Form Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-hd{padding:18px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:2;border-radius:16px 16px 0 0}
+.modal-hd h3{font-size:16px;font-weight:900;color:var(--navy)}
+.modal-hd .close{width:32px;height:32px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.modal-bd{padding:20px}
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.fg input,.fg select,.fg textarea{width:100%;padding:11px 12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:14px;font-family:inherit;outline:none;transition:border-color .2s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--orange)}
+.fg textarea{resize:vertical;min-height:70px}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.submit-btn{width:100%;padding:14px;border:0;border-radius:10px;background:var(--orange);color:#fff;font-size:15px;font-weight:800;cursor:pointer;transition:background .2s;text-transform:uppercase;letter-spacing:.06em}
+.submit-btn:hover{background:#e67e00}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--navy);color:#fff;padding:14px 24px;border-radius:10px;font-size:13px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:200;opacity:0;transition:all .4s;max-width:90%;border:1px solid rgba(255,140,0,.4)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
+<link rel="stylesheet" href="assets/css/community.css">
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="brand">Valmont Gadgets</div>
+  <h1>Bring Your <span>Physical Store</span><br>Online</h1>
+  <p class="sub">Have a phone shop? Get your own online store page on Valmont Gadgets. Reach thousands of customers across Ghana. Sell more phones without building a website.</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="n">5,000+</div><div class="l">Monthly Visitors</div></div>
+    <div class="hero-stat"><div class="n">72+</div><div class="l">Products Listed</div></div>
+    <div class="hero-stat"><div class="n">GH₵ 0</div><div class="l">Setup Fee</div></div>
+  </div>
+</div>
+
+<!-- THE PROBLEM -->
+<div class="section">
+  <div class="section-title">
+    <h2>Running a Phone Shop in Ghana?</h2>
+    <p>You're great at selling phones. But getting online customers is hard.</p>
+  </div>
+  <div class="problem-grid">
+    <div class="problem-card">
+      <h3>😩 Without Valmont</h3>
+      <ul>
+        <li><span style="color:var(--red)">✗</span> Posting phones on WhatsApp status — limited reach</li>
+        <li><span style="color:var(--red)">✗</span> Facebook groups — full of scammers and time-wasters</li>
+        <li><span style="color:var(--red)">✗</span> Building a website — costs GH₵ 2,000+ and takes months</li>
+        <li><span style="color:var(--red)">✗</span> No analytics — don't know which phones are in demand</li>
+        <li><span style="color:var(--red)">✗</span> No payment system — chasing customers for MoMo</li>
+        <li><span style="color:var(--red)">✗</span> Only selling to people who walk past your shop</li>
+      </ul>
+    </div>
+    <div class="problem-card">
+      <h3>🚀 With Valmont Partner</h3>
+      <ul>
+        <li><span style="color:var(--green)">✓</span> Your own store page on ValmontGadgets.com</li>
+        <li><span style="color:var(--green)">✓</span> Reach 5,000+ monthly visitors across Ghana</li>
+        <li><span style="color:var(--green)">✓</span> No website needed — we handle everything</li>
+        <li><span style="color:var(--green)">✓</span> Analytics dashboard — see views, leads, demand</li>
+        <li><span style="color:var(--green)">✓</span> Valmont Pay integration — MoMo & Card</li>
+        <li><span style="color:var(--green)">✓</span> Sell to customers in Accra, Kumasi, Tamale, everywhere</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="section" style="background:#fff;padding-top:40px;padding-bottom:40px">
+  <div class="section-title">
+    <h2>How It Works</h2>
+    <p>Go from physical shop to online store in 4 simple steps</p>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="num">1</div><h4>Apply</h4><p>Fill out the partner form. Tell us about your shop, location, and inventory.</p></div>
+    <div class="step"><div class="num">2</div><h4>Get Approved</h4><p>Valmont reviews your application. We verify your business and Ghana Card.</p></div>
+    <div class="step"><div class="num">3</div><h4>List Your Phones</h4><p>Add your inventory to your store page. Photos, prices, specs — all in one place.</p></div>
+    <div class="step"><div class="num">4</div><h4>Start Selling</h4><p>Customers find you on Valmont. They message you on WhatsApp or pay via Valmont Pay.</p></div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div class="section">
+  <div class="section-title">
+    <h2>What You Get</h2>
+    <p>Everything you need to sell phones online — without building a website</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature"><div class="icon">🏪</div><div><h4>Your Own Store Page</h4><p>Dedicated page on ValmontGadgets.com with your shop name, logo, and all your products.</p></div></div>
+    <div class="feature"><div class="icon">📊</div><div><h4>Analytics Dashboard</h4><p>See how many people viewed your store, which phones get the most interest, and your sales data.</p></div></div>
+    <div class="feature"><div class="icon">⭐</div><div><h4>Promoted Listings</h4><p>Boost your phones to the top of search results and the homepage. Get more eyes on your stock.</p></div></div>
+    <div class="feature"><div class="icon">💳</div><div><h4>Valmont Pay</h4><p>Accept MoMo and card payments through Valmont Pay. No need to chase customers for money.</p></div></div>
+    <div class="feature"><div class="icon">🛡️</div><div><h4>Verified Badge</h4><p>Get the Valmont Verified badge on your store. Customers trust verified sellers more.</p></div></div>
+    <div class="feature"><div class="icon">📱</div><div><h4>Mobile Optimized</h4><p>Your store looks perfect on phones. Most Ghana customers browse on mobile.</p></div></div>
+    <div class="feature"><div class="icon">🔄</div><div><h4>Swap & Trade</h4><p>List phones for swap or sale. Reach customers who want to trade their old phone for yours.</p></div></div>
+    <div class="feature"><div class="icon">💬</div><div><h4>WhatsApp Integration</h4><p>Customers contact you directly on WhatsApp. One-tap messaging from your store page.</p></div></div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<div class="section" style="background:#fff;padding-top:40px;padding-bottom:40px">
+  <div class="section-title">
+    <h2>Simple, Transparent Pricing</h2>
+    <p>No hidden fees. Cancel anytime. Start free, upgrade when you're ready.</p>
+  </div>
+  <div class="pricing-grid">
+    <!-- Free -->
+    <div class="price-card">
+      <div class="name">Starter</div>
+      <div class="desc">Test the waters. List a few phones and see the response.</div>
+      <div class="price">Free <span>/ forever</span></div>
+      <ul class="features">
+        <li><span class="check">✓</span> Up to 5 phone listings</li>
+        <li><span class="check">✓</span> Basic store page on Valmont</li>
+        <li><span class="check">✓</span> WhatsApp contact button</li>
+        <li><span class="check">✓</span> Valmont Certified grading</li>
+        <li><span class="cross">—</span> No promoted listings</li>
+        <li><span class="cross">—</span> No analytics dashboard</li>
+        <li><span class="cross">—</span> No verified badge</li>
+      </ul>
+      <a href="#apply" class="cta outline" onclick="window._applyPlan('starter')">Get Started Free</a>
+    </div>
+    <!-- Pro -->
+    <div class="price-card popular">
+      <div class="badge">Most Popular</div>
+      <div class="name">Pro Dealer</div>
+      <div class="desc">For serious phone dealers who want to grow online.</div>
+      <div class="price">GH₵ 150 <span>/ month</span></div>
+      <ul class="features">
+        <li><span class="check">✓</span> Up to 50 listings</li>
+        <li><span class="check">✓</span> Custom store page with logo</li>
+        <li><span class="check">✓</span> WhatsApp + Valmont Pay</li>
+        <li><span class="check">✓</span> Valmont Certified grading</li>
+        <li><span class="check">✓</span> 5 promoted listings/month</li>
+        <li><span class="check">✓</span> Analytics dashboard</li>
+        <li><span class="check">✓</span> Verified Partner badge</li>
+      </ul>
+      <a href="#apply" class="cta primary" onclick="window._applyPlan('pro')">Apply for Pro — GH₵ 150/mo</a>
+    </div>
+    <!-- Enterprise -->
+    <div class="price-card">
+      <div class="name">Enterprise</div>
+      <div class="desc">For large shops and chains with big inventory.</div>
+      <div class="price">GH₵ 400 <span>/ month</span></div>
+      <ul class="features">
+        <li><span class="check">✓</span> Unlimited listings</li>
+        <li><span class="check">✓</span> Custom branded store page</li>
+        <li><span class="check">✓</span> WhatsApp + Valmont Pay</li>
+        <li><span class="check">✓</span> Valmont Certified grading</li>
+        <li><span class="check">✓</span> Unlimited promoted listings</li>
+        <li><span class="check">✓</span> Advanced analytics + reports</li>
+        <li><span class="check">✓</span> Priority support + dedicated rep</li>
+      </ul>
+      <a href="#apply" class="cta outline" onclick="window._applyPlan('enterprise')">Contact Sales</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- GET YOUR OWN WEBSITE — Valmont Web Services -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">
+    <h2>Want Your Own Website?</h2>
+    <p>Go beyond a store page — get a full website for your phone business, built by Valmont Web Services.</p>
+  </div>
+
+  <div style="background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:20px;padding:32px 24px;color:#fff;margin-bottom:24px">
+    <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-bottom:24px">
+      <div style="font-size:48px">🌐</div>
+      <div style="flex:1;min-width:220px">
+        <h3 style="font-size:18px;font-weight:900;color:var(--orange);margin:0 0 6px">Your Business. Your Website. Your Brand.</h3>
+        <p style="font-size:13px;color:#94a3b8;margin:0;line-height:1.5">A store page on Valmont is great for starting. But when you're ready to own your brand completely — with your own domain, your own design, and your own customers — Valmont Web Services builds it for you.</p>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
+      <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px">
+        <div style="font-size:10px;color:var(--orange);font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Lite Package</div>
+        <div style="font-size:24px;font-weight:900;color:#fff">GH₵ 3,500</div>
+        <div style="font-size:11px;color:#94a3b8;margin:6px 0 10px">Up to 20 products • WhatsApp orders • ~7 days</div>
+        <a href="https://wa.me/233542451578?text=Hello%20Valmont!%20I'm%20a%20Valmont%20Gadgets%20partner%20and%20I%20want%20the%20LITE%20website%20package%20(GH₵%203,500)." target="_blank" style="display:block;background:var(--orange);color:#fff;text-align:center;padding:10px;border-radius:8px;font-size:12px;font-weight:800;text-decoration:none">Get Started</a>
+      </div>
+      <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px">
+        <div style="font-size:10px;color:var(--orange);font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Starter Package</div>
+        <div style="font-size:24px;font-weight:900;color:#fff">GH₵ 5,000</div>
+        <div style="font-size:11px;color:#94a3b8;margin:6px 0 10px">Up to 50 products • Valmont Pay • Custom domain • ~10 days</div>
+        <a href="https://wa.me/233542451578?text=Hello%20Valmont!%20I'm%20a%20Valmont%20Gadgets%20partner%20and%20I%20want%20the%20STARTER%20website%20package%20(GH₵%205,000)." target="_blank" style="display:block;background:var(--orange);color:#fff;text-align:center;padding:10px;border-radius:8px;font-size:12px;font-weight:800;text-decoration:none">Get Started</a>
+      </div>
+      <div style="background:rgba(255,140,0,.15);border:2px solid var(--orange);border-radius:12px;padding:16px;position:relative">
+        <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--orange);color:#fff;font-size:9px;font-weight:900;padding:3px 12px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em">Best Value</div>
+        <div style="font-size:10px;color:var(--orange);font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Business Package</div>
+        <div style="font-size:24px;font-weight:900;color:#fff">GH₵ 6,500</div>
+        <div style="font-size:11px;color:#94a3b8;margin:6px 0 10px">250 products • Valmont Pay + SMS • SEO • Delivery calculator • ~14 days</div>
+        <a href="https://wa.me/233542451578?text=Hello%20Valmont!%20I'm%20a%20Valmont%20Gadgets%20partner%20and%20I%20want%20the%20BUSINESS%20website%20package%20(GH₵%206,500)." target="_blank" style="display:block;background:var(--orange);color:#fff;text-align:center;padding:10px;border-radius:8px;font-size:12px;font-weight:800;text-decoration:none">Get Started</a>
+      </div>
+      <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px">
+        <div style="font-size:10px;color:var(--orange);font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Empire Package</div>
+        <div style="font-size:24px;font-weight:900;color:#fff">GH₵ 10,000</div>
+        <div style="font-size:11px;color:#94a3b8;margin:6px 0 10px">Unlimited catalog • Corporate portal • ~30 days</div>
+        <a href="https://wa.me/233542451578?text=Hello%20Valmont!%20I'm%20a%20Valmont%20Gadgets%20partner%20and%20I%20want%20the%20EMPIRE%20website%20package%20(GH₵%2010,000)." target="_blank" style="display:block;background:var(--orange);color:#fff;text-align:center;padding:10px;border-radius:8px;font-size:12px;font-weight:800;text-decoration:none">Get Started</a>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#94a3b8"><span style="color:var(--orange);font-weight:900">✓</span> Pay 40/40/20</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#94a3b8"><span style="color:var(--orange);font-weight:900">✓</span> 30-day delivery</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#94a3b8"><span style="color:var(--orange);font-weight:900">✓</span> Keys fully handed over</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#94a3b8"><span style="color:var(--orange);font-weight:900">✓</span> Built in Accra</div>
+    </div>
+  </div>
+
+  <!-- Comparison -->
+  <div style="background:#fff;border-radius:16px;padding:24px;border:1px solid #e5e7eb">
+    <h3 style="font-size:15px;font-weight:900;color:var(--navy);margin:0 0 16px;text-align:center">Store Page vs Own Website — Which is Right for You?</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:16px">
+        <h4 style="font-size:13px;font-weight:800;color:#166534;margin:0 0 10px">🏪 Store Page (Partner Program)</h4>
+        <ul style="list-style:none;padding:0;margin:0;font-size:12px;color:#374151;line-height:1.8">
+          <li>✓ Free or GH₵ 150–400/month</li>
+          <li>✓ Your products on ValmontGadgets.com</li>
+          <li>✓ Valmont handles traffic & SEO</li>
+          <li>✓ Quick setup — same day</li>
+          <li>✗ Limited customization</li>
+          <li>✗ Shared platform with other dealers</li>
+        </ul>
+      </div>
+      <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:12px;padding:16px">
+        <h4 style="font-size:13px;font-weight:800;color:#1e40af;margin:0 0 10px">🌐 Own Website (Valmont Web)</h4>
+        <ul style="list-style:none;padding:0;margin:0;font-size:12px;color:#374151;line-height:1.8">
+          <li>✓ GH₵ 3,500–10,000 one-time</li>
+          <li>✓ Your own domain (yourbusiness.com)</li>
+          <li>✓ Full brand control & design</li>
+          <li>✓ Valmont Pay MoMo + Card built in</li>
+          <li>✓ 100% yours — keys handed over</li>
+          <li>✓ ~7–30 days to go live</li>
+        </ul>
+      </div>
+    </div>
+    <p style="text-align:center;font-size:12px;color:#6b7280;margin:16px 0 0">Start with a free store page. When you're ready to own your brand, upgrade to your own website.</p>
+  </div>
+
+  <!-- THE PITCH -->
+  <div style="background:linear-gradient(135deg,#fff7ed,#fef3c7);border:2px solid var(--orange);border-radius:20px;padding:32px 24px;margin-top:24px;text-align:center">
+    <div style="font-size:48px;margin-bottom:12px">💰</div>
+    <h3 style="font-size:22px;font-weight:900;color:var(--navy);margin:0 0 8px">Pay Once. Profit Forever.</h3>
+    <p style="font-size:15px;color:#374151;max-width:600px;margin:0 auto 20px;line-height:1.6">
+      This is not an expense. This is an <b>investment</b>. You pay today and your website works for you <b>24 hours a day, 7 days a week</b>, for years to come. It is yours <b>forever</b>.
+    </p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;max-width:700px;margin:0 auto 24px">
+      <div style="background:#fff;border-radius:12px;padding:14px;border:1px solid #e5e7eb">
+        <div style="font-size:28px;margin-bottom:6px">📱</div>
+        <div style="font-size:12px;font-weight:800;color:var(--navy)">Today</div>
+        <div style="font-size:11px;color:#6b7280">You invest GH₵ 6,500 in your website</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:14px;border:1px solid #e5e7eb">
+        <div style="font-size:28px;margin-bottom:6px">📈</div>
+        <div style="font-size:12px;font-weight:800;color:var(--navy)">Month 1–6</div>
+        <div style="font-size:11px;color:#6b7280">Customers find you on Google. Orders come in while you sleep.</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:14px;border:1px solid #e5e7eb">
+        <div style="font-size:28px;margin-bottom:6px">🚀</div>
+        <div style="font-size:12px;font-weight:800;color:var(--navy)">Year 1</div>
+        <div style="font-size:11px;color:#6b7280">Your website paid for itself 10x. It is now your biggest sales channel.</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:14px;border:1px solid #e5e7eb">
+        <div style="font-size:28px;margin-bottom:6px">🏆</div>
+        <div style="font-size:12px;font-weight:800;color:var(--navy)">Year 2+</div>
+        <div style="font-size:11px;color:#6b7280">Your brand is established. Customers come to YOU. You profit forever.</div>
+      </div>
+    </div>
+
+    <div style="background:var(--navy);border-radius:12px;padding:20px;max-width:600px;margin:0 auto 20px">
+      <div style="font-size:11px;color:var(--orange);font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Think about it</div>
+      <p style="font-size:14px;color:#fff;line-height:1.6;margin:0">
+        A phone shop in Accra pays <b style="color:var(--orange)">GH₵ 2,000 to 5,000 every month</b> in rent.
+        Your website costs <b style="color:var(--orange)">GH₵ 6,500 once</b> and it never closes, never takes a day off, and reaches every city in Ghana.
+        <br><br>
+        <b style="color:var(--gold)">2 years from now, you will look back and say: That was the best money I ever spent.</b>
+      </p>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button onclick="window._openBuildModal()" style="background:var(--orange);color:#fff;padding:14px 28px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;border:0">See What You Get</button>
+      <button onclick="window._openBuildModal()" style="background:var(--navy);color:var(--orange);padding:14px 28px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;border:2px solid var(--orange)">See What You Get</button>
+      <a href="https://valmontweb.com" target="_blank" style="background:#fff;color:var(--navy);padding:14px 28px;border-radius:10px;font-size:14px;font-weight:800;text-decoration:none;border:2px solid var(--navy)">See Live Examples</a>
+    </div>
+
+    <p style="font-size:11px;color:#9ca3af;margin:16px 0 0">
+      100% yours forever. Domain, design, customers, everything. Keys handed over. No recurring fees unless you choose support.
+    </p>
+  </div>
+</div>
+
+<!-- TESTIMONIAL -->
+<div class="section">
+  <div class="testimonial">
+    <div class="quote">"Before Valmont, I was only selling to people who walked past my shop in Circle. Now I get WhatsApp messages from Kumasi, Takoradi, even Tamale. My sales doubled in the first month."</div>
+    <div class="author">Kwame A.</div>
+    <div class="role">Pro Dealer — Accra Circle</div>
+  </div>
+</div>
+
+<!-- FAQ -->
+<div class="section" style="background:#fff;padding-top:40px;padding-bottom:40px">
+  <div class="section-title">
+    <h2>Frequently Asked Questions</h2>
+  </div>
+  <div style="max-width:600px;margin:0 auto">
+    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Do I need a website?</div><div class="faq-a"><p>No! Valmont gives you your own store page on ValmontGadgets.com. You don't need to build or host anything.</p></div></div>
+    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How do I get paid?</div><div class="faq-a"><p>Customers pay you directly via MoMo, cash on delivery, or through Valmont Pay. You keep 100% of your sales — Valmont only charges the monthly subscription.</p></div></div>
+    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can I cancel anytime?</div><div class="faq-a"><p>Yes. No contracts, no commitments. Cancel your subscription anytime and your store stays active until the end of your billing period.</p></div></div>
+    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What if I'm outside Accra?</div><div class="faq-a"><p>No problem. Valmont serves all of Ghana. Customers from any region can find your store and contact you. You handle delivery your way.</p></div></div>
+    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How does Valmont verify my shop?</div><div class="faq-a"><p>We verify your Ghana Card, phone number, and business details. Pro and Enterprise partners also get a physical or video verification visit.</p></div></div>
+    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What's the difference between this and just listing on the swap page?</div><div class="faq-a"><p>The swap page is for individuals selling their personal phone. The Partner Program is for businesses with inventory. Partners get a dedicated store page, analytics, promoted listings, and the Verified Partner badge.</p></div></div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="section">
+  <div class="cta-section">
+    <h2>Ready to Grow Your Phone Business?</h2>
+    <p>Join Ghana's fastest-growing phone marketplace. Get online today.</p>
+    <a href="#apply" class="btn" onclick="window._applyPlan('pro')">Apply Now — It's Free to Start</a>
+  </div>
+</div>
+
+<!-- APPLICATION MODAL -->
+<div class="modal-overlay" id="applyModal">
+  <div class="modal">
+    <div class="modal-hd">
+      <h3>🏪 Partner Application</h3>
+      <button class="close" id="closeApplyModal">×</button>
+    </div>
+    <div class="modal-bd">
+      <p style="font-size:12px;color:#6b7280;margin-bottom:16px">Tell us about your shop. We'll review your application and get back to you within 24 hours.</p>
+      <div class="fg"><label>Shop / Business Name *</label><input id="aShopName" placeholder="e.g. Kofi Phones"></div>
+      <div class="fg-row">
+        <div class="fg"><label>Your Name *</label><input id="aName" placeholder="e.g. Kofi Mensah"></div>
+        <div class="fg"><label>Phone Number *</label><input id="aPhone" type="tel" inputmode="tel" placeholder="024 123 4567"></div>
+      </div>
+      <div class="fg"><label>Email</label><input id="aEmail" type="email" placeholder="you@email.com"></div>
+      <div class="fg-row">
+        <div class="fg"><label>City / Location *</label><input id="aCity" placeholder="e.g. Accra - Circle"></div>
+        <div class="fg"><label>Ghana Card Number *</label><input id="aGhanaCard" placeholder="GHA-XXXXXXXXX-X"></div>
+      </div>
+      <div class="fg"><label>Selected Plan *</label>
+        <select id="aPlan">
+          <option value="starter">Starter — Free (up to 5 listings)</option>
+          <option value="pro" selected>Pro Dealer — GH₵ 150/month</option>
+          <option value="enterprise">Enterprise — GH₵ 400/month</option>
+        </select>
+      </div>
+      <div class="fg"><label>How many phones do you sell per month?</label>
+        <select id="aVolume">
+          <option>1-10 phones</option>
+          <option>10-30 phones</option>
+          <option>30-50 phones</option>
+          <option>50-100 phones</option>
+          <option>100+ phones</option>
+        </select>
+      </div>
+      <div class="fg"><label>Tell us about your shop</label><textarea id="aAbout" placeholder="What phones do you sell? How long have you been in business? Any special deals?"></textarea></div>
+      <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:14px">
+        <input type="checkbox" id="aTerms" style="margin-top:3px;accent-color:var(--orange)">
+        <label for="aTerms" style="font-size:11px;color:#374151;line-height:1.4;cursor:pointer">I agree to the Valmont Partner Terms. I confirm my business is legitimate and my Ghana Card is valid.</label>
+      </div>
+      <button class="submit-btn" id="submitApplyBtn">Submit Application</button>
+      <p style="font-size:10px;color:#9ca3af;text-align:center;margin-top:10px">We'll review your application within 24 hours and contact you on WhatsApp.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-bd" style="text-align:center;padding:32px">
+      <div style="font-size:48px;margin-bottom:12px">🎉</div>
+      <h3 style="font-size:18px;font-weight:900;color:var(--navy);margin-bottom:8px">Application Submitted!</h3>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:16px">We'll review your application and contact you on WhatsApp within 24 hours.</p>
+      <button class="submit-btn" onclick="document.getElementById('successModal').classList.remove('open')">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><span id="toastMsg">Done!</span></div>
+
+<!-- FOOTER -->
+<footer class="vg-footer vg-footer--panel" aria-label="Footer">
+  <div class="vg-footer-inner">
+    <div class="vg-footer-grid">
+      <div>
+        <p class="vg-foot-brand">Valmont Gadgets</p>
+        <p class="vg-foot-text">Ghana's trusted marketplace for certified smartphones, executive laptops, and premium accessories.</p>
+      </div>
+      <div>
+        <p class="vg-foot-title">Explore</p>
+        <ul class="vg-foot-links">
+          <li><a href="/">Shop Home</a></li>
+          <li><a href="swap.html">Swap & Sell</a></li>
+          <li><a href="used.html">UK & US Used</a></li>
+          <li><a href="partner.html">Partner Program</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="vg-foot-title">Contact</p>
+        <a href="https://wa.me/233542451578" target="_blank" rel="noopener" class="vg-contact-wa">💬 WhatsApp Support →</a>
+      </div>
+    </div>
+    <div class="vg-footer-bottom"><span>© 2026 Valmont Gadgets</span><span>Accra, Ghana</span></div>
+  </div>
+</footer>
+
+<a href="https://wa.me/233542451578" target="_blank" rel="noopener" class="whatsapp-float" aria-label="WhatsApp">
+  <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 fill-current" viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L3 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-93.8-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 89.4-184.5 184.6-184.5 46 0 89.3 18 121.9 50.6 32.6 32.5 50.5 75.9 50.5 122.1-.1 101.8-94.9 184.5-184.6 184.5zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
+</a>
+
+<script>
+(function(){
+'use strict';
+
+function toast(m){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+
+// Apply modal
+document.getElementById('closeApplyModal').addEventListener('click',()=>{document.getElementById('applyModal').classList.remove('open')});
+
+window._applyPlan=function(plan){
+  document.getElementById('aPlan').value=plan;
+  document.getElementById('applyModal').classList.add('open');
+};
+
+// Submit application
+document.getElementById('submitApplyBtn').addEventListener('click',async()=>{
+  const shopName=VG.escapeHtml(document.getElementById('aShopName').value);
+  const name=VG.escapeHtml(document.getElementById('aName').value);
+  const phone=document.getElementById('aPhone').value.trim();
+  const city=VG.escapeHtml(document.getElementById('aCity').value);
+  const gc=document.getElementById('aGhanaCard').value.trim().toUpperCase();
+  const plan=document.getElementById('aPlan').value;
+
+  // Validate
+  if(!shopName||!name||!phone||!city||!gc){toast('Please fill all required fields.');return}
+  if(!VG.isValidGhanaPhone(phone)){toast('Invalid Ghana phone number.');return}
+  if(!VG.isValidGhanaCard(gc)){toast('Invalid Ghana Card format. Use: GHA-XXXXXXXXX-X');return}
+  if(!document.getElementById('aTerms').checked){toast('Please agree to the terms.');return}
+
+  // Rate limit
+  if(!VG.canPerform('partner_apply',3,3600000)){toast('Too many applications. Try again later.');return}
+
+  // Save application
+  const appData = {
+    id:'pa'+Date.now(),shopName,name,phone,email:VG.escapeHtml(document.getElementById('aEmail').value),
+    city,ghanaCard:gc,plan,
+    volume:document.getElementById('aVolume').value,
+    about:VG.escapeHtml(document.getElementById('aAbout').value),
+    date:new Date().toISOString(),status:'pending'
+  };
+  if(window.VDBPartner) await VDBPartner.apply(appData);
+  else { const apps=VG.storage.get('vg_partner_applications',[]); apps.unshift(appData); VG.storage.set('vg_partner_applications',apps); }
+
+  document.getElementById('applyModal').classList.remove('open');
+  document.getElementById('successModal').classList.add('open');
+  VG.audit('PARTNER_APPLICATION',{shop:shopName,plan:plan});
+});
+
+// FAQ toggle
+document.querySelectorAll('.faq-q').forEach(q=>{
+  q.addEventListener('click',()=>{q.parentElement.classList.toggle('open')});
+});
+
+})();
+</script>
+
+<!-- BUILD YOUR OWN WEBSITE MODAL -->
+<div class="modal-overlay" id="buildWebsiteModal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-hd">
+      <h3>Build Your Own Website</h3>
+      <button class="close" id="closeBuildModal">&times;</button>
+    </div>
+    <div class="modal-bd" style="padding:0">
+      <div style="background:linear-gradient(135deg,var(--navy),var(--navy2));padding:28px 24px;text-align:center;color:#fff">
+        <div style="font-size:40px;margin-bottom:8px">&#127760;</div>
+        <h2 style="font-size:20px;font-weight:900;color:var(--orange);margin:0 0 6px">Your Business. Your Website. Your Brand.</h2>
+        <p style="font-size:13px;color:#94a3b8;margin:0;line-height:1.5">A professional website that sells for you 24/7. Built by Valmont Web Services in Accra.</p>
+      </div>
+      <div style="padding:24px">
+        <h4 style="font-size:14px;font-weight:900;color:var(--navy);margin:0 0 14px">What You Get</h4>
+        <div style="display:grid;gap:12px">
+          <div style="display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px">
+            <div style="font-size:28px;flex-shrink:0">&#128722;</div>
+            <div>
+              <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:2px">Full Online Shop</div>
+              <div style="font-size:12px;color:#374151;line-height:1.5">Products displayed beautifully. Customers browse, add to cart, and pay with MoMo or Card on your own website.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px">
+            <div style="font-size:28px;flex-shrink:0">&#128179;</div>
+            <div>
+              <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:2px">Valmont Pay Built In</div>
+              <div style="font-size:12px;color:#374151;line-height:1.5">Accept MTN MoMo, Telecel, AT Money, Visa and Mastercard. Payments go <b>direct to your account</b>.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px">
+            <div style="font-size:28px;flex-shrink:0">&#128279;</div>
+            <div>
+              <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:2px">Your Own Domain</div>
+              <div style="font-size:12px;color:#374151;line-height:1.5">Your own address like <b>yourbusiness.com</b>. Professional, memorable, 100% yours.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px">
+            <div style="font-size:28px;flex-shrink:0">&#128241;</div>
+            <div>
+              <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:2px">Manage From Your Phone</div>
+              <div style="font-size:12px;color:#374151;line-height:1.5">Add products, change prices, see orders from your phone. If you can use WhatsApp, you can run your website.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px">
+            <div style="font-size:28px;flex-shrink:0">&#128269;</div>
+            <div>
+              <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:2px">Found on Google</div>
+              <div style="font-size:12px;color:#374151;line-height:1.5">Optimized for Google search. When someone searches for phones in your city, <b>your shop shows up</b>.</div>
+            </div>
+          </div>
+          <!-- ValmontAI -->
+          <div style="display:flex;gap:12px;align-items:flex-start;background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:14px">
+            <div style="font-size:28px;flex-shrink:0">&#129302;</div>
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#166534;margin-bottom:2px">ValmontAI — Website Assistant <span style="font-size:9px;background:var(--orange);color:#fff;padding:2px 6px;border-radius:4px;font-weight:900">ADD-ON</span></div>
+              <div style="font-size:12px;color:#374151;line-height:1.5">Your website answers customers instantly with AI. It knows your products, prices, and delivery info. Guides customers to checkout — <b>even at 2 AM when you are sleeping</b>. Auto-syncs when you update products.</div>
+              <div style="font-size:11px;color:#166534;font-weight:700;margin-top:6px">GH 1,200 setup + GH 250/month (or GH 2,500/year)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pricing -->
+        <div style="margin-top:20px;background:linear-gradient(135deg,#fff7ed,#fef3c7);border:2px solid var(--orange);border-radius:12px;padding:16px;text-align:center">
+          <div style="font-size:10px;font-weight:800;color:var(--orange);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Website Packages</div>
+          <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+            <div style="background:#fff;border-radius:10px;padding:10px 14px;border:1px solid #e5e7eb">
+              <div style="font-size:18px;font-weight:900;color:var(--navy)">GH 3,500</div>
+              <div style="font-size:10px;color:#6b7280">Lite (20 products)</div>
+            </div>
+            <div style="background:#fff;border-radius:10px;padding:10px 14px;border:1px solid #e5e7eb">
+              <div style="font-size:18px;font-weight:900;color:var(--navy)">GH 5,000</div>
+              <div style="font-size:10px;color:#6b7280">Starter (50 products)</div>
+            </div>
+            <div style="background:#fff;border-radius:10px;padding:10px 14px;border:2px solid var(--orange)">
+              <div style="font-size:18px;font-weight:900;color:var(--orange)">GH 6,500</div>
+              <div style="font-size:10px;color:var(--orange)">Business (250 products)</div>
+            </div>
+            <div style="background:#fff;border-radius:10px;padding:10px 14px;border:1px solid #e5e7eb">
+              <div style="font-size:18px;font-weight:900;color:var(--navy)">GH 10,000</div>
+              <div style="font-size:10px;color:#6b7280">Empire (Unlimited)</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:#374151"><b>Pay 40/40/20</b> &bull; Keys handed over &bull; Built in Accra</div>
+        </div>
+
+        <!-- The Pitch -->
+        <div style="margin-top:16px;background:var(--navy);border-radius:12px;padding:16px;text-align:center">
+          <p style="font-size:13px;color:#fff;line-height:1.6;margin:0">A phone shop pays <b style="color:var(--orange)">GH 2,000-5,000/month</b> in rent.<br>Your website costs <b style="color:var(--orange)">GH 6,500 once</b>.<br><br><b style="color:var(--gold)">Pay once. Profit forever.</b></p>
+        </div>
+
+        <!-- CTAs -->
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <a href="https://wa.me/233542451578?text=Hello%20Valmont!%20I%20want%20to%20build%20my%20own%20website.%20Please%20send%20me%20a%20quote." target="_blank" style="flex:1;background:var(--orange);color:#fff;text-align:center;padding:14px;border-radius:10px;font-size:13px;font-weight:800;text-decoration:none">Get My Quote on WhatsApp</a>
+          <a href="https://valmontweb.com" target="_blank" style="flex:1;background:#fff;color:var(--navy);text-align:center;padding:14px;border-radius:10px;font-size:13px;font-weight:800;text-decoration:none;border:2px solid var(--navy)">See Examples</a>
+        </div>
+        <p style="font-size:10px;color:#9ca3af;text-align:center;margin:12px 0 0">100% yours forever. No recurring fees unless you choose support or ValmontAI.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('closeBuildModal').addEventListener('click',function(){document.getElementById('buildWebsiteModal').classList.remove('open')});
+window._openBuildModal=function(){document.getElementById('buildWebsiteModal').classList.add('open')};
+</script>
+
+</body>
+</html>
