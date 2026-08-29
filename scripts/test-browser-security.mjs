@@ -15,6 +15,7 @@ const UUID = '00000000-0000-4000-8000-000000000001';
 const pages = [
   'index.html', 'account.html', 'admin.html', 'admin-login.html',
   'admin-drop.html', 'drop.html', 'order-confirmed.html',
+  'swap.html', 'used.html', 'wholesale.html', 'partner.html', 'admin-control.html',
 ];
 for (const page of pages) {
   const html = await readFile(join(ROOT, page), 'utf8');
@@ -28,6 +29,58 @@ for (const page of pages) {
     assert.equal(script.type, 'application/ld+json', `${page}: executable inline script`);
   }
 }
+// ── platform pages: no local theatre pretending to be a server ──────────────
+const securitySource = await readFile(join(ROOT, 'assets/js/security.js'), 'utf8');
+const dbAdapterSource = await readFile(join(ROOT, 'assets/js/db-adapter.js'), 'utf8');
+const clientSource = await readFile(join(ROOT, 'assets/js/supabase-client.js'), 'utf8');
+const swapSource = await readFile(join(ROOT, 'assets/js/swap-page.js'), 'utf8');
+const usedSource = await readFile(join(ROOT, 'assets/js/used-page.js'), 'utf8');
+const adminConsoleSource = await readFile(join(ROOT, 'assets/js/admin-control-page.js'), 'utf8');
+const adminConsoleHtml = await readFile(join(ROOT, 'admin-control.html'), 'utf8');
+const swapHtml = await readFile(join(ROOT, 'swap.html'), 'utf8');
+const usedHtml = await readFile(join(ROOT, 'used.html'), 'utf8');
+
+// Data comes from Postgres or it is an error state — never from a demo array.
+for (const [label, source] of Object.entries({
+  'db-adapter.js': dbAdapterSource, 'swap-page.js': swapSource, 'used-page.js': usedSource,
+})) {
+  assert.doesNotMatch(source, /\bSEED_[A-Z]+\b|const\s+DEMO\s*=/, `${label}: ships seeded demo rows`);
+}
+assert.match(dbAdapterSource, /retryable\s*=\s*true/, 'a failed read must surface as a retryable error, not fake data');
+assert.doesNotMatch(usedSource, /SEED|sampleInventory/, 'the used board may not invent stock');
+
+// "Security" must not be theater: no console silencing, no eval override, no
+// self-asserting CSP meta tag injected at runtime.
+assert.doesNotMatch(securitySource, /window\.eval\s*=|console\.(?:log|warn|error|debug)\s*=/,
+  'console and eval must not be monkey-patched');
+assert.doesNotMatch(securitySource, /http-equiv['"]?\s*,?\s*['"]Content-Security-Policy/,
+  'CSP belongs in vercel.json, not in a script');
+assert.match(securitySource, /safeImageRef|cleanText/, 'sanitizers must exist to be used');
+
+// Authentication is Supabase's job. A page that hashes a password locally is a
+// credential oracle, and the admin console must hand over to admin-login.html.
+for (const [label, source] of Object.entries({
+  'supabase-client.js': clientSource, 'admin-control-page.js': adminConsoleSource,
+})) {
+  assert.doesNotMatch(source, /sha256|SubtleCrypto|crypto\.subtle|hashStr|btoa\(password\)/,
+    `${label}: no browser-side credential hashing`);
+}
+assert.doesNotMatch(adminConsoleHtml, /type="password"|value="admin"|valmont2026/,
+  'the admin console must not contain a login form, a user name or a secret');
+assert.match(adminConsoleHtml, /admin-login\.html/, 'the admin console hands over to the real sign-in');
+assert.match(clientSource, /is_valmont_admin/, 'admin access is answered by Postgres, not by localStorage');
+assert.doesNotMatch(adminConsoleSource, /vg_admin_session|localStorage\.setItem\(['"]valmont_admin/,
+  'no client-side admin session flag');
+assert.doesNotMatch(clientSource + dbAdapterSource + adminConsoleSource + swapSource,
+  /\.from\(['"](?:sellers|swap_listings|swap_leads|used_inventory|wholesale_dealers|wholesale_orders|partner_applications|ad_payments|admin_audit_log)['"]\)/,
+  'platform tables may only be touched through the RPC surface');
+
+// The marketplace entry points must be real links, and the sell flow must reach
+// the seller dashboard through the adapter rather than a local array.
+assert.match(swapHtml, /assets\/js\/db-adapter\.js/, 'swap.html must load the Supabase adapter');
+assert.match(usedHtml, /assets\/js\/supabase-client\.js/, 'used.html must load the data client');
+assert.match(swapSource, /VGA\.swap\.create|VGA\.swap\.browse/, 'swap page must go through the adapter');
+
 assert.match(accountSource, /accountStorageKey\s*\(/, 'account private state must be account-scoped');
 for (const key of [
   'valmont_customer_addresses', 'valmont_payment_preference', 'valmont_cart',

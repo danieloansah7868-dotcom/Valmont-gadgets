@@ -1,359 +1,259 @@
 /**
- * Valmont Gadgets — Database Adapter
- * Bridges localStorage to Supabase (VDB).
- * Falls back to localStorage if Supabase is unavailable.
- * Include AFTER supabase-client.js
+ * Valmont Gadgets — Read-model adapter (VGA)
+ *
+ * Turns the rows the database is willing to hand out into the shapes the
+ * platform pages render. Two rules:
+ *
+ *   1. No invented rows. If Supabase is unreachable the page shows a retry
+ *      state; it must never fall back to a localStorage "sample" that a
+ *      shopper could mistake for live stock or a real seller.
+ *   2. No secrets, no PII. Raw Ghana Card numbers, phone numbers and any
+ *      supplier cost stop at this layer unless the field is a deliberate,
+ *      seller-chosen public contact handle.
+ *
+ * Writes do not go through here: pages call VDB.rpc.* which maps to a
+ * SECURITY DEFINER Postgres function.
  */
-(function(){
-'use strict';
+(function () {
+  'use strict';
 
-const LS_KEYS = {
-  swap_listings: 'vg_swap_listings',
-  swap_users: 'vg_swap_users',
-  swap_leads: 'vg_swap_leads',
-  used_inventory: 'vg_used_inventory',
-  ws_dealers: 'vg_ws_dealers',
-  ws_orders: 'vg_ws_orders',
-  partner_apps: 'vg_partner_applications',
-  admin_logs: 'vg_admin_logs',
-  site_settings: 'vg_site_settings',
-};
+  const gradeLabel = (grade) => (['A', 'B', 'C'].indexOf(String(grade || '').toUpperCase()) !== -1
+    ? String(grade).toUpperCase() : '');
 
-// ── Helpers ──
-function lsGet(key, fallback) {
-  try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : fallback; } catch(e) { return fallback; }
-}
-function lsSet(key, val) {
-  try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
-}
-function lsRemove(key) { try { localStorage.removeItem(key); } catch(e) {} }
+  const numberOrNull = (value) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : null;
+  };
 
-// ── Check if Supabase is available ──
-function hasVDB() { return typeof window.VDB !== 'undefined' && window.VDB && window.VDB.db; }
+  const dateOnly = (value) => {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+  };
 
-// ── Retry wrapper ──
-async function withRetry(fn, retries = 2, delay = 500) {
-  for (let i = 0; i <= retries; i++) {
-    try { return await fn(); }
-    catch(e) { if (i === retries) return null; await new Promise(r => setTimeout(r, delay * (i + 1))); }
+  const imageList = (value) => {
+    let list = value;
+    if (typeof list === 'string') {
+      try { list = JSON.parse(list); } catch (e) { list = list ? [list] : []; }
+    }
+    if (!Array.isArray(list)) list = list ? [list] : [];
+    const safe = list.map((item) => window.VG.safeImageRef(item)).filter(Boolean);
+    return safe.slice(0, 8);
+  };
+
+  const PLACEHOLDER = 'uploads/clean_15_pro.png';
+
+  /** Active swap/sell listings, promoted first (public projection). */
+  async function swapListings() {
+    let rows = [];
+    try {
+      rows = await window.VDB.read.activeSwapListings(120);
+    } catch (error) {
+      const err = new Error('Listings are unavailable right now.');
+      err.cause = error;
+      err.retryable = true;
+      throw err;
+    }
+    return (Array.isArray(rows) ? rows : []).map((row) => ({
+      id: String(row.id),
+      type: ['swap', 'sell', 'both'].indexOf(row.listing_type) !== -1 ? row.listing_type : 'swap',
+      category: String(row.category || 'phones'),
+      brand: String(row.brand || ''),
+      model: String(row.model || ''),
+      storage: String(row.storage || ''),
+      color: String(row.color || ''),
+      grade: gradeLabel(row.grade),
+      battery: numberOrNull(row.battery_health),
+      screen: String(row.screen_condition || ''),
+      body: String(row.body_condition || ''),
+      included: String(row.included || ''),
+      want: String(row.want || ''),
+      price: numberOrNull(row.price),
+      budgetMin: numberOrNull(row.budget_min),
+      budgetMax: numberOrNull(row.budget_max),
+      notes: String(row.notes || ''),
+      images: imageList(row.images),
+      fallbackImage: PLACEHOLDER,
+      city: String(row.city || ''),
+      sellerName: String(row.seller_name || 'Valmont seller'),
+      verified: row.seller_verified === true,
+      promoted: row.is_promoted === true && (!row.promo_expires_at || new Date(row.promo_expires_at) > new Date()),
+      views: numberOrNull(row.views) || 0,
+      date: dateOnly(row.created_at),
+      status: 'active',
+    }));
   }
-  return null;
-}
 
-// ── Loading bar ──
-const Loading = {
-  _el: null,
-  show() {
-    if (!this._el) {
-      this._el = document.createElement('div');
-      this._el.style.cssText = 'position:fixed;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#ff8c00,#e67e00);z-index:9999;transition:opacity .3s;opacity:0';
-      document.body.appendChild(this._el);
-    }
-    this._el.style.opacity = '1';
-  },
-  hide() { if (this._el) this._el.style.opacity = '0'; }
-};
+  /** The signed-in seller's own listings, including pending ones. */
+  async function mySwapListings() {
+    const rows = await window.VDB.rpc.myListings();
+    return (Array.isArray(rows) ? rows : []).map((row) => ({
+      id: String(row.id),
+      type: ['swap', 'sell', 'both'].indexOf(row.listing_type) !== -1 ? row.listing_type : 'swap',
+      model: String(row.model || ''),
+      brand: String(row.brand || ''),
+      storage: String(row.storage || ''),
+      grade: gradeLabel(row.grade),
+      price: numberOrNull(row.price),
+      want: String(row.want || ''),
+      images: imageList(row.images),
+      fallbackImage: PLACEHOLDER,
+      city: String(row.city || ''),
+      status: String(row.status || 'pending'),
+      promoted: row.is_promoted === true && (!row.promo_expires_at || new Date(row.promo_expires_at) > new Date()),
+      promoPending: row.promo_pending === true,
+      views: numberOrNull(row.views) || 0,
+      leads: numberOrNull(row.leads_count) || 0,
+      date: dateOnly(row.created_at),
+      whatsappNumber: String(row.seller_phone || ''),
+      sellerName: String(row.seller_name || ''),
+    }));
+  }
 
-// ── SWAP LISTINGS ──
-const SwapDB = {
-  async getAll() {
-    Loading.show();
+  async function myLeads() {
+    const rows = await window.VDB.rpc.profileLeads ? await window.VDB.rpc.profileLeads() : [];
+    return (Array.isArray(rows) ? rows : []).map((row) => ({
+      id: String(row.id),
+      listingId: String(row.listing_id || ''),
+      listingModel: String(row.listing_model || ''),
+      listingImage: imageList(row.listing_images)[0] || PLACEHOLDER,
+      buyerName: String(row.buyer_name || 'Valmont buyer'),
+      buyerPhone: String(row.buyer_phone || ''),
+      message: String(row.message || ''),
+      status: String(row.status || 'new'),
+      date: dateOnly(row.created_at),
+    }));
+  }
+
+  async function usedInventory(origin) {
+    let rows = [];
     try {
-    if (hasVDB()) {
-      const result = await withRetry(() => VDB.swap.getActive());
-      const { data, error } = result || {};
-      if (!error && data && data.length > 0) return data;
+      rows = await window.VDB.rpc.usedInventory(origin);
+    } catch (error) {
+      const err = new Error('Imported stock is unavailable right now.');
+      err.cause = error;
+      err.retryable = true;
+      throw err;
     }
-    return lsGet(LS_KEYS.swap_listings, []).filter(l => l.status === 'active');
-    } finally { Loading.hide(); }
-  },
+    return (Array.isArray(rows) ? rows : []).map((row) => ({
+      id: String(row.id),
+      origin: row.origin === 'us' ? 'us' : 'uk',
+      brand: String(row.brand || ''),
+      name: String(row.name || ''),
+      storage: String(row.storage || ''),
+      color: String(row.color || ''),
+      grade: gradeLabel(row.grade),
+      battery: numberOrNull(row.battery_health),
+      price: numberOrNull(row.price),
+      was: numberOrNull(row.was_price),
+      screen: String(row.screen_condition || ''),
+      body: String(row.body_condition || ''),
+      charger: String(row.charger_included || ''),
+      images: imageList(row.images),
+      fallbackImage: PLACEHOLDER,
+      date: dateOnly(row.listed_date),
+      sold: false,
+    }));
+  }
 
-  async getAllIncludingPending() {
-    if (hasVDB()) {
-      const { data, error } = await VDB.db.select('swap_listings', {}, { order: { column: 'created_at' } });
-      if (!error && data) return data;
-    }
-    return lsGet(LS_KEYS.swap_listings, []);
-  },
+  /**
+   * Dealer rows (including supplier cost) are only ever handed out by
+   * `get_wholesale_catalog()`, which fails closed for anyone Postgres has not
+   * marked approved. The page does not have to check the profile itself.
+   */
+  async function wholesaleCatalog() {
+    const rows = await window.VDB.rpc.wholesaleCatalog();
+    return {
+      approved: true,
+      products: (Array.isArray(rows) ? rows : []).map((row) => ({
+        id: String(row.id),
+        name: String(row.name || ''),
+        category: String(row.category_id || ''),
+        storage: String(row.storage_options && row.storage_options[0] || ''),
+        retail: numberOrNull(row.price),
+        wholesale: numberOrNull(row.wholesale_price),
+        tiers: Array.isArray(row.tiers) ? row.tiers.map((t) => ({
+          qty: numberOrNull(t.min_qty),
+          price: numberOrNull(t.unit_price),
+        })) : [],
+        image: imageList([row.image_url])[0] || PLACEHOLDER,
+        stock: numberOrNull(row.stock) || 0,
+      })),
+    };
+  }
 
-  async getByUser(userId) {
-    if (hasVDB()) {
-      const { data } = await VDB.db.select('swap_listings', { seller_id: userId });
-      if (data) return data;
-    }
-    return lsGet(LS_KEYS.swap_listings, []).filter(l => l.userId === userId);
-  },
+  async function myWholesaleProfile() {
+    const row = await window.VDB.rpc.wholesaleProfile();
+    if (!row) return null;
+    return {
+      id: String(row.id || ''),
+      businessName: String(row.business_name || ''),
+      contactName: String(row.contact_name || ''),
+      phone: String(row.phone || ''),
+      status: String(row.status || 'pending'),
+      since: dateOnly(row.created_at),
+    };
+  }
 
-  async getPromoted() {
-    if (hasVDB()) {
-      const { data } = await VDB.swap.getPromoted();
-      if (data && data.length > 0) return data;
-    }
-    return lsGet(LS_KEYS.swap_listings, []).filter(l => l.promoted && l.status === 'active');
-  },
+  async function myOrders() {
+    const rows = await window.VDB.rpc.wholesaleOrders();
+    return (Array.isArray(rows) ? rows : []).map((row) => ({
+      id: String(row.id),
+      orderNumber: String(row.order_number || ''),
+      total: numberOrNull(row.total),
+      status: String(row.status || 'pending'),
+      items: Array.isArray(row.items) ? row.items.map((item) => ({
+        name: String(item.name || ''),
+        qty: numberOrNull(item.qty) || 0,
+        unitPrice: numberOrNull(item.unit_price),
+      })) : [],
+      date: dateOnly(row.created_at),
+    }));
+  }
 
-  async create(listing) {
-    if (hasVDB()) {
-      const dbListing = {
-        seller_id: listing.userId, seller_name: listing.userName, seller_phone: listing.userPhone,
-        seller_verified: listing.userVerified || false, listing_type: listing.type,
-        category: listing.category || 'phones', brand: listing.brand, model: listing.model,
-        storage: listing.storage, color: listing.color, grade: listing.grade,
-        battery_health: listing.battery, screen_condition: listing.screen,
-        body_condition: listing.body, included: listing.included, want: listing.want,
-        price: listing.price, budget_min: listing.budgetMin, budget_max: listing.budgetMax,
-        notes: listing.notes, images: listing.images || [], city: listing.city,
-        status: 'pending', is_promoted: false, views: 0, leads_count: 0,
-      };
-      const { data, error } = await VDB.swap.create(dbListing);
-      if (!error && data && data[0]) return data[0];
-    }
-    // Fallback to localStorage
-    const listings = lsGet(LS_KEYS.swap_listings, []);
-    listing.id = listing.id || 's' + Date.now();
-    listing.status = listing.status || 'pending';
-    listings.unshift(listing);
-    lsSet(LS_KEYS.swap_listings, listings);
-    return listing;
-  },
+  async function partnerStatus() {
+    const row = await window.VDB.rpc.partnerStatus();
+    if (!row) return null;
+    return {
+      id: String(row.id || ''),
+      shopName: String(row.shop_name || ''),
+      plan: String(row.plan || 'starter'),
+      status: String(row.status || 'pending'),
+      date: dateOnly(row.created_at),
+    };
+  }
 
-  async update(id, updates) {
-    if (hasVDB()) {
-      const { data } = await VDB.db.update('swap_listings', id, updates);
-      if (data) return data;
-    }
-    const listings = lsGet(LS_KEYS.swap_listings, []);
-    const idx = listings.findIndex(l => l.id === id);
-    if (idx >= 0) { Object.assign(listings[idx], updates); lsSet(LS_KEYS.swap_listings, listings); return listings[idx]; }
-    return null;
-  },
-
-  async approve(id) { return this.update(id, { status: 'active' }); },
-  async reject(id) { return this.update(id, { status: 'rejected' }); },
-  async remove(id) { return this.update(id, { status: 'removed' }); },
-
-  async togglePromo(id, hours) {
-    const listings = lsGet(LS_KEYS.swap_listings, []);
-    const l = listings.find(x => x.id === id);
-    if (l) {
-      l.promoted = !l.promoted;
-      l.promoExpiry = l.promoted ? Date.now() + (hours * 3600000) : null;
-      lsSet(LS_KEYS.swap_listings, listings);
-    }
-    if (hasVDB()) {
-      await VDB.swap.togglePromo(id, l && l.promoted ? new Date(l.promoExpiry).toISOString() : null);
-    }
-    return l;
-  },
-
-  async addLead(listingId, buyerName, buyerPhone, message) {
-    if (hasVDB()) {
-      const { data } = await VDB.swap.addLead(listingId, buyerName, buyerPhone, message);
-      if (data) return data;
-    }
-    const leads = lsGet(LS_KEYS.swap_leads, []);
-    const lead = { id: 'l' + Date.now(), listingId, buyerName, buyerPhone, message, date: new Date().toLocaleString(), status: 'new' };
-    leads.push(lead);
-    lsSet(LS_KEYS.swap_leads, leads);
-    return lead;
-  },
-
-  async getLeads() {
-    if (hasVDB()) {
-      const { data } = await VDB.db.select('swap_leads', {}, { order: { column: 'created_at' } });
-      if (data) return data;
-    }
-    return lsGet(LS_KEYS.swap_leads, []);
-  },
-
-  seed(listings) { if (lsGet(LS_KEYS.swap_listings, []).length === 0) lsSet(LS_KEYS.swap_listings, listings); },
-};
-
-// ── USERS ──
-const UserDB = {
-  async getAll() {
-    if (hasVDB()) {
-      const { data } = await VDB.sellers.getAll();
-      if (data) return data;
-    }
-    return lsGet(LS_KEYS.swap_users, []);
-  },
-
-  async getByPhone(phone) {
-    if (hasVDB()) {
-      const user = await VDB.sellers.getByPhone(phone);
-      if (user) return user;
-    }
-    return lsGet(LS_KEYS.swap_users, []).find(u => u.phone === phone);
-  },
-
-  async create(user) {
-    if (hasVDB()) {
-      const { data } = await VDB.sellers.create({
-        name: user.name, phone: user.phone, city: user.city,
-        ghana_card: user.ghanaCard, face_photo_url: user.facePhoto,
-        face_verified: !!user.facePhoto, is_verified: true,
-        role: 'seller', password_hash: user.pass,
-      });
-      if (data && data[0]) return data[0];
-    }
-    const users = lsGet(LS_KEYS.swap_users, []);
-    user.id = user.id || 'u' + Date.now();
-    users.push(user);
-    lsSet(LS_KEYS.swap_users, users);
-    return user;
-  },
-
-  async update(id, updates) {
-    if (hasVDB()) {
-      await VDB.db.update('sellers', id, updates);
-    }
-    const users = lsGet(LS_KEYS.swap_users, []);
-    const idx = users.findIndex(u => u.id === id);
-    if (idx >= 0) { Object.assign(users[idx], updates); lsSet(LS_KEYS.swap_users, users); }
-  },
-
-  async ban(id) {
-    if (hasVDB()) await VDB.sellers.ban(id, 'Banned by admin');
-    const users = lsGet(LS_KEYS.swap_users, []).filter(u => u.id !== id);
-    lsSet(LS_KEYS.swap_users, users);
-  },
-
-  seed(users) { if (lsGet(LS_KEYS.swap_users, []).length === 0) lsSet(LS_KEYS.swap_users, users); },
-};
-
-// ── USED INVENTORY ──
-const UsedDB = {
-  async getAll() {
-    Loading.show();
-    try {
-    if (hasVDB()) {
-      const result = await withRetry(() => VDB.used.getAll());
-      const { data } = result || {};
-      if (data && data.length > 0) return data;
-    }
-    return lsGet(LS_KEYS.used_inventory, []);
-    } finally { Loading.hide(); }
-  },
-
-  async getAvailable() {
-    if (hasVDB()) {
-      const { data } = await VDB.used.getAvailable();
-      if (data && data.length > 0) return data;
-    }
-    return lsGet(LS_KEYS.used_inventory, []).filter(i => !i.sold);
-  },
-
-  async create(item) {
-    if (hasVDB()) {
-      const { data } = await VDB.used.create({
-        origin: item.origin, brand: item.brand, name: item.name,
-        storage: item.storage, color: item.color, grade: item.grade,
-        battery_health: item.battery, price: item.price, was_price: item.was,
-        screen_condition: item.screen, body_condition: item.body,
-        charger_included: item.charger, images: item.images || [],
-      });
-      if (data && data[0]) return data[0];
-    }
-    const items = lsGet(LS_KEYS.used_inventory, []);
-    item.id = item.id || 'p' + Date.now();
-    items.unshift(item);
-    lsSet(LS_KEYS.used_inventory, items);
-    return item;
-  },
-
-  async toggleSold(id) {
-    const items = lsGet(LS_KEYS.used_inventory, []);
-    const item = items.find(i => i.id === id);
-    if (item) { item.sold = !item.sold; lsSet(LS_KEYS.used_inventory, items); }
-    if (hasVDB()) {
-      if (item && item.sold) await VDB.used.markSold(id);
-      else await VDB.used.restock(id);
-    }
-    return item;
-  },
-
-  async remove(id) {
-    if (hasVDB()) await VDB.used.remove(id);
-    const items = lsGet(LS_KEYS.used_inventory, []).filter(i => i.id !== id);
-    lsSet(LS_KEYS.used_inventory, items);
-  },
-
-  seed(items) { if (lsGet(LS_KEYS.used_inventory, []).length === 0) lsSet(LS_KEYS.used_inventory, items); },
-};
-
-// ── WHOLESALE ──
-const WholesaleDB = {
-  async getDealers() {
-    if (hasVDB()) {
-      const { data } = await VDB.wholesale.getDealers();
-      if (data) return data;
-    }
-    return lsGet(LS_KEYS.ws_dealers, []);
-  },
-
-  async createDealer(dealer) {
-    if (hasVDB()) {
-      const { data } = await VDB.wholesale.createDealer(dealer);
-      if (data) return data;
-    }
-    const dealers = lsGet(LS_KEYS.ws_dealers, []);
-    dealer.id = dealer.id || 'd' + Date.now();
-    dealers.push(dealer);
-    lsSet(LS_KEYS.ws_dealers, dealers);
-    return dealer;
-  },
-
-  async getOrders(dealerId) {
-    if (hasVDB()) {
-      const { data } = await VDB.wholesale.getOrders(dealerId);
-      if (data) return data;
-    }
-    const orders = lsGet(LS_KEYS.ws_orders, []);
-    return dealerId ? orders.filter(o => o.dealerId === dealerId) : orders;
-  },
-
-  async createOrder(order) {
-    if (hasVDB()) {
-      const { data } = await VDB.wholesale.createOrder(order);
-      if (data) return data;
-    }
-    const orders = lsGet(LS_KEYS.ws_orders, []);
-    order.id = order.id || 'WO-' + Date.now();
-    orders.unshift(order);
-    lsSet(LS_KEYS.ws_orders, orders);
-    return order;
-  },
-};
-
-// ── PARTNER ──
-const PartnerDB = {
-  async getAll() {
-    if (hasVDB()) {
-      const { data } = await VDB.partner.getApplications();
-      if (data) return data;
-    }
-    return lsGet(LS_KEYS.partner_apps, []);
-  },
-
-  async apply(app) {
-    if (hasVDB()) {
-      const { data } = await VDB.partner.apply(app);
-      if (data) return data;
-    }
-    const apps = lsGet(LS_KEYS.partner_apps, []);
-    app.id = app.id || 'pa' + Date.now();
-    apps.unshift(app);
-    lsSet(LS_KEYS.partner_apps, apps);
-    return app;
-  },
-};
-
-// ── EXPOSE ──
-window.VDBSwap = SwapDB;
-window.VDBUser = UserDB;
-window.VDBUsed = UsedDB;
-window.VDBWholesale = WholesaleDB;
-window.VDBPartner = PartnerDB;
-
+  window.VGA = {
+    swap: {
+      browse: swapListings,
+      mine: mySwapListings,
+      leads: myLeads,
+      create: (listing) => window.VDB.rpc.createListing(listing),
+      setStatus: (id, status) => window.VDB.rpc.updateListingStatus(id, status),
+      promote: (id, hours) => window.VDB.rpc.requestPromotion(id, hours),
+      expressInterest: (id, message) => window.VDB.rpc.addLead(id, message),
+      recordView: (id) => window.VDB.rpc.listingViews(id),
+    },
+    used: { inventory: usedInventory },
+    wholesale: {
+      catalog: wholesaleCatalog,
+      profile: myWholesaleProfile,
+      // Pages pass the same camelCase shape they display; the wire names stay
+      // inside this file so a rename in Postgres is a one-line change.
+      apply: (business) => window.VDB.rpc.wholesaleApply({
+        business_name: String((business && business.businessName) || '').slice(0, 90),
+        contact_name: String((business && business.contactName) || '').slice(0, 80),
+        phone: String((business && business.phone) || '').slice(0, 20),
+        email: String((business && business.email) || '').slice(0, 120),
+        city: String((business && business.city) || '').slice(0, 60),
+      }),
+      placeOrder: (items, address) => window.VDB.rpc.wholesalePlaceOrder(items, address),
+      orders: myOrders,
+      quote: (items) => window.VDB.rpc.wholesaleQuote(items),
+    },
+    partner: {
+      apply: (application) => window.VDB.rpc.partnerApply(application),
+      status: partnerStatus,
+    },
+    seller: { profile: () => window.VDB.rpc.profile() },
+  };
 })();

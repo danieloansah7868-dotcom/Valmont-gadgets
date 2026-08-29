@@ -18,9 +18,6 @@
 <link rel="icon" href="favicon.svg">
 <link rel="stylesheet" href="tailwind.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="assets/js/security.js"></script>
-<script src="assets/js/supabase-client.js"></script>
-<script src="assets/js/db-adapter.js"></script>
 <style>
 :root{--navy:#0b1a38;--navy2:#122649;--orange:#ff8c00;--green:#047857;--blue:#1e40af;--purple:#7c3aed}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -129,6 +126,10 @@ body{font-family:'Inter',sans-serif;background:#f1f1f2;color:#333;min-height:100
 /* ── Toast ── */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--navy);color:#fff;padding:14px 24px;border-radius:10px;font-size:13px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:200;opacity:0;transition:all .4s;max-width:90%;border:1px solid rgba(255,140,0,.4)}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+  /* ── "your application is with us" strip above the plans ── */
+  .status-strip{background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a5f;border-radius:12px;padding:12px 14px;font-size:12px;font-weight:700;line-height:1.5;margin-bottom:18px}
+  .status-strip .badge{display:inline-block;background:var(--navy);color:#fff;border-radius:999px;padding:2px 9px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-right:6px}
+
 </style>
 <link rel="stylesheet" href="assets/css/community.css">
 </head>
@@ -231,7 +232,7 @@ body{font-family:'Inter',sans-serif;background:#f1f1f2;color:#333;min-height:100
         <li><span class="cross">—</span> No analytics dashboard</li>
         <li><span class="cross">—</span> No verified badge</li>
       </ul>
-      <a href="#apply" class="cta outline" onclick="window._applyPlan('starter')">Get Started Free</a>
+      <a href="#apply" class="cta outline" data-plan="starter">Get Started Free</a>
     </div>
     <!-- Pro -->
     <div class="price-card popular">
@@ -248,7 +249,7 @@ body{font-family:'Inter',sans-serif;background:#f1f1f2;color:#333;min-height:100
         <li><span class="check">✓</span> Analytics dashboard</li>
         <li><span class="check">✓</span> Verified Partner badge</li>
       </ul>
-      <a href="#apply" class="cta primary" onclick="window._applyPlan('pro')">Apply for Pro — GH₵ 150/mo</a>
+      <a href="#apply" class="cta primary" data-plan="pro">Apply for Pro — GH₵ 150/mo</a>
     </div>
     <!-- Enterprise -->
     <div class="price-card">
@@ -264,7 +265,7 @@ body{font-family:'Inter',sans-serif;background:#f1f1f2;color:#333;min-height:100
         <li><span class="check">✓</span> Advanced analytics + reports</li>
         <li><span class="check">✓</span> Priority support + dedicated rep</li>
       </ul>
-      <a href="#apply" class="cta outline" onclick="window._applyPlan('enterprise')">Contact Sales</a>
+      <a href="#apply" class="cta outline" data-plan="enterprise">Contact Sales</a>
     </div>
   </div>
 </div>
@@ -395,8 +396,8 @@ body{font-family:'Inter',sans-serif;background:#f1f1f2;color:#333;min-height:100
     </div>
 
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button onclick="window._openBuildModal()" style="background:var(--orange);color:#fff;padding:14px 28px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;border:0">See What You Get</button>
-      <button onclick="window._openBuildModal()" style="background:var(--navy);color:var(--orange);padding:14px 28px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;border:2px solid var(--orange)">See What You Get</button>
+      <button type="button" id="openBuildModalA" style="background:var(--orange);color:#fff;padding:14px 28px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;border:0">See What You Get</button>
+      <button type="button" id="openBuildModalB" style="background:var(--navy);color:var(--orange);padding:14px 28px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;border:2px solid var(--orange)">See What You Get</button>
       <a href="https://valmontweb.com" target="_blank" style="background:#fff;color:var(--navy);padding:14px 28px;border-radius:10px;font-size:14px;font-weight:800;text-decoration:none;border:2px solid var(--navy)">See Live Examples</a>
     </div>
 
@@ -421,12 +422,12 @@ body{font-family:'Inter',sans-serif;background:#f1f1f2;color:#333;min-height:100
     <h2>Frequently Asked Questions</h2>
   </div>
   <div style="max-width:600px;margin:0 auto">
-    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Do I need a website?</div><div class="faq-a"><p>No! Valmont gives you your own store page on ValmontGadgets.com. You don't need to build or host anything.</p></div></div>
-    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How do I get paid?</div><div class="faq-a"><p>Customers pay you directly via MoMo, cash on delivery, or through Valmont Pay. You keep 100% of your sales — Valmont only charges the monthly subscription.</p></div></div>
-    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can I cancel anytime?</div><div class="faq-a"><p>Yes. No contracts, no commitments. Cancel your subscription anytime and your store stays active until the end of your billing period.</p></div></div>
-    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What if I'm outside Accra?</div><div class="faq-a"><p>No problem. Valmont serves all of Ghana. Customers from any region can find your store and contact you. You handle delivery your way.</p></div></div>
-    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How does Valmont verify my shop?</div><div class="faq-a"><p>We verify your Ghana Card, phone number, and business details. Pro and Enterprise partners also get a physical or video verification visit.</p></div></div>
-    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What's the difference between this and just listing on the swap page?</div><div class="faq-a"><p>The swap page is for individuals selling their personal phone. The Partner Program is for businesses with inventory. Partners get a dedicated store page, analytics, promoted listings, and the Verified Partner badge.</p></div></div>
+    <div class="faq-item"><div class="faq-q" role="button" tabindex="0">Do I need a website?</div><div class="faq-a"><p>No! Valmont gives you your own store page on ValmontGadgets.com. You don't need to build or host anything.</p></div></div>
+    <div class="faq-item"><div class="faq-q" role="button" tabindex="0">How do I get paid?</div><div class="faq-a"><p>Customers pay you directly via MoMo, cash on delivery, or through Valmont Pay. You keep 100% of your sales — Valmont only charges the monthly subscription.</p></div></div>
+    <div class="faq-item"><div class="faq-q" role="button" tabindex="0">Can I cancel anytime?</div><div class="faq-a"><p>Yes. No contracts, no commitments. Cancel your subscription anytime and your store stays active until the end of your billing period.</p></div></div>
+    <div class="faq-item"><div class="faq-q" role="button" tabindex="0">What if I'm outside Accra?</div><div class="faq-a"><p>No problem. Valmont serves all of Ghana. Customers from any region can find your store and contact you. You handle delivery your way.</p></div></div>
+    <div class="faq-item"><div class="faq-q" role="button" tabindex="0">How does Valmont verify my shop?</div><div class="faq-a"><p>We verify your Ghana Card, phone number, and business details. Pro and Enterprise partners also get a physical or video verification visit.</p></div></div>
+    <div class="faq-item"><div class="faq-q" role="button" tabindex="0">What's the difference between this and just listing on the swap page?</div><div class="faq-a"><p>The swap page is for individuals selling their personal phone. The Partner Program is for businesses with inventory. Partners get a dedicated store page, analytics, promoted listings, and the Verified Partner badge.</p></div></div>
   </div>
 </div>
 
@@ -435,7 +436,7 @@ body{font-family:'Inter',sans-serif;background:#f1f1f2;color:#333;min-height:100
   <div class="cta-section">
     <h2>Ready to Grow Your Phone Business?</h2>
     <p>Join Ghana's fastest-growing phone marketplace. Get online today.</p>
-    <a href="#apply" class="btn" onclick="window._applyPlan('pro')">Apply Now — It's Free to Start</a>
+    <a href="#apply" class="btn" data-plan="pro">Apply Now — It's Free to Start</a>
   </div>
 </div>
 
@@ -448,24 +449,29 @@ body{font-family:'Inter',sans-serif;background:#f1f1f2;color:#333;min-height:100
     </div>
     <div class="modal-bd">
       <p style="font-size:12px;color:#6b7280;margin-bottom:16px">Tell us about your shop. We'll review your application and get back to you within 24 hours.</p>
-      <div class="fg"><label>Shop / Business Name *</label><input id="aShopName" placeholder="e.g. Kofi Phones"></div>
-      <div class="fg-row">
-        <div class="fg"><label>Your Name *</label><input id="aName" placeholder="e.g. Kofi Mensah"></div>
-        <div class="fg"><label>Phone Number *</label><input id="aPhone" type="tel" inputmode="tel" placeholder="024 123 4567"></div>
+      <div id="applyAuthNote" hidden style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:11px 13px;margin-bottom:14px;font-size:11.5px;line-height:1.5;color:#1e3a5f">
+        A partner application belongs to a Valmont account, so you can manage your store page afterwards.
+        <a href="account.html" target="_blank" rel="noopener" style="color:#1e40af;font-weight:800">Sign in or create one in a new tab</a>,
+        then come back here and press Send again &mdash; nothing you typed is lost.
       </div>
-      <div class="fg"><label>Email</label><input id="aEmail" type="email" placeholder="you@email.com"></div>
+      <div class="fg"><label for="aShopName">Shop / Business Name *</label><input id="aShopName" placeholder="e.g. Kofi Phones"></div>
       <div class="fg-row">
-        <div class="fg"><label>City / Location *</label><input id="aCity" placeholder="e.g. Accra - Circle"></div>
-        <div class="fg"><label>Ghana Card Number *</label><input id="aGhanaCard" placeholder="GHA-XXXXXXXXX-X"></div>
+        <div class="fg"><label for="aName">Your Name *</label><input id="aName" placeholder="e.g. Kofi Mensah"></div>
+        <div class="fg"><label for="aPhone">Phone Number *</label><input id="aPhone" type="tel" inputmode="tel" placeholder="024 123 4567"></div>
       </div>
-      <div class="fg"><label>Selected Plan *</label>
+      <div class="fg"><label for="aEmail">Email</label><input id="aEmail" type="email" placeholder="you@email.com"></div>
+      <div class="fg-row">
+        <div class="fg"><label for="aCity">City / Location *</label><input id="aCity" placeholder="e.g. Accra - Circle"></div>
+        <div class="fg"><label for="aGhanaCard">Ghana Card Number *</label><input id="aGhanaCard" maxlength="24" placeholder="GHA-123456789-0"><span style="font-size:10px;color:#9ca3af">Verified by Valmont staff; only a hashed fingerprint and the last digits are stored.</span></div>
+      </div>
+      <div class="fg"><label for="aPlan">Selected Plan *</label>
         <select id="aPlan">
           <option value="starter">Starter — Free (up to 5 listings)</option>
           <option value="pro" selected>Pro Dealer — GH₵ 150/month</option>
           <option value="enterprise">Enterprise — GH₵ 400/month</option>
         </select>
       </div>
-      <div class="fg"><label>How many phones do you sell per month?</label>
+      <div class="fg"><label for="aVolume">How many phones do you sell per month?</label>
         <select id="aVolume">
           <option>1-10 phones</option>
           <option>10-30 phones</option>
@@ -474,16 +480,20 @@ body{font-family:'Inter',sans-serif;background:#f1f1f2;color:#333;min-height:100
           <option>100+ phones</option>
         </select>
       </div>
-      <div class="fg"><label>Tell us about your shop</label><textarea id="aAbout" placeholder="What phones do you sell? How long have you been in business? Any special deals?"></textarea></div>
+      <div class="fg"><label for="aAbout">Tell us about your shop</label><textarea id="aAbout" placeholder="What phones do you sell? How long have you been in business? Any special deals?"></textarea></div>
       <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:14px">
         <input type="checkbox" id="aTerms" style="margin-top:3px;accent-color:var(--orange)">
         <label for="aTerms" style="font-size:11px;color:#374151;line-height:1.4;cursor:pointer">I agree to the Valmont Partner Terms. I confirm my business is legitimate and my Ghana Card is valid.</label>
       </div>
-      <button class="submit-btn" id="submitApplyBtn">Submit Application</button>
+      <p id="applyErr" style="color:#dc2626;font-size:12px;font-weight:700;min-height:16px;margin-top:8px" role="alert" aria-live="polite"></p>
+      <button type="button" class="submit-btn" id="submitApplyBtn">Submit Application</button>
       <p style="font-size:10px;color:#9ca3af;text-align:center;margin-top:10px">We'll review your application within 24 hours and contact you on WhatsApp.</p>
     </div>
   </div>
 </div>
+
+<!-- APPLICATION STATUS (filled by partner-page.js) -->
+<div id="applyStatus" class="status-strip" style="display:none"></div>
 
 <!-- SUCCESS MODAL -->
 <div class="modal-overlay" id="successModal">
@@ -492,7 +502,7 @@ body{font-family:'Inter',sans-serif;background:#f1f1f2;color:#333;min-height:100
       <div style="font-size:48px;margin-bottom:12px">🎉</div>
       <h3 style="font-size:18px;font-weight:900;color:var(--navy);margin-bottom:8px">Application Submitted!</h3>
       <p style="font-size:13px;color:#6b7280;margin-bottom:16px">We'll review your application and contact you on WhatsApp within 24 hours.</p>
-      <button class="submit-btn" onclick="document.getElementById('successModal').classList.remove('open')">Done</button>
+      <button type="button" class="submit-btn" id="successDoneBtn">Done</button>
     </div>
   </div>
 </div>
@@ -530,61 +540,6 @@ body{font-family:'Inter',sans-serif;background:#f1f1f2;color:#333;min-height:100
   <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 fill-current" viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L3 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-93.8-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 89.4-184.5 184.6-184.5 46 0 89.3 18 121.9 50.6 32.6 32.5 50.5 75.9 50.5 122.1-.1 101.8-94.9 184.5-184.6 184.5zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
 </a>
 
-<script>
-(function(){
-'use strict';
-
-function toast(m){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
-
-// Apply modal
-document.getElementById('closeApplyModal').addEventListener('click',()=>{document.getElementById('applyModal').classList.remove('open')});
-
-window._applyPlan=function(plan){
-  document.getElementById('aPlan').value=plan;
-  document.getElementById('applyModal').classList.add('open');
-};
-
-// Submit application
-document.getElementById('submitApplyBtn').addEventListener('click',async()=>{
-  const shopName=VG.escapeHtml(document.getElementById('aShopName').value);
-  const name=VG.escapeHtml(document.getElementById('aName').value);
-  const phone=document.getElementById('aPhone').value.trim();
-  const city=VG.escapeHtml(document.getElementById('aCity').value);
-  const gc=document.getElementById('aGhanaCard').value.trim().toUpperCase();
-  const plan=document.getElementById('aPlan').value;
-
-  // Validate
-  if(!shopName||!name||!phone||!city||!gc){toast('Please fill all required fields.');return}
-  if(!VG.isValidGhanaPhone(phone)){toast('Invalid Ghana phone number.');return}
-  if(!VG.isValidGhanaCard(gc)){toast('Invalid Ghana Card format. Use: GHA-XXXXXXXXX-X');return}
-  if(!document.getElementById('aTerms').checked){toast('Please agree to the terms.');return}
-
-  // Rate limit
-  if(!VG.canPerform('partner_apply',3,3600000)){toast('Too many applications. Try again later.');return}
-
-  // Save application
-  const appData = {
-    id:'pa'+Date.now(),shopName,name,phone,email:VG.escapeHtml(document.getElementById('aEmail').value),
-    city,ghanaCard:gc,plan,
-    volume:document.getElementById('aVolume').value,
-    about:VG.escapeHtml(document.getElementById('aAbout').value),
-    date:new Date().toISOString(),status:'pending'
-  };
-  if(window.VDBPartner) await VDBPartner.apply(appData);
-  else { const apps=VG.storage.get('vg_partner_applications',[]); apps.unshift(appData); VG.storage.set('vg_partner_applications',apps); }
-
-  document.getElementById('applyModal').classList.remove('open');
-  document.getElementById('successModal').classList.add('open');
-  VG.audit('PARTNER_APPLICATION',{shop:shopName,plan:plan});
-});
-
-// FAQ toggle
-document.querySelectorAll('.faq-q').forEach(q=>{
-  q.addEventListener('click',()=>{q.parentElement.classList.toggle('open')});
-});
-
-})();
-</script>
 
 <!-- BUILD YOUR OWN WEBSITE MODAL -->
 <div class="modal-overlay" id="buildWebsiteModal">
@@ -688,10 +643,9 @@ document.querySelectorAll('.faq-q').forEach(q=>{
   </div>
 </div>
 
-<script>
-document.getElementById('closeBuildModal').addEventListener('click',function(){document.getElementById('buildWebsiteModal').classList.remove('open')});
-window._openBuildModal=function(){document.getElementById('buildWebsiteModal').classList.add('open')};
-</script>
-
+<script src="assets/js/security.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/db-adapter.js"></script>
+<script src="assets/js/partner-page.js"></script>
 </body>
 </html>

@@ -5,16 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Valmont Admin — Control Panel</title>
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="description" content="Internal Valmont Gadgets console for swap approvals, imported stock, dealer and partner applications, and promotion requests.">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta http-equiv="X-Frame-Options" content="DENY">
 <meta http-equiv="X-XSS-Protection" content="1; mode=block">
 <meta http-equiv="Referrer-Policy" content="no-referrer">
+<link rel="canonical" href="https://valmontgadgets.com/admin-control.html">
 <link rel="icon" href="favicon.svg">
 <link rel="stylesheet" href="tailwind.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="assets/js/security.js"></script>
-<script src="assets/js/supabase-client.js"></script>
-<script src="assets/js/db-adapter.js"></script>
 <style>
 :root{--navy:#0b1a38;--navy2:#122649;--orange:#ff8c00;--green:#047857;--red:#dc2626;--blue:#1e40af;--purple:#7c3aed}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -123,12 +122,10 @@ tr:hover{background:#f9fafb}
   <div class="login-card">
     <div class="lock">🔐</div>
     <h1>Valmont Admin</h1>
-    <p class="sub">Secure control panel — authorized access only</p>
-    <div class="fg"><label>Admin Username</label><input id="adminUser" type="text" placeholder="admin" autocomplete="username"></div>
-    <div class="fg"><label>Password</label><input id="adminPass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
-    <p id="loginErr" style="color:var(--red);font-size:12px;font-weight:700;min-height:18px;margin-bottom:10px"></p>
-    <button class="btn btn-primary" style="width:100%;padding:12px;font-size:13px" id="loginBtn">Sign In to Admin</button>
-    <p style="font-size:10px;color:#9ca3af;text-align:center;margin-top:12px">Protected area • All actions are logged</p>
+    <p class="sub">This panel has no password of its own — access is decided by PostgreSQL.</p>
+    <p id="loginErr" style="color:var(--red);font-size:12px;font-weight:700;min-height:18px;margin-bottom:10px" role="alert" aria-live="polite">Checking your session…</p>
+    <a class="btn btn-primary" style="width:100%;padding:12px;font-size:13px;justify-content:center;text-decoration:none" href="admin-login.html">Sign in with the owner account</a>
+    <p style="font-size:10px;color:#9ca3af;text-align:center;margin-top:12px">Only the allowlisted admin email is accepted. Every action here is written to the audit log in the database.</p>
   </div>
 </div>
 
@@ -140,31 +137,26 @@ tr:hover{background:#f9fafb}
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="brand">
-      <img src="favicon.png" alt="V" style="border-radius:8px">
+      <img src="favicon.png" alt="Valmont Gadgets logo" width="28" height="28" style="border-radius:8px">
       <span>VALMONT ADMIN</span>
     </div>
     <nav>
-      <div class="nav-section">Overview</div>
-      <button class="nav-item active" data-page="dashboard"><span class="icon">📊</span> Dashboard</button>
-      <button class="nav-item" data-page="orders"><span class="icon">📦</span> Orders</button>
+      <div class="nav-section">Marketplace</div>
+      <button class="nav-item active" data-page="dashboard"><span class="icon">📊</span> Overview</button>
+      <button class="nav-item" data-page="swap"><span class="icon">🔄</span> Swap review</button>
+      <button class="nav-item" data-page="ads"><span class="icon">⭐</span> Promotions</button>
 
-      <div class="nav-section">Inventory</div>
-      <button class="nav-item" data-page="products"><span class="icon">📱</span> Products</button>
+      <div class="nav-section">Imported stock</div>
       <button class="nav-item" data-page="used"><span class="icon">🌍</span> UK/US Used</button>
-      <button class="nav-item" data-page="swap"><span class="icon">🔄</span> Swap Listings</button>
 
-      <div class="nav-section">Users</div>
-      <button class="nav-item" data-page="users"><span class="icon">👥</span> All Users</button>
-      <button class="nav-item" data-page="dealers"><span class="icon">🏪</span> Dealers</button>
-      <button class="nav-item" data-page="sellers"><span class="icon">💰</span> Sellers</button>
-
-      <div class="nav-section">Revenue</div>
-      <button class="nav-item" data-page="ads"><span class="icon">⭐</span> Ad Revenue</button>
-      <button class="nav-item" data-page="payments"><span class="icon">💳</span> Payments</button>
+      <div class="nav-section">Partners</div>
+      <button class="nav-item" data-page="sellers"><span class="icon">👥</span> Sellers</button>
+      <button class="nav-item" data-page="dealers"><span class="icon">🏪</span> Wholesale dealers</button>
+      <button class="nav-item" data-page="orders"><span class="icon">📦</span> Dealer orders</button>
+      <button class="nav-item" data-page="partners"><span class="icon">🤝</span> Store partners</button>
 
       <div class="nav-section">System</div>
-      <button class="nav-item" data-page="settings"><span class="icon">⚙️</span> Settings</button>
-      <button class="nav-item" data-page="logs"><span class="icon">📋</span> Activity Logs</button>
+      <button class="nav-item" data-page="logs"><span class="icon">📋</span> Activity log</button>
       <button class="nav-item" id="logoutAdmin" style="color:#f87171"><span class="icon">🚪</span> Logout</button>
     </nav>
   </aside>
@@ -201,545 +193,8 @@ tr:hover{background:#f9fafb}
   </div>
 </div>
 
-<script>
-(function(){
-'use strict';
-
-// ══════════════════════════════════════════
-// ADMIN CREDENTIALS (change these!)
-// ══════════════════════════════════════════
-const ADMIN_USER='admin';
-// Password verified via SHA-256 hash — never stored in plain text
-async function hashStr(str){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('')}
-// Pre-computed hash for default password — change via Settings page
-let ADMIN_PASS_HASH=localStorage.getItem('vg_admin_pass_hash')||null;
-// Default password 'valmont2026' — hash computed on first login
-const DEFAULT_HASH_PROMISE=hashStr('valmont2026');
-const K_SESSION='vg_admin_session';
-
-// ══════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════
-function ld(k,f){try{const s=localStorage.getItem(k);if(s)return JSON.parse(s)}catch(e){}return f}
-function sv(k,v){localStorage.setItem(k,JSON.stringify(v))}
-function fmt(n){return'GH\u20B5 '+Number(n).toLocaleString()}
-function toast(m){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
-function timeAgo(d){const h=Math.floor((Date.now()-new Date(d).getTime())/3600000);if(h<1)return'Just now';if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago'}
-
-// ══════════════════════════════════════════
-// AUTH
-// ══════════════════════════════════════════
-function isLoggedIn(){
-  const s=VG.session.get(K_SESSION);
-  return!!s;
-}
-function showAdmin(){
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('adminDashboard').style.display='';
-  loadPage('dashboard');
-}
-
-document.getElementById('loginBtn').addEventListener('click',async()=>{
-  const u=document.getElementById('adminUser').value.trim();
-  const p=document.getElementById('adminPass').value;
-
-  // Rate limit via security module
-  if(!VG.canPerform('admin_login',3,900000)){
-    document.getElementById('loginErr').textContent='Too many attempts. Wait 15 minutes.';
-    VG.audit('ADMIN_LOGIN_LOCKED',{user:u});
-    return;
-  }
-
-  if(u!==ADMIN_USER){document.getElementById('loginErr').textContent='Invalid credentials.';VG.audit('ADMIN_LOGIN_FAIL',{user:u,reason:'bad_user'});return}
-
-  // Hash the entered password and compare
-  const enteredHash=await hashStr(p);
-  const defaultHash=await DEFAULT_HASH_PROMISE;
-  const storedHash=ADMIN_PASS_HASH||defaultHash;
-
-  if(enteredHash!==storedHash){
-    document.getElementById('loginErr').textContent='Invalid credentials.';
-    VG.audit('ADMIN_LOGIN_FAIL',{user:u,reason:'bad_pass'});
-    return;
-  }
-
-  VG.session.create(K_SESSION,{user:u},7200000);
-  showAdmin();
-  VG.audit('ADMIN_LOGIN_SUCCESS',{user:u});
-});
-
-document.getElementById('logoutAdmin').addEventListener('click',()=>{
-  localStorage.removeItem(K_SESSION);
-  document.getElementById('adminDashboard').style.display='none';
-  document.getElementById('loginScreen').style.display='';
-  toast('Logged out.');
-});
-
-if(isLoggedIn())showAdmin();
-
-// ══════════════════════════════════════════
-// NAVIGATION
-// ══════════════════════════════════════════
-let currentPage='dashboard';
-document.querySelectorAll('.nav-item[data-page]').forEach(n=>{
-  n.addEventListener('click',()=>{
-    document.querySelectorAll('.nav-item').forEach(nn=>nn.classList.remove('active'));
-    n.classList.add('active');
-    currentPage=n.dataset.page;
-    document.getElementById('pageTitle').textContent=n.textContent.trim();
-    loadPage(currentPage);
-    // Close mobile sidebar
-    document.getElementById('sidebar').classList.remove('open');
-  });
-});
-
-// Mobile menu
-const menuToggle=document.getElementById('menuToggle');
-if(window.innerWidth<=768)menuToggle.style.display='';
-menuToggle.addEventListener('click',()=>{document.getElementById('sidebar').classList.toggle('open')});
-
-// Modal
-document.getElementById('closeModal').addEventListener('click',()=>{document.getElementById('modal').classList.remove('open')});
-
-// ══════════════════════════════════════════
-// ACTIVITY LOG
-// ══════════════════════════════════════════
-function logActivity(action){
-  const logs=ld('vg_admin_logs',[]);
-  logs.unshift({action,time:new Date().toISOString()});
-  if(logs.length>200)logs.length=200;
-  sv('vg_admin_logs',logs);
-}
-
-// ══════════════════════════════════════════
-// PAGE RENDERERS
-// ══════════════════════════════════════════
-function loadPage(page){
-  const c=document.getElementById('pageContent');
-  const renderers={dashboard:renderDashboard,products:renderProducts,used:renderUsed,swap:renderSwap,orders:renderOrders,users:renderUsers,dealers:renderDealers,sellers:renderSellers,ads:renderAds,payments:renderPayments,settings:renderSettings,logs:renderLogs};
-  if(renderers[page])renderers[page](c);
-}
-
-// ── DASHBOARD ──
-async function renderDashboard(c){
-  const products=window.VDBUsed ? await VDBUsed.getAll() : ld('vg_used_inventory',[]);
-  const swapListings=window.VDBSwap ? await VDBSwap.getAllIncludingPending() : ld('vg_swap_listings',[]);
-  const users=window.VDBUser ? await VDBUser.getAll() : ld('vg_swap_users',[]);
-  const leads=window.VDBSwap ? await VDBSwap.getLeads() : ld('vg_swap_leads',[]);
-  const orders=ld('vg_orders',[]);
-  const ads=swapListings.filter(l=>l.promoted);
-  const totalRevenue=ld('vg_ad_revenue',0);
-
-  c.innerHTML=`
-    <div class="stat-grid">
-      <div class="stat-card"><div class="label">Total Products</div><div class="value">${products.length}</div><div class="change up">In catalog</div></div>
-      <div class="stat-card"><div class="label">Swap Listings</div><div class="value">${swapListings.filter(l=>l.status==='active').length}</div><div class="change up">${swapListings.filter(l=>l.status==='pending').length} pending</div></div>
-      <div class="stat-card"><div class="label">Registered Users</div><div class="value">${users.length}</div><div class="change up">Verified sellers</div></div>
-      <div class="stat-card"><div class="label">Total Leads</div><div class="value">${leads.length}</div><div class="change up">${leads.filter(l=>l.status==='new').length} new</div></div>
-      <div class="stat-card"><div class="label">Active Ads</div><div class="value">${ads.length}</div><div class="change up">Promoted listings</div></div>
-      <div class="stat-card"><div class="label">Ad Revenue</div><div class="value">${fmt(totalRevenue)}</div><div class="change up">Total earned</div></div>
-      <div class="stat-card"><div class="label">Orders</div><div class="value">${orders.length}</div><div class="change up">${orders.filter(o=>o.status==='pending').length} pending</div></div>
-      <div class="stat-card"><div class="label">Sold Items</div><div class="value">${products.filter(p=>p.sold).length}</div><div class="change down">UK/US Used</div></div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <div class="table-card">
-        <div class="hd"><h3>Recent Activity</h3></div>
-        <table><thead><tr><th>Action</th><th>Time</th></tr></thead>
-        <tbody>${(ld('vg_admin_logs',[])).slice(0,10).map(l=>`<tr><td>${l.action}</td><td>${timeAgo(l.time)}</td></tr>`).join('')||'<tr><td colspan="2" style="text-align:center;color:#9ca3af">No activity yet</td></tr>'}</tbody></table>
-      </div>
-      <div class="table-card">
-        <div class="hd"><h3>Pending Approvals</h3></div>
-        <table><thead><tr><th>Listing</th><th>Seller</th><th>Action</th></tr></thead>
-        <tbody>${swapListings.filter(l=>l.status==='pending').slice(0,5).map(l=>`<tr><td>${l.model}</td><td>${l.userName}</td><td><button class="btn btn-green btn-sm" onclick="window._approve('${l.id}')">Approve</button> <button class="btn btn-red btn-sm" onclick="window._reject('${l.id}')">Reject</button></td></tr>`).join('')||'<tr><td colspan="3" style="text-align:center;color:#9ca3af">Nothing pending</td></tr>'}</tbody></table>
-      </div>
-    </div>`;
-}
-
-// ── PRODUCTS ──
-async function renderProducts(c){
-  const products=window.VDBUsed ? await VDBUsed.getAll() : ld('vg_used_inventory',[]);
-  c.innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h3 style="font-size:16px;font-weight:900;color:var(--navy)">UK/US Used Inventory</h3>
-      <button class="btn btn-primary" onclick="window._addProduct()">+ Add Phone</button>
-    </div>
-    <div class="table-card">
-      <table><thead><tr><th>Phone</th><th>Origin</th><th>Storage</th><th>Grade</th><th>Battery</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
-      <tbody>${products.map(p=>`<tr>
-        <td><strong>${p.name}</strong><br><span style="font-size:10px;color:#9ca3af">${p.color||''}</span></td>
-        <td><span class="badge ${p.origin==='uk'?'badge-blue':'badge-green'}">${p.origin.toUpperCase()}</span></td>
-        <td>${p.storage}</td>
-        <td><span class="badge ${p.grade==='A'?'badge-green':p.grade==='B'?'badge-blue':'badge-yellow'}">Grade ${p.grade}</span></td>
-        <td>${p.battery}%</td>
-        <td>${fmt(p.price)}</td>
-        <td><span class="badge ${p.sold?'badge-red':'badge-green'}">${p.sold?'SOLD':'Available'}</span></td>
-        <td>
-          <button class="btn btn-outline btn-sm" onclick="window._toggleSold('${p.id}')">${p.sold?'Restock':'Mark Sold'}</button>
-          <button class="btn btn-red btn-sm" onclick="window._deleteProduct('${p.id}')">Delete</button>
-        </td>
-      </tr>`).join('')}</tbody></table>
-    </div>`;
-}
-
-window._toggleSold=function(id){
-  const products=ld('vg_used_inventory',[]);
-  const p=products.find(x=>x.id===id);
-  if(p){p.sold=!p.sold;sv('vg_used_inventory',products);toast(p.sold?'Marked as sold':'Restocked');logActivity(`${p.name} ${p.sold?'sold':'restocked'}`);loadPage('products')}
-};
-
-window._deleteProduct=function(id){
-  if(!confirm('Delete this product?'))return;
-  const products=ld('vg_used_inventory',[]).filter(x=>x.id!==id);
-  sv('vg_used_inventory',products);toast('Deleted');logActivity('Product deleted');loadPage('products')
-};
-
-window._addProduct=function(){
-  document.getElementById('modalTitle').textContent='Add New Phone';
-  document.getElementById('modalBody').innerHTML=`
-    <div class="fg-row"><div class="fg"><label>Origin</label><select id="mOrigin"><option value="uk">UK Used</option><option value="us">US Used</option></select></div>
-    <div class="fg"><label>Brand</label><select id="mBrand"><option>Apple</option><option>Samsung</option><option>Google</option><option>OnePlus</option><option>Xiaomi</option></select></div></div>
-    <div class="fg"><label>Model</label><input id="mModel" placeholder="e.g. iPhone 15 Pro Max 256GB"></div>
-    <div class="fg-row"><div class="fg"><label>Storage</label><select id="mStorage"><option>64GB</option><option>128GB</option><option>256GB</option><option>512GB</option><option>1TB</option></select></div>
-    <div class="fg"><label>Color</label><input id="mColor" placeholder="e.g. Space Black"></div></div>
-    <div class="fg-row"><div class="fg"><label>Grade</label><select id="mGrade"><option value="A">Grade A</option><option value="B">Grade B</option><option value="C">Grade C</option></select></div>
-    <div class="fg"><label>Battery %</label><input id="mBattery" type="number" min="50" max="100" value="90"></div></div>
-    <div class="fg-row"><div class="fg"><label>Price (GH)</label><input id="mPrice" type="number" placeholder="e.g. 8500"></div>
-    <div class="fg"><label>Was (GH)</label><input id="mWas" type="number" placeholder="e.g. 10000"></div></div>
-    <div class="fg"><label>Screen Condition</label><select id="mScreen"><option>Perfect — No scratches</option><option>Light scratches</option><option>Visible scratches</option></select></div>
-    <div class="fg"><label>Body Condition</label><select id="mBody"><option>Pristine — No marks</option><option>Minor wear</option><option>Visible wear</option></select></div>
-    <div class="fg"><label>Image URLs (one per line)</label><textarea id="mImages" rows="3" placeholder="https://...photo1.jpg"></textarea></div>
-    <button class="btn btn-primary" style="width:100%;padding:12px" onclick="window._saveProduct()">Add to Inventory</button>`;
-  document.getElementById('modal').classList.add('open');
-};
-
-window._saveProduct=function(){
-  const products=ld('vg_used_inventory',[]);
-  const images=document.getElementById('mImages').value.trim().split('\n').filter(x=>x.trim());
-  products.unshift({
-    id:'p'+Date.now(),origin:document.getElementById('mOrigin').value,brand:document.getElementById('mBrand').value.toLowerCase(),
-    name:document.getElementById('mModel').value,storage:document.getElementById('mStorage').value,color:document.getElementById('mColor').value,
-    grade:document.getElementById('mGrade').value,battery:parseInt(document.getElementById('mBattery').value),
-    price:parseInt(document.getElementById('mPrice').value),was:parseInt(document.getElementById('mWas').value)||null,
-    screen:document.getElementById('mScreen').value,body:document.getElementById('mBody').value,
-    images:images.length?images:['https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=400&auto=format&fit=crop'],
-    date:new Date().toISOString().slice(0,10),sold:false
-  });
-  sv('vg_used_inventory',products);
-  document.getElementById('modal').classList.remove('open');
-  toast('Phone added!');logActivity('New phone added: '+document.getElementById('mModel').value);loadPage('products');
-};
-
-// ── SWAP LISTINGS ──
-async function renderSwap(c){
-  const listings=window.VDBSwap ? await VDBSwap.getAllIncludingPending() : ld('vg_swap_listings',[]);
-  c.innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h3 style="font-size:16px;font-weight:900;color:var(--navy)">Swap & Sell Listings</h3>
-      <div style="display:flex;gap:8px">
-        <span class="badge badge-yellow">${listings.filter(l=>l.status==='pending').length} Pending</span>
-        <span class="badge badge-green">${listings.filter(l=>l.status==='active').length} Active</span>
-        <span class="badge badge-orange">${listings.filter(l=>l.promoted).length} Promoted</span>
-      </div>
-    </div>
-    <div class="table-card">
-      <table><thead><tr><th>Phone</th><th>Seller</th><th>Type</th><th>Price/Want</th><th>Grade</th><th>Status</th><th>Promo</th><th>Actions</th></tr></thead>
-      <tbody>${listings.map(l=>`<tr>
-        <td><strong>${l.model}</strong><br><span style="font-size:10px;color:#9ca3af">${l.storage} • ${l.color||''}</span></td>
-        <td>${l.userName}<br><span style="font-size:10px;color:#9ca3af">${l.userPhone}</span></td>
-        <td><span class="badge ${l.type==='swap'?'badge-blue':l.type==='sell'?'badge-green':'badge-purple'}">${l.type}</span></td>
-        <td>${l.price?fmt(l.price):'<span style="font-size:10px">'+l.want+'</span>'}</td>
-        <td><span class="badge ${l.grade==='A'?'badge-green':l.grade==='B'?'badge-blue':'badge-yellow'}">${l.grade}</span></td>
-        <td><span class="badge ${l.status==='active'?'badge-green':l.status==='pending'?'badge-yellow':'badge-red'}">${l.status}</span></td>
-        <td>${l.promoted?'<span class="badge badge-orange">⭐ Active</span>':'—'}</td>
-        <td>
-          ${l.status==='pending'?`<button class="btn btn-green btn-sm" onclick="window._approve('${l.id}')">Approve</button> <button class="btn btn-red btn-sm" onclick="window._reject('${l.id}')">Reject</button>`:
-          `<button class="btn btn-outline btn-sm" onclick="window._togglePromo('${l.id}')">${l.promoted?'Unpromo':'Promote'}</button>
-           <button class="btn btn-red btn-sm" onclick="window._removeListing('${l.id}')">Remove</button>`}
-        </td>
-      </tr>`).join('')}</tbody></table>
-    </div>`;
-}
-
-window._approve=async function(id){
-  if(window.VDBSwap)await VDBSwap.approve(id);
-  else{const listings=ld('vg_swap_listings',[]);const l=listings.find(x=>x.id===id);if(l){l.status='active';sv('vg_swap_listings',listings);}}
-  toast('Approved!');loadPage(currentPage);
-};
-window._reject=async function(id){
-  if(window.VDBSwap)await VDBSwap.reject(id);
-  else{const listings=ld('vg_swap_listings',[]);const l=listings.find(x=>x.id===id);if(l){l.status='rejected';sv('vg_swap_listings',listings);}}
-  toast('Rejected');loadPage(currentPage);
-};
-window._togglePromo=function(id){
-  const listings=ld('vg_swap_listings',[]);
-  const l=listings.find(x=>x.id===id);
-  if(l){l.promoted=!l.promoted;sv('vg_swap_listings',listings);toast(l.promoted?'Promoted':'Unpromoted');loadPage(currentPage)}
-};
-window._removeListing=function(id){
-  if(!confirm('Remove this listing?'))return;
-  const listings=ld('vg_swap_listings',[]);
-  const l=listings.find(x=>x.id===id);
-  if(l){l.status='removed';sv('vg_swap_listings',listings);toast('Removed');logActivity('Removed: '+l.model);loadPage(currentPage)}
-};
-
-// ── ORDERS ──
-async function renderOrders(c){
-  const orders=window.VDBWholesale ? await VDBWholesale.getOrders() : ld('vg_orders',[]);
-  c.innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h3 style="font-size:16px;font-weight:900;color:var(--navy)">Orders</h3>
-      <span class="badge badge-yellow">${orders.filter(o=>o.status==='pending').length} Pending</span>
-    </div>
-    <div class="table-card">
-      <table><thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
-      <tbody>${orders.length?orders.map(o=>`<tr>
-        <td><strong>${o.id}</strong></td>
-        <td>${o.customerName}<br><span style="font-size:10px;color:#9ca3af">${o.phone}</span></td>
-        <td>${o.items?o.items.length:0} items</td>
-        <td>${fmt(o.total||0)}</td>
-        <td><span class="badge badge-blue">${o.paymentMethod||'MoMo'}</span></td>
-        <td><span class="badge ${o.status==='delivered'?'badge-green':o.status==='pending'?'badge-yellow':'badge-blue'}">${o.status}</span></td>
-        <td>${timeAgo(o.date)}</td>
-        <td>
-          <select class="btn btn-outline btn-sm" onchange="window._updateOrder('${o.id}',this.value)" style="padding:5px;font-size:10px">
-            <option ${o.status==='pending'?'selected':''}>pending</option>
-            <option ${o.status==='processing'?'selected':''}>processing</option>
-            <option ${o.status==='shipped'?'selected':''}>shipped</option>
-            <option ${o.status==='delivered'?'selected':''}>delivered</option>
-            <option ${o.status==='cancelled'?'selected':''}>cancelled</option>
-          </select>
-        </td>
-      </tr>`).join(''):'<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:24px">No orders yet</td></tr>'}</tbody></table>
-    </div>`;
-}
-
-window._updateOrder=function(id,status){
-  const orders=ld('vg_orders',[]);
-  const o=orders.find(x=>x.id===id);
-  if(o){o.status=status;sv('vg_orders',orders);toast('Order updated');logActivity('Order '+id+' → '+status)}
-};
-
-// ── USERS ──
-function renderUsers(c){
-  const users=window.VDBUser ? await VDBUser.getAll() : ld('vg_swap_users',[]);
-  c.innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h3 style="font-size:16px;font-weight:900;color:var(--navy)">All Users (${users.length})</h3>
-    </div>
-    <div class="table-card">
-      <table><thead><tr><th>Name</th><th>Phone</th><th>City</th><th>Ghana Card</th><th>Face</th><th>Verified</th><th>Joined</th><th>Actions</th></tr></thead>
-      <tbody>${users.map(u=>`<tr>
-        <td><strong>${u.name}</strong></td>
-        <td>${u.phone}</td>
-        <td>${u.city||'—'}</td>
-        <td style="font-family:monospace;font-size:11px">${u.ghanaCard||'—'}</td>
-        <td>${u.facePhoto?`<img src="${u.facePhoto}" style="width:36px;height:36px;object-fit:cover;border-radius:999px;border:2px solid ${u.faceVerified?'var(--green)':'var(--red)'}">`:'<span style="font-size:10px;color:#9ca3af">No selfie</span>'}</td>
-        <td><span class="badge ${u.verified?'badge-green':'badge-red'}">${u.verified?'Verified':'Unverified'}</span></td>
-        <td>${u.joinDate||'—'}</td>
-        <td>
-          <button class="btn btn-outline btn-sm" onclick="window._toggleVerify('${u.id}')">${u.verified?'Unverify':'Verify'}</button>
-          <button class="btn btn-red btn-sm" onclick="window._banUser('${u.id}')">Ban</button>
-        </td>
-      </tr>`).join('')}</tbody></table>
-    </div>`;
-}
-
-window._toggleVerify=function(id){
-  const users=window.VDBUser ? await VDBUser.getAll() : ld('vg_swap_users',[]);
-  const u=users.find(x=>x.id===id);
-  if(u){u.verified=!u.verified;sv('vg_swap_users',users);toast(u.verified?'Verified':'Unverified');logActivity('User '+u.name+' '+(u.verified?'verified':'unverified'));loadPage('users')}
-};
-window._banUser=function(id){
-  if(!confirm('Ban this user?'))return;
-  const users=ld('vg_swap_users',[]).filter(x=>x.id!==id);
-  sv('vg_swap_users',users);toast('User banned');logActivity('User banned');loadPage('users')
-};
-
-// ── DEALERS ──
-function renderDealers(c){
-  const dealers=ld('vg_dealers',[]);
-  c.innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h3 style="font-size:16px;font-weight:900;color:var(--navy)">Dealer Applications (${dealers.length})</h3>
-    </div>
-    <div class="table-card">
-      <table><thead><tr><th>Business</th><th>Phone</th><th>Email</th><th>Status</th><th>Applied</th><th>Actions</th></tr></thead>
-      <tbody>${dealers.length?dealers.map(d=>`<tr>
-        <td><strong>${d.name}</strong></td>
-        <td>${d.phone}</td>
-        <td>${d.email||'—'}</td>
-        <td><span class="badge ${d.status==='approved'?'badge-green':d.status==='pending'?'badge-yellow':'badge-red'}">${d.status}</span></td>
-        <td>${d.date||'—'}</td>
-        <td>
-          ${d.status==='pending'?`<button class="btn btn-green btn-sm" onclick="window._approveDealer('${d.id}')">Approve</button> <button class="btn btn-red btn-sm" onclick="window._rejectDealer('${d.id}')">Reject</button>`:'—'}
-        </td>
-      </tr>`).join(''):'<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:24px">No dealer applications</td></tr>'}</tbody></table>
-    </div>`;
-}
-
-window._approveDealer=function(id){
-  const dealers=ld('vg_dealers',[]);
-  const d=dealers.find(x=>x.id===id);
-  if(d){d.status='approved';sv('vg_dealers',dealers);toast('Dealer approved');logActivity('Dealer approved: '+d.name);loadPage('dealers')}
-};
-window._rejectDealer=function(id){
-  const dealers=ld('vg_dealers',[]);
-  const d=dealers.find(x=>x.id===id);
-  if(d){d.status='rejected';sv('vg_dealers',dealers);toast('Dealer rejected');logActivity('Dealer rejected: '+d.name);loadPage('dealers')}
-};
-
-// ── SELLERS ──
-function renderSellers(c){
-  const users=window.VDBUser ? await VDBUser.getAll() : ld('vg_swap_users',[]);
-  const listings=ld('vg_swap_listings',[]);
-  const sellerStats=users.map(u=>{
-    const myListings=listings.filter(l=>l.userId===u.id);
-    return{...u,totalListings:myListings.length,active:myListings.filter(l=>l.status==='active').length,sold:myListings.filter(l=>l.status==='sold').length,views:myListings.reduce((s,l)=>s+(l.views||0),0),leads:myListings.reduce((s,l)=>s+(l.leads||0),0)};
-  }).filter(u=>u.totalListings>0);
-
-  c.innerHTML=`
-    <h3 style="font-size:16px;font-weight:900;color:var(--navy);margin-bottom:16px">Seller Performance</h3>
-    <div class="table-card">
-      <table><thead><tr><th>Seller</th><th>Phone</th><th>Listings</th><th>Active</th><th>Views</th><th>Leads</th><th>Verified</th></tr></thead>
-      <tbody>${sellerStats.map(s=>`<tr>
-        <td><strong>${s.name}</strong></td>
-        <td>${s.phone}</td>
-        <td>${s.totalListings}</td>
-        <td>${s.active}</td>
-        <td>${s.views}</td>
-        <td>${s.leads}</td>
-        <td><span class="badge ${s.verified?'badge-green':'badge-red'}">${s.verified?'Yes':'No'}</span></td>
-      </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:#9ca3af">No sellers yet</td></tr>'}</tbody></table>
-    </div>`;
-}
-
-// ── ADS / REVENUE ──
-async function renderAds(c){
-  const listings=window.VDBSwap ? await VDBSwap.getAllIncludingPending() : ld('vg_swap_listings',[]);
-  const promoted=listings.filter(l=>l.promoted);
-  const totalRevenue=ld('vg_ad_revenue',0);
-  const adPayments=ld('vg_ad_payments',[]);
-
-  c.innerHTML=`
-    <div class="stat-grid">
-      <div class="stat-card"><div class="label">Active Ads</div><div class="value">${promoted.length}</div></div>
-      <div class="stat-card"><div class="label">Total Revenue</div><div class="value">${fmt(totalRevenue)}</div></div>
-      <div class="stat-card"><div class="label">Transactions</div><div class="value">${adPayments.length}</div></div>
-    </div>
-    <div class="table-card">
-      <div class="hd"><h3>Active Promoted Listings</h3></div>
-      <table><thead><tr><th>Phone</th><th>Seller</th><th>Price</th><th>Views</th><th>Leads</th><th>Expires</th><th>Actions</th></tr></thead>
-      <tbody>${promoted.map(l=>`<tr>
-        <td><strong>${l.model}</strong></td>
-        <td>${l.userName}</td>
-        <td>${l.price?fmt(l.price):'Swap'}</td>
-        <td>${l.views||0}</td>
-        <td>${l.leads||0}</td>
-        <td>${l.promoExpiry?new Date(l.promoExpiry).toLocaleDateString():'—'}</td>
-        <td><button class="btn btn-red btn-sm" onclick="window._removePromo('${l.id}')">Remove Ad</button></td>
-      </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:#9ca3af">No active ads</td></tr>'}</tbody></table>
-    </div>
-    <div class="table-card" style="margin-top:16px">
-      <div class="hd"><h3>Payment History</h3></div>
-      <table><thead><tr><th>Date</th><th>Seller</th><th>Plan</th><th>Amount</th><th>Method</th></tr></thead>
-      <tbody>${adPayments.map(p=>`<tr>
-        <td>${timeAgo(p.date)}</td>
-        <td>${p.seller}</td>
-        <td>${p.hours}h</td>
-        <td>${fmt(p.amount)}</td>
-        <td><span class="badge badge-blue">${p.method}</span></td>
-      </tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:#9ca3af">No payments yet</td></tr>'}</tbody></table>
-    </div>`;
-}
-
-window._removePromo=function(id){
-  const listings=ld('vg_swap_listings',[]);
-  const l=listings.find(x=>x.id===id);
-  if(l){l.promoted=false;sv('vg_swap_listings',listings);toast('Ad removed');logActivity('Ad removed: '+l.model);loadPage('ads')}
-};
-
-// ── PAYMENTS ──
-function renderPayments(c){
-  const adPayments=ld('vg_ad_payments',[]);
-  const orders=ld('vg_orders',[]);
-  const totalAd=adPayments.reduce((s,p)=>s+p.amount,0);
-  const totalOrders=orders.reduce((s,o)=>s+(o.total||0),0);
-
-  c.innerHTML=`
-    <div class="stat-grid">
-      <div class="stat-card"><div class="label">Ad Revenue</div><div class="value">${fmt(totalAd)}</div></div>
-      <div class="stat-card"><div class="label">Order Revenue</div><div class="value">${fmt(totalOrders)}</div></div>
-      <div class="stat-card"><div class="label">Total Revenue</div><div class="value">${fmt(totalAd+totalOrders)}</div></div>
-    </div>
-    <div class="table-card">
-      <div class="hd"><h3>All Transactions</h3></div>
-      <table><thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th><th>Method</th></tr></thead>
-      <tbody>${[...adPayments.map(p=>({...p,type:'Ad'})),...orders.map(o=>({date:o.date,type:'Order',description:o.customerName,amount:o.total||0,method:o.paymentMethod||'MoMo'}))].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(t=>`<tr>
-        <td>${timeAgo(t.date)}</td>
-        <td><span class="badge ${t.type==='Ad'?'badge-orange':'badge-green'}">${t.type}</span></td>
-        <td>${t.description||t.seller||''}</td>
-        <td>${fmt(t.amount)}</td>
-        <td><span class="badge badge-blue">${t.method||'MoMo'}</span></td>
-      </tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:#9ca3af">No transactions</td></tr>'}</tbody></table>
-    </div>`;
-}
-
-// ── SETTINGS ──
-function renderSettings(c){
-  const settings=ld('vg_site_settings',{siteName:'Valmont Gadgets',whatsapp:'233542451578',email:'support@valmontdata.com',freeDeliveryOver:5000,adPrice24h:15,adPrice3d:35,adPrice7d:60,adPrice30d:150});
-
-  c.innerHTML=`
-    <h3 style="font-size:16px;font-weight:900;color:var(--navy);margin-bottom:16px">Site Settings</h3>
-    <div style="max-width:500px">
-      <div class="table-card" style="padding:20px">
-        <div class="fg"><label>Site Name</label><input id="sSiteName" value="${settings.siteName}"></div>
-        <div class="fg"><label>WhatsApp Number</label><input id="sWhatsapp" value="${settings.whatsapp}"></div>
-        <div class="fg"><label>Support Email</label><input id="sEmail" value="${settings.email}"></div>
-        <div class="fg"><label>Free Delivery Over (GH)</label><input id="sFreeDelivery" type="number" value="${settings.freeDeliveryOver}"></div>
-        <h4 style="font-size:13px;font-weight:800;color:var(--navy);margin:16px 0 10px;border-top:1px solid #e5e7eb;padding-top:16px">Ad Pricing</h4>
-        <div class="fg-row">
-          <div class="fg"><label>24 Hours (GH)</label><input id="sAd24" type="number" value="${settings.adPrice24h}"></div>
-          <div class="fg"><label>3 Days (GH)</label><input id="sAd3d" type="number" value="${settings.adPrice3d}"></div>
-        </div>
-        <div class="fg-row">
-          <div class="fg"><label>7 Days (GH)</label><input id="sAd7d" type="number" value="${settings.adPrice7d}"></div>
-          <div class="fg"><label>30 Days (GH)</label><input id="sAd30d" type="number" value="${settings.adPrice30d}"></div>
-        </div>
-        <button class="btn btn-primary" style="width:100%;padding:12px;margin-top:10px" onclick="window._saveSettings()">Save Settings</button>
-      </div>
-    </div>`;
-}
-
-window._saveSettings=function(){
-  sv('vg_site_settings',{
-    siteName:document.getElementById('sSiteName').value,
-    whatsapp:document.getElementById('sWhatsapp').value,
-    email:document.getElementById('sEmail').value,
-    freeDeliveryOver:parseInt(document.getElementById('sFreeDelivery').value),
-    adPrice24h:parseInt(document.getElementById('sAd24').value),
-    adPrice3d:parseInt(document.getElementById('sAd3d').value),
-    adPrice7d:parseInt(document.getElementById('sAd7d').value),
-    adPrice30d:parseInt(document.getElementById('sAd30d').value)
-  });
-  toast('Settings saved!');logActivity('Settings updated');
-};
-
-// ── ACTIVITY LOGS ──
-function renderLogs(c){
-  const logs=ld('vg_admin_logs',[]);
-  c.innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h3 style="font-size:16px;font-weight:900;color:var(--navy)">Activity Logs (${logs.length})</h3>
-      <button class="btn btn-red btn-sm" onclick="if(confirm('Clear all logs?')){localStorage.removeItem('vg_admin_logs');toast('Logs cleared');loadPage('logs')}">Clear Logs</button>
-    </div>
-    <div class="table-card">
-      <table><thead><tr><th>#</th><th>Action</th><th>Time</th></tr></thead>
-      <tbody>${logs.map((l,i)=>`<tr><td>${i+1}</td><td>${l.action}</td><td>${new Date(l.time).toLocaleString()}</td></tr>`).join('')||'<tr><td colspan="3" style="text-align:center;color:#9ca3af">No logs</td></tr>'}</tbody></table>
-    </div>`;
-}
-
-})();
-</script>
+<script src="assets/js/security.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/admin-control-page.js"></script>
 </body>
 </html>

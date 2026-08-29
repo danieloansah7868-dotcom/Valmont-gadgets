@@ -222,6 +222,14 @@
   }
   .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
+  /* ── Board status line (loading / failure / retry) ── */
+  .board-status { font-size: 12px; font-weight: 700; color: #6b7280; margin: 0 0 12px; min-height: 18px; }
+  .board-status.err { color: #dc2626; }
+  .board-status button {
+    font: inherit; font-weight: 800; color: var(--orange); background: none; border: 0;
+    padding: 0; margin-left: 6px; cursor: pointer; text-decoration: underline;
+  }
+
   /* ── Responsive ── */
   @media (max-width: 640px) {
     .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -233,9 +241,6 @@
   }
 </style>
 <link rel="stylesheet" href="assets/css/community.css">
-<script src="assets/js/security.js"></script>
-<script src="assets/js/supabase-client.js"></script>
-<script src="assets/js/db-adapter.js"></script>
 </head>
 <body>
 
@@ -249,20 +254,16 @@
 <!-- STATS BAR -->
 <div class="stats-bar">
   <div class="stat-card">
-    <div class="num" id="statTotal">0</div>
-    <div class="label">Total Listed</div>
-  </div>
-  <div class="stat-card">
     <div class="num" id="statAvailable" style="color:#047857">0</div>
-    <div class="label">Available</div>
+    <div class="label">Available now</div>
   </div>
   <div class="stat-card">
-    <div class="num" id="statSold" style="color:#dc2626">0</div>
-    <div class="label">Sold Today</div>
+    <div class="num" id="statNew" style="color:var(--orange)">0</div>
+    <div class="label">New this week</div>
   </div>
   <div class="stat-card">
-    <div class="num" id="statRefresh" style="color:var(--orange)">—</div>
-    <div class="label">Next Refresh</div>
+    <div class="num" id="statRefresh">—</div>
+    <div class="label">Last stock update</div>
   </div>
 </div>
 
@@ -272,7 +273,6 @@
     <button class="tab-btn active" data-tab="all">All <span class="count" id="countAll">0</span></button>
     <button class="tab-btn" data-tab="uk">🇬🇧 UK Used <span class="count" id="countUK">0</span></button>
     <button class="tab-btn" data-tab="us">🇺🇸 US Used <span class="count" id="countUS">0</span></button>
-    <button class="tab-btn" data-tab="sold">SOLD <span class="count" id="countSold">0</span></button>
   </div>
 </div>
 
@@ -318,21 +318,22 @@
 
 <!-- PRODUCT GRID -->
 <div class="grid-section">
+  <p class="board-status" id="boardStatus" role="status" aria-live="polite">Loading today&rsquo;s board&hellip;</p>
   <div class="product-grid" id="usedGrid">
     <!-- Populated via JS -->
   </div>
   <div id="loadMoreWrap" style="text-align:center;padding:16px;display:none"><button id="loadMoreBtn" class="btn btn-primary" style="padding:12px 32px;font-size:13px">Load More Phones</button></div>
       <div class="empty-state" id="emptyState" style="display:none">
     <div class="icon">📦</div>
-    <h3>No phones in this category</h3>
-    <p>Check back later — new stock arrives daily!</p>
+    <h3>No matching phones today</h3>
+    <p>The board only shows units our team has physically inspected. New arrivals land every morning.</p>
   </div>
 </div>
 
 <!-- TOAST -->
 <div class="toast" id="toast">
   <span>✅</span>
-  <span id="toastMsg">Added to bag!</span>
+  <span id="toastMsg">Noted!</span>
 </div>
 
 <!-- FOOTER -->
@@ -388,309 +389,9 @@
   <span class="whatsapp-float-dot" aria-hidden="true">1</span>
 </a>
 
-<script>
-(function() {
-  'use strict';
-
-  const STORE_KEY = 'vg_used_inventory';
-  const WA_NUMBER = '233542451578';
-
-  // ── Seed inventory: UK Used & US Used phones ──
-  const SEED = [
-    // UK Used iPhones
-    { id:'uk1', origin:'uk', brand:'apple', name:'iPhone 15 Pro Max 256GB', storage:'256GB', color:'Natural Titanium', grade:'A', battery:94, price:11200, was:13500, images:['uploads/clean_15_pro.png','https://images.unsplash.com/photo-1696446703255-020d67fa2f3b?q=80&w=400&auto=format&fit=crop','https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=400&auto=format&fit=crop'], date:'2026-08-27', sold:false, notes:'Face ID OK • True Tone OK • Europe Standard • Cable included', screen:'Perfect — No scratches', body:'Pristine — No dents or marks', charger:'Cable included' },
-    { id:'uk2', origin:'uk', brand:'apple', name:'iPhone 14 Pro 128GB', storage:'128GB', color:'Deep Purple', grade:'A', battery:91, price:8200, was:9800, images:['https://images.unsplash.com/photo-1678911820864-e2c567c655d7?q=80&w=400&auto=format&fit=crop','https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=400&auto=format&fit=crop'], date:'2026-08-27', sold:false, notes:'Dynamic Island • 48MP Camera • No scratches', screen:'Perfect — No scratches', body:'Excellent — Like new', charger:'Cable included' },
-    { id:'uk3', origin:'uk', brand:'apple', name:'iPhone 13 Pro Max 128GB', storage:'128GB', color:'Sierra Blue', grade:'B', battery:86, price:6800, was:8200, images:['uploads/clean_13_promax.png','https://images.unsplash.com/photo-1632661674596-df8be070a5c5?q=80&w=400&auto=format&fit=crop'], date:'2026-08-27', sold:false, notes:'Minor wear on edges • Screen perfect • Battery 86%', screen:'Perfect — No scratches', body:'Minor wear — Light scuffs on edges', charger:'Cable included' },
-    { id:'uk4', origin:'uk', brand:'apple', name:'iPhone 13 128GB', storage:'128GB', color:'Midnight', grade:'A', battery:92, price:4800, was:5600, images:['uploads/clean_13.png','https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=400&auto=format&fit=crop'], date:'2026-08-26', sold:false, notes:'Excellent condition • All functions working', screen:'Perfect — No scratches', body:'Excellent — Clean body', charger:'Cable included' },
-    { id:'uk5', origin:'uk', brand:'samsung', name:'Samsung Galaxy S23 Ultra 256GB', storage:'256GB', color:'Phantom Black', grade:'A', battery:93, price:8500, was:10200, images:['https://images.unsplash.com/photo-1610945264803-c22b62d2a7b3?q=80&w=400&auto=format&fit=crop','https://images.unsplash.com/photo-1585060544812-6b45742d762f?q=80&w=400&auto=format&fit=crop'], date:'2026-08-27', sold:false, notes:'S Pen included • 200MP Camera • Like new', screen:'Perfect — No scratches', body:'Pristine — No marks', charger:'Cable included' },
-    { id:'uk6', origin:'uk', brand:'apple', name:'iPhone 12 Pro Max 128GB', storage:'128GB', color:'Pacific Blue', grade:'B', battery:82, price:5200, was:6400, images:['https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=400&auto=format&fit=crop'], date:'2026-08-25', sold:true, notes:'Sold — was in great condition', screen:'Perfect', body:'Minor wear', charger:'Cable included' },
-    { id:'uk7', origin:'uk', brand:'apple', name:'iPhone 11 64GB', storage:'64GB', color:'Black', grade:'C', battery:76, price:2800, was:3400, images:['https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=400&auto=format&fit=crop'], date:'2026-08-24', sold:true, notes:'Sold — visible wear but functional', screen:'Light scratches', body:'Visible wear — Scuffs on back', charger:'No charger' },
-
-    // US Used iPhones
-    { id:'us1', origin:'us', brand:'apple', name:'iPhone 15 Pro 128GB', storage:'128GB', color:'White Titanium', grade:'A', battery:96, price:9800, was:11500, images:['https://images.unsplash.com/photo-1696446703255-020d67fa2f3b?q=80&w=400&auto=format&fit=crop','https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=400&auto=format&fit=crop','https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=400&auto=format&fit=crop'], date:'2026-08-27', sold:false, notes:'US Variant • eSIM + Physical SIM • Pristine', screen:'Perfect — No scratches', body:'Pristine — No marks at all', charger:'Cable included' },
-    { id:'us2', origin:'us', brand:'apple', name:'iPhone 14 128GB', storage:'128GB', color:'Blue', grade:'A', battery:93, price:6200, was:7400, images:['https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=400&auto=format&fit=crop','https://images.unsplash.com/photo-1632661674596-df8be070a5c5?q=80&w=400&auto=format&fit=crop'], date:'2026-08-27', sold:false, notes:'US Unlocked • A15 Bionic • No marks', screen:'Perfect — No scratches', body:'Excellent — Clean body', charger:'Cable included' },
-    { id:'us3', origin:'us', brand:'apple', name:'iPhone 13 Pro 256GB', storage:'256GB', color:'Alpine Green', grade:'B', battery:88, price:6400, was:7800, images:['https://images.unsplash.com/photo-1632661674596-df8be070a5c5?q=80&w=400&auto=format&fit=crop','https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=400&auto=format&fit=crop'], date:'2026-08-26', sold:false, notes:'US Variant • Minor scuff on back • Screen mint', screen:'Perfect — No scratches', body:'Minor wear — Small scuff on back', charger:'Cable included' },
-    { id:'us4', origin:'us', brand:'samsung', name:'Samsung Galaxy S24 256GB', storage:'256GB', color:'Marble Gray', grade:'A', battery:97, price:7200, was:8900, images:['https://images.unsplash.com/photo-1585060544812-6b45742d762f?q=80&w=400&auto=format&fit=crop','https://images.unsplash.com/photo-1610945264803-c22b62d2a7b3?q=80&w=400&auto=format&fit=crop'], date:'2026-08-27', sold:false, notes:'US Unlocked • Galaxy AI • Sealed-like condition', screen:'Perfect — No scratches', body:'Pristine — Like sealed', charger:'Cable included' },
-    { id:'us5', origin:'us', brand:'google', name:'Google Pixel 8 Pro 128GB', storage:'128GB', color:'Obsidian', grade:'A', battery:95, price:6800, was:8500, images:['https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=400&auto=format&fit=crop','https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=400&auto=format&fit=crop'], date:'2026-08-27', sold:false, notes:'US Variant • Tensor G3 • 50MP Camera • Mint', screen:'Perfect — No scratches', body:'Pristine — No marks', charger:'Cable included' },
-    { id:'us6', origin:'us', brand:'apple', name:'iPhone 15 128GB', storage:'128GB', color:'Pink', grade:'B', battery:89, price:7400, was:8800, images:['https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=400&auto=format&fit=crop'], date:'2026-08-25', sold:true, notes:'Sold — US Variant, great condition', screen:'Perfect', body:'Minor wear', charger:'Cable included' },
-    { id:'us7', origin:'us', brand:'oneplus', name:'OnePlus 12 256GB', storage:'256GB', color:'Silky Black', grade:'A', battery:94, price:7800, was:9200, images:['https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=400&auto=format&fit=crop','https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=400&auto=format&fit=crop'], date:'2026-08-26', sold:false, notes:'US Variant • 100W SuperVOOC • 16GB RAM', screen:'Perfect — No scratches', body:'Excellent — Clean body', charger:'Cable included' },
-    { id:'us8', origin:'us', brand:'xiaomi', name:'Xiaomi 14 256GB', storage:'256GB', color:'Black', grade:'B', battery:87, price:4200, was:5400, images:['https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=400&auto=format&fit=crop','https://images.unsplash.com/photo-1632661674596-df8be070a5c5?q=80&w=400&auto=format&fit=crop'], date:'2026-08-24', sold:false, notes:'US Variant • Leica Camera • Light wear', screen:'Light scratches — Hairline marks', body:'Light wear — Minor scuffs', charger:'Cable included' },
-  ];
-
-  // ── Load / Save ──
-  function load() {
-    // Use adapter if available, else localStorage
-    if (window.VDBUsed) return window._usedCache || SEED;
-    try {
-      const s = localStorage.getItem(STORE_KEY);
-      if (s) return JSON.parse(s);
-    } catch(e) {}
-    localStorage.setItem(STORE_KEY, JSON.stringify(SEED));
-    return SEED;
-  }
-  function save(d) { localStorage.setItem(STORE_KEY, JSON.stringify(d)); window._usedCache = d; }
-
-  // ── Helpers ──
-  function gradeInfo(g) {
-    const m = { A:['🟢 Grade A','badge-grade-a'], B:['🔵 Grade B','badge-grade-b'], C:['🟡 Grade C','badge-grade-c'] };
-    return m[g] || ['⚪',''];
-  }
-  function bhClass(v) { return v >= 85 ? 'bh-high' : v >= 70 ? 'bh-mid' : 'bh-low'; }
-  function fmt(n) { return 'GH₵ ' + n.toLocaleString(); }
-  function pctOff(was, now) { return was > now ? '-' + Math.round((1 - now/was) * 100) + '%' : ''; }
-  function isNew(dateStr) {
-    const d = new Date(dateStr); const now = new Date();
-    return (now - d) < 86400000 * 2; // within 2 days
-  }
-  function waLink(item) {
-    const msg = encodeURIComponent(`Hi Valmont! I'm interested in the ${item.origin.toUpperCase()} Used ${item.name} (${item.storage}, ${item.color}, Grade ${item.grade}) listed at ${fmt(item.price)}. Is it still available?`);
-    return `https://wa.me/${WA_NUMBER}?text=${msg}`;
-  }
-
-  // ── State ──
-  let activeTab = 'all';
-  let filters = { brand: 'all', storage: 'all', battery: 'all', grade: 'all' };
-
-  // ── Parse storage to number ──
-  function storageNum(s) {
-    if (!s) return 0;
-    s = s.toUpperCase().replace('TB', '000').replace('GB', '');
-    return parseInt(s) || 0;
-  }
-
-  // ── Render ──
-  function render() {
-    const data = load();
-    const grid = document.getElementById('usedGrid');
-    const empty = document.getElementById('emptyState');
-
-    // Tab filter
-    let filtered = data;
-    if (activeTab === 'uk') filtered = data.filter(d => d.origin === 'uk' && !d.sold);
-    else if (activeTab === 'us') filtered = data.filter(d => d.origin === 'us' && !d.sold);
-    else if (activeTab === 'sold') filtered = data.filter(d => d.sold);
-    else filtered = data.filter(d => !d.sold);
-
-    // Brand filter
-    if (filters.brand !== 'all') {
-      filtered = filtered.filter(d => d.brand === filters.brand);
-    }
-
-    // Storage filter
-    if (filters.storage !== 'all') {
-      const target = parseInt(filters.storage);
-      filtered = filtered.filter(d => storageNum(d.storage) === target);
-    }
-
-    // Battery filter
-    if (filters.battery !== 'all') {
-      const min = parseInt(filters.battery);
-      filtered = filtered.filter(d => d.battery >= min);
-    }
-
-    // Grade filter
-    if (filters.grade !== 'all') {
-      filtered = filtered.filter(d => d.grade === filters.grade);
-    }
-
-    // Sort: available first (newest first), then sold
-    filtered.sort((a, b) => {
-      if (a.sold !== b.sold) return a.sold ? 1 : -1;
-      return new Date(b.date) - new Date(a.date);
-    });
-
-    // Stats
-    const available = data.filter(d => !d.sold);
-    const sold = data.filter(d => d.sold);
-    document.getElementById('statTotal').textContent = data.length;
-    document.getElementById('statAvailable').textContent = available.length;
-    document.getElementById('statSold').textContent = sold.length;
-    document.getElementById('statRefresh').textContent = '6:00 AM';
-
-    // Counts
-    document.getElementById('countAll').textContent = available.length;
-    document.getElementById('countUK').textContent = data.filter(d => d.origin === 'uk' && !d.sold).length;
-    document.getElementById('countUS').textContent = data.filter(d => d.origin === 'us' && !d.sold).length;
-    document.getElementById('countSold').textContent = sold.length;
-
-    // Cards
-    if (filtered.length === 0) {
-      grid.innerHTML = '';
-      empty.style.display = 'block';
-      return;
-    }
-    empty.style.display = 'none';
-
-    const PAGE_SIZE=18;window._usedFiltered=filtered;window._usedPage=1;const initial=filtered.slice(0,PAGE_SIZE);const lmw=document.getElementById('loadMoreWrap');const lmb=document.getElementById('loadMoreBtn');if(filtered.length>PAGE_SIZE){lmw.style.display='';lmb.onclick=function(){window._usedPage++;const end=window._usedPage*PAGE_SIZE;const more=filtered.slice(0,end);grid.innerHTML = more.map(item => {
-      const [gLabel, gCls] = gradeInfo(item.grade);
-      const originBadge = item.origin === 'uk'
-        ? '<span class="badge badge-uk">🇬🇧 UK Used</span>'
-        : '<span class="badge badge-us">🇺🇸 US Used</span>';
-      const newBadge = isNew(item.date) ? '<span class="badge badge-new-arrival">New Arrival</span>' : '';
-      const soldCls = item.sold ? 'sold' : '';
-      const discount = pctOff(item.was, item.price);
-
-      // Multi-image support
-      const imgs = (item.images && item.images.length) ? item.images : [item.image || 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=400&auto=format&fit=crop'];
-      const hasMulti = imgs.length > 1;
-      const galleryId = 'gal-' + item.id;
-
-      const imgHtml = imgs.map((src, i) => `<img src="${src}" alt="${item.name} — photo ${i+1}" loading="lazy" class="${i > 0 ? 'hidden' : ''}" data-gi="${i}">`).join('');
-      const dotsHtml = hasMulti ? `<div class="img-dots">${imgs.map((_, i) => `<span class="img-dot ${i === 0 ? 'active' : ''}" data-gi="${i}"></span>`).join('')}</div>` : '';
-      const arrowsHtml = hasMulti ? `<span class="img-arrow left" data-dir="-1">‹</span><span class="img-arrow right" data-dir="1">›</span>` : '';
-      const counterHtml = hasMulti ? `<span class="img-counter">1/${imgs.length}</span>` : '';
-
-      // Condition details (no warranty)
-      const conditionRows = [];
-      if (item.screen) conditionRows.push(`<div class="cond-row"><span class="cond-label">Screen:</span> ${item.screen}</div>`);
-      if (item.body) conditionRows.push(`<div class="cond-row"><span class="cond-label">Body:</span> ${item.body}</div>`);
-      if (item.charger) conditionRows.push(`<div class="cond-row"><span class="cond-label">Charger:</span> ${item.charger}</div>`);
-
-      return `
-        <div class="prod-card ${soldCls}">
-          <div class="prod-img">
-            <div class="img-gallery" id="${galleryId}" data-count="${imgs.length}" data-cur="0">
-              ${imgHtml}
-              ${arrowsHtml}
-              ${dotsHtml}
-              ${counterHtml}
-            </div>
-            <div class="prod-badges">
-              ${originBadge}
-              <span class="badge ${gCls}">${gLabel}</span>
-              ${newBadge}
-            </div>
-          </div>
-          <div class="prod-body">
-            <h3>${item.name}</h3>
-            <div class="prod-specs">${item.storage} • ${item.color}</div>
-            <div class="prod-battery">
-              🔋 ${item.battery}%
-              <div class="bar"><div class="bar-fill ${bhClass(item.battery)}" style="width:${item.battery}%"></div></div>
-            </div>
-            ${conditionRows.length ? `<div class="condition-details">${conditionRows.join('')}</div>` : ''}
-            <div class="prod-price">
-              <span class="current">${fmt(item.price)}</span>
-              ${item.was > item.price ? `<span class="old">${fmt(item.was)}</span>` : ''}
-              ${discount ? `<span class="pct">${discount}</span>` : ''}
-            </div>
-            <div class="prod-actions">
-              ${item.sold
-                ? '<button class="btn-buy disabled" disabled>Sold Out</button>'
-                : `<button class="btn-buy primary" onclick="window._addToBag('${item.id}')">Add to Bag</button>`
-              }
-            </div>
-          </div>
-          <div class="prod-footer">
-            <span>${item.origin.toUpperCase()} Used • Grade ${item.grade}</span>
-            <span>${item.sold ? '❌ SOLD' : '✅ Available'}</span>
-          </div>
-        </div>`;
-    }).join('');
-
-    // Bind gallery navigation
-    document.querySelectorAll('.img-arrow').forEach(arrow => {
-      arrow.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const gallery = arrow.closest('.img-gallery');
-        const count = parseInt(gallery.dataset.count);
-        let cur = parseInt(gallery.dataset.cur);
-        const dir = parseInt(arrow.dataset.dir);
-        cur = (cur + dir + count) % count;
-        gallery.dataset.cur = cur;
-        gallery.querySelectorAll('img').forEach((img, i) => img.classList.toggle('hidden', i !== cur));
-        gallery.querySelectorAll('.img-dot').forEach((dot, i) => dot.classList.toggle('active', i !== cur));
-        const counter = gallery.querySelector('.img-counter');
-        if (counter) counter.textContent = (cur + 1) + '/' + count;
-      });
-    });
-    document.querySelectorAll('.img-dot').forEach(dot => {
-      dot.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const gallery = dot.closest('.img-gallery');
-        const count = parseInt(gallery.dataset.count);
-        const cur = parseInt(dot.dataset.gi);
-        gallery.dataset.cur = cur;
-        gallery.querySelectorAll('img').forEach((img, i) => img.classList.toggle('hidden', i !== cur));
-        gallery.querySelectorAll('.img-dot').forEach((d, i) => d.classList.toggle('active', i !== cur));
-        const counter = gallery.querySelector('.img-counter');
-        if (counter) counter.textContent = (cur + 1) + '/' + count;
-      });
-    });
-  }
-
-  // ── Tab switching ──
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeTab = btn.dataset.tab;
-      render();
-    });
-  });
-
-  // ── Filter chips (multi-filter) ──
-  document.querySelectorAll('.filter-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const group = chip.dataset.filter;
-      const val = chip.dataset.val;
-      // Deactivate siblings in same group
-      document.querySelectorAll(`.filter-chip[data-filter="${group}"]`).forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      filters[group] = val;
-      render();
-    });
-  });
-
-  // ── Add to Bag ──
-  window._addToBag = function(id) {
-    const data = load();
-    const item = data.find(d => d.id === id);
-    if (!item || item.sold) return;
-
-    // Load existing bag
-    let bag = [];
-    try { bag = JSON.parse(localStorage.getItem('vg_bag') || '[]'); } catch(e) {}
-
-    // Check if already in bag
-    if (bag.find(b => b.id === id)) {
-      showToast('Already in your bag!');
-      return;
-    }
-
-    bag.push({
-      id: item.id,
-      name: item.name,
-      price: item.price,
-      image: (item.images && item.images[0]) || item.image || '',
-      storage: item.storage,
-      color: item.color,
-      origin: item.origin,
-      grade: item.grade,
-      qty: 1,
-      source: 'used'
-    });
-
-    localStorage.setItem('vg_bag', JSON.stringify(bag));
-    showToast(item.name + ' added to bag! 🛍️');
-  };
-
-  // ── Init (async load from Supabase) ──
-  async function init() {
-    if (window.VDBUsed) {
-      const data = await VDBUsed.getAll();
-      if (data && data.length > 0) {
-        window._usedCache = data;
-        localStorage.setItem(STORE_KEY, JSON.stringify(data));
-      } else {
-        window._usedCache = SEED;
-        localStorage.setItem(STORE_KEY, JSON.stringify(SEED));
-      }
-    }
-    render();
-  }
-  init();
-})();
-</script>
+<script src="assets/js/security.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/db-adapter.js"></script>
+<script src="assets/js/used-page.js"></script>
 </body>
 </html>

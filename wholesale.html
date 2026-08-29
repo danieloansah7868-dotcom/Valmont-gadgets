@@ -9,12 +9,10 @@
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta http-equiv="X-Frame-Options" content="DENY">
 <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+<link rel="canonical" href="https://valmontgadgets.com/wholesale.html">
 <link rel="icon" href="favicon.svg">
 <link rel="stylesheet" href="tailwind.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="assets/js/security.js"></script>
-<script src="assets/js/supabase-client.js"></script>
-<script src="assets/js/db-adapter.js"></script>
 <style>
 :root{--navy:#0b1a38;--navy2:#122649;--orange:#ff8c00;--green:#047857;--blue:#1e40af;--purple:#7c3aed;--gold:#b45309}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -132,15 +130,37 @@ tr:hover{background:#f9fafb}
     <div class="lock">📦</div>
     <h1>Valmont Wholesale</h1>
     <p class="sub">Bulk phone prices for verified dealers only</p>
-    <div class="fg"><label>Phone Number</label><input id="wsPhone" type="tel" inputmode="tel" placeholder="024 123 4567" autocomplete="tel"></div>
-    <div class="fg"><label>Password</label><input id="wsPass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
-    <p id="loginErr" style="color:#dc2626;font-size:12px;font-weight:700;min-height:18px;margin-bottom:10px"></p>
+    <div class="fg"><label for="wsEmail">Email</label><input id="wsEmail" type="email" autocomplete="email" placeholder="you@yourshop.com"></div>
+    <div class="fg"><label for="wsPass">Password</label><input id="wsPass" type="password" autocomplete="current-password" placeholder="Your Valmont password"></div>
+    <p id="loginErr" style="color:#dc2626;font-size:12px;font-weight:700;min-height:18px;margin-bottom:10px" role="alert" aria-live="polite"></p>
     <button class="btn btn-primary" style="width:100%;padding:12px;font-size:13px" id="loginBtn">Sign In to Wholesale</button>
     <div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb">
-      <p style="font-size:12px;color:#6b7280;margin-bottom:8px">Not a wholesale dealer yet?</p>
-      <a href="partner.html" class="btn btn-outline" style="width:100%;justify-content:center;padding:10px;font-size:12px;text-decoration:none">Apply for Wholesale Access</a>
+      <p style="font-size:12px;color:#6b7280;margin-bottom:8px">No dealer account yet?</p>
+      <button type="button" class="btn btn-outline" style="width:100%;justify-content:center;padding:10px;font-size:12px" id="openApplyBtn">Apply for wholesale access</button>
+      <p style="font-size:11px;color:#9ca3af;margin-top:8px">Need a login first? <a href="account.html" style="color:#1e40af;font-weight:800">Create a free Valmont account</a></p>
     </div>
-    <p style="font-size:10px;color:#9ca3af;text-align:center;margin-top:12px">Wholesale access is by approval only</p>
+
+    <!-- Dealer application. The database ties it to the signed-in user id, so
+         an approval can never be claimed by whoever typed the form. -->
+    <div id="wsApplyPanel" hidden style="margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:left">
+      <p style="font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:12px">
+        Send us your shop details. Once our purchasing team approves the account,
+        dealer prices and volume tiers are released to this login by the database
+        &mdash; not by this page.
+      </p>
+      <div class="fg"><label for="waBusiness">Business / shop name</label><input id="waBusiness" maxlength="90" placeholder="e.g. Kejetia Mobile Hub"></div>
+      <div class="fg-row">
+        <div class="fg"><label for="waContact">Contact name</label><input id="waContact" maxlength="80" placeholder="e.g. Ama Mensah"></div>
+        <div class="fg"><label for="waPhone">Phone</label><input id="waPhone" type="tel" inputmode="tel" maxlength="20" placeholder="024 123 4567"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label for="waEmail">Email (optional)</label><input id="waEmail" type="email" maxlength="120" placeholder="you@yourshop.com"></div>
+        <div class="fg"><label for="waCity">City</label><input id="waCity" maxlength="60" placeholder="Accra"></div>
+      </div>
+      <p id="applyErr" style="color:#dc2626;font-size:12px;font-weight:700;min-height:18px;margin-bottom:10px" role="alert" aria-live="polite"></p>
+      <button type="button" class="btn btn-green" style="width:100%;justify-content:center;padding:12px;font-size:13px" id="applySubmitBtn">Send dealer application</button>
+    </div>
+
   </div>
 </div>
 
@@ -152,7 +172,7 @@ tr:hover{background:#f9fafb}
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="brand">
-      <img src="favicon.png" alt="V" style="border-radius:8px">
+      <img src="favicon.png" alt="Valmont Gadgets logo" width="28" height="28" style="border-radius:8px">
       <span>WHOLESALE</span>
     </div>
     <nav>
@@ -199,382 +219,9 @@ tr:hover{background:#f9fafb}
 <!-- TOAST -->
 <div class="toast" id="toast"><span id="toastMsg">Done!</span></div>
 
-<script>
-(function(){
-'use strict';
-
-const K_SESSION='vg_ws_session';
-
-// ══════════════════════════════════════════
-// WHOLESALE CATALOG — Your supplier prices
-// ══════════════════════════════════════════
-const WHOLESALE_CATALOG=[
-  // ── PHONES ──
-  {id:'w1',name:'iPhone 15 Pro Max 256GB',brand:'apple',category:'phones',storage:'256GB',color:'Natural Titanium',retail:16500,wholesale:13800,tiers:[{qty:1,price:13800},{qty:5,price:13200},{qty:10,price:12600},{qty:25,price:12000}],image:'https://images.unsplash.com/photo-1696446703255-020d67fa2f3b?q=80&w=400&auto=format&fit=crop',stock:50},
-  {id:'w2',name:'iPhone 15 Pro 128GB',brand:'apple',category:'phones',storage:'128GB',color:'White Titanium',retail:11200,wholesale:9200,tiers:[{qty:1,price:9200},{qty:5,price:8800},{qty:10,price:8400},{qty:25,price:8000}],image:'https://images.unsplash.com/photo-1696446703255-020d67fa2f3b?q=80&w=400&auto=format&fit=crop',stock:80},
-  {id:'w3',name:'iPhone 14 Pro Max 256GB',brand:'apple',category:'phones',storage:'256GB',color:'Deep Purple',retail:13500,wholesale:11200,tiers:[{qty:1,price:11200},{qty:5,price:10700},{qty:10,price:10200},{qty:25,price:9800}],image:'https://images.unsplash.com/photo-1678911820864-e2c567c655d7?q=80&w=400&auto=format&fit=crop',stock:40},
-  {id:'w4',name:'iPhone 14 128GB',brand:'apple',category:'phones',storage:'128GB',color:'Blue',retail:9900,wholesale:8100,tiers:[{qty:1,price:8100},{qty:5,price:7700},{qty:10,price:7300},{qty:25,price:7000}],image:'https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=400&auto=format&fit=crop',stock:100},
-  {id:'w5',name:'iPhone 13 128GB',brand:'apple',category:'phones',storage:'128GB',color:'Midnight',retail:6800,wholesale:5400,tiers:[{qty:1,price:5400},{qty:5,price:5100},{qty:10,price:4800},{qty:25,price:4500}],image:'https://images.unsplash.com/photo-1632661674596-df8be070a5c5?q=80&w=400&auto=format&fit=crop',stock:120},
-  {id:'w6',name:'Samsung Galaxy S24 Ultra 512GB',brand:'samsung',category:'phones',storage:'512GB',color:'Titanium Black',retail:15200,wholesale:12600,tiers:[{qty:1,price:12600},{qty:5,price:12000},{qty:10,price:11500},{qty:25,price:11000}],image:'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=400&auto=format&fit=crop',stock:30},
-  {id:'w7',name:'Samsung Galaxy S24 256GB',brand:'samsung',category:'phones',storage:'256GB',color:'Marble Gray',retail:8900,wholesale:7200,tiers:[{qty:1,price:7200},{qty:5,price:6900},{qty:10,price:6600},{qty:25,price:6300}],image:'https://images.unsplash.com/photo-1585060544812-6b45742d762f?q=80&w=400&auto=format&fit=crop',stock:60},
-  {id:'w8',name:'Samsung Galaxy A55 256GB',brand:'samsung',category:'phones',storage:'256GB',color:'Awesome Navy',retail:4200,wholesale:3400,tiers:[{qty:1,price:3400},{qty:5,price:3200},{qty:10,price:3000},{qty:25,price:2800}],image:'https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=400&auto=format&fit=crop',stock:90},
-
-  // ── LAPTOPS ──
-  {id:'w9',name:'MacBook Pro M3 16GB/512GB',brand:'apple',category:'laptops',storage:'512GB',color:'Space Black',retail:22500,wholesale:19500,tiers:[{qty:1,price:19500},{qty:3,price:18800},{qty:5,price:18200},{qty:10,price:17500}],image:'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=400&auto=format&fit=crop',stock:20},
-  {id:'w10',name:'MacBook Air M2 13-inch 8GB/256GB',brand:'apple',category:'laptops',storage:'256GB',color:'Midnight',retail:12800,wholesale:10800,tiers:[{qty:1,price:10800},{qty:3,price:10300},{qty:5,price:9800},{qty:10,price:9400}],image:'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=400&auto=format&fit=crop',stock:35},
-  {id:'w11',name:'HP Spectre x360 13.5-inch i7 16GB/1TB',brand:'hp',category:'laptops',storage:'1TB',color:'Nightfall Black',retail:14500,wholesale:12200,tiers:[{qty:1,price:12200},{qty:3,price:11700},{qty:5,price:11200},{qty:10,price:10800}],image:'https://images.unsplash.com/photo-1583223667854-e0e05b1ad2ad?q=80&w=400&auto=format&fit=crop',stock:15},
-  {id:'w12',name:'Dell XPS 13 Plus i7 16GB/512GB',brand:'dell',category:'laptops',storage:'512GB',color:'Platinum',retail:13200,wholesale:11000,tiers:[{qty:1,price:11000},{qty:3,price:10500},{qty:5,price:10000},{qty:10,price:9600}],image:'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?q=80&w=400&auto=format&fit=crop',stock:18},
-
-  // ── TABLETS ──
-  {id:'w13',name:'iPad Pro 11-inch M4 256GB',brand:'apple',category:'tablets',storage:'256GB',color:'Space Black',retail:12500,wholesale:10600,tiers:[{qty:1,price:10600},{qty:3,price:10100},{qty:5,price:9700},{qty:10,price:9300}],image:'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=400&auto=format&fit=crop',stock:25},
-  {id:'w14',name:'iPad Air M2 11-inch 128GB',brand:'apple',category:'tablets',storage:'128GB',color:'Blue',retail:6900,wholesale:5800,tiers:[{qty:1,price:5800},{qty:3,price:5500},{qty:5,price:5200},{qty:10,price:4900}],image:'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=400&auto=format&fit=crop',stock:40},
-
-  // ── AUDIO ──
-  {id:'w15',name:'AirPods Pro 2nd Gen USB-C',brand:'apple',category:'audio',storage:'—',color:'White',retail:3200,wholesale:2500,tiers:[{qty:1,price:2500},{qty:5,price:2350},{qty:10,price:2200},{qty:25,price:2050}],image:'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?q=80&w=400&auto=format&fit=crop',stock:200},
-  {id:'w16',name:'AirPods Max — Space Gray',brand:'apple',category:'audio',storage:'—',color:'Space Gray',retail:6500,wholesale:5200,tiers:[{qty:1,price:5200},{qty:3,price:4900},{qty:5,price:4600},{qty:10,price:4300}],image:'https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=400&auto=format&fit=crop',stock:30},
-  {id:'w17',name:'Sony WH-1000XM5 Wireless Headset',brand:'sony',category:'audio',storage:'—',color:'Black',retail:4100,wholesale:3200,tiers:[{qty:1,price:3200},{qty:3,price:3000},{qty:5,price:2800},{qty:10,price:2600}],image:'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=400&auto=format&fit=crop',stock:50},
-  {id:'w18',name:'JBL Charge 5 Bluetooth Speaker',brand:'jbl',category:'audio',storage:'—',color:'Black',retail:1650,wholesale:1200,tiers:[{qty:1,price:1200},{qty:5,price:1100},{qty:10,price:1000},{qty:25,price:900}],image:'https://images.unsplash.com/photo-1608043152269-423dbba4e7e11?q=80&w=400&auto=format&fit=crop',stock:100},
-
-  // ── GAMING ──
-  {id:'w19',name:'PS5 1TB Slim — Disc Edition',brand:'sony',category:'gaming',storage:'1TB',color:'White',retail:7800,wholesale:6400,tiers:[{qty:1,price:6400},{qty:3,price:6100},{qty:5,price:5800},{qty:10,price:5500}],image:'https://valmontgadgets.com/uploads/clean_ps5.png',stock:20},
-  {id:'w20',name:'Nintendo Switch OLED — Neon',brand:'nintendo',category:'gaming',storage:'64GB',color:'Neon Blue/Red',retail:4200,wholesale:3400,tiers:[{qty:1,price:3400},{qty:3,price:3200},{qty:5,price:3000},{qty:10,price:2800}],image:'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?q=80&w=400&auto=format&fit=crop',stock:30},
-
-  // ── SMARTWATCHES ──
-  {id:'w21',name:'Apple Watch Series 9 GPS 45mm',brand:'apple',category:'smartwatches',storage:'—',color:'Midnight',retail:5500,wholesale:4400,tiers:[{qty:1,price:4400},{qty:3,price:4200},{qty:5,price:4000},{qty:10,price:3800}],image:'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?q=80&w=400&auto=format&fit=crop',stock:40},
-  {id:'w22',name:'Samsung Galaxy Watch 6 44mm',brand:'samsung',category:'smartwatches',storage:'—',color:'Graphite',retail:3900,wholesale:3100,tiers:[{qty:1,price:3100},{qty:3,price:2900},{qty:5,price:2700},{qty:10,price:2500}],image:'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?q=80&w=400&auto=format&fit=crop',stock:50},
-
-  // ── ACCESSORIES ──
-  {id:'w23',name:'Anker 20,000mAh 65W Power Bank',brand:'anker',category:'accessories',storage:'—',color:'Black',retail:1250,wholesale:850,tiers:[{qty:1,price:850},{qty:5,price:800},{qty:10,price:750},{qty:25,price:700}],image:'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=400&auto=format&fit=crop',stock:300},
-  {id:'w24',name:'Anker 735 65W GaN Charger — 3 Port',brand:'anker',category:'accessories',storage:'—',color:'White',retail:750,wholesale:500,tiers:[{qty:1,price:500},{qty:5,price:460},{qty:10,price:420},{qty:25,price:380}],image:'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=400&auto=format&fit=crop',stock:200},
-  {id:'w25',name:'Spigen Rugged Armor Case iPhone 15 Pro Max',brand:'spigen',category:'accessories',storage:'—',color:'Matte Black',retail:350,wholesale:200,tiers:[{qty:1,price:200},{qty:10,price:170},{qty:25,price:150},{qty:50,price:130}],image:'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=400&auto=format&fit=crop',stock:500},
-  {id:'w26',name:'Spigen EZ Fit Tempered Glass (2-Pack)',brand:'spigen',category:'accessories',storage:'—',color:'Clear',retail:250,wholesale:140,tiers:[{qty:1,price:140},{qty:10,price:120},{qty:25,price:100},{qty:50,price:85}],image:'https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=400&auto=format&fit=crop',stock:1000},
-
-  // ── SMART HOME ──
-  {id:'w27',name:'TP-Link Tapo Smart Wi-Fi Bulb',brand:'tp-link',category:'smart_home',storage:'—',color:'Multi-Color',retail:380,wholesale:250,tiers:[{qty:1,price:250},{qty:5,price:220},{qty:10,price:200},{qty:25,price:180}],image:'https://images.unsplash.com/photo-1550985543-f47f8d7a8c8e?q=80&w=400&auto=format&fit=crop',stock:200},
-  {id:'w28',name:'TP-Link Tapo C210 Indoor Camera',brand:'tp-link',category:'smart_home',storage:'—',color:'White',retail:950,wholesale:650,tiers:[{qty:1,price:650},{qty:5,price:600},{qty:10,price:550},{qty:25,price:500}],image:'https://images.unsplash.com/photo-1557597774-9d273605dfa9?q=80&w=400&auto=format&fit=crop',stock:80},
-
-  // ── CAMERAS & CREATOR ──
-  {id:'w29',name:'LED Ring Light with Tripod — Creator Kit',brand:'valmont',category:'cameras',storage:'—',color:'Black',retail:650,wholesale:400,tiers:[{qty:1,price:400},{qty:5,price:360},{qty:10,price:320},{qty:25,price:280}],image:'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?q=80&w=400&auto=format&fit=crop',stock:100},
-  {id:'w30',name:'Wireless Lavalier Microphone — USB-C',brand:'valmont',category:'cameras',storage:'—',color:'Black',retail:780,wholesale:480,tiers:[{qty:1,price:480},{qty:5,price:440},{qty:10,price:400},{qty:25,price:360}],image:'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=400&auto=format&fit=crop',stock:150},
-];
-
-// ══════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════
-function ld(k,f){try{const s=localStorage.getItem(k);if(s)return JSON.parse(s)}catch(e){}return f}
-function sv(k,v){localStorage.setItem(k,JSON.stringify(v))}
-function fmt(n){return'GH₵ '+Number(n).toLocaleString()}
-function toast(m){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
-
-// ══════════════════════════════════════════
-// AUTH
-// ══════════════════════════════════════════
-function isLoggedIn(){return!!ld(K_SESSION,null)}
-function showDashboard(){
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('wsDashboard').style.display='';
-  const s=ld(K_SESSION,{});
-  document.getElementById('dealerName').textContent=s.name||'Dealer';
-  loadPage('dashboard');
-}
-
-document.getElementById('loginBtn').addEventListener('click',()=>{
-  const phone=document.getElementById('wsPhone').value.trim();
-  const pass=document.getElementById('wsPass').value;
-
-  if(!VG.canPerform('ws_login',5,900000)){document.getElementById('loginErr').textContent='Too many attempts. Wait 15 minutes.';return}
-
-  // Check wholesale dealers
-  const dealers=ld('vg_ws_dealers',[]);
-  const dealer=dealers.find(d=>d.phone===phone&&d.pass===pass);
-  if(!dealer){document.getElementById('loginErr').textContent='Invalid credentials or not approved for wholesale.';return}
-  if(dealer.status!=='approved'){document.getElementById('loginErr').textContent='Your wholesale account is pending approval.';return}
-
-  sv(K_SESSION,{id:dealer.id,name:dealer.name,phone:dealer.phone,business:dealer.business});
-  showDashboard();
-  VG.audit('WS_LOGIN',{dealer:dealer.name});
-});
-
-document.getElementById('logoutBtn').addEventListener('click',()=>{
-  localStorage.removeItem(K_SESSION);
-  document.getElementById('wsDashboard').style.display='none';
-  document.getElementById('loginScreen').style.display='';
-  toast('Logged out.');
-});
-
-if(isLoggedIn())showDashboard();
-
-// ══════════════════════════════════════════
-// NAVIGATION
-// ══════════════════════════════════════════
-let currentPage='dashboard';
-document.querySelectorAll('.nav-item[data-page]').forEach(n=>{
-  n.addEventListener('click',()=>{
-    document.querySelectorAll('.nav-item').forEach(nn=>nn.classList.remove('active'));
-    n.classList.add('active');
-    currentPage=n.dataset.page;
-    document.getElementById('pageTitle').textContent=n.textContent.trim();
-    loadPage(currentPage);
-    document.getElementById('sidebar').classList.remove('open');
-  });
-});
-
-const menuToggle=document.getElementById('menuToggle');
-if(window.innerWidth<=768)menuToggle.style.display='';
-menuToggle.addEventListener('click',()=>{document.getElementById('sidebar').classList.toggle('open')});
-
-document.getElementById('closeModal').addEventListener('click',()=>{document.getElementById('modal').classList.remove('open')});
-
-// ══════════════════════════════════════════
-// PAGES
-// ══════════════════════════════════════════
-function loadPage(page){
-  const c=document.getElementById('pageContent');
-  const r={dashboard:rDash,catalog:rCatalog,orders:rOrders,calculator:rCalc,pricing:rPricing,profile:rProfile};
-  if(r[page])r[page](c);
-}
-
-// ── DASHBOARD ──
-function rDash(c){
-  const orders=window.VDBWholesale ? await VDBWholesale.getOrders() : ld('vg_ws_orders',[]);
-  const totalSpent=orders.reduce((s,o)=>s+(o.total||0),0);
-  c.innerHTML=`
-    <div class="stat-grid">
-      <div class="stat-card"><div class="label">Available Products</div><div class="value">${WHOLESALE_CATALOG.length}</div><div class="change up">In stock</div></div>
-      <div class="stat-card"><div class="label">My Orders</div><div class="value">${orders.length}</div><div class="change up">${orders.filter(o=>o.status==='pending').length} pending</div></div>
-      <div class="stat-card"><div class="label">Total Spent</div><div class="value">${fmt(totalSpent)}</div><div class="change up">Wholesale</div></div>
-      <div class="stat-card"><div class="label">Avg. Savings</div><div class="value">18%</div><div class="change up">vs retail</div></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <div class="table-card">
-        <div class="hd"><h3>Recent Orders</h3><a href="#" onclick="loadPage('orders');return false" style="font-size:11px;color:var(--orange);font-weight:700;text-decoration:none">View All</a></div>
-        <table><thead><tr><th>Order</th><th>Items</th><th>Total</th><th>Status</th></tr></thead>
-        <tbody>${orders.slice(0,5).map(o=>`<tr><td>${o.id}</td><td>${o.items?o.items.length:0}</td><td>${fmt(o.total)}</td><td><span class="badge ${o.status==='delivered'?'badge-green':o.status==='pending'?'badge-yellow':'badge-blue'}">${o.status}</span></td></tr>`).join('')||'<tr><td colspan="4" style="text-align:center;color:#9ca3af">No orders yet</td></tr>'}</tbody></table>
-      </div>
-      <div class="table-card">
-        <div class="hd"><h3>Top Wholesale Deals</h3></div>
-        <table><thead><tr><th>Product</th><th>Retail</th><th>Wholesale</th><th>Save</th></tr></thead>
-        <tbody>${WHOLESALE_CATALOG.slice(0,5).map(p=>{
-          const save=Math.round((1-p.wholesale/p.retail)*100);
-          return`<tr><td><strong>${p.name}</strong></td><td class="retail-price">${fmt(p.retail)}</td><td class="ws-price">${fmt(p.wholesale)}</td><td><span class="badge badge-green">-${save}%</span></td></tr>`;
-        }).join('')}</tbody></table>
-      </div>
-    </div>`;
-}
-
-// ── CATALOG ──
-function rCatalog(c){
-  c.innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h3 style="font-size:16px;font-weight:900;color:var(--navy)">Wholesale Catalog</h3>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-outline btn-sm" onclick="window._filterCat('all')">All</button>
-        <button class="btn btn-outline btn-sm" onclick="window._filterCat('phones')">📱 Phones</button>
-        <button class="btn btn-outline btn-sm" onclick="window._filterCat('laptops')">💻 Laptops</button>
-        <button class="btn btn-outline btn-sm" onclick="window._filterCat('tablets')">📱 Tablets</button>
-        <button class="btn btn-outline btn-sm" onclick="window._filterCat('audio')">🎧 Audio</button>
-        <button class="btn btn-outline btn-sm" onclick="window._filterCat('gaming')">🎮 Gaming</button>
-        <button class="btn btn-outline btn-sm" onclick="window._filterCat('smartwatches')">⌚ Watches</button>
-        <button class="btn btn-outline btn-sm" onclick="window._filterCat('accessories')">🔌 Accessories</button>
-        <button class="btn btn-outline btn-sm" onclick="window._filterCat('smart_home')">🏠 Smart Home</button>
-        <button class="btn btn-outline btn-sm" onclick="window._filterCat('cameras')">📷 Creator</button>
-      </div>
-    </div>
-    <div id="catalogGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px"></div>`;
-  renderCatalogGrid(WHOLESALE_CATALOG);
-}
-
-function renderCatalogGrid(products){
-  document.getElementById('catalogGrid').innerHTML=products.map(p=>{
-    const save=Math.round((1-p.wholesale/p.retail)*100);
-    return`<div style="background:#fff;border-radius:14px;border:1px solid #e5e7eb;overflow:hidden;transition:all .2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
-      <div style="height:160px;background:#f9fafb;display:flex;align-items:center;justify-content:center;position:relative">
-        <img src="${p.image}" alt="${p.name}" style="max-height:80%;max-width:80%;object-fit:contain" loading="lazy">
-        <span class="badge badge-gold" style="position:absolute;top:8px;left:8px">⭐ Wholesale</span>
-        <span class="badge badge-green" style="position:absolute;top:8px;right:8px">-${save}%</span>
-      </div>
-      <div style="padding:14px">
-        <h4 style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:4px">${p.name}</h4>
-        <p style="font-size:11px;color:#9ca3af;margin-bottom:8px">${p.storage} • ${p.color} • ${p.stock} in stock</p>
-        <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:10px">
-          <span class="ws-price" style="font-size:18px">${fmt(p.wholesale)}</span>
-          <span class="retail-price">${fmt(p.retail)}</span>
-        </div>
-        <div style="font-size:10px;font-weight:700;color:#6b7280;margin-bottom:8px">Volume Pricing:</div>
-        <div class="tier-grid">
-          ${p.tiers.map(t=>`<div class="tier-card"><div class="qty">${t.qty}+ units</div><div class="price">${fmt(t.price)}</div><div class="save">Save ${fmt(p.retail-t.price)}/unit</div></div>`).join('')}
-        </div>
-        <button class="btn btn-primary" style="width:100%;margin-top:10px;justify-content:center" onclick="window._orderProduct('${p.id}')">📦 Place Order</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-window._filterCat=function(cat){
-  const filtered=cat==='all'?WHOLESALE_CATALOG:WHOLESALE_CATALOG.filter(p=>p.category===cat);
-  renderCatalogGrid(filtered);
-};
-
-window._orderProduct=function(id){
-  const p=WHOLESALE_CATALOG.find(x=>x.id===id);
-  if(!p)return;
-  document.getElementById('modalTitle').textContent='📦 Order: '+p.name;
-  document.getElementById('modalBody').innerHTML=`
-    <div style="display:flex;gap:12px;margin-bottom:16px">
-      <img src="${p.image}" style="width:80px;height:80px;object-fit:contain;border-radius:10px;background:#f9fafb">
-      <div><h4 style="font-size:14px;font-weight:800;color:var(--navy)">${p.name}</h4><p style="font-size:12px;color:#6b7280">${p.storage} • ${p.color}</p></div>
-    </div>
-    <div class="fg"><label>Quantity *</label><input id="oQty" type="number" min="1" max="${p.stock}" value="1" onchange="window._updateOrderTotal('${id}')"></div>
-    <div id="oTierInfo" style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px;margin-bottom:14px">
-      <div style="font-size:11px;font-weight:700;color:#166534">Unit Price: <span id="oUnitPrice">${fmt(p.wholesale)}</span></div>
-      <div style="font-size:16px;font-weight:900;color:var(--navy);margin-top:4px">Total: <span id="oTotal">${fmt(p.wholesale)}</span></div>
-    </div>
-    <div class="fg"><label>Delivery Address</label><textarea id="oAddress" rows="2" placeholder="Where should we deliver?"></textarea></div>
-    <div class="fg"><label>Notes</label><textarea id="oNotes" rows="2" placeholder="Any special instructions?"></textarea></div>
-    <button class="btn btn-primary" style="width:100%;padding:12px;justify-content:center" onclick="window._submitOrder('${id}')">Confirm Order</button>`;
-  document.getElementById('modal').classList.add('open');
-};
-
-window._updateOrderTotal=function(id){
-  const p=WHOLESALE_CATALOG.find(x=>x.id===id);
-  const qty=parseInt(document.getElementById('oQty').value)||1;
-  let unitPrice=p.wholesale;
-  for(let i=p.tiers.length-1;i>=0;i--){if(qty>=p.tiers[i].qty){unitPrice=p.tiers[i].price;break}}
-  document.getElementById('oUnitPrice').textContent=fmt(unitPrice);
-  document.getElementById('oTotal').textContent=fmt(unitPrice*qty);
-};
-
-window._submitOrder=function(id){
-  const p=WHOLESALE_CATALOG.find(x=>x.id===id);
-  const qty=parseInt(document.getElementById('oQty').value)||1;
-  let unitPrice=p.wholesale;
-  for(let i=p.tiers.length-1;i>=0;i--){if(qty>=p.tiers[i].qty){unitPrice=p.tiers[i].price;break}}
-  const session=ld(K_SESSION,{});
-  const orders=window.VDBWholesale ? await VDBWholesale.getOrders() : ld('vg_ws_orders',[]);
-  orders.unshift({
-    id:'WO-'+Date.now(),dealerId:session.id,dealerName:session.name,
-    items:[{productId:p.id,name:p.name,qty,unitPrice,total:unitPrice*qty}],
-    total:unitPrice*qty,address:VG.escapeHtml(document.getElementById('oAddress').value),
-    notes:VG.escapeHtml(document.getElementById('oNotes').value),
-    date:new Date().toISOString(),status:'pending'
-  };
-  if(window.VDBWholesale) await VDBWholesale.createOrder(orderData);
-  else { const orders=ld('vg_ws_orders',[]); orders.unshift(orderData); sv('vg_ws_orders',orders); }
-  document.getElementById('modal').classList.remove('open');
-  toast('Order placed! We\'ll confirm via WhatsApp.');
-  VG.audit('WS_ORDER',{product:p.name,qty:qty,total:unitPrice*qty});
-  if(currentPage==='orders')loadPage('orders');
-};
-
-// ── ORDERS ──
-function rOrders(c){
-  const orders=window.VDBWholesale ? await VDBWholesale.getOrders() : ld('vg_ws_orders',[]);
-  c.innerHTML=`
-    <h3 style="font-size:16px;font-weight:900;color:var(--navy);margin-bottom:16px">My Orders (${orders.length})</h3>
-    <div class="table-card">
-      <table><thead><tr><th>Order ID</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
-      <tbody>${orders.map(o=>`<tr>
-        <td><strong>${o.id}</strong></td>
-        <td>${o.items.map(i=>i.name+' × '+i.qty).join(', ')}</td>
-        <td class="ws-price">${fmt(o.total)}</td>
-        <td><span class="badge ${o.status==='delivered'?'badge-green':o.status==='shipped'?'badge-blue':o.status==='pending'?'badge-yellow':'badge-purple'}">${o.status}</span></td>
-        <td>${new Date(o.date).toLocaleDateString()}</td>
-      </tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:24px">No orders yet. Browse the catalog to place your first order.</td></tr>'}</tbody></table>
-    </div>`;
-}
-
-// ── PROFIT CALCULATOR ──
-function rCalc(c){
-  c.innerHTML=`
-    <h3 style="font-size:16px;font-weight:900;color:var(--navy);margin-bottom:16px">🧮 Profit Calculator</h3>
-    <p style="font-size:13px;color:#6b7280;margin-bottom:20px">Calculate your profit margin on each phone. Enter your selling price and see how much you make.</p>
-    <div style="max-width:500px">
-      <div class="table-card" style="padding:20px">
-        <div class="fg"><label>Select Product</label>
-          <select id="calcProduct" onchange="window._updateCalc()">
-            ${WHOLESALE_CATALOG.map(p=>`<option value="${p.id}" data-ws="${p.wholesale}" data-retail="${p.retail}">${p.name} — Wholesale: ${fmt(p.wholesale)}</option>`).join('')}
-          </select>
-        </div>
-        <div class="fg"><label>Quantity</label><input id="calcQty" type="number" min="1" value="1" onchange="window._updateCalc()"></div>
-        <div class="fg"><label>Your Selling Price (per unit)</label><input id="calcSell" type="number" placeholder="e.g. 15000" onchange="window._updateCalc()"></div>
-        <div id="calcResult" style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:16px;margin-top:10px">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div><div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase">Your Cost</div><div style="font-size:18px;font-weight:900;color:var(--navy)" id="calcCost">GH₵ 0</div></div>
-            <div><div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase">Your Revenue</div><div style="font-size:18px;font-weight:900;color:var(--navy)" id="calcRevenue">GH₵ 0</div></div>
-            <div><div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase">Profit per Unit</div><div style="font-size:18px;font-weight:900;color:var(--green)" id="calcProfitUnit">GH₵ 0</div></div>
-            <div><div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase">Total Profit</div><div style="font-size:18px;font-weight:900;color:var(--green)" id="calcProfitTotal">GH₵ 0</div></div>
-          </div>
-          <div style="text-align:center;margin-top:12px;padding-top:12px;border-top:1px solid #86efac">
-            <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase">Margin</div>
-            <div style="font-size:24px;font-weight:900;color:var(--green)" id="calcMargin">0%</div>
-          </div>
-        </div>
-      </div>
-    </div>`;
-}
-
-window._updateCalc=function(){
-  const sel=document.getElementById('calcProduct');
-  const opt=sel.options[sel.selectedIndex];
-  const ws=parseInt(opt.dataset.ws);
-  const retail=parseInt(opt.dataset.retail);
-  const qty=parseInt(document.getElementById('calcQty').value)||1;
-  const sell=parseInt(document.getElementById('calcSell').value)||0;
-  const cost=ws*qty;
-  const revenue=sell*qty;
-  const profitUnit=sell-ws;
-  const profitTotal=profitUnit*qty;
-  const margin=sell>0?Math.round((profitUnit/sell)*100):0;
-  document.getElementById('calcCost').textContent=fmt(cost);
-  document.getElementById('calcRevenue').textContent=fmt(revenue);
-  document.getElementById('calcProfitUnit').textContent=fmt(profitUnit);
-  document.getElementById('calcProfitTotal').textContent=fmt(profitTotal);
-  document.getElementById('calcMargin').textContent=margin+'%';
-};
-
-// ── PRICE LIST ──
-function rPricing(c){
-  c.innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h3 style="font-size:16px;font-weight:900;color:var(--navy)">💰 Wholesale Price List</h3>
-      <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print Price List</button>
-    </div>
-    <div class="table-card">
-      <table><thead><tr><th>Product</th><th>Storage</th><th>Retail</th><th>1+ Unit</th><th>5+ Units</th><th>10+ Units</th><th>25+ Units</th><th>Stock</th></tr></thead>
-      <tbody>${WHOLESALE_CATALOG.map(p=>`<tr>
-        <td><strong>${p.name}</strong><br><span style="font-size:10px;color:#9ca3af">${p.color}</span></td>
-        <td>${p.storage}</td>
-        <td class="retail-price">${fmt(p.retail)}</td>
-        <td class="ws-price">${fmt(p.tiers[0].price)}</td>
-        <td class="ws-price">${fmt(p.tiers[1].price)}</td>
-        <td class="ws-price">${fmt(p.tiers[2].price)}</td>
-        <td class="ws-price">${fmt(p.tiers[3].price)}</td>
-        <td>${p.stock}</td>
-      </tr>`).join('')}</tbody></table>
-    </div>`;
-}
-
-// ── PROFILE ──
-function rProfile(c){
-  const session=ld(K_SESSION,{});
-  const dealers=ld('vg_ws_dealers',[]);
-  const dealer=dealers.find(d=>d.id===session.id)||{};
-  c.innerHTML=`
-    <h3 style="font-size:16px;font-weight:900;color:var(--navy);margin-bottom:16px">👤 My Profile</h3>
-    <div style="max-width:500px">
-      <div class="table-card" style="padding:20px">
-        <div style="display:grid;gap:12px">
-          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f3f4f6"><span style="font-size:12px;font-weight:700;color:#6b7280">Business Name</span><span style="font-size:12px;font-weight:800;color:var(--navy)">${dealer.business||session.business||'—'}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f3f4f6"><span style="font-size:12px;font-weight:700;color:#6b7280">Contact Name</span><span style="font-size:12px;font-weight:800;color:var(--navy)">${dealer.name||session.name||'—'}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f3f4f6"><span style="font-size:12px;font-weight:700;color:#6b7280">Phone</span><span style="font-size:12px;font-weight:800;color:var(--navy)">${dealer.phone||session.phone||'—'}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f3f4f6"><span style="font-size:12px;font-weight:700;color:#6b7280">Ghana Card</span><span style="font-size:12px;font-weight:800;color:var(--navy)">${dealer.ghanaCard||'—'}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:10px 0"><span style="font-size:12px;font-weight:700;color:#6b7280">Status</span><span class="badge badge-green">Approved Wholesale Dealer</span></div>
-        </div>
-      </div>
-    </div>`;
-}
-
-})();
-</script>
+<script src="assets/js/security.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/db-adapter.js"></script>
+<script src="assets/js/wholesale-page.js"></script>
 </body>
 </html>

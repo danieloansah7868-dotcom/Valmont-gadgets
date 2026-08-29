@@ -180,6 +180,10 @@
   .lead-card .lc-actions{display:flex;gap:6px}
   .lc-btn{padding:6px 12px;border:0;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer}
 
+  .browse-status{font-size:12px;color:#6b7280;font-weight:700;margin:0 0 10px;min-height:18px}
+  .browse-status.err{color:var(--red)}
+  .browse-status button{font:inherit;border:0;background:none;color:var(--orange);font-weight:800;cursor:pointer;padding:0;text-decoration:underline}
+
   /* ── Verification ── */
   .verify-banner{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:2px solid #6ee7b7;border-radius:14px;padding:20px;margin:20px auto;max-width:960px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
   .verify-banner .vb-icon{font-size:36px}
@@ -195,9 +199,6 @@
   }
 </style>
 <link rel="stylesheet" href="assets/css/community.css">
-<script src="assets/js/security.js"></script>
-<script src="assets/js/supabase-client.js"></script>
-<script src="assets/js/db-adapter.js"></script>
 </head>
 <body>
 
@@ -346,56 +347,38 @@
   </div>
 </div>
 
-<!-- AUTH / DASHBOARD / BROWSE (toggled by JS) -->
+<!-- SIGN IN / SIGN UP (toggled by JS) -->
 <div id="authView" style="display:none">
   <div class="dash-section">
     <div class="modal" style="max-width:420px;margin:0 auto;position:static;box-shadow:0 4px 20px rgba(0,0,0,.08)">
       <div class="modal-bd">
         <div class="auth-section">
-          <h3>Sign in to Swap & Sell</h3>
-          <p>Create an account or sign in to list phones, track leads, and manage your swaps.</p>
+          <h3>Sign in to Swap &amp; Sell</h3>
+          <p>Use your Valmont account, or create one with your email. Listing requires a Ghana Card number for verification.</p>
           <div class="auth-tabs">
-            <button class="auth-tab on" data-auth="signin">Sign In</button>
-            <button class="auth-tab" data-auth="signup">Sign Up</button>
+            <button type="button" class="auth-tab on" data-auth="signin">Sign In</button>
+            <button type="button" class="auth-tab" data-auth="signup">Sign Up</button>
           </div>
           <!-- Sign In -->
           <div id="signinForm">
-            <div class="fg"><label>Phone Number</label><input id="authPhone" type="tel" inputmode="tel" placeholder="024 123 4567"></div>
-            <div class="fg"><label>Password</label><input id="authPass" type="password" placeholder="••••••••"></div>
-            <button class="submit-btn" id="signinBtn">Sign In</button>
+            <div class="fg"><label for="authEmail">Email</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
+            <div class="fg"><label for="authPass">Password</label><input id="authPass" type="password" autocomplete="current-password" placeholder="Your password"></div>
+            <button type="button" class="submit-btn" id="signinBtn">Sign In</button>
+            <p style="font-size:11px;color:#6b7280;margin-top:10px">No account yet? <a href="account.html" style="color:var(--orange);font-weight:700">Create one on your Valmont account page</a>.</p>
           </div>
           <!-- Sign Up -->
           <div id="signupForm" style="display:none">
-            <div class="fg"><label>Full Name *</label><input id="suName" type="text" placeholder="Kofi Mensah"></div>
-            <div class="fg"><label>Phone Number *</label><input id="suPhone" type="tel" inputmode="tel" placeholder="024 123 4567"></div>
-            <div class="fg"><label>Password *</label><input id="suPass" type="password" placeholder="At least 6 characters"></div>
-            <div class="fg"><label>City / Location *</label><input id="suCity" type="text" placeholder="Accra"></div>
-            <div class="fg"><label>Ghana Card Number *</label><input id="suGhanaCard" type="text" placeholder="GHA-XXXXXXXXX-X"></div>
-            <p style="font-size:11px;color:#6b7280;margin-bottom:12px">Your Ghana Card is used for verification only. It won't be shown publicly.</p>
-
-            <!-- Face Verification (Optional) -->
-            <div class="fg">
-              <label>Face Verification (Optional — earns ✓ badge)</label>
-              <div id="faceVerifySection" style="background:#f9fafb;border:2px dashed #d1d5db;border-radius:12px;padding:20px;text-align:center">
-                <div id="facePreview" style="display:none;margin-bottom:12px">
-                  <img id="faceImg" src="" alt="Your selfie" style="width:120px;height:120px;object-fit:cover;border-radius:999px;border:3px solid var(--green);margin:0 auto">
-                  <p style="font-size:11px;color:var(--green);font-weight:700;margin-top:6px">✓ Face verified — you get the trusted badge</p>
-                </div>
-                <div id="faceCapture" style="display:none;margin-bottom:12px">
-                  <video id="faceVideo" autoplay playsinline style="width:200px;height:200px;object-fit:cover;border-radius:999px;border:3px solid var(--orange);margin:0 auto;display:block"></video>
-                  <p style="font-size:11px;color:#6b7280;margin-top:8px">Position your face in the circle and tap capture</p>
-                </div>
-                <button type="button" id="startFaceBtn" class="btn btn-primary" style="padding:10px 20px">📷 Take Selfie</button>
-                <button type="button" id="captureFaceBtn" class="btn btn-green" style="padding:10px 20px;display:none">📸 Capture</button>
-                <button type="button" id="retakeFaceBtn" class="btn btn-outline" style="padding:10px 20px;display:none">🔄 Retake</button>
-                <canvas id="faceCanvas" style="display:none"></canvas>
-              </div>
-              <p style="font-size:10px;color:#9ca3af;margin-top:6px">Optional but recommended. Sellers with face verification get a ✓ trusted badge and more leads. Without it, you can still list but won't have the badge.</p>
-            </div>
-
-            <button class="submit-btn" id="signupBtn">Create Account & Verify</button>
+            <div class="fg"><label for="suName">Full Name *</label><input id="suName" type="text" autocomplete="name" maxlength="80" placeholder="Kofi Mensah"></div>
+            <div class="fg"><label for="suEmail">Email *</label><input id="suEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
+            <div class="fg"><label for="suPhone">Phone Number *</label><input id="suPhone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="024 123 4567"></div>
+            <div class="fg"><label for="suPass">Password *</label><input id="suPass" type="password" autocomplete="new-password" maxlength="72" placeholder="At least 8 characters, with a number"></div>
+            <div class="fg"><label for="suCity">City / Location *</label><input id="suCity" type="text" maxlength="60" placeholder="Accra"></div>
+            <div class="fg"><label for="suGhanaCard">Ghana Card Number *</label><input id="suGhanaCard" type="text" maxlength="24" placeholder="GHA-123456789-0"></div>
+            <p style="font-size:11px;color:#6b7280;margin-bottom:12px">Your Ghana Card number is hashed in our database for duplicate checks and shown only to Valmont staff. It is never published on a listing.</p>
+            <button type="button" class="submit-btn" id="signupBtn">Create Account</button>
+            <p style="font-size:11px;color:#6b7280;margin-top:10px">We send a confirmation link to your email. Listings stay private until you confirm and Valmont reviews them.</p>
           </div>
-          <p id="authErr" style="color:var(--red);font-size:12px;font-weight:700;margin-top:10px;min-height:18px"></p>
+          <p id="authErr" style="color:var(--red);font-size:12px;font-weight:700;margin-top:10px;min-height:18px" role="alert" aria-live="polite"></p>
         </div>
       </div>
     </div>
@@ -459,9 +442,10 @@
   </div>
 
   <div class="grid-section">
+    <p class="browse-status" id="browseStatus" role="status" aria-live="polite">Loading listings&hellip;</p>
     <div class="swap-grid" id="browseGrid"></div>
-    <div id="loadMoreWrap" style="text-align:center;padding:16px;display:none"><button id="loadMoreBtn" class="btn btn-primary" style="padding:12px 32px;font-size:13px">Load More Listings</button></div>
-    <div class="empty" id="browseEmpty" style="display:none"><div class="ic">📦</div><h3>No listings found</h3><p>Try different filters or check back later.</p></div>
+    <div id="loadMoreWrap" style="text-align:center;padding:16px;display:none"><button type="button" id="loadMoreBtn" class="btn btn-primary" style="padding:12px 32px;font-size:13px">Show more listings</button></div>
+    <div class="empty" id="browseEmpty" style="display:none"><div class="ic">📦</div><h3>No listings yet</h3><p>Sign in and post the gadget you want to swap or sell — approved listings appear here.</p></div>
   </div>
 </div>
 
@@ -552,227 +536,103 @@
   </div>
 </div>
 
+<!-- INTEREST MODAL (creates a lead for the seller) -->
+<div class="modal-overlay" id="interestModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-hd">
+      <h2>Send your interest</h2>
+      <button type="button" class="close" id="closeInterestModal" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-bd">
+      <p style="font-size:13px;color:#6b7280;margin-bottom:14px">Your message goes to the seller&rsquo;s Valmont dashboard as a lead. Valmont does not share your phone number publicly.</p>
+      <div class="fg">
+        <label for="interestListingName">Listing</label>
+        <input id="interestListingName" type="text" readonly tabindex="-1" value="">
+      </div>
+      <div class="fg">
+        <label for="interestMessage">Message to the seller</label>
+        <textarea id="interestMessage" maxlength="600" placeholder="e.g. I have an iPhone 14 128GB in Grade A, I can add cash. When can we meet in Accra?"></textarea>
+      </div>
+      <button type="button" class="submit-btn" id="sendInterestBtn">Send to seller</button>
+      <p id="interestErr" style="color:var(--red);font-size:12px;font-weight:700;margin-top:10px;min-height:16px" role="alert" aria-live="polite"></p>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"><span>✅</span><span id="toastMsg">Done!</span></div>
 
 <!-- ══════════════════════════════════════════ -->
-<!-- QUICK ACTION FLOATING BUTTONS -->
+<!-- QUICK ACTION FLOATING BUTTON -->
 <!-- ══════════════════════════════════════════ -->
-<div id="quickActions" style="position:fixed;bottom:80px;right:16px;z-index:50;display:flex;flex-direction:column;gap:10px">
-  <button id="quickSwapBtn" style="background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;border:0;border-radius:14px;padding:14px 20px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(30,64,175,.35);display:flex;align-items:center;gap:8px;transition:transform .2s">
-    <span style="font-size:18px">🔄</span> Quick Swap
-  </button>
-  <button id="quickBuyBtn" style="background:linear-gradient(135deg,#047857,#10b981);color:#fff;border:0;border-radius:14px;padding:14px 20px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(4,120,87,.35);display:flex;align-items:center;gap:8px;transition:transform .2s">
-    <span style="font-size:18px">💰</span> Quick Buy
+<div id="quickActions" style="position:fixed;bottom:80px;right:16px;z-index:50">
+  <button type="button" id="quickListBtn" style="background:linear-gradient(135deg,#ff8c00,#e67e00);color:#fff;border:0;border-radius:14px;padding:14px 20px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(255,140,0,.35);display:flex;align-items:center;gap:8px">
+    <span style="font-size:18px">➕</span> Sell or swap my phone
   </button>
 </div>
 
 <!-- ══════════════════════════════════════════ -->
-<!-- AD PROMOTION MODAL -->
+<!-- PROMOTION REQUEST MODAL -->
 <!-- ══════════════════════════════════════════ -->
-<div class="modal-overlay" id="adModal">
+<div class="modal-overlay" id="promoModal">
   <div class="modal" style="max-width:480px">
     <div class="modal-hd">
-      <h2>⭐ Boost Your Listing</h2>
-      <button class="close" id="closeAdModal">×</button>
+      <h2>&#11088; Promote your listing</h2>
+      <button type="button" class="close" id="closePromoModal" aria-label="Close">&times;</button>
     </div>
     <div class="modal-bd">
-      <p style="font-size:13px;color:#6b7280;margin-bottom:16px">Your listing will appear as a <b>promoted ad</b> at the top of the Swap page AND as a popup when customers visit the site. More eyes = faster sale or swap!</p>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:16px">A promoted listing sits at the top of the Swap page with a &#11088; badge for the period you choose. Our team confirms your MoMo or card payment before the boost switches on.</p>
 
-      <!-- Ad Preview -->
-      <div style="background:linear-gradient(135deg,#fff7ed,#fef3c7);border:2px solid var(--orange);border-radius:12px;padding:14px;margin-bottom:16px">
-        <div style="font-size:10px;font-weight:800;color:var(--orange);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">⭐ Your Ad Preview</div>
-        <div style="display:flex;gap:10px;align-items:center">
-          <div style="width:50px;height:50px;background:#f9fafb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px">📱</div>
-          <div>
-            <div style="font-size:13px;font-weight:800;color:var(--navy)" id="adPreviewName">Your Phone Model</div>
-            <div style="font-size:12px;color:var(--orange);font-weight:800" id="adPreviewPrice">GH₵ 0</div>
-            <div style="font-size:10px;color:#6b7280">⭐ Promoted • Appears as popup to all visitors</div>
-          </div>
+      <div style="background:#f9fafb;border-radius:10px;padding:14px;margin-bottom:16px">
+        <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:4px">Listing</div>
+        <div style="font-size:14px;font-weight:800;color:var(--navy)" id="promoTargetName">&mdash;</div>
+      </div>
+
+      <div class="fg">
+        <label>Choose a period</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="promoPlans" role="radiogroup" aria-label="Promotion period">
+          <button type="button" class="ad-plan on" data-hours="24" data-price="15" role="radio" aria-checked="true">
+            <span style="display:block;font-size:22px;font-weight:900;color:var(--navy)">GH&#8353; 15</span>
+            <span style="display:block;font-size:12px;font-weight:700;color:#6b7280">24 hours</span>
+          </button>
+          <button type="button" class="ad-plan" data-hours="72" data-price="35" role="radio" aria-checked="false">
+            <span style="display:block;font-size:22px;font-weight:900;color:var(--navy)">GH&#8353; 35</span>
+            <span style="display:block;font-size:12px;font-weight:700;color:#6b7280">3 days</span>
+          </button>
+          <button type="button" class="ad-plan" data-hours="168" data-price="60" role="radio" aria-checked="false">
+            <span style="display:block;font-size:22px;font-weight:900;color:var(--navy)">GH&#8353; 60</span>
+            <span style="display:block;font-size:12px;font-weight:700;color:#6b7280">7 days</span>
+          </button>
+          <button type="button" class="ad-plan" data-hours="720" data-price="150" role="radio" aria-checked="false">
+            <span style="display:block;font-size:22px;font-weight:900;color:var(--navy)">GH&#8353; 150</span>
+            <span style="display:block;font-size:12px;font-weight:700;color:#6b7280">30 days</span>
+          </button>
         </div>
       </div>
 
-      <!-- Select Listing -->
-      <div class="fg">
-        <label>Select Your Listing *</label>
-        <select id="adListingSelect"><option value="">Choose a listing to promote</option></select>
-      </div>
-
-      <!-- Duration Options -->
-      <div class="fg">
-        <label>Choose Duration *</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div class="ad-plan" data-hours="24" data-price="15">
-            <div style="font-size:24px;font-weight:900;color:var(--navy)">GH₵ 15</div>
-            <div style="font-size:12px;font-weight:700;color:#6b7280">24 Hours</div>
-            <div style="font-size:10px;color:var(--orange);font-weight:700;margin-top:4px">Most Popular</div>
-          </div>
-          <div class="ad-plan" data-hours="72" data-price="35">
-            <div style="font-size:24px;font-weight:900;color:var(--navy)">GH₵ 35</div>
-            <div style="font-size:12px;font-weight:700;color:#6b7280">3 Days</div>
-            <div style="font-size:10px;color:#047857;font-weight:700;margin-top:4px">Save GH₵ 10</div>
-          </div>
-          <div class="ad-plan" data-hours="168" data-price="60">
-            <div style="font-size:24px;font-weight:900;color:var(--navy)">GH₵ 60</div>
-            <div style="font-size:12px;font-weight:700;color:#6b7280">7 Days</div>
-            <div style="font-size:10px;color:#047857;font-weight:700;margin-top:4px">Save GH₵ 45</div>
-          </div>
-          <div class="ad-plan" data-hours="720" data-price="150">
-            <div style="font-size:24px;font-weight:900;color:var(--navy)">GH₵ 150</div>
-            <div style="font-size:12px;font-weight:700;color:#6b7280">30 Days</div>
-            <div style="font-size:10px;color:#047857;font-weight:700;margin-top:4px">Best Value</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Summary -->
-      <div style="background:#f9fafb;border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:12px;margin-bottom:14px">
         <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:#374151;margin-bottom:4px">
-          <span>Ad Duration:</span><span id="adSummaryDuration">—</span>
+          <span>Price shown by Valmont:</span><span id="promoSummaryPrice">GH&#8353; 15</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:900;color:var(--navy)">
-          <span>Total:</span><span id="adSummaryPrice">GH₵ 0</span>
-        </div>
+        <div style="font-size:11px;color:#92400e;line-height:1.5">The amount is calculated by our database &mdash; the page only sends the period you picked. Pay with MoMo or card on <b>Valmont Pay</b> or at the Accra store; the boost activates once payment is recorded.</div>
       </div>
 
-      <button class="submit-btn" id="payAdBtn" style="background:linear-gradient(135deg,#047857,#10b981)">Pay with Valmont Pay →</button>
-      <p style="font-size:11px;color:#9ca3af;margin-top:10px;text-align:center">Secure payment via Valmont Pay • MoMo & Card accepted</p>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════ -->
-<!-- VALMONT PAY MODAL -->
-<!-- ══════════════════════════════════════════ -->
-<div class="modal-overlay" id="payModal">
-  <div class="modal" style="max-width:440px">
-    <div class="modal-hd">
-      <h2>💳 Valmont Pay</h2>
-      <button class="close" id="closePayModal">×</button>
-    </div>
-    <div class="modal-bd">
-      <!-- Payment Summary -->
-      <div style="background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border-radius:12px;padding:16px;margin-bottom:16px;text-align:center">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700">Amount to Pay</div>
-        <div style="font-size:32px;font-weight:900;color:var(--orange);margin:4px 0" id="payAmount">GH₵ 0</div>
-        <div style="font-size:12px;color:var(--muted)" id="payDesc">Ad promotion</div>
-      </div>
-
-      <!-- Payment Method -->
-      <div class="fg">
-        <label>Payment Method</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div class="pay-method on" data-method="momo">
-            <div style="font-size:20px;margin-bottom:4px">📱</div>
-            <div style="font-size:12px;font-weight:800">MoMo</div>
-            <div style="font-size:10px;color:#6b7280">MTN, Telecel, AT</div>
-          </div>
-          <div class="pay-method" data-method="card">
-            <div style="font-size:20px;margin-bottom:4px">💳</div>
-            <div style="font-size:12px;font-weight:800">Card</div>
-            <div style="font-size:10px;color:#6b7280">Visa, Mastercard</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- MoMo Fields -->
-      <div id="momoFields">
-        <div class="fg">
-          <label>MoMo Number *</label>
-          <input id="momoNumber" type="tel" inputmode="tel" placeholder="024 123 4567">
-        </div>
-      </div>
-
-      <!-- Card Fields -->
-      <div id="cardFields" style="display:none">
-        <div class="fg"><label>Card Number *</label><input id="cardNumber" type="text" placeholder="1234 5678 9012 3456" maxlength="19"></div>
-        <div class="fg-row">
-          <div class="fg"><label>Expiry *</label><input id="cardExpiry" type="text" placeholder="MM/YY" maxlength="5"></div>
-          <div class="fg"><label>CVV *</label><input id="cardCvv" type="text" placeholder="123" maxlength="3"></div>
-        </div>
-      </div>
-
-      <button class="submit-btn" id="confirmPayBtn" style="background:linear-gradient(135deg,#047857,#10b981)">Confirm Payment</button>
-      <p style="font-size:10px;color:#9ca3af;margin-top:8px;text-align:center">🔒 Secured by Valmont Pay • Your payment info is encrypted</p>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════ -->
-<!-- AD POPUP (shown to all visitors) -->
-<!-- ══════════════════════════════════════════ -->
-<div id="adPopup" style="position:fixed;bottom:16px;left:16px;right:16px;max-width:400px;margin:0 auto;z-index:60;display:none">
-  <div style="background:linear-gradient(135deg,#fff7ed,#fef3c7);border:2px solid var(--orange);border-radius:16px;padding:16px;box-shadow:0 10px 40px rgba(0,0,0,.2);position:relative">
-    <button id="closeAdPopup" style="position:absolute;top:8px;right:10px;background:none;border:0;font-size:18px;cursor:pointer;color:#9ca3af;font-weight:700">×</button>
-    <div style="display:flex;align-items:center;gap:4px;margin-bottom:8px">
-      <span style="background:var(--orange);color:#fff;font-size:9px;font-weight:900;padding:2px 7px;border-radius:6px;text-transform:uppercase">⭐ Sponsored</span>
-      <span style="font-size:10px;color:#9ca3af;font-weight:600">Promoted listing</span>
-    </div>
-    <div style="display:flex;gap:12px;align-items:center">
-      <img id="adPopupImg" src="" alt="" style="width:60px;height:60px;object-fit:contain;border-radius:10px;background:#f9fafb">
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:800;color:var(--navy)" id="adPopupName">Phone</div>
-        <div style="font-size:12px;color:#6b7280" id="adPopupSpecs">Specs</div>
-        <div style="font-size:16px;font-weight:900;color:var(--orange);margin-top:2px" id="adPopupPrice">GH₵ 0</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:12px">
-      <a id="adPopupWa" href="#" target="_blank" style="flex:1;background:#25d366;color:#fff;text-align:center;padding:10px;border-radius:8px;font-size:12px;font-weight:800;text-decoration:none">💬 WhatsApp Seller</a>
-      <button id="adPopupDismiss" style="flex:1;background:#fff;color:#374151;border:1.5px solid #d1d5db;padding:10px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Later</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════ -->
-<!-- PAYMENT SUCCESS MODAL -->
-<!-- ══════════════════════════════════════════ -->
-<div class="modal-overlay" id="successModal">
-  <div class="modal" style="max-width:380px">
-    <div class="modal-bd" style="text-align:center;padding:32px 24px">
-      <div style="font-size:48px;margin-bottom:12px">🎉</div>
-      <h3 style="font-size:18px;font-weight:900;color:var(--navy);margin:0 0 8px">Payment Successful!</h3>
-      <p style="font-size:13px;color:#6b7280;margin-bottom:16px">Your listing is now promoted. It will appear at the top of the Swap page and as a popup to all visitors.</p>
-      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px;margin-bottom:16px">
-        <div style="font-size:12px;font-weight:700;color:#166534" id="successDetails">Ad active for 24 hours</div>
-      </div>
-      <button class="submit-btn" id="successDoneBtn" style="background:var(--navy)">Done</button>
+      <button type="button" class="submit-btn" id="submitPromoBtn" style="background:linear-gradient(135deg,#047857,#10b981)">Send promotion request</button>
+      <p id="promoErr" style="color:var(--red);font-size:12px;font-weight:700;margin-top:10px;min-height:16px" role="alert" aria-live="polite"></p>
     </div>
   </div>
 </div>
 
 <style>
-  /* Ad Plan Cards */
+  /* Promotion period cards */
   .ad-plan{
     background:#fff;border:2px solid #e5e7eb;border-radius:12px;padding:14px;text-align:center;
-    cursor:pointer;transition:all .2s;
+    cursor:pointer;transition:border-color .2s,background .2s;font:inherit;
   }
   .ad-plan:hover{border-color:var(--orange)}
   .ad-plan.on{border-color:var(--orange);background:#fff7ed;box-shadow:0 0 0 1px var(--orange)}
-
-  /* Payment Method Cards */
-  .pay-method{
-    background:#fff;border:2px solid #e5e7eb;border-radius:12px;padding:14px;text-align:center;
-    cursor:pointer;transition:all .2s;
-  }
-  .pay-method:hover{border-color:var(--orange)}
-  .pay-method.on{border-color:var(--orange);background:#fff7ed;box-shadow:0 0 0 1px var(--orange)}
-
-  /* Processing overlay */
-  .processing{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:none;align-items:center;justify-content:center}
-  .processing.show{display:flex}
-  .processing-box{background:#fff;border-radius:16px;padding:32px;text-align:center;max-width:300px}
-  .spinner{width:40px;height:40px;border:4px solid #e5e7eb;border-top-color:var(--orange);border-radius:999px;animation:spin .8s linear infinite;margin:0 auto 16px}
-  @keyframes spin{to{transform:rotate(360deg)}}
+  .ad-plan:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
 </style>
-
-<!-- Processing Overlay -->
-<div class="processing" id="processingOverlay">
-  <div class="processing-box">
-    <div class="spinner"></div>
-    <div style="font-size:14px;font-weight:800;color:var(--navy)">Processing Payment...</div>
-    <div style="font-size:12px;color:#6b7280;margin-top:4px">Please wait</div>
-  </div>
-</div>
 
 <!-- FOOTER -->
 <footer class="vg-footer vg-footer--panel" aria-label="Footer">
@@ -809,694 +669,9 @@
   <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 fill-current" viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L3 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-93.8-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 89.4-184.5 184.6-184.5 46 0 89.3 18 121.9 50.6 32.6 32.5 50.5 75.9 50.5 122.1-.1 101.8-94.9 184.5-184.6 184.5zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
 </a>
 
-<script>
-(function(){
-'use strict';
-
-// ══════════════════════════════════════════
-// STORAGE KEYS
-// ══════════════════════════════════════════
-const K_LISTINGS='vg_swap_listings',K_USER='vg_swap_user',K_LEADS='vg_swap_leads';
-
-// ══════════════════════════════════════════
-// SEED DATA
-// ══════════════════════════════════════════
-const SEED_USERS=[
-  {id:'u1',name:'Kofi Mensah',phone:'0241234567',pass:'demo123',city:'Accra',ghanaCard:'GHA-123456789-0',verified:true,joinDate:'2026-08-10'},
-  {id:'u2',name:'Ama Serwaa',phone:'0501234567',pass:'demo123',city:'Kumasi',ghanaCard:'GHA-987654321-0',verified:true,joinDate:'2026-08-12'},
-  {id:'u3',name:'Yaw Boateng',phone:'0271234567',pass:'demo123',city:'Tema',ghanaCard:'GHA-456789123-0',verified:true,joinDate:'2026-08-14'},
-];
-
-const SEED_LISTINGS=[
-  {id:'s1',userId:'u1',userName:'Kofi Mensah',userPhone:'0241234567',userVerified:true,type:'swap',category:'phones',brand:'apple',model:'iPhone 13 Pro Max 256GB',storage:'256GB',color:'Sierra Blue',grade:'A',battery:91,screen:'Perfect — No scratches',body:'Pristine — No marks',included:'Box, charger, cable',want:'Any laptop or Samsung S24 Ultra. Will add cash.',price:null,budgetMin:6000,budgetMax:9000,notes:'UK used, Face ID OK, True Tone OK',images:['uploads/clean_13_promax.png','https://images.unsplash.com/photo-1632661674596-df8be070a5c5?q=80&w=400&auto=format&fit=crop'],city:'Accra',date:'2026-08-27',status:'active',promoted:false,views:24,leads:3},
-  {id:'s2',userId:'u2',userName:'Ama Serwaa',userPhone:'0501234567',userVerified:true,type:'sell',category:'phones',brand:'samsung',model:'Samsung Galaxy S23 Ultra 256GB',storage:'256GB',color:'Phantom Black',grade:'A',battery:93,screen:'Perfect — No scratches',body:'Excellent — Like new',included:'S Pen, cable',want:null,price:8500,budgetMin:null,budgetMax:null,notes:'US variant, 200MP camera, sealed-like',images:['https://images.unsplash.com/photo-1610945264803-c22b62d2a7b3?q=80&w=400&auto=format&fit=crop','https://images.unsplash.com/photo-1585060544812-6b45742d762f?q=80&w=400&auto=format&fit=crop'],city:'Kumasi',date:'2026-08-27',status:'active',promoted:true,views:56,leads:7},
-  {id:'s3',userId:'u3',userName:'Yaw Boateng',userPhone:'0271234567',userVerified:true,type:'both',category:'phones',brand:'apple',model:'iPhone 14 128GB',storage:'128GB',color:'Blue',grade:'B',battery:86,screen:'Perfect — No scratches',body:'Minor wear — Light scuffs on edges',included:'Cable only',want:'PS5 or Nintendo Switch + cash. Or sell for GH₵ 6,200.',price:6200,budgetMin:5000,budgetMax:7000,notes:'US unlocked, A15 Bionic',images:['https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=400&auto=format&fit=crop','https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=400&auto=format&fit=crop'],city:'Tema',date:'2026-08-26',status:'active',promoted:false,views:18,leads:2},
-  {id:'s4',userId:'u1',userName:'Kofi Mensah',userPhone:'0241234567',userVerified:true,type:'sell',category:'phones',brand:'apple',model:'iPhone 11 64GB',storage:'64GB',color:'Black',grade:'C',battery:76,screen:'Light scratches',body:'Visible wear — Scuffs on back',included:'Phone only',want:null,price:2800,budgetMin:null,budgetMax:null,notes:'Good working phone, battery lasts full day',images:['https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=400&auto=format&fit=crop'],city:'Accra',date:'2026-08-25',status:'active',promoted:false,views:12,leads:1},
-  {id:'s5',userId:'u2',userName:'Ama Serwaa',userPhone:'0501234567',userVerified:true,type:'swap',category:'laptops',brand:'apple',model:'MacBook Air M1 13-inch 8GB/256GB',storage:'256GB',color:'Space Gray',grade:'A',battery:90,screen:'Perfect — No scratches',body:'Pristine — Like new',included:'Charger, box',want:'iPhone 14 Pro Max or Samsung S24 Ultra. Open to any flagship phone.',price:null,budgetMin:8000,budgetMax:12000,notes:'M1 chip, great for students and professionals',images:['https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=400&auto=format&fit=crop','https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=400&auto=format&fit=crop'],city:'Kumasi',date:'2026-08-27',status:'active',promoted:false,views:31,leads:4},
-];
-
-const SEED_LEADS=[
-  {id:'l1',listingId:'s2',buyerName:'Efua Mensah',buyerPhone:'0551234567',message:'Is the S23 Ultra still available? I can pay GH₵ 8,000.',date:'2026-08-27 14:30',status:'new'},
-  {id:'l2',listingId:'s2',buyerName:'Kwame Asante',buyerPhone:'0201234567',message:'Can you do GH₵ 8,200? I\'m in Kumasi too.',date:'2026-08-27 12:15',status:'replied'},
-  {id:'l3',listingId:'s1',buyerName:'Nana Yaa',buyerPhone:'0249876543',message:'I have an iPhone 15 Pro 128GB. Interested in swapping?',date:'2026-08-27 10:00',status:'new'},
-  {id:'l4',listingId:'s5',buyerName:'Kofi Adu',buyerPhone:'0261234567',message:'Would you swap for a Samsung S24 256GB?',date:'2026-08-26 16:45',status:'new'},
-];
-
-// ══════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════
-function ld(k,fallback){try{const s=localStorage.getItem(k);if(s)return JSON.parse(s)}catch(e){}return fallback}
-function sv(k,v){localStorage.setItem(k,JSON.stringify(v))}
-function fmt(n){return'GH₵ '+Number(n).toLocaleString()}
-function toast(m){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)}
-function gradeBdg(g){const m={A:['🟢 Grade A','bdg-grade-a'],B:['🔵 Grade B','bdg-grade-b'],C:['🟡 Grade C','bdg-grade-c']};return m[g]||['','']}
-function timeAgo(d){const diff=Date.now()-new Date(d).getTime();const h=Math.floor(diff/3600000);if(h<1)return'Just now';if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago'}
-
-// ══════════════════════════════════════════
-// INIT STORAGE
-// ══════════════════════════════════════════
-VDBSwap.seed(SEED_LISTINGS);
-  VDBUser.seed(SEED_USERS);
-  if(!localStorage.getItem(K_LEADS)){sv(K_LEADS,SEED_LEADS)}
-
-// ══════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════
-let currentUser=ld(K_USER,null);
-let activeTab='all';
-let filters={brand:'all',grade:'all'};
-
-// ══════════════════════════════════════════
-// AUTH
-// ══════════════════════════════════════════
-function showView(view){
-  document.getElementById('authView').style.display=view==='auth'?'':'none';
-  document.getElementById('dashView').style.display=view==='dash'?'':'none';
-  document.getElementById('browseView').style.display=view==='browse'?'':'none';
-}
-
-function checkAuth(){
-  if(currentUser){showView('dash');renderDash();renderBrowse()}
-  else{showView('browse');renderBrowse()}
-}
-
-// Auth tabs
-document.querySelectorAll('.auth-tab').forEach(t=>{
-  t.addEventListener('click',()=>{
-    document.querySelectorAll('.auth-tab').forEach(b=>b.classList.remove('on'));
-    t.classList.add('on');
-    const is=t.dataset.auth==='signin';
-    document.getElementById('signinForm').style.display=is?'':'none';
-    document.getElementById('signupForm').style.display=is?'none':'';
-  });
-});
-
-// Sign In
-document.getElementById('signinBtn').addEventListener('click',()=>{
-  const phone=document.getElementById('authPhone').value.trim();
-  const pass=document.getElementById('authPass').value;
-
-  // Rate limit: max 5 login attempts per 15 minutes
-  if(!canPerformAction('login',5,900000)){document.getElementById('authErr').textContent='Too many login attempts. Wait 15 minutes.';return}
-
-  if(!phone||!pass){document.getElementById('authErr').textContent='Enter phone and password.';return}
-  let u=null;
-  const users=VDBUser.getAll?await VDBUser.getAll():ld('vg_swap_users',[]);
-  if(users.then)u=(await users).find(x=>x.phone===phone&&x.pass===pass);
-  else u=users.find(x=>x.phone===phone&&x.pass===pass);
-  if(!u){document.getElementById('authErr').textContent='Invalid phone or password.';return}
-  currentUser=u;sv(K_USER,u);checkAuth();VG.audit('USER_LOGIN',{user:u.name});toast('Welcome back, '+u.name+'!');
-});
-
-// ── SECURITY: Input sanitizer ──
-function sanitize(str){
-  if(typeof str!=='string')return'';
-  return str.replace(/[<>'"&]/g,c=>({'<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;','&':'&amp;'}[c])).trim();
-}
-
-// ── SECURITY: Ghana Card validator ──
-function isValidGhanaCard(gc){
-  // Format: GHA-XXXXXXXXX-X (3 letters dash 9 digits dash 1 digit)
-  return /^GHA-\d{9}-\d$/i.test(gc.trim());
-}
-
-// ── SECURITY: Ghana phone validator ──
-function isValidGhanaPhone(p){
-  // 0XX XXX XXXX (10 digits starting with 0)
-  const digits=p.replace(/\D/g,'');
-  return /^0\d{9}$/.test(digits);
-}
-
-// ── SECURITY: Rate limiter ──
-function canPerformAction(action,limit,windowMs){
-  const key='vg_rate_'+action;
-  const now=Date.now();
-  let attempts=[];
-  try{attempts=JSON.parse(localStorage.getItem(key)||'[]')}catch(e){}
-  attempts=attempts.filter(t=>now-t<windowMs);
-  if(attempts.length>=limit)return false;
-  attempts.push(now);
-  localStorage.setItem(key,JSON.stringify(attempts));
-  return true;
-}
-
-// ── SECURITY: Password strength ──
-function isStrongPassword(p){
-  return p.length>=6;
-}
-
-// Sign Up
-let faceDataUrl=null;
-let faceStream=null;
-
-document.getElementById('startFaceBtn').addEventListener('click',async()=>{
-  try{
-    faceStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:400,height:400}});
-    document.getElementById('faceVideo').srcObject=faceStream;
-    document.getElementById('faceCapture').style.display='';
-    document.getElementById('startFaceBtn').style.display='none';
-    document.getElementById('captureFaceBtn').style.display='';
-  }catch(e){
-    document.getElementById('authErr').textContent='Camera access denied. You can still sign up without face verification.';
-  }
-});
-
-document.getElementById('captureFaceBtn').addEventListener('click',()=>{
-  const video=document.getElementById('faceVideo');
-  const canvas=document.getElementById('faceCanvas');
-  canvas.width=400;canvas.height=400;
-  const ctx=canvas.getContext('2d');
-  ctx.beginPath();ctx.arc(200,200,200,0,Math.PI*2);ctx.clip();
-  ctx.drawImage(video,0,0,400,400);
-  faceDataUrl=canvas.toDataURL('image/jpeg',0.7);
-  if(faceStream){faceStream.getTracks().forEach(t=>t.stop());faceStream=null}
-  document.getElementById('faceImg').src=faceDataUrl;
-  document.getElementById('faceCapture').style.display='none';
-  document.getElementById('facePreview').style.display='';
-  document.getElementById('captureFaceBtn').style.display='none';
-  document.getElementById('retakeFaceBtn').style.display='';
-});
-
-document.getElementById('retakeFaceBtn').addEventListener('click',async()=>{
-  faceDataUrl=null;
-  document.getElementById('facePreview').style.display='none';
-  document.getElementById('retakeFaceBtn').style.display='none';
-  document.getElementById('startFaceBtn').style.display='';
-  try{
-    faceStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:400,height:400}});
-    document.getElementById('faceVideo').srcObject=faceStream;
-    document.getElementById('faceCapture').style.display='';
-    document.getElementById('startFaceBtn').style.display='none';
-    document.getElementById('captureFaceBtn').style.display='';
-  }catch(e){
-    document.getElementById('authErr').textContent='Camera access denied.';
-  }
-});
-
-document.getElementById('signupBtn').addEventListener('click',()=>{
-  const name=sanitize(document.getElementById('suName').value);
-  const phone=document.getElementById('suPhone').value.trim();
-  const pass=document.getElementById('suPass').value;
-  const city=sanitize(document.getElementById('suCity').value);
-  const gc=document.getElementById('suGhanaCard').value.trim().toUpperCase();
-
-  // Validations
-  if(!name||name.length<2){document.getElementById('authErr').textContent='Enter your full name.';return}
-  if(!phone){document.getElementById('authErr').textContent='Enter your phone number.';return}
-  if(!isValidGhanaPhone(phone)){document.getElementById('authErr').textContent='Invalid Ghana phone. Format: 0241234567';return}
-  if(!pass){document.getElementById('authErr').textContent='Enter a password.';return}
-  if(!isStrongPassword(pass)){document.getElementById('authErr').textContent='Password must be at least 6 characters.';return}
-  if(!city){document.getElementById('authErr').textContent='Enter your city.';return}
-  if(!gc){document.getElementById('authErr').textContent='Enter your Ghana Card number.';return}
-  if(!isValidGhanaCard(gc)){document.getElementById('authErr').textContent='Invalid Ghana Card. Format: GHA-XXXXXXXXX-X';return}
-
-  // Rate limit: max 3 sign-ups per hour from same browser
-  if(!canPerformAction('signup',3,3600000)){document.getElementById('authErr').textContent='Too many sign-up attempts. Try again later.';return}
-
-  // Check duplicate
-  const existingUsers=await VDBUser.getAll();
-  if(existingUsers.find(u=>u.phone===phone)){document.getElementById('authErr').textContent='Phone number already registered.';return}
-  if(existingUsers.find(u=>(u.ghanaCard||u.ghana_card)===gc)){document.getElementById('authErr').textContent='Ghana Card already registered.';return}
-
-  const u={
-    id:'u'+Date.now(),name,phone,pass,city,ghanaCard:gc,
-    faceVerified:!!faceDataUrl,facePhoto:faceDataUrl||null,
-    verified:true,joinDate:new Date().toISOString().slice(0,10)
-  };
-  await VDBUser.create(u);
-  currentUser=u;sv(K_USER,u);
-  if(faceStream){faceStream.getTracks().forEach(t=>t.stop());faceStream=null}
-  checkAuth();VG.audit('USER_SIGNUP',{name:name,phone:phone});
-  toast(faceDataUrl?'Account created with face verification! ✓':'Account created! Add face verification later for the trusted badge.');
-});
-
-// Logout
-document.getElementById('logoutBtn').addEventListener('click',()=>{currentUser=null;localStorage.removeItem(K_USER);checkAuth();toast('Logged out.')});
-
-// ══════════════════════════════════════════
-// DASHBOARD
-// ══════════════════════════════════════════
-function renderDash(){
-  if(!currentUser)return;
-  document.getElementById('dashName').textContent=currentUser.name.split(' ')[0];
-  const listings=(await VDBSwap.getByUser(currentUser.id)).filter(l=>l.userId===currentUser.id||l.seller_id===currentUser.id);
-  const leads=(await VDBSwap.getLeads()).filter(l=>listings.find(ls=>ls.id===(l.listingId||l.listing_id)));
-  const active=listings.filter(l=>l.status==='active');
-  document.getElementById('dsActive').textContent=active.length;
-  document.getElementById('dsLeads').textContent=leads.filter(l=>l.status==='new').length;
-  document.getElementById('dsSold').textContent=listings.filter(l=>l.status==='sold').length;
-  document.getElementById('dsViews').textContent=listings.reduce((s,l)=>s+(l.views||0),0);
-
-  // My listings
-  const mg=document.getElementById('myListingsGrid');
-  const me=document.getElementById('myEmpty');
-  if(listings.length===0){mg.innerHTML='';me.style.display='';return}
-  me.style.display='none';
-  mg.innerHTML=listings.map(l=>renderCard(l,true)).join('');
-  bindGalleries();
-
-  // Leads
-  const ll=document.getElementById('leadsList');
-  const le=document.getElementById('leadsEmpty');
-  if(leads.length===0){ll.innerHTML='';le.style.display='';return}
-  le.style.display='none';
-  ll.innerHTML=leads.map(l=>{
-    const listing=ld(K_LISTINGS,[]).find(ls=>ls.id===l.listingId);
-    return`<div class="lead-card">
-      <img src="${listing?(listing.images?listing.images[0]:''):''}" alt="" loading="lazy">
-      <div class="lc-info">
-        <div class="lc-name">${l.buyerName} — ${listing?listing.model:'Unknown'}</div>
-        <div class="lc-msg">${l.message}</div>
-        <div class="lc-time">${l.date} • ${l.status==='new'?'🆕 New':'✅ Replied'}</div>
-      </div>
-      <div class="lc-actions">
-        <a href="https://wa.me/233${l.buyerPhone.replace(/^0/,'')}?text=${encodeURIComponent('Hi '+l.buyerName+'! Thanks for your interest. Let me know if you have questions.')}" target="_blank" class="lc-btn" style="background:#25d366;color:#fff;text-decoration:none">Reply</a>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ══════════════════════════════════════════
-// NEW LISTING MODAL
-// ══════════════════════════════════════════
-document.getElementById('newListingBtn').addEventListener('click',()=>{document.getElementById('listingModal').classList.add('open')});
-document.getElementById('closeListingModal').addEventListener('click',()=>{document.getElementById('listingModal').classList.remove('open')});
-
-// Toggle want/price fields based on type
-document.getElementById('lType').addEventListener('change',()=>{
-  const v=document.getElementById('lType').value;
-  document.getElementById('wantField').style.display=(v==='sell')?'none':'';
-  document.getElementById('priceField').style.display=(v==='swap')?'none':'';
-});
-
-// Submit listing
-document.getElementById('submitListingBtn').addEventListener('click',()=>{
-  if(!currentUser){toast('Please sign in first.');return}
-  if(!document.getElementById('agreeTerms').checked){toast('You must agree to the Terms & Conditions.');return}
-  const type=document.getElementById('lType').value;
-  const brand=document.getElementById('lBrand').value;
-  const model=sanitize(document.getElementById('lModel').value);
-  const storage=document.getElementById('lStorage').value;
-  const grade=document.getElementById('lGrade').value;
-  const screen=document.getElementById('lScreen').value;
-  const body=document.getElementById('lBody').value;
-  if(!brand||!model||!storage||!grade||!screen||!body){toast('Please fill all required fields.');return}
-  if(type!=='sell'&&!document.getElementById('lWant').value.trim()){toast('Please specify what you want in return.');return}
-  if(type!=='swap'&&!document.getElementById('lPrice').value){toast('Please enter an asking price.');return}
-
-  // Rate limit: max 5 listings per hour
-  if(!canPerformAction('listing',5,3600000)){toast('Too many listings. Try again later.');return}
-
-  // Sanitize image URLs — only allow https
-  const rawPhotos=document.getElementById('lPhotos').value.trim().split('\n').filter(p=>p.trim());
-  const photos=rawPhotos.filter(p=>/^https:\/\//i.test(p.trim())).map(p=>p.trim());
-  const listing={
-    id:'s'+Date.now(),userId:currentUser.id,userName:currentUser.name,userPhone:currentUser.phone,userVerified:currentUser.verified,
-    type,brand:brand.toLowerCase(),model,storage,
-    color:sanitize(document.getElementById('lColor').value),
-    grade,battery:parseInt(document.getElementById('lBattery').value)||null,
-    screen,body,
-    included:sanitize(document.getElementById('lIncluded').value),
-    want:type==='sell'?null:sanitize(document.getElementById('lWant').value),
-    price:type==='swap'?null:parseInt(document.getElementById('lPrice').value)||null,
-    notes:sanitize(document.getElementById('lNotes').value),
-    budgetMin:parseInt(document.getElementById('lBudgetMin').value)||null,
-    budgetMax:parseInt(document.getElementById('lBudgetMax').value)||null,
-    category:document.getElementById('lCategory').value||'phones',
-    images:photos.length?photos:['https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=400&auto=format&fit=crop'],
-    city:currentUser.city,date:new Date().toISOString().slice(0,10),status:'pending',promoted:false,views:0,leads:0
-  };
-
-  await VDBSwap.create(listing); VG.audit('LISTING_SUBMITTED',{model:model,brand:brand});
-  document.getElementById('listingModal').classList.remove('open');
-  toast('Listing submitted! It will appear on the site after Valmont reviews it.');
-  renderDash();
-});
-
-// ══════════════════════════════════════════
-// PROMOTED LISTINGS
-// ══════════════════════════════════════════
-function renderPromo(){
-  const promo=await VDBSwap.getPromoted();
-  const sec=document.getElementById('promoSection');
-  if(!promo.length){sec.style.display='none';return}
-  sec.style.display='';
-  document.getElementById('promoItems').innerHTML=promo.map(l=>`
-    <div class="promo-item" onclick="document.getElementById('browseGrid').scrollIntoView({behavior:'smooth'})">
-      <img src="${l.images?l.images[0]:''}" alt="${l.model}" loading="lazy">
-      <div><div class="pi-name">${l.model}</div><div class="pi-price">${l.price?fmt(l.price):'Swap'}</div><div class="pi-type">${l.type==='swap'?'🔄 Swap':l.type==='sell'?'💰 Sale':'🔄💰 Both'}</div></div>
-    </div>
-  `).join('');
-}
-
-// ══════════════════════════════════════════
-// BROWSE
-// ══════════════════════════════════════════
-function renderBrowse(){
-  let data=await VDBSwap.getAll();
-
-  // Tab
-  if(activeTab==='swap')data=data.filter(l=>l.type==='swap'||l.type==='both');
-  else if(activeTab==='sell')data=data.filter(l=>l.type==='sell'||l.type==='both');
-  else if(activeTab==='matches'&&currentUser){
-    // Match algorithm: find listings where the "want" matches user's listings
-    const myListings=ld(K_LISTINGS,[]).filter(l=>l.userId===currentUser.id&&l.status==='active');
-    const myModels=myListings.map(l=>l.model.toLowerCase());
-    data=data.filter(l=>l.userId!==currentUser.id&&l.want&&myModels.some(m=>l.want.toLowerCase().includes(m.split(' ')[0])));
-  }
-
-  // Filters
-  if(filters.brand!=='all')data=data.filter(l=>l.brand===filters.brand);
-  if(filters.grade!=='all')data=data.filter(l=>l.grade===filters.grade);
-
-  // Sort: promoted first, then newest
-  data.sort((a,b)=>{if(a.promoted!==b.promoted)return a.promoted?-1:1;return new Date(b.date)-new Date(a.date)});
-
-  // Stats
-  const all=ld(K_LISTINGS,[]).filter(l=>l.status==='active');
-  document.getElementById('hTotal').textContent=all.length;
-  document.getElementById('hSwaps').textContent=all.filter(l=>l.type==='swap'||l.type==='both').length;
-  document.getElementById('hSells').textContent=all.filter(l=>l.type==='sell'||l.type==='both').length;
-  document.getElementById('hVerified').textContent=all.filter(l=>l.userVerified).length;
-  document.getElementById('cAll').textContent=all.length;
-  document.getElementById('cSwap').textContent=all.filter(l=>l.type==='swap'||l.type==='both').length;
-  document.getElementById('cSell').textContent=all.filter(l=>l.type==='sell'||l.type==='both').length;
-  document.getElementById('cMatch').textContent=data.length;
-
-  const grid=document.getElementById('browseGrid');
-  const empty=document.getElementById('browseEmpty');
-  if(!data.length){grid.innerHTML='';empty.style.display='';return}
-  empty.style.display='none';
-  grid.innerHTML=data.map(l=>renderCard(l,false)).join('');
-  bindGalleries();
-  renderPromo();
-}
-
-function renderCard(l,isOwner){
-  const[gLabel,gCls]=gradeBdg(l.grade);
-  const typeBdg=l.type==='swap'?'<span class="bdg bdg-swap">🔄 Swap</span>':l.type==='sell'?'<span class="bdg bdg-sell">💰 For Sale</span>':'<span class="bdg bdg-swap">🔄💰 Both</span>';
-  const promoBdg=l.promoted?'<span class="bdg bdg-promo">⭐ Promoted</span>':'';
-  const verBdg=l.userVerified?'<span class="bdg bdg-verified">✓ Verified</span>':'';
-  const imgs=l.images||['https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=400&auto=format&fit=crop'];
-  const hasMulti=imgs.length>1;
-  const gid='g-'+l.id;
-  const imgHtml=imgs.map((s,i)=>`<img src="${s}" alt="${l.model}" loading="lazy" class="${i?'hid':''}" data-gi="${i}">`).join('');
-  const dotsHtml=hasMulti?`<div class="ig-dots">${imgs.map((_,i)=>`<span class="ig-dot ${i?'':'on'}" data-gi="${i}"></span>`).join('')}</div>`:'';
-  const arrHtml=hasMulti?'<span class="ig-arr l" data-d="-1">‹</span><span class="ig-arr r" data-d="1">›</span>':'';
-  const ctrHtml=hasMulti?`<span class="ig-ctr">1/${imgs.length}</span>`:'';
-
-  const condRows=[];
-  if(l.screen)condRows.push(`<div class="cr"><span class="cl">Screen:</span>${l.screen}</div>`);
-  if(l.body)condRows.push(`<div class="cr"><span class="cl">Body:</span>${l.body}</div>`);
-  if(l.included)condRows.push(`<div class="cr"><span class="cl">Includes:</span>${l.included}</div>`);
-
-  const waMsg=encodeURIComponent(`Hi ${l.userName}! I'm interested in your ${l.model}. Is it still available?`);
-  const waLink=`https://wa.me/233${l.userPhone.replace(/^0/,'')}?text=${waMsg}`;
-
-  return`<div class="sc ${l.promoted?'promoted':''}">
-    <div class="sc-img">
-      <div class="ig" id="${gid}" data-c="${imgs.length}" data-i="0">${imgHtml}${arrHtml}${dotsHtml}${ctrHtml}</div>
-      <div class="sc-badges">${typeBdg}<span class="bdg ${gCls}">${gLabel}</span>${promoBdg}${verBdg}</div>
-    </div>
-    <div class="sc-body">
-      <h3>${l.model}</h3>
-      <div class="sc-meta">${l.storage} • ${l.color||'N/A'} • 🔋 ${l.battery||'?'}% • ${l.city} • ${timeAgo(l.date)}</div>
-      ${condRows.length?`<div class="sc-cond">${condRows.join('')}</div>`:''}
-      ${l.want?`<div class="sc-want"><b>Looking for:</b> ${l.want}</div>`:''}
-      ${(l.budgetMin||l.budgetMax)?`<div style="font-size:12px;color:#374151;margin-bottom:8px"><b>Budget:</b> ${l.budgetMin?fmt(l.budgetMin):'Open'} ${l.budgetMax?' — '+fmt(l.budgetMax):''} <span style="font-size:10px;color:#6b7280">(gadget + cash)</span></div>`:''}
-      ${l.price?`<div class="sc-price"><span class="cur">${fmt(l.price)}</span></div>`:''}
-      ${l.notes?`<div style="font-size:11px;color:#9ca3af;margin-bottom:10px">${l.notes}</div>`:''}
-      <div class="sc-actions">
-        ${isOwner
-          ?`<button class="btn btn-outline" onclick="window._promote('${l.id}')">${l.promoted?'⭐ Promoted':'☆ Promote'}</button><button class="btn btn-outline" onclick="window._remove('${l.id}')">Remove</button>`
-          :`<a href="${waLink}" target="_blank" class="btn btn-green">💬 WhatsApp</a><button class="btn btn-orange" onclick="window._interest('${l.id}')">I'm Interested</button>`
-        }
-      </div>
-    </div>
-    <div class="sc-footer"><span>${l.userName} ${l.userVerified?'✓':''} • ${l.city}</span><span>👁 ${l.views||0} views</span></div>
-  </div>`;
-}
-
-// ══════════════════════════════════════════
-// GALLERY BINDING
-// ══════════════════════════════════════════
-function bindGalleries(){
-  document.querySelectorAll('.ig-arr').forEach(a=>{
-    a.addEventListener('click',e=>{
-      e.stopPropagation();const g=a.closest('.ig');const c=+g.dataset.c;let i=+g.dataset.i;
-      i=(i+ +a.dataset.d+c)%c;g.dataset.i=i;
-      g.querySelectorAll('img').forEach((im,ix)=>im.classList.toggle('hid',ix!==i));
-      g.querySelectorAll('.ig-dot').forEach((d,ix)=>d.classList.toggle('on',ix!==i));
-      const ct=g.querySelector('.ig-ctr');if(ct)ct.textContent=(i+1)+'/'+c;
-    });
-  });
-  document.querySelectorAll('.ig-dot').forEach(d=>{
-    d.addEventListener('click',e=>{
-      e.stopPropagation();const g=d.closest('.ig');const c=+g.dataset.c;const i=+d.dataset.gi;g.dataset.i=i;
-      g.querySelectorAll('img').forEach((im,ix)=>im.classList.toggle('hid',ix!==i));
-      g.querySelectorAll('.ig-dot').forEach((dd,ix)=>dd.classList.toggle('on',ix!==i));
-      const ct=g.querySelector('.ig-ctr');if(ct)ct.textContent=(i+1)+'/'+c;
-    });
-  });
-}
-
-// ══════════════════════════════════════════
-// ACTIONS
-// ══════════════════════════════════════════
-window._promote=function(id){
-  const listings=ld(K_LISTINGS,[]);
-  const l=listings.find(l=>l.id===id);
-  if(!l)return;
-  l.promoted=!l.promoted;
-  sv(K_LISTINGS,listings); VG.audit('LISTING_SUBMITTED',{model:model,brand:brand});
-  toast(l.promoted?'Listing promoted! ⭐':'Promotion removed.');
-  renderDash();renderBrowse();
-};
-
-window._remove=function(id){
-  const listings=ld(K_LISTINGS,[]);
-  const l=listings.find(l=>l.id===id);
-  if(l)l.status='removed';
-  sv(K_LISTINGS,listings); VG.audit('LISTING_SUBMITTED',{model:model,brand:brand});
-  toast('Listing removed.');
-  renderDash();renderBrowse();
-};
-
-window._interest=function(id){
-  if(!currentUser){showView('auth');toast('Sign in to express interest.');return}
-  const listings=ld(K_LISTINGS,[]);
-  const l=listings.find(l=>l.id===id);
-  if(!l)return;
-  l.views=(l.views||0)+1;
-  l.leads=(l.leads||0)+1;
-  sv(K_LISTINGS,listings); VG.audit('LISTING_SUBMITTED',{model:model,brand:brand});
-  const leads=ld(K_LEADS,[]);
-  leads.push({id:'l'+Date.now(),listingId:id,buyerName:currentUser.name,buyerPhone:currentUser.phone,message:'I\'m interested in your '+l.model+'!',date:new Date().toLocaleString(),status:'new'});
-  sv(K_LEADS,leads);
-  toast('Interest sent! The seller will be notified.');
-};
-
-// ══════════════════════════════════════════
-// TABS & FILTERS
-// ══════════════════════════════════════════
-document.querySelectorAll('.tab-btn').forEach(b=>{
-  b.addEventListener('click',()=>{
-    document.querySelectorAll('.tab-btn').forEach(bb=>bb.classList.remove('active'));
-    b.classList.add('active');activeTab=b.dataset.tab;renderBrowse();
-  });
-});
-document.querySelectorAll('.fc').forEach(c=>{
-  c.addEventListener('click',()=>{
-    const f=c.dataset.f,v=c.dataset.v;
-    document.querySelectorAll(`.fc[data-f="${f}"]`).forEach(cc=>cc.classList.remove('on'));
-    c.classList.add('on');filters[f]=v;renderBrowse();
-  });
-});
-
-// ══════════════════════════════════════════
-// AD SYSTEM
-// ══════════════════════════════════════════
-let selectedAdPlan={hours:24,price:15};
-let selectedAdListing=null;
-
-// Quick buttons
-document.getElementById('quickSwapBtn').addEventListener('click',()=>{
-  if(!currentUser){showView('auth');toast('Sign in first to create a listing.');return}
-  document.getElementById('lType').value='swap';
-  document.getElementById('lType').dispatchEvent(new Event('change'));
-  document.getElementById('listingModal').classList.add('open');
-});
-document.getElementById('quickBuyBtn').addEventListener('click',()=>{
-  if(!currentUser){showView('auth');toast('Sign in first to create a listing.');return}
-  document.getElementById('lType').value='sell';
-  document.getElementById('lType').dispatchEvent(new Event('change'));
-  document.getElementById('listingModal').classList.add('open');
-});
-
-// Open ad modal from dashboard promote button
-window._openAdModal=function(listingId){
-  if(!currentUser){toast('Sign in first.');return}
-  const listings=ld(K_LISTINGS,[]).filter(l=>l.userId===currentUser.id&&l.status==='active'&&!l.promoted);
-  const sel=document.getElementById('adListingSelect');
-  sel.innerHTML='<option value="">Choose a listing to promote</option>'+listings.map(l=>`<option value="${l.id}" ${l.id===listingId?'selected':''}>${l.model} — ${l.storage}</option>`).join('');
-  if(listingId){sel.value=listingId}
-  updateAdPreview();
-  document.getElementById('adModal').classList.add('open');
-};
-
-// Also open from the _promote function
-const origPromote=window._promote;
-window._promote=function(id){
-  const listings=ld(K_LISTINGS,[]);
-  const l=listings.find(l=>l.id===id);
-  if(!l)return;
-  if(l.promoted){l.promoted=false;sv(K_LISTINGS,listings); VG.audit('LISTING_SUBMITTED',{model:model,brand:brand});toast('Promotion removed.');renderDash();renderBrowse();return}
-  window._openAdModal(id);
-};
-
-// Listing select change
-document.getElementById('adListingSelect').addEventListener('change',updateAdPreview);
-function updateAdPreview(){
-  const id=document.getElementById('adListingSelect').value;
-  const listings=ld(K_LISTINGS,[]);
-  const l=listings.find(l=>l.id===id);
-  selectedAdListing=l||null;
-  document.getElementById('adPreviewName').textContent=l?l.model:'Your Phone Model';
-  document.getElementById('adPreviewPrice').textContent=l?(l.price?fmt(l.price):'Swap'):'GH₵ 0';
-}
-
-// Ad plan selection
-document.querySelectorAll('.ad-plan').forEach(p=>{
-  p.addEventListener('click',()=>{
-    document.querySelectorAll('.ad-plan').forEach(pp=>pp.classList.remove('on'));
-    p.classList.add('on');
-    selectedAdPlan={hours:+p.dataset.hours,price:+p.dataset.price};
-    document.getElementById('adSummaryDuration').textContent=p.dataset.hours+' hours';
-    document.getElementById('adSummaryPrice').textContent=fmt(+p.dataset.price);
-  });
-});
-// Default select24h
-document.querySelector('.ad-plan[data-hours="24"]').classList.add('on');
-document.getElementById('adSummaryDuration').textContent='24 hours';
-document.getElementById('adSummaryPrice').textContent=fmt(15);
-
-// Close ad modal
-document.getElementById('closeAdModal').addEventListener('click',()=>{document.getElementById('adModal').classList.remove('open')});
-
-// Pay button → open payment modal
-document.getElementById('payAdBtn').addEventListener('click',()=>{
-  if(!selectedAdListing){toast('Please select a listing to promote.');return}
-  document.getElementById('adModal').classList.remove('open');
-  document.getElementById('payAmount').textContent=fmt(selectedAdPlan.price);
-  document.getElementById('payDesc').textContent='Ad promotion — '+selectedAdPlan.hours+' hours';
-  document.getElementById('payModal').classList.add('open');
-});
-
-// Payment method toggle
-document.querySelectorAll('.pay-method').forEach(m=>{
-  m.addEventListener('click',()=>{
-    document.querySelectorAll('.pay-method').forEach(mm=>mm.classList.remove('on'));
-    m.classList.add('on');
-    document.getElementById('momoFields').style.display=m.dataset.method==='momo'?'':'none';
-    document.getElementById('cardFields').style.display=m.dataset.method==='card'?'':'none';
-  });
-});
-
-// Close pay modal
-document.getElementById('closePayModal').addEventListener('click',()=>{document.getElementById('payModal').classList.remove('open')});
-
-// Confirm payment
-document.getElementById('confirmPayBtn').addEventListener('click',()=>{
-  const method=document.querySelector('.pay-method.on').dataset.method;
-  if(method==='momo'&&!document.getElementById('momoNumber').value.trim()){toast('Enter your MoMo number.');return}
-  if(method==='card'&&!document.getElementById('cardNumber').value.trim()){toast('Enter your card number.');return}
-
-  // Show processing
-  document.getElementById('payModal').classList.remove('open');
-  document.getElementById('processingOverlay').classList.add('show');
-
-  // Simulate payment (2seconds)
-  setTimeout(()=>{
-    document.getElementById('processingOverlay').classList.remove('show');
-
-    // Activate promotion
-    const listings=ld(K_LISTINGS,[]);
-    const l=listings.find(l=>l.id===selectedAdListing.id);
-    if(l){
-      l.promoted=true;
-      l.promoExpiry=Date.now()+(selectedAdPlan.hours*3600000);
-      sv(K_LISTINGS,listings); VG.audit('LISTING_SUBMITTED',{model:model,brand:brand});
-    }
-
-    // Show success
-    document.getElementById('successDetails').textContent='Ad active for '+selectedAdPlan.hours+' hours • '+fmt(selectedAdPlan.price)+' paid via '+(method==='momo'?'MoMo':'Card');
-    document.getElementById('successModal').classList.add('open');
-    renderDash();renderBrowse();
-  },2000);
-});
-
-// Success done
-document.getElementById('successDoneBtn').addEventListener('click',()=>{
-  document.getElementById('successModal').classList.remove('open');
-  toast('Your listing is now promoted! ⭐');
-});
-
-// ══════════════════════════════════════════
-// AD POPUP SYSTEM
-// ══════════════════════════════════════════
-function showAdPopup(){
-  const listings=ld(K_LISTINGS,[]);
-  const now=Date.now();
-  // Get active promoted listings that haven't expired
-  const promoted=listings.filter(l=>l.promoted&&l.status==='active'&&(!l.promoExpiry||l.promoExpiry>now));
-  if(!promoted.length)return;
-
-  // Pick a random promoted listing
-  const l=promoted[Math.floor(Math.random()*promoted.length)];
-  const img=(l.images&&l.images[0])||'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=400&auto=format&fit=crop';
-  const waMsg=encodeURIComponent(`Hi ${l.userName}! I saw your promoted ad for the ${l.model}. Is it still available?`);
-
-  document.getElementById('adPopupImg').src=img;
-  document.getElementById('adPopupName').textContent=l.model;
-  document.getElementById('adPopupSpecs').textContent=l.storage+' • '+l.color+' • Grade '+l.grade;
-  document.getElementById('adPopupPrice').textContent=l.price?fmt(l.price):'Swap';
-  document.getElementById('adPopupWa').href=`https://wa.me/233${l.userPhone.replace(/^0/,'')}?text=${waMsg}`;
-  document.getElementById('adPopup').style.display='';
-
-  // Track view
-  l.views=(l.views||0)+1;
-  sv(K_LISTINGS,listings); VG.audit('LISTING_SUBMITTED',{model:model,brand:brand});
-}
-
-// Show popup after3 seconds, then every45 seconds
-setTimeout(showAdPopup,3000);
-setInterval(showAdPopup,45000);
-
-// Close popup
-document.getElementById('closeAdPopup').addEventListener('click',()=>{document.getElementById('adPopup').style.display='none'});
-document.getElementById('adPopupDismiss').addEventListener('click',()=>{document.getElementById('adPopup').style.display='none'});
-
-// ══════════════════════════════════════════
-// CHECK FOR EXPIRED PROMOTIONS
-// ══════════════════════════════════════════
-function checkExpiredPromos(){
-  const listings=ld(K_LISTINGS,[]);
-  const now=Date.now();
-  let changed=false;
-  listings.forEach(l=>{
-    if(l.promoted&&l.promoExpiry&&l.promoExpiry<now){l.promoted=false;changed=true}
-  });
-  if(changed)sv(K_LISTINGS,listings); VG.audit('LISTING_SUBMITTED',{model:model,brand:brand});
-}
-checkExpiredPromos();
-setInterval(checkExpiredPromos,60000);
-
-// ══════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════
-checkAuth();VG.audit('USER_SIGNUP',{name:name,phone:phone});
-
-})();
-</script>
+<script src="assets/js/security.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/db-adapter.js"></script>
+<script src="assets/js/swap-page.js"></script>
 </body>
 </html>
