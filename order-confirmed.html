@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="X-XSS-Protection" content="1; mode=block">
+<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="ga-measurement-id" content="G-TEST1234">
   <meta name="meta-pixel-id" content="1234567890">
@@ -26,6 +30,7 @@
     .tick-anim { animation: pop .5s cubic-bezier(.2,.9,.3,1.3) both; }
     @keyframes pop { 0%{ transform:scale(.4); opacity:0 } 100%{ transform:scale(1); opacity:1 } }
   </style>
+<script src="assets/js/security.js"></script>
 </head>
 <body class="text-[#0b1a38]">
   <header class="w-full border-b border-slate-200 bg-white">

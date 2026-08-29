@@ -135,6 +135,82 @@ Expected results:
 
 Investigate any extra overload. Do not approve based only on a matching function name.
 
+### Platform tables (`20260829_platform_security.sql`)
+
+The swap & sell marketplace, UK/US used board, wholesale portal and partner program
+ship their tables in `20260828_platform_tables.sql` and the security model that
+actually governs them in `20260829_platform_security.sql`. The follow-up must run
+after both `20260811_admin_email_allowlist.sql` (it supplies `is_valmont_admin()`)
+and the platform tables migration:
+
+```bash
+psql "$STAGING_DATABASE_URL" \
+  --set=ON_ERROR_STOP=1 \
+  --single-transaction \
+  --file=supabase/migrations/20260829_platform_security.sql
+```
+
+The follow-up converges the earlier file (drops its TO-less policies, rebuilds any
+platform table whose columns do not match) and **refuses to run if one of those
+tables already holds rows**: it prints which table, how many rows, and which
+columns are missing or must go. Empty the table after exporting it, then re-run.
+
+Then set the identity pepper **once per project** (it salts the Ghana Card
+fingerprint; without it the fingerprint is an unsalted SHA-256 of an
+eleven-character ID, which is brute-forceable if the table is ever dumped):
+
+```sql
+ALTER DATABASE postgres SET valmont.identity_pepper = '<32+ characters from the secret manager>';
+```
+
+Rotation is not free: changing the pepper orphans every existing fingerprint, so
+duplicate detection only resumes after each seller re-submits their card. Record
+the pepper's fingerprint (not its value) in the release record.
+
+```sql
+-- No browser role may mutate a platform table; the only writes are RPCs.
+SELECT table_name, privilege_type, grantee
+FROM information_schema.role_table_grants
+WHERE table_schema = 'public'
+  AND table_name IN ('sellers','swap_listings','swap_leads','used_inventory','wholesale_dealers',
+                     'wholesale_orders','partner_applications','ad_payments','admin_audit_log','write_quota')
+  AND grantee IN ('anon','authenticated')
+  AND privilege_type <> 'SELECT';
+
+-- The console's single entry point and the board must not be callable anonymously.
+SELECT has_function_privilege('anon', 'public.admin(text,jsonb)'::regprocedure, 'EXECUTE') AS anon_admin,
+       has_function_privilege('authenticated', 'public.admin_platform_board(text,integer)'::regprocedure, 'EXECUTE') AS auth_board;
+
+-- Identity material must not be readable in the clear from any read model.
+SELECT count(*) AS leaks_card
+FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+WHERE n.nspname = 'public'
+  AND pg_get_functiondef(p.oid) ILIKE '%ghana_card_hash%'
+  AND p.proname LIKE 'get_%';
+
+-- A promotion cannot be activated without the admin predicate.
+SELECT prosrc LIKE '%is_valmont_admin()%' AS checks_allowlist
+FROM pg_proc WHERE proname = 'admin_set_promotion';
+```
+
+Expected results:
+
+- the grant query returns **zero rows**;
+- `anon_admin = false` and `auth_board = true` (the function re-checks the
+  allowlist, so `true` here only means "callable", not "authorised");
+- `leaks_card = 0`;
+- `checks_allowlist = true`.
+
+Then sign in as the allowlisted admin and confirm `admin-control.html` renders
+non-zero counters. A console that shows `—` everywhere means the board RPC was
+revoked or the allowlist does not match the signed-in email; the page cannot fix
+that, and it deliberately shows nothing rather than demo data.
+
+`npm run test:migration` runs `scripts/test-platform-migration.mjs`, which
+repeats these guarantees against a throwaway Postgres (PGlite), including
+"client-supplied prices are ignored" and "a seller cannot publish their own
+listing". Deploy the same commit only if that suite is green.
+
 ## 4. Staging application verification
 
 Deploy the same commit to a protected staging URL with staging-only credentials, then run:

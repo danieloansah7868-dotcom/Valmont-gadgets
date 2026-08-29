@@ -68,7 +68,18 @@ for (const rule of vercel.headers.filter(rule => rule.source !== '/assets/build/
 const pageNames = [
   'index.html', 'account.html', 'admin.html', 'admin-login.html',
   'admin-drop.html', 'drop.html', 'order-confirmed.html',
+  'swap.html', 'used.html', 'wholesale.html', 'partner.html', 'admin-control.html',
 ];
+// Each platform page must load the reviewed runtime in dependency order from
+// the fingerprinted bundles; a page that quietly drops db-adapter.js would fall
+// back to no data at all, which is exactly how a "working" demo ships broken.
+const platformRuntimes = {
+  'swap.html': ['security', 'supabase-client', 'db-adapter', 'swap-page'],
+  'used.html': ['security', 'supabase-client', 'db-adapter', 'used-page'],
+  'wholesale.html': ['security', 'supabase-client', 'db-adapter', 'wholesale-page'],
+  'partner.html': ['security', 'supabase-client', 'db-adapter', 'partner-page'],
+  'admin-control.html': ['security', 'supabase-client', 'admin-control-page'],
+};
 for (const page of pageNames) {
   const source = await readFile(join(OUT, page), 'utf8');
   const document = new JSDOM(source).window.document;
@@ -88,6 +99,17 @@ for (const page of pageNames) {
     assert.match(ref, /^\/assets\/build\/[a-z0-9.-]+\.[a-f0-9]{16}\.(?:js|css)$/i, `${page}: asset is not fingerprinted: ${ref}`);
   }
   assert.ok(!source.includes('cdn.jsdelivr.net/npm/@supabase'), `${page}: unpinned CDN SDK`);
+  // No credential, secret or raw-identity column may be shipped to a browser.
+  for (const leak of ['valmont2026', 'ADMIN_USER', 'password_hash', 'face_photo_url', 'ghana_card:']) {
+    assert.ok(!source.includes(leak), `${page}: ships ${leak}`);
+  }
+  const runtime = platformRuntimes[page];
+  if (runtime) {
+    const refs = [...document.querySelectorAll('script[src]')];
+    assert.equal(refs.length, runtime.length, `${page}: unexpected script tag count`);
+    const stems = refs.map((node) => (node.getAttribute('src') || '').match(/^\/assets\/build\/([a-z-]+)\.[a-f0-9]{16}\.js$/)?.[1]);
+    assert.deepEqual(stems, runtime, `${page}: runtime scripts missing, extra or out of order`);
+  }
 }
 
 const artifactFiles = await filesBelow(OUT);
@@ -123,6 +145,12 @@ assert.doesNotMatch(serviceWorker, /CACHE_NAME\s*=\s*['"]valmont-v\d+/, 'manual 
 const sitemap = await readFile(join(OUT, 'sitemap.xml'), 'utf8');
 assert.ok(!sitemap.includes('/account.html'), 'noindex account page must not be in sitemap');
 assert.ok(sitemap.includes('/drop.html'), 'public Daily Drop should be in sitemap');
+for (const page of ['used.html', 'swap.html', 'partner.html']) {
+  assert.ok(sitemap.includes(`/${page}`), `${page} is indexable and belongs in the sitemap`);
+}
+for (const page of ['wholesale.html', 'admin-control.html']) {
+  assert.ok(!sitemap.includes(`/${page}`), `${page} is noindex and must not be in the sitemap`);
+}
 assert.match(sitemap, /<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
 
 // A second artifact build with identical inputs must be byte-for-byte stable.

@@ -11,7 +11,11 @@ const ROOT = path.join(__dirname, '..');
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const exists = (f) => fs.existsSync(path.join(ROOT, f));
 
-const PAGES = ['index.html', 'order-confirmed.html', 'account.html', 'drop.html', 'admin.html', 'admin-login.html', 'admin-drop.html'];
+const PAGES = [
+  'index.html', 'order-confirmed.html', 'account.html', 'drop.html',
+  'admin.html', 'admin-login.html', 'admin-drop.html',
+  'swap.html', 'used.html', 'wholesale.html', 'partner.html', 'admin-control.html',
+];
 const findings = [];
 const add = (sev, where, issue, detail = '') => findings.push({ sev, where, issue, detail });
 

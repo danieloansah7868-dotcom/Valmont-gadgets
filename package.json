@@ -14,7 +14,7 @@
     "test": "node scripts/test-valmontpay.mjs",
     "test:browser": "node scripts/test-browser-security.mjs",
     "ci": "npm run typecheck && npm test && npm run test:migration && npm run test:browser && npm run test:password-reset && npm run build && npm run verify",
-    "test:migration": "node scripts/test-production-migration.mjs",
+    "test:migration": "node scripts/test-production-migration.mjs && node scripts/test-platform-migration.mjs",
     "test:google": "node scripts/test-google-oauth.mjs",
     "test:password-reset": "node scripts/test-customer-password-reset.mjs && node scripts/test-admin-password-reset.mjs",
     "test:integration": "node scripts/integration-orders.mjs",

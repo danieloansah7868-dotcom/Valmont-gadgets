@@ -31,6 +31,12 @@ const urls = [
     changefreq: 'weekly',
   })),
   { loc: `${SITE}/drop.html`, priority: '0.6', changefreq: 'daily' },
+  // Platform pages. `wholesale.html` and `admin-control.html` are deliberately
+  // absent: both carry noindex, and the price list behind the dealer login is
+  // not something a sitemap should advertise to a crawler.
+  { loc: `${SITE}/used.html`, priority: '0.9', changefreq: 'daily' },
+  { loc: `${SITE}/swap.html`, priority: '0.8', changefreq: 'weekly' },
+  { loc: `${SITE}/partner.html`, priority: '0.6', changefreq: 'monthly' },
 ];
 
 const xml =

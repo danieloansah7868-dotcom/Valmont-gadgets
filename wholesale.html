@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Wholesale Portal — Valmont Gadgets</title>
+<meta name="description" content="Valmont Gadgets Wholesale Portal. Bulk phone prices for verified dealers. iPhones, Samsung, laptops at wholesale rates in Ghana.">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="X-XSS-Protection" content="1; mode=block">
+<link rel="canonical" href="https://valmontgadgets.com/wholesale.html">
+<link rel="icon" href="favicon.svg">
+<link rel="stylesheet" href="tailwind.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0b1a38;--navy2:#122649;--orange:#ff8c00;--green:#047857;--blue:#1e40af;--purple:#7c3aed;--gold:#b45309}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#f1f1f2;color:#333;min-height:100vh}
+
+/* ── Login ── */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,var(--navy),var(--navy2))}
+.login-card{background:#fff;border-radius:16px;padding:32px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.login-card h1{font-size:20px;font-weight:900;color:var(--navy);text-align:center;margin-bottom:4px}
+.login-card .sub{text-align:center;font-size:12px;color:#6b7280;margin-bottom:24px}
+.login-card .lock{text-align:center;font-size:40px;margin-bottom:12px}
+
+/* ── Layout ── */
+.ws-layout{display:flex;min-height:100vh}
+.sidebar{width:240px;background:var(--navy);color:#fff;position:fixed;top:0;bottom:0;left:0;overflow-y:auto;z-index:50;transition:transform .3s}
+.sidebar .brand{padding:20px 16px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:10px}
+.sidebar .brand img{height:32px;border-radius:8px}
+.sidebar .brand span{font-size:13px;font-weight:800;color:var(--orange);letter-spacing:.05em}
+.sidebar nav{padding:12px 8px}
+.sidebar .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;color:rgba(255,255,255,.7);cursor:pointer;transition:all .15s;margin-bottom:2px;border:0;background:0;width:100%;text-align:left}
+.sidebar .nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.sidebar .nav-item.active{background:var(--orange);color:#fff;font-weight:700}
+.sidebar .nav-item .icon{font-size:16px;width:22px;text-align:center}
+.sidebar .nav-section{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.35);padding:16px 12px 6px}
+
+.main{flex:1;margin-left:240px;padding:0}
+.topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:40}
+.topbar h2{font-size:16px;font-weight:900;color:var(--navy)}
+.content{padding:24px}
+
+/* ── Cards ── */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:12px;padding:18px;border:1px solid #e5e7eb}
+.stat-card .label{font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em}
+.stat-card .value{font-size:28px;font-weight:900;color:var(--navy);margin:4px 0}
+.stat-card .change{font-size:11px;font-weight:700}.stat-card .change.up{color:var(--green)}.stat-card .change.down{color:#dc2626}
+
+/* ── Table ── */
+.table-card{background:#fff;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden;margin-bottom:20px}
+.table-card .hd{padding:16px 18px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center}
+.table-card .hd h3{font-size:14px;font-weight:800;color:var(--navy)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 14px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;border-bottom:1px solid #e5e7eb;background:#f9fafb}
+td{padding:10px 14px;font-size:12px;font-weight:600;color:#374151;border-bottom:1px solid #f3f4f6}
+tr:hover{background:#f9fafb}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+.badge-green{background:#dcfce7;color:#166534}
+.badge-red{background:#fecaca;color:#991b1b}
+.badge-yellow{background:#fef9c3;color:#854d0e}
+.badge-blue{background:#dbeafe;color:#1e40af}
+.badge-purple{background:#f3e8ff;color:#6b21a8}
+.badge-gold{background:#fef3c7;color:#92400e}
+
+/* ── Buttons ── */
+.btn{padding:8px 14px;border:0;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
+.btn-primary{background:var(--orange);color:#fff}.btn-primary:hover{background:#e67e00}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:#065f46}
+.btn-red{background:#dc2626;color:#fff}.btn-red:hover{background:#b91c1c}
+.btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{background:#1e3a8a}
+.btn-gold{background:var(--gold);color:#fff}.btn-gold:hover{background:#92400e}
+.btn-outline{background:#fff;color:#374151;border:1.5px solid #d1d5db}.btn-outline:hover{border-color:var(--orange);color:var(--orange)}
+.btn-sm{padding:5px 10px;font-size:10px}
+
+/* ── Forms ── */
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.fg input,.fg select,.fg textarea{width:100%;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;font-family:inherit;outline:none;transition:border-color .2s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--orange)}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── Pricing Tiers ── */
+.tier-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:12px 0}
+.tier-card{background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px;text-align:center}
+.tier-card .qty{font-size:11px;font-weight:800;color:var(--orange);text-transform:uppercase}
+.tier-card .price{font-size:18px;font-weight:900;color:var(--navy);margin:4px 0}
+.tier-card .save{font-size:10px;color:var(--green);font-weight:700}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-hd{padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:2;border-radius:16px 16px 0 0}
+.modal-hd h3{font-size:15px;font-weight:900;color:var(--navy)}
+.modal-hd .close{width:30px;height:30px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.modal-bd{padding:20px}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:14px 20px;border-radius:10px;font-size:13px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:200;opacity:0;transform:translateY(20px);transition:all .3s;max-width:340px;border:1px solid rgba(255,140,0,.4)}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* ── Wholesale Price Highlight ── */
+.ws-price{color:var(--green);font-weight:900}
+.retail-price{color:#9ca3af;text-decoration:line-through;font-weight:600;font-size:11px}
+.save-badge{background:#dcfce7;color:#166534;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);width:280px}.sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .fg-row{grid-template-columns:1fr}
+  .content{padding:16px}
+  .tier-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- LOGIN -->
+<!-- ══════════════════════════════════════════ -->
+<div id="loginScreen" class="login-wrap">
+  <div class="login-card">
+    <div class="lock">📦</div>
+    <h1>Valmont Wholesale</h1>
+    <p class="sub">Bulk phone prices for verified dealers only</p>
+    <div class="fg"><label for="wsEmail">Email</label><input id="wsEmail" type="email" autocomplete="email" placeholder="you@yourshop.com"></div>
+    <div class="fg"><label for="wsPass">Password</label><input id="wsPass" type="password" autocomplete="current-password" placeholder="Your Valmont password"></div>
+    <p id="loginErr" style="color:#dc2626;font-size:12px;font-weight:700;min-height:18px;margin-bottom:10px" role="alert" aria-live="polite"></p>
+    <button class="btn btn-primary" style="width:100%;padding:12px;font-size:13px" id="loginBtn">Sign In to Wholesale</button>
+    <div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb">
+      <p style="font-size:12px;color:#6b7280;margin-bottom:8px">No dealer account yet?</p>
+      <button type="button" class="btn btn-outline" style="width:100%;justify-content:center;padding:10px;font-size:12px" id="openApplyBtn">Apply for wholesale access</button>
+      <p style="font-size:11px;color:#9ca3af;margin-top:8px">Need a login first? <a href="account.html" style="color:#1e40af;font-weight:800">Create a free Valmont account</a></p>
+    </div>
+
+    <!-- Dealer application. The database ties it to the signed-in user id, so
+         an approval can never be claimed by whoever typed the form. -->
+    <div id="wsApplyPanel" hidden style="margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:left">
+      <p style="font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:12px">
+        Send us your shop details. Once our purchasing team approves the account,
+        dealer prices and volume tiers are released to this login by the database
+        &mdash; not by this page.
+      </p>
+      <div class="fg"><label for="waBusiness">Business / shop name</label><input id="waBusiness" maxlength="90" placeholder="e.g. Kejetia Mobile Hub"></div>
+      <div class="fg-row">
+        <div class="fg"><label for="waContact">Contact name</label><input id="waContact" maxlength="80" placeholder="e.g. Ama Mensah"></div>
+        <div class="fg"><label for="waPhone">Phone</label><input id="waPhone" type="tel" inputmode="tel" maxlength="20" placeholder="024 123 4567"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label for="waEmail">Email (optional)</label><input id="waEmail" type="email" maxlength="120" placeholder="you@yourshop.com"></div>
+        <div class="fg"><label for="waCity">City</label><input id="waCity" maxlength="60" placeholder="Accra"></div>
+      </div>
+      <p id="applyErr" style="color:#dc2626;font-size:12px;font-weight:700;min-height:18px;margin-bottom:10px" role="alert" aria-live="polite"></p>
+      <button type="button" class="btn btn-green" style="width:100%;justify-content:center;padding:12px;font-size:13px" id="applySubmitBtn">Send dealer application</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- WHOLESALE DASHBOARD -->
+<!-- ══════════════════════════════════════════ -->
+<div id="wsDashboard" class="ws-layout" style="display:none">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <img src="favicon.png" alt="Valmont Gadgets logo" width="28" height="28" style="border-radius:8px">
+      <span>WHOLESALE</span>
+    </div>
+    <nav>
+      <div class="nav-section">Overview</div>
+      <button class="nav-item active" data-page="dashboard"><span class="icon">📊</span> Dashboard</button>
+      <button class="nav-item" data-page="catalog"><span class="icon">📱</span> Wholesale Catalog</button>
+      <button class="nav-item" data-page="orders"><span class="icon">📦</span> My Orders</button>
+
+      <div class="nav-section">Tools</div>
+      <button class="nav-item" data-page="calculator"><span class="icon">🧮</span> Profit Calculator</button>
+      <button class="nav-item" data-page="pricing"><span class="icon">💰</span> Price List</button>
+
+      <div class="nav-section">Account</div>
+      <button class="nav-item" data-page="profile"><span class="icon">👤</span> My Profile</button>
+      <button class="nav-item" id="logoutBtn" style="color:#f87171"><span class="icon">🚪</span> Logout</button>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button id="menuToggle" style="display:none;background:0;border:0;font-size:20px;cursor:pointer">☰</button>
+        <h2 id="pageTitle">Dashboard</h2>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span style="font-size:11px;color:#6b7280;font-weight:600" id="dealerName">Dealer</span>
+        <span class="badge badge-gold">⭐ Wholesale</span>
+        <a href="/" class="btn btn-outline btn-sm" target="_blank">View Store</a>
+      </div>
+    </div>
+    <div class="content" id="pageContent"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-hd"><h3 id="modalTitle">Modal</h3><button class="close" id="closeModal">×</button></div>
+    <div class="modal-bd" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><span id="toastMsg">Done!</span></div>
+
+<script src="assets/js/security.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/db-adapter.js"></script>
+<script src="assets/js/wholesale-page.js"></script>
+</body>
+</html>

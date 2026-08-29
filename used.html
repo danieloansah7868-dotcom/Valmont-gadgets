@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>UK & US Used Phones — Daily Stock | Valmont Gadgets</title>
+<meta name="description" content="Shop graded UK Used and US Used phones at Valmont Gadgets. Daily refreshed stock, transparent condition grading, sold-out tracking. iPhones, Samsung, and more.">
+<link rel="canonical" href="https://valmontgadgets.com/used.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="UK & US Used Phones — Daily Stock | Valmont Gadgets">
+<meta property="og:description" content="Graded UK & US Used phones. Daily refreshed stock. Transparent condition grading. Sold-out tracking.">
+<meta property="og:url" content="https://valmontgadgets.com/used.html">
+<meta property="og:image" content="https://valmontgadgets.com/uploads/clean_15_pro.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="X-XSS-Protection" content="1; mode=block">
+<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+<link rel="icon" href="favicon.svg">
+<link rel="stylesheet" href="tailwind.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0b1a38; --navy2: #122649; --orange: #ff8c00;
+    --ink: #f8fafc; --muted: #94a3b8; --gold: #ffd54a;
+    --uk-blue: #1e40af; --us-green: #047857;
+    --sold-red: #dc2626;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f1f1f2; color: #333; min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .used-header {
+    background: linear-gradient(135deg, var(--navy), var(--navy2));
+    color: var(--ink); padding: 36px 16px 28px; text-align: center;
+  }
+  .used-header .brand { font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--orange); font-weight: 800; }
+  .used-header h1 { font-size: clamp(26px, 7vw, 40px); margin: 10px 0 6px; font-weight: 900; }
+  .used-header .sub { color: var(--muted); font-size: 14px; max-width: 560px; margin: 0 auto; line-height: 1.6; }
+
+  /* ── Stats Bar ── */
+  .stats-bar {
+    max-width: 960px; margin: -16px auto 0; padding: 0 16px; position: relative; z-index: 2;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;
+  }
+  .stat-card {
+    background: #fff; border-radius: 12px; padding: 16px; text-align: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,.08); border: 1px solid #e5e7eb;
+  }
+  .stat-card .num { font-size: 28px; font-weight: 900; color: var(--navy); }
+  .stat-card .label { font-size: 11px; color: #6b7280; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+
+  /* ── Tab Bar ── */
+  .tab-section { max-width: 960px; margin: 24px auto 0; padding: 0 16px; }
+  .tab-bar {
+    display: flex; gap: 4px; background: #fff; border-radius: 12px; padding: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06); border: 1px solid #e5e7eb;
+  }
+  .tab-btn {
+    flex: 1; padding: 12px 8px; border: 0; border-radius: 10px; background: transparent;
+    font-size: 13px; font-weight: 700; color: #6b7280; cursor: pointer; transition: all .2s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .tab-btn.active { background: var(--navy); color: #fff; }
+  .tab-btn .count {
+    background: rgba(255,255,255,.2); padding: 1px 7px; border-radius: 999px;
+    font-size: 10px; font-weight: 800;
+  }
+  .tab-btn.active .count { background: var(--orange); color: #fff; }
+
+  /* ── Filter Bar ── */
+  .filter-bar {
+    max-width: 960px; margin: 16px auto 0; padding: 0 16px;
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .filter-chip {
+    padding: 7px 14px; border: 1.5px solid #d1d5db; border-radius: 999px;
+    background: #fff; font-size: 12px; font-weight: 700; color: #374151;
+    cursor: pointer; transition: all .15s; white-space: nowrap;
+  }
+  .filter-chip:hover { border-color: var(--orange); color: var(--orange); }
+  .filter-chip.active { background: var(--orange); color: #fff; border-color: var(--orange); }
+
+  /* ── Product Grid ── */
+  .grid-section { max-width: 960px; margin: 16px auto; padding: 0 16px; }
+  .product-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px;
+  }
+
+  /* ── Product Card ── */
+  .prod-card {
+    background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 10px rgba(0,0,0,.05); transition: transform .2s, box-shadow .2s;
+    position: relative;
+  }
+  .prod-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.1); }
+  .prod-card.sold { opacity: .55; pointer-events: none; }
+  .prod-card.sold .prod-img::after {
+    content: 'SOLD'; position: absolute; inset: 0; background: rgba(220,38,38,.75);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; font-weight: 900; color: #fff; letter-spacing: .2em;
+    transform: rotate(-12deg);
+  }
+
+  .prod-img {
+    height: 170px; background: #f9fafb; display: flex; align-items: center;
+    justify-content: center; overflow: hidden; position: relative;
+  }
+  .prod-img img { max-height: 80%; max-width: 80%; object-fit: contain; transition: transform .3s; }
+  .prod-card:hover .prod-img img { transform: scale(1.05); }
+
+  /* ── Image Gallery ── */
+  .img-gallery { position: relative; width: 100%; height: 100%; }
+  .img-gallery img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity .3s; padding: 10px; }
+  .img-gallery img.hidden { opacity: 0; pointer-events: none; }
+  .img-dots {
+    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 5px; z-index: 5;
+  }
+  .img-dot {
+    width: 7px; height: 7px; border-radius: 999px; background: rgba(255,255,255,.5);
+    border: 1.5px solid rgba(0,0,0,.2); cursor: pointer; transition: all .2s;
+  }
+  .img-dot.active { background: var(--orange); border-color: var(--orange); transform: scale(1.2); }
+  .img-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 5;
+    width: 26px; height: 26px; border-radius: 999px; background: rgba(255,255,255,.85);
+    border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 12px; font-weight: 900; color: #374151;
+    transition: all .15s; box-shadow: 0 2px 6px rgba(0,0,0,.1);
+  }
+  .img-arrow:hover { background: var(--orange); color: #fff; border-color: var(--orange); }
+  .img-arrow.left { left: 6px; }
+  .img-arrow.right { right: 6px; }
+  .img-counter {
+    position: absolute; top: 8px; right: 8px; z-index: 5;
+    background: rgba(0,0,0,.55); color: #fff; font-size: 9px; font-weight: 800;
+    padding: 2px 7px; border-radius: 999px;
+  }
+
+  .prod-badges {
+    position: absolute; top: 8px; left: 8px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .badge {
+    padding: 3px 8px; border-radius: 6px; font-size: 9px; font-weight: 800;
+    letter-spacing: .04em; text-transform: uppercase; display: inline-flex;
+    align-items: center; gap: 3px;
+  }
+  .badge-uk { background: #dbeafe; color: var(--uk-blue); }
+  .badge-us { background: #d1fae5; color: var(--us-green); }
+  .badge-grade-a { background: #dcfce7; color: #166534; }
+  .badge-grade-b { background: #dbeafe; color: #1e40af; }
+  .badge-grade-c { background: #fef9c3; color: #854d0e; }
+  .badge-sold { background: #fecaca; color: var(--sold-red); }
+  .badge-new-arrival { background: #fef3c7; color: #92400e; }
+
+  .prod-body { padding: 14px; }
+  .prod-body h3 { font-size: 13px; font-weight: 800; color: var(--navy); margin: 0 0 4px; line-height: 1.3; }
+  .prod-specs { font-size: 11px; color: #9ca3af; margin-bottom: 6px; line-height: 1.4; }
+  .prod-battery { font-size: 11px; color: #6b7280; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
+  .prod-battery .bar {
+    flex: 1; height: 5px; background: #e5e7eb; border-radius: 99px; overflow: hidden; max-width: 60px;
+  }
+  .prod-battery .bar-fill { height: 100%; border-radius: 99px; }
+  .bh-high { background: #22c55e; }
+  .bh-mid { background: #f59e0b; }
+  .bh-low { background: #ef4444; }
+
+  .prod-price { display: flex; align-items: baseline; gap: 6px; margin-bottom: 10px; }
+  .prod-price .current { font-size: 16px; font-weight: 900; color: var(--navy); }
+  .prod-price .old { font-size: 12px; color: #9ca3af; text-decoration: line-through; font-weight: 600; }
+  .prod-price .pct { font-size: 10px; font-weight: 800; color: var(--orange); background: #fff7ed; padding: 1px 6px; border-radius: 4px; }
+
+  .prod-actions { display: flex; gap: 6px; }
+  .btn-buy {
+    flex: 1; padding: 10px; border: 0; border-radius: 8px; font-size: 12px;
+    font-weight: 800; cursor: pointer; transition: all .15s; text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .btn-buy.primary { background: var(--orange); color: #fff; }
+  .btn-buy.primary:hover { background: #e67e00; }
+  .btn-buy.wa { background: #25d366; color: #fff; }
+  .btn-buy.wa:hover { background: #1da851; }
+  .btn-buy.disabled { background: #e5e7eb; color: #9ca3af; cursor: default; }
+
+  .prod-footer {
+    padding: 8px 14px; background: #f9fafb; border-top: 1px solid #f3f4f6;
+    font-size: 10px; color: #9ca3af; font-weight: 600;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  /* ── Condition Details ── */
+  .condition-details {
+    background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 8px;
+    padding: 8px 10px; margin-bottom: 10px;
+  }
+  .cond-row {
+    font-size: 10px; color: #6b7280; padding: 2px 0; display: flex; gap: 4px; line-height: 1.4;
+  }
+  .cond-label {
+    font-weight: 800; color: #374151; min-width: 52px; text-transform: uppercase; letter-spacing: .03em;
+  }
+
+  /* ── Empty State ── */
+  .empty-state { text-align: center; padding: 48px 16px; }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state h3 { font-size: 16px; font-weight: 800; color: var(--navy); margin: 0 0 6px; }
+  .empty-state p { font-size: 13px; color: #6b7280; max-width: 320px; margin: 0 auto; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
+    background: var(--navy); color: #fff; padding: 14px 24px; border-radius: 10px;
+    font-size: 13px; font-weight: 700; box-shadow: 0 8px 24px rgba(0,0,0,.3);
+    z-index: 100; opacity: 0; transition: all .4s; display: flex; align-items: center; gap: 10px;
+    border: 1px solid rgba(255,140,0,.4);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+  /* ── Board status line (loading / failure / retry) ── */
+  .board-status { font-size: 12px; font-weight: 700; color: #6b7280; margin: 0 0 12px; min-height: 18px; }
+  .board-status.err { color: #dc2626; }
+  .board-status button {
+    font: inherit; font-weight: 800; color: var(--orange); background: none; border: 0;
+    padding: 0; margin-left: 6px; cursor: pointer; text-decoration: underline;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .prod-img { height: 140px; }
+    .prod-body { padding: 10px; }
+    .prod-body h3 { font-size: 12px; }
+    .prod-price .current { font-size: 14px; }
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+<link rel="stylesheet" href="assets/css/community.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="used-header">
+  <a href="/" style="text-decoration:none"><div class="brand">Valmont Gadgets</div></a>
+  <h1>UK & US Used Phones</h1>
+  <p class="sub">Graded, inspected, and ready to go. Daily refreshed stock — when it's gone, it's gone. New arrivals every day.</p>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-card">
+    <div class="num" id="statAvailable" style="color:#047857">0</div>
+    <div class="label">Available now</div>
+  </div>
+  <div class="stat-card">
+    <div class="num" id="statNew" style="color:var(--orange)">0</div>
+    <div class="label">New this week</div>
+  </div>
+  <div class="stat-card">
+    <div class="num" id="statRefresh">—</div>
+    <div class="label">Last stock update</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-section">
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="all">All <span class="count" id="countAll">0</span></button>
+    <button class="tab-btn" data-tab="uk">🇬🇧 UK Used <span class="count" id="countUK">0</span></button>
+    <button class="tab-btn" data-tab="us">🇺🇸 US Used <span class="count" id="countUS">0</span></button>
+  </div>
+</div>
+
+<!-- FILTERS -->
+<div class="filter-bar" style="flex-direction:column;align-items:stretch;gap:10px">
+  <!-- Brand row -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;min-width:50px">Brand:</span>
+    <button class="filter-chip active" data-filter="brand" data-val="all">All</button>
+    <button class="filter-chip" data-filter="brand" data-val="apple">Apple</button>
+    <button class="filter-chip" data-filter="brand" data-val="samsung">Samsung</button>
+    <button class="filter-chip" data-filter="brand" data-val="google">Google</button>
+    <button class="filter-chip" data-filter="brand" data-val="oneplus">OnePlus</button>
+    <button class="filter-chip" data-filter="brand" data-val="xiaomi">Xiaomi</button>
+  </div>
+  <!-- Storage row -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;min-width:50px">Storage:</span>
+    <button class="filter-chip active" data-filter="storage" data-val="all">All</button>
+    <button class="filter-chip" data-filter="storage" data-val="64">64GB</button>
+    <button class="filter-chip" data-filter="storage" data-val="128">128GB</button>
+    <button class="filter-chip" data-filter="storage" data-val="256">256GB</button>
+    <button class="filter-chip" data-filter="storage" data-val="512">512GB</button>
+    <button class="filter-chip" data-filter="storage" data-val="1024">1TB</button>
+  </div>
+  <!-- Battery row -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;min-width:50px">Battery:</span>
+    <button class="filter-chip active" data-filter="battery" data-val="all">All</button>
+    <button class="filter-chip" data-filter="battery" data-val="90">90%+</button>
+    <button class="filter-chip" data-filter="battery" data-val="80">80%+</button>
+    <button class="filter-chip" data-filter="battery" data-val="70">70%+</button>
+  </div>
+  <!-- Condition row -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <span style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;min-width:50px">Condition:</span>
+    <button class="filter-chip active" data-filter="grade" data-val="all">All Grades</button>
+    <button class="filter-chip" data-filter="grade" data-val="A">🟢 Grade A</button>
+    <button class="filter-chip" data-filter="grade" data-val="B">🔵 Grade B</button>
+    <button class="filter-chip" data-filter="grade" data-val="C">🟡 Grade C</button>
+  </div>
+</div>
+
+<!-- PRODUCT GRID -->
+<div class="grid-section">
+  <p class="board-status" id="boardStatus" role="status" aria-live="polite">Loading today&rsquo;s board&hellip;</p>
+  <div class="product-grid" id="usedGrid">
+    <!-- Populated via JS -->
+  </div>
+  <div id="loadMoreWrap" style="text-align:center;padding:16px;display:none"><button id="loadMoreBtn" class="btn btn-primary" style="padding:12px 32px;font-size:13px">Load More Phones</button></div>
+      <div class="empty-state" id="emptyState" style="display:none">
+    <div class="icon">📦</div>
+    <h3>No matching phones today</h3>
+    <p>The board only shows units our team has physically inspected. New arrivals land every morning.</p>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span>✅</span>
+  <span id="toastMsg">Noted!</span>
+</div>
+
+<!-- FOOTER -->
+<footer class="vg-footer vg-footer--panel" aria-label="Footer">
+  <div class="vg-footer-inner">
+    <a href="https://whatsapp.com/channel/0029Vb9DIKG8V0terg2V4K2Y" target="_blank" rel="noopener" class="vg-community-banner">
+      <span class="vg-community-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L3 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-93.8-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 89.4-184.5 184.6-184.5 46 0 89.3 18 121.9 50.6 32.6 32.5 50.5 75.9 50.5 122.1-.1 101.8-94.9 184.5-184.6 184.5zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg></span>
+      <span class="vg-community-text">
+        <span class="vg-community-title">Join our WhatsApp Channel</span>
+        <span class="vg-community-sub">Restock alerts & exclusive deals — straight to your WhatsApp.</span>
+      </span>
+      <span class="vg-community-cta">Follow Channel&#160;&#8594;</span>
+    </a>
+    <div class="vg-footer-grid">
+      <div>
+        <p class="vg-foot-brand">Valmont Gadgets</p>
+        <p class="vg-foot-text">Ghana's trusted marketplace for certified smartphones, executive laptops, and premium accessories.</p>
+        <div class="vg-social-row">
+          <a href="https://whatsapp.com/channel/0029Vb9DIKG8V0terg2V4K2Y" target="_blank" rel="noopener" class="vg-social-btn vg-social-btn--whatsapp" aria-label="WhatsApp"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L3 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-93.8-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 89.4-184.5 184.6-184.5 46 0 89.3 18 121.9 50.6 32.6 32.5 50.5 75.9 50.5 122.1-.1 101.8-94.9 184.5-184.6 184.5zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg></a>
+          <a href="https://www.facebook.com/share/1TA1PNVaCP/" target="_blank" rel="noopener" class="vg-social-btn vg-social-btn--facebook" aria-label="Facebook"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953h-1.513c-1.492 0-1.957.925-1.957 1.874v2.25h3.328l-.532 3.469h-2.796v8.386C19.612 23.027 24 18.061 24 12.073z"/></svg></a>
+          <a href="https://www.tiktok.com/@valmont.group" target="_blank" rel="noopener" class="vg-social-btn vg-social-btn--tiktok" aria-label="TikTok"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
+        </div>
+      </div>
+      <div>
+        <p class="vg-foot-title">Explore</p>
+        <ul class="vg-foot-links">
+          <li><a href="/">Shop Home (Inbox)</a></li>
+          <li><a href="used.html">UK & US Used</a></li>
+          <li><a href="swap.html">Phone Swap</a></li>
+          <li><a href="drop.html">Daily Drop</a></li>
+          <li><a href="account.html">My Account</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="vg-foot-title">Contact</p>
+        <ul class="vg-contact-list">
+          <li><span class="vg-contact-ic" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg></span><a href="mailto:support@valmontdata.com" class="vg-contact-mail">support@valmontdata.com</a></li>
+          <li><span class="vg-contact-ic" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg></span><span>Accra, Ghana</span></li>
+          <li><span class="vg-contact-ic" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></span><span>Mon - Sun: 8AM - 9PM</span></li>
+        </ul>
+        <a href="https://wa.me/233542451578" target="_blank" rel="noopener" class="vg-contact-wa">💬 WhatsApp Support →</a>
+      </div>
+    </div>
+    <div class="vg-footer-bottom">
+      <span>© 2026 Valmont Gadgets — All rights reserved</span>
+      <span>Accra, Ghana</span>
+    </div>
+  </div>
+</footer>
+
+<a href="https://wa.me/233542451578" target="_blank" rel="noopener" class="whatsapp-float" aria-label="WhatsApp">
+  <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 fill-current" viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L3 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-93.8-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 89.4-184.5 184.6-184.5 46 0 89.3 18 121.9 50.6 32.6 32.5 50.5 75.9 50.5 122.1-.1 101.8-94.9 184.5-184.6 184.5zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
+  <span class="whatsapp-float-dot" aria-hidden="true">1</span>
+</a>
+
+<script src="assets/js/security.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/db-adapter.js"></script>
+<script src="assets/js/used-page.js"></script>
+</body>
+</html>

@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Gadget Swap & Sell — Trade Phones, Laptops, Tablets & More | Valmont Gadgets</title>
+<meta name="description" content="Swap or sell your gadgets at Valmont Gadgets. Phones, laptops, tablets, gaming consoles, audio gear, accessories. Free listings, verified sellers, fraud protection.">
+<link rel="canonical" href="https://valmontgadgets.com/swap.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Phone Swap & Sell | Valmont Gadgets">
+<meta property="og:description" content="Swap or sell your phone. Free listings, verified sellers, fraud protection.">
+<meta property="og:url" content="https://valmontgadgets.com/swap.html">
+<meta property="og:image" content="https://valmontgadgets.com/uploads/clean_15_pro.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="X-XSS-Protection" content="1; mode=block">
+<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+<meta http-equiv="Permissions-Policy" content="camera=(self), microphone=(), geolocation=()">
+<link rel="icon" href="favicon.svg">
+<link rel="stylesheet" href="tailwind.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#0b1a38;--navy2:#122649;--orange:#ff8c00;--ink:#f8fafc;--muted:#94a3b8;--gold:#ffd54a;--green:#047857;--red:#dc2626;--blue:#1e40af}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f1f2;color:#333;min-height:100vh}
+
+  /* ── Header ── */
+  .hero{background:linear-gradient(135deg,var(--navy),var(--navy2));color:var(--ink);padding:40px 16px 32px;text-align:center}
+  .hero .brand{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--orange);font-weight:800}
+  .hero h1{font-size:clamp(28px,7vw,42px);margin:10px 0 8px;font-weight:900}
+  .hero .sub{color:var(--muted);font-size:14px;max-width:560px;margin:0 auto;line-height:1.6}
+  .hero-stats{display:flex;gap:16px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+  .hero-stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 18px;text-align:center}
+  .hero-stat .n{font-size:22px;font-weight:900;color:var(--orange)}
+  .hero-stat .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+
+  /* ── Promoted Banner ── */
+  .promo-section{max-width:960px;margin:-14px auto 0;padding:0 16px;position:relative;z-index:2}
+  .promo-card{background:linear-gradient(135deg,#fff7ed,#fef3c7);border:2px solid var(--orange);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 20px rgba(255,140,0,.15);overflow-x:auto}
+  .promo-badge{background:var(--orange);color:#fff;font-size:9px;font-weight:900;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+  .promo-card .promo-items{display:flex;gap:12px;overflow-x:auto;flex:1}
+  .promo-item{background:#fff;border-radius:10px;padding:10px;min-width:180px;border:1px solid #e5e7eb;display:flex;gap:10px;align-items:center;cursor:pointer;transition:all .15s}
+  .promo-item:hover{box-shadow:0 4px 12px rgba(0,0,0,.1);transform:translateY(-1px)}
+  .promo-item img{width:48px;height:48px;object-fit:contain;border-radius:8px;background:#f9fafb}
+  .promo-item .pi-name{font-size:12px;font-weight:800;color:var(--navy);line-height:1.3}
+  .promo-item .pi-price{font-size:11px;color:var(--orange);font-weight:800}
+  .promo-item .pi-type{font-size:9px;color:#6b7280;font-weight:600}
+
+  /* ── How It Works ── */
+  .how-section{max-width:960px;margin:24px auto 0;padding:0 16px}
+  .how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+  .how-card{background:#fff;border-radius:12px;padding:20px 14px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.05);border:1px solid #e5e7eb}
+  .how-card .ic{font-size:28px;margin-bottom:8px}
+  .how-card h3{font-size:13px;font-weight:800;color:var(--navy);margin:0 0 4px}
+  .how-card p{font-size:11px;color:#6b7280;margin:0;line-height:1.5}
+
+  /* ── Tabs ── */
+  .tab-section{max-width:960px;margin:24px auto 0;padding:0 16px}
+  .tab-bar{display:flex;gap:4px;background:#fff;border-radius:12px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1px solid #e5e7eb}
+  .tab-btn{flex:1;padding:11px 6px;border:0;border-radius:10px;background:transparent;font-size:12px;font-weight:700;color:#6b7280;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px}
+  .tab-btn.active{background:var(--navy);color:#fff}
+  .tab-btn .cnt{background:rgba(255,255,255,.2);padding:1px 6px;border-radius:999px;font-size:9px;font-weight:800}
+  .tab-btn.active .cnt{background:var(--orange);color:#fff}
+
+  /* ── Filters ── */
+  .filter-bar{max-width:960px;margin:14px auto 0;padding:0 16px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .filter-bar label{font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;min-width:44px}
+  .fc{padding:6px 12px;border:1.5px solid #d1d5db;border-radius:999px;background:#fff;font-size:11px;font-weight:700;color:#374151;cursor:pointer;transition:all .15s;white-space:nowrap}
+  .fc:hover{border-color:var(--orange);color:var(--orange)}
+  .fc.on{background:var(--orange);color:#fff;border-color:var(--orange)}
+
+  /* ── Grid ── */
+  .grid-section{max-width:960px;margin:14px auto;padding:0 16px}
+  .swap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+
+  /* ── Card ── */
+  .sc{background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;box-shadow:0 2px 10px rgba(0,0,0,.05);transition:transform .2s,box-shadow .2s;position:relative}
+  .sc:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.1)}
+  .sc.promoted{border-color:var(--orange);box-shadow:0 0 0 1px var(--orange),0 4px 16px rgba(255,140,0,.12)}
+  .sc-img{height:180px;background:#f9fafb;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+  .sc-img img{max-height:80%;max-width:80%;object-fit:contain;transition:transform .3s}
+  .sc:hover .sc-img img{transform:scale(1.04)}
+  .sc-badges{position:absolute;top:8px;left:8px;display:flex;flex-direction:column;gap:4px;z-index:3}
+  .bdg{padding:3px 8px;border-radius:6px;font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;gap:3px}
+  .bdg-swap{background:#dbeafe;color:var(--blue)}
+  .bdg-sell{background:#d1fae5;color:var(--green)}
+  .bdg-promo{background:#fef3c7;color:#92400e}
+  .bdg-verified{background:#dcfce7;color:#166534}
+  .bdg-grade-a{background:#dcfce7;color:#166534}
+  .bdg-grade-b{background:#dbeafe;color:var(--blue)}
+  .bdg-grade-c{background:#fef9c3;color:#854d0e}
+  .bdg-new{background:#fef3c7;color:#92400e}
+
+  .sc-body{padding:14px}
+  .sc-body h3{font-size:13px;font-weight:800;color:var(--navy);margin:0 0 3px;line-height:1.3}
+  .sc-meta{font-size:11px;color:#9ca3af;margin-bottom:6px}
+  .sc-want{font-size:12px;color:#374151;margin-bottom:8px;line-height:1.4}
+  .sc-want b{color:var(--orange)}
+  .sc-cond{background:#f9fafb;border:1px solid #f3f4f6;border-radius:8px;padding:8px 10px;margin-bottom:10px}
+  .sc-cond .cr{font-size:10px;color:#6b7280;padding:1px 0;display:flex;gap:4px;line-height:1.4}
+  .sc-cond .cl{font-weight:800;color:#374151;min-width:48px;text-transform:uppercase}
+  .sc-price{display:flex;align-items:baseline;gap:6px;margin-bottom:10px}
+  .sc-price .cur{font-size:16px;font-weight:900;color:var(--navy)}
+  .sc-price .old{font-size:12px;color:#9ca3af;text-decoration:line-through;font-weight:600}
+  .sc-actions{display:flex;gap:6px}
+  .btn{flex:1;padding:10px;border:0;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.03em;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px}
+  .btn-orange{background:var(--orange);color:#fff}
+  .btn-orange:hover{background:#e67e00}
+  .btn-green{background:#25d366;color:#fff}
+  .btn-green:hover{background:#1da851}
+  .btn-outline{background:#fff;color:var(--navy);border:1.5px solid #d1d5db}
+  .btn-outline:hover{border-color:var(--orange);color:var(--orange)}
+  .sc-footer{padding:8px 14px;background:#f9fafb;border-top:1px solid #f3f4f6;font-size:10px;color:#9ca3af;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+
+  /* ── Image Gallery ── */
+  .ig{position:relative;width:100%;height:100%}
+  .ig img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:10px;transition:opacity .3s}
+  .ig img.hid{opacity:0;pointer-events:none}
+  .ig-dots{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:5}
+  .ig-dot{width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,.5);border:1.5px solid rgba(0,0,0,.2);cursor:pointer;transition:all .2s}
+  .ig-dot.on{background:var(--orange);border-color:var(--orange);transform:scale(1.2)}
+  .ig-arr{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:24px;height:24px;border-radius:999px;background:rgba(255,255,255,.85);border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;font-weight:900;color:#374151;transition:all .15s;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+  .ig-arr:hover{background:var(--orange);color:#fff;border-color:var(--orange)}
+  .ig-arr.l{left:6px}.ig-arr.r{right:6px}
+  .ig-ctr{position:absolute;top:8px;right:8px;z-index:5;background:rgba(0,0,0,.55);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px}
+
+  /* ── Empty ── */
+  .empty{text-align:center;padding:48px 16px}
+  .empty .ic{font-size:48px;margin-bottom:12px}
+  .empty h3{font-size:16px;font-weight:800;color:var(--navy);margin:0 0 6px}
+  .empty p{font-size:13px;color:#6b7280;max-width:320px;margin:0 auto}
+
+  /* ── Toast ── */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--navy);color:#fff;padding:14px 24px;border-radius:10px;font-size:13px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:200;opacity:0;transition:all .4s;display:flex;align-items:center;gap:10px;border:1px solid rgba(255,140,0,.4);max-width:90%}
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+  /* ── Modal ── */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
+  .modal-overlay.open{display:flex}
+  .modal{background:#fff;border-radius:16px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .modal-hd{padding:18px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:2;border-radius:16px 16px 0 0}
+  .modal-hd h2{font-size:16px;font-weight:900;color:var(--navy);margin:0}
+  .modal-hd .close{width:32px;height:32px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .modal-bd{padding:20px}
+  .fg{display:flex;flex-direction:column;margin-bottom:14px}
+  .fg label{font-size:11px;font-weight:700;text-transform:uppercase;color:#6b7280;margin-bottom:4px;letter-spacing:.04em}
+  .fg input,.fg select,.fg textarea{padding:11px 12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:14px;font-family:inherit;outline:none;transition:border-color .2s}
+  .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--orange)}
+  .fg textarea{resize:vertical;min-height:70px}
+  .fg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .submit-btn{width:100%;padding:14px;border:0;border-radius:10px;background:var(--orange);color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-top:8px;transition:background .2s;text-transform:uppercase;letter-spacing:.06em}
+  .submit-btn:hover{background:#e67e00}
+  .submit-btn:disabled{opacity:.5;cursor:default}
+
+  /* ── Auth ── */
+  .auth-section{text-align:center;padding:20px}
+  .auth-section h3{font-size:18px;font-weight:900;color:var(--navy);margin:0 0 8px}
+  .auth-section p{font-size:13px;color:#6b7280;margin-bottom:16px}
+  .auth-tabs{display:flex;border-bottom:2px solid #e5e7eb;margin-bottom:16px}
+  .auth-tab{flex:1;padding:10px;border:0;background:transparent;font-size:13px;font-weight:700;color:#9ca3af;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+  .auth-tab.on{color:var(--orange);border-bottom-color:var(--orange)}
+
+  /* ── Dashboard ── */
+  .dash-section{max-width:960px;margin:20px auto;padding:0 16px}
+  .dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+  .dash-header h2{font-size:18px;font-weight:900;color:var(--navy);margin:0}
+  .dash-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
+  .dash-stat{background:#fff;border-radius:10px;padding:14px;text-align:center;border:1px solid #e5e7eb}
+  .dash-stat .n{font-size:24px;font-weight:900;color:var(--navy)}
+  .dash-stat .l{font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase}
+  .lead-card{background:#fff;border-radius:10px;padding:14px;border:1px solid #e5e7eb;margin-bottom:10px;display:flex;gap:12px;align-items:center}
+  .lead-card img{width:50px;height:50px;object-fit:contain;border-radius:8px;background:#f9fafb}
+  .lead-card .lc-info{flex:1}
+  .lead-card .lc-name{font-size:13px;font-weight:800;color:var(--navy)}
+  .lead-card .lc-msg{font-size:11px;color:#6b7280;margin-top:2px}
+  .lead-card .lc-time{font-size:10px;color:#9ca3af;margin-top:2px}
+  .lead-card .lc-actions{display:flex;gap:6px}
+  .lc-btn{padding:6px 12px;border:0;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer}
+
+  .browse-status{font-size:12px;color:#6b7280;font-weight:700;margin:0 0 10px;min-height:18px}
+  .browse-status.err{color:var(--red)}
+  .browse-status button{font:inherit;border:0;background:none;color:var(--orange);font-weight:800;cursor:pointer;padding:0;text-decoration:underline}
+
+  /* ── Verification ── */
+  .verify-banner{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:2px solid #6ee7b7;border-radius:14px;padding:20px;margin:20px auto;max-width:960px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  .verify-banner .vb-icon{font-size:36px}
+  .verify-banner .vb-text h3{font-size:15px;font-weight:900;color:#065f46;margin:0 0 4px}
+  .verify-banner .vb-text p{font-size:12px;color:#047857;margin:0;line-height:1.5}
+
+  @media(max-width:640px){
+    .swap-grid{grid-template-columns:1fr}
+    .fg-row{grid-template-columns:1fr}
+    .promo-card{flex-direction:column;align-items:flex-start}
+    .hero-stats{gap:8px}
+    .hero-stat{padding:8px 12px}
+  }
+</style>
+<link rel="stylesheet" href="assets/css/community.css">
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <a href="/" style="text-decoration:none"><div class="brand">Valmont Gadgets</div></a>
+  <h1>Swap & Sell</h1>
+  <p class="sub">Trade your phone, laptop, tablet, or any gadget for an upgrade — or sell it for cash. Free to list. Verified sellers. Fraud protection.</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="n" id="hTotal">0</div><div class="l">Listed</div></div>
+    <div class="hero-stat"><div class="n" id="hSwaps">0</div><div class="l">Swaps</div></div>
+    <div class="hero-stat"><div class="n" id="hSells">0</div><div class="l">For Sale</div></div>
+    <div class="hero-stat"><div class="n" id="hVerified">0</div><div class="l">Verified</div></div>
+  </div>
+</div>
+
+<!-- PROMOTED LISTINGS -->
+<div class="promo-section" id="promoSection" style="display:none">
+  <div class="promo-card">
+    <span class="promo-badge">⭐ Promoted</span>
+    <div class="promo-items" id="promoItems"></div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how-section">
+  <div class="how-grid">
+    <div class="how-card"><div class="ic">📱</div><h3>1. List Free</h3><p>Post your phone for swap or sale. Upload photos, set your price or trade want. 100% free.</p></div>
+    <div class="how-card"><div class="ic">🔍</div><h3>2. Get Found</h3><p>Your listing is seen by thousands of Valmont visitors. Boost it with a paid ad for faster results.</p></div>
+    <div class="how-card"><div class="ic">💬</div><h3>3. Chat on WhatsApp</h3><p>Found a match? Message them on WhatsApp. Negotiate the deal — gadget swap, cash difference, meeting spot.</p></div>
+    <div class="how-card"><div class="ic">🤝</div><h3>4. Meet & Swap</h3><p>Meet in a safe public place. Inspect the gadget. Swap + cash if needed. Done.</p></div>
+  </div>
+</div>
+
+<!-- WHY VALMONT -->
+<div style="max-width:960px;margin:20px auto;padding:0 16px">
+  <div style="background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:16px;padding:24px 20px;color:#fff">
+    <h3 style="font-size:16px;font-weight:900;color:var(--orange);margin:0 0 8px;text-align:center">Why List on Valmont Instead of Facebook or WhatsApp Status?</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:16px">
+      <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:24px;margin-bottom:6px">👀</div>
+        <div style="font-size:12px;font-weight:800;color:#fff">More Eyes</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:4px">Thousands of Valmont visitors see your listing — not just your WhatsApp contacts.</div>
+      </div>
+      <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:24px;margin-bottom:6px">🛡️</div>
+        <div style="font-size:12px;font-weight:800;color:#fff">Verified Sellers</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:4px">Ghana Card verification means fewer scammers than random Facebook groups.</div>
+      </div>
+      <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:24px;margin-bottom:6px">⭐</div>
+        <div style="font-size:12px;font-weight:800;color:#fff">Boost Your Ad</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:4px">Pay a small fee to put your listing in front of everyone. Sell or swap faster.</div>
+      </div>
+      <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:24px;margin-bottom:6px">📊</div>
+        <div style="font-size:12px;font-weight:800;color:#fff">Track Leads</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:4px">See how many people viewed your listing and messaged you. Know your phone's demand.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SAFETY TIPS -->
+<div style="max-width:960px;margin:20px auto;padding:0 16px">
+  <div style="background:#fff;border-radius:16px;padding:20px;border:1px solid #e5e7eb;box-shadow:0 2px 10px rgba(0,0,0,.04)">
+    <h3 style="font-size:14px;font-weight:900;color:var(--navy);margin:0 0 12px">🛡️ Stay Safe — Tips for Swapping</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+      <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--green);font-size:14px">✓</span><span style="font-size:11px;color:#374151;line-height:1.4"><b>Meet in a public place</b> — mall, restaurant, or busy area. Never meet alone.</span></div>
+      <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--green);font-size:14px">✓</span><span style="font-size:11px;color:#374151;line-height:1.4"><b>Check the IMEI</b> — dial *#06# and verify it matches. Avoid stolen phones.</span></div>
+      <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--green);font-size:14px">✓</span><span style="font-size:11px;color:#374151;line-height:1.4"><b>Test everything</b> — screen, cameras, Face ID, speakers, charging port.</span></div>
+      <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--green);font-size:14px">✓</span><span style="font-size:11px;color:#374151;line-height:1.4"><b>Check battery health</b> — Settings → Battery → Battery Health. Below 80% = negotiate lower.</span></div>
+      <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--green);font-size:14px">✓</span><span style="font-size:11px;color:#374151;line-height:1.4"><b>Bring a friend</b> — don't go alone to meet a stranger.</span></div>
+      <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--green);font-size:14px">✓</span><span style="font-size:11px;color:#374151;line-height:1.4"><b>Pay with MoMo</b> — cash is risky. Mobile money leaves a trace.</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- TERMS & CONDITIONS -->
+<div style="max-width:960px;margin:20px auto;padding:0 16px">
+  <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:16px;padding:20px">
+    <h3 style="font-size:14px;font-weight:900;color:#991b1b;margin:0 0 10px">⚠️ Swap & Sell — Terms & Disclaimer</h3>
+    <div style="font-size:11px;color:#7f1d1d;line-height:1.6;space-y:3">
+      <p style="margin:0 0 8px"><b>Valmont Gadgets is a marketplace platform only.</b> We provide the space for buyers and sellers to list, discover, and contact each other. We are <b>not a party</b> to any swap, sale, or trade between users.</p>
+      <p style="margin:0 0 8px"><b>Valmont Gadgets is NOT responsible for:</b></p>
+      <ul style="margin:0 0 8px;padding-left:18px">
+        <li>The condition, quality, or authenticity of any phone listed by users</li>
+        <li>Any disputes, scams, or fraud between buyers and sellers</li>
+        <li>Phones that are stolen, damaged, or not as described</li>
+        <li>Any loss, theft, or damage during meetups or swaps</li>
+        <li>Payments made directly between users (cash, MoMo, etc.)</li>
+        <li>No-shows, cancellations, or failed transactions</li>
+      </ul>
+
+      <p style="margin:0 0 8px"><b>Seller Verification Requirements:</b></p>
+      <ul style="margin:0 0 8px;padding-left:18px">
+        <li><b>Phone Number</b> — must be a valid, active Ghana mobile number</li>
+        <li><b>Ghana Card</b> — must be a valid Ghana Card number (national ID)</li>
+        <li><b>Face Verification</b> — must take a live selfie during sign-up. The selfie must clearly show your face. No masks, sunglasses, or filters allowed.</li>
+        <li>All three are <b>mandatory</b> for every seller. No exceptions.</li>
+        <li>Your selfie is stored securely and used only for identity verification. It is <b>never shown publicly</b> to other users.</li>
+        <li>If your selfie does not match your Ghana Card or appears fake, your account will be <b>rejected or banned</b>.</li>
+      </ul>
+      <p style="margin:0 0 8px"><b>By using this platform, you agree that:</b></p>
+      <ul style="margin:0 0 8px;padding-left:18px">
+        <li>You are solely responsible for verifying the phone before paying or swapping</li>
+        <li>You meet at your own risk and should take safety precautions</li>
+        <li>Valmont Gadgets does not guarantee any listing, seller, or transaction</li>
+        <li>Valmont Gadgets may remove any listing at its sole discretion</li>
+        <li>Providing false information (fake Ghana Card, wrong condition, stolen phone) may result in a permanent ban</li>
+      </ul>
+
+      <p style="margin:0 0 8px"><b>What "Permanent Ban" means:</b></p>
+      <ul style="margin:0 0 8px;padding-left:18px">
+        <li>Your account will be <b>permanently deactivated</b> — you cannot sign in again</li>
+        <li>Your phone number will be <b>blocked</b> — you cannot create a new account with the same number</li>
+        <li>Your Ghana Card number will be <b>flagged</b> — any future account using the same Ghana Card will be rejected</li>
+        <li>All your active listings will be <b>immediately removed</b> from the platform</li>
+        <li>You will be <b>reported to Valmont</b> and your details (name, phone, Ghana Card) may be shared with other users if fraud is confirmed</li>
+        <li>You will be <b>permanently excluded</b> from all Valmont Gadgets services — including buying, selling, swapping, and promotions</li>
+        <li><b>No refund</b> will be given for any paid promotions or services</li>
+      </ul>
+
+      <p style="margin:0 0 8px"><b>Reasons for permanent ban include but are not limited to:</b></p>
+      <ul style="margin:0 0 8px;padding-left:18px">
+        <li>Listing a <b>stolen phone</b> (reported IMEI, blocked device)</li>
+        <li>Using a <b>fake or stolen Ghana Card</b></li>
+        <li>Using a <b>fake face photo</b> (someone else's photo, AI-generated image, screenshot, or stock photo instead of a live selfie)</li>
+        <li>Listing a phone with <b>intentionally false condition</b> (e.g. saying "Grade A" when the screen is cracked)</li>
+        <li><b>Scamming</b> another user (taking payment without delivering, swapping a different phone than listed)</li>
+        <li>Creating <b>multiple accounts</b> to bypass a previous ban</li>
+        <li>Using the platform for <b>any illegal activity</b></li>
+      </ul>
+
+      <p style="margin:0"><b>Valmont Gadgets' only role</b> is to provide the platform, verify seller identities via Ghana Card, and promote listings for a fee. We do not inspect, guarantee, or mediate any transaction between users. However, we <b>will</b> ban users who violate these terms to protect the community.</p>
+    </div>
+  </div>
+</div>
+
+<!-- VERIFICATION BANNER -->
+<div class="verify-banner" style="margin-left:16px;margin-right:16px">
+  <div class="vb-icon">🛡️</div>
+  <div class="vb-text" style="flex:1;min-width:200px">
+    <h3>All Sellers Must Verify — Ghana Card Required</h3>
+    <p>Every seller must provide a valid Ghana Card number before listing goes live. Listings are reviewed by Valmont before appearing on the site. This protects buyers from scams and ensures accountability.</p>
+  </div>
+</div>
+
+<!-- SIGN IN / SIGN UP (toggled by JS) -->
+<div id="authView" style="display:none">
+  <div class="dash-section">
+    <div class="modal" style="max-width:420px;margin:0 auto;position:static;box-shadow:0 4px 20px rgba(0,0,0,.08)">
+      <div class="modal-bd">
+        <div class="auth-section">
+          <h3>Sign in to Swap &amp; Sell</h3>
+          <p>Use your Valmont account, or create one with your email. Listing requires a Ghana Card number for verification.</p>
+          <div class="auth-tabs">
+            <button type="button" class="auth-tab on" data-auth="signin">Sign In</button>
+            <button type="button" class="auth-tab" data-auth="signup">Sign Up</button>
+          </div>
+          <!-- Sign In -->
+          <div id="signinForm">
+            <div class="fg"><label for="authEmail">Email</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
+            <div class="fg"><label for="authPass">Password</label><input id="authPass" type="password" autocomplete="current-password" placeholder="Your password"></div>
+            <button type="button" class="submit-btn" id="signinBtn">Sign In</button>
+            <p style="font-size:11px;color:#6b7280;margin-top:10px">No account yet? <a href="account.html" style="color:var(--orange);font-weight:700">Create one on your Valmont account page</a>.</p>
+          </div>
+          <!-- Sign Up -->
+          <div id="signupForm" style="display:none">
+            <div class="fg"><label for="suName">Full Name *</label><input id="suName" type="text" autocomplete="name" maxlength="80" placeholder="Kofi Mensah"></div>
+            <div class="fg"><label for="suEmail">Email *</label><input id="suEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
+            <div class="fg"><label for="suPhone">Phone Number *</label><input id="suPhone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="024 123 4567"></div>
+            <div class="fg"><label for="suPass">Password *</label><input id="suPass" type="password" autocomplete="new-password" maxlength="72" placeholder="At least 8 characters, with a number"></div>
+            <div class="fg"><label for="suCity">City / Location *</label><input id="suCity" type="text" maxlength="60" placeholder="Accra"></div>
+            <div class="fg"><label for="suGhanaCard">Ghana Card Number *</label><input id="suGhanaCard" type="text" maxlength="24" placeholder="GHA-123456789-0"></div>
+            <p style="font-size:11px;color:#6b7280;margin-bottom:12px">Your Ghana Card number is hashed in our database for duplicate checks and shown only to Valmont staff. It is never published on a listing.</p>
+            <button type="button" class="submit-btn" id="signupBtn">Create Account</button>
+            <p style="font-size:11px;color:#6b7280;margin-top:10px">We send a confirmation link to your email. Listings stay private until you confirm and Valmont reviews them.</p>
+          </div>
+          <p id="authErr" style="color:var(--red);font-size:12px;font-weight:700;margin-top:10px;min-height:18px" role="alert" aria-live="polite"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD (logged in) -->
+<div id="dashView" style="display:none">
+  <div class="dash-section">
+    <div class="dash-header">
+      <h2>👋 <span id="dashName">Seller</span>'s Dashboard</h2>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-orange" id="newListingBtn" style="flex:none;padding:10px 18px">+ New Listing</button>
+        <button class="btn btn-outline" id="logoutBtn" style="flex:none;padding:10px 14px">Logout</button>
+      </div>
+    </div>
+    <div class="dash-stats">
+      <div class="dash-stat"><div class="n" id="dsActive">0</div><div class="l">Active</div></div>
+      <div class="dash-stat"><div class="n" id="dsLeads">0</div><div class="l">Leads</div></div>
+      <div class="dash-stat"><div class="n" id="dsSold">0</div><div class="l">Sold/Swapped</div></div>
+      <div class="dash-stat"><div class="n" id="dsViews">0</div><div class="l">Total Views</div></div>
+    </div>
+
+    <!-- My Listings -->
+    <h3 style="font-size:14px;font-weight:800;color:var(--navy);margin:0 0 10px">My Listings</h3>
+    <div id="myListingsGrid" class="swap-grid"></div>
+    <div class="empty" id="myEmpty" style="display:none"><div class="ic">📋</div><h3>No listings yet</h3><p>Tap "New Listing" to post your first phone.</p></div>
+
+    <!-- Leads -->
+    <h3 style="font-size:14px;font-weight:800;color:var(--navy);margin:20px 0 10px">Recent Leads</h3>
+    <div id="leadsList"></div>
+    <div class="empty" id="leadsEmpty" style="display:none"><div class="ic">📬</div><h3>No leads yet</h3><p>When someone messages about your listing, it'll show up here.</p></div>
+  </div>
+</div>
+
+<!-- BROWSE TABS -->
+<div id="browseView">
+  <div class="tab-section">
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="all">All <span class="cnt" id="cAll">0</span></button>
+      <button class="tab-btn" data-tab="swap">🔄 Swaps <span class="cnt" id="cSwap">0</span></button>
+      <button class="tab-btn" data-tab="sell">💰 For Sale <span class="cnt" id="cSell">0</span></button>
+      <button class="tab-btn" data-tab="matches">🎯 Matches <span class="cnt" id="cMatch">0</span></button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <label>Brand:</label>
+    <button class="fc on" data-f="brand" data-v="all">All</button>
+    <button class="fc" data-f="brand" data-v="apple">Apple</button>
+    <button class="fc" data-f="brand" data-v="samsung">Samsung</button>
+    <button class="fc" data-f="brand" data-v="google">Google</button>
+    <button class="fc" data-f="brand" data-v="other">Other</button>
+  </div>
+  <div class="filter-bar" style="margin-top:6px">
+    <label>Grade:</label>
+    <button class="fc on" data-f="grade" data-v="all">All</button>
+    <button class="fc" data-f="grade" data-v="A">🟢 A</button>
+    <button class="fc" data-f="grade" data-v="B">🔵 B</button>
+    <button class="fc" data-f="grade" data-v="C">🟡 C</button>
+  </div>
+
+  <div class="grid-section">
+    <p class="browse-status" id="browseStatus" role="status" aria-live="polite">Loading listings&hellip;</p>
+    <div class="swap-grid" id="browseGrid"></div>
+    <div id="loadMoreWrap" style="text-align:center;padding:16px;display:none"><button type="button" id="loadMoreBtn" class="btn btn-primary" style="padding:12px 32px;font-size:13px">Show more listings</button></div>
+    <div class="empty" id="browseEmpty" style="display:none"><div class="ic">📦</div><h3>No listings yet</h3><p>Sign in and post the gadget you want to swap or sell — approved listings appear here.</p></div>
+  </div>
+</div>
+
+<!-- NEW LISTING MODAL -->
+<div class="modal-overlay" id="listingModal">
+  <div class="modal">
+    <div class="modal-hd">
+      <h2>📱 New Listing</h2>
+      <button class="close" id="closeListingModal">×</button>
+    </div>
+    <div class="modal-bd">
+      <div class="fg">
+        <label>Listing Type *</label>
+        <select id="lType"><option value="swap">🔄 Swap (Trade)</option><option value="sell">💰 Sell (For Cash)</option><option value="both">🔄💰 Swap or Sell</option></select>
+      </div>
+      <div class="fg">
+        <label>Category *</label>
+        <select id="lCategory">
+          <option value="">Select category</option>
+          <option value="phones">📱 Phones & Tablets</option>
+          <option value="laptops">💻 Laptops & Computers</option>
+          <option value="audio">🎧 Audio & Headphones</option>
+          <option value="gaming">🎮 Gaming & Consoles</option>
+          <option value="smartwatches">⌚ Smartwatches & Wearables</option>
+          <option value="accessories">🔌 Accessories & Chargers</option>
+          <option value="cameras">📷 Cameras & Creator Gear</option>
+          <option value="smart_home">🏠 Smart Home & Security</option>
+          <option value="other">📦 Other Gadgets</option>
+        </select>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Brand *</label><select id="lBrand"><option value="">Select</option><option>Apple</option><option>Samsung</option><option>Google</option><option>OnePlus</option><option>Xiaomi</option><option>HP</option><option>Dell</option><option>Lenovo</option><option>Sony</option><option>JBL</option><option>Bose</option><option>Nintendo</option><option>Microsoft</option><option>Anker</option><option>UGREEN</option><option>Spigen</option><option>Tecno</option><option>Infinix</option><option>Other</option></select></div>
+        <div class="fg"><label>Model / Name *</label><input id="lModel" type="text" placeholder="e.g. iPhone 14 Pro Max / MacBook Air M2 / PS5"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Storage *</label><select id="lStorage"><option value="">Select</option><option>64GB</option><option>128GB</option><option>256GB</option><option>512GB</option><option>1TB</option></select></div>
+        <div class="fg"><label>Color</label><input id="lColor" type="text" placeholder="e.g. Space Black"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Condition *</label><select id="lGrade"><option value="">Select</option><option value="A">Grade A — Pristine / Like New</option><option value="B">Grade B — Excellent / Minor Wear</option><option value="C">Grade C — Good / Visible Wear</option></select></div>
+        <div class="fg"><label>Battery Health %</label><input id="lBattery" type="number" min="50" max="100" placeholder="e.g. 88"></div>
+      </div>
+      <div class="fg">
+        <label>Screen Condition *</label>
+        <select id="lScreen"><option value="">Select</option><option>Perfect — No scratches</option><option>Light scratches — Barely visible</option><option>Visible scratches</option><option>Cracked — Needs replacement</option></select>
+      </div>
+      <div class="fg">
+        <label>Body Condition *</label>
+        <select id="lBody"><option value="">Select</option><option>Pristine — No marks</option><option>Minor wear — Light scuffs</option><option>Visible wear — Scratches/dents</option><option>Heavy wear — Significant damage</option></select>
+      </div>
+      <div class="fg">
+        <label>What's Included</label>
+        <input id="lIncluded" type="text" placeholder="e.g. Box, charger, cable, case">
+      </div>
+        <div class="fg" id="wantField">
+          <label>What do you want in return? *</label>
+          <textarea id="lWant" placeholder="e.g. Any laptop, or Samsung S24 Ultra, or PS5 + cash, or MacBook Air. Be specific about what you'd accept."></textarea>
+          <p style="font-size:10px;color:#9ca3af;margin-top:4px">You can swap for ANY gadget — phone, laptop, tablet, gaming console, headphones, smartwatch, or even accessories + cash. Just say what you want.</p>
+        </div>
+        <div class="fg" id="priceField" style="display:none">
+          <label>Asking Price (GH₵) *</label>
+          <input id="lPrice" type="number" min="100" placeholder="e.g. 8500">
+        </div>
+        <div class="fg">
+          <label>What's your budget / price range? (GH₵)</label>
+          <div class="fg-row">
+            <input id="lBudgetMin" type="number" min="100" placeholder="Min (e.g. 5000)">
+            <input id="lBudgetMax" type="number" min="100" placeholder="Max (e.g. 8000)">
+          </div>
+          <p style="font-size:10px;color:#9ca3af;margin-top:4px">What value of gadget + cash are you looking for? Helps people know if they can afford your swap.</p>
+        </div>
+      <div class="fg">
+        <label>Photos (URLs, one per line)</label>
+        <textarea id="lPhotos" placeholder="https://...photo1.jpg&#10;https://...photo2.jpg&#10;https://...photo3.jpg"></textarea>
+        <p style="font-size:10px;color:#9ca3af;margin-top:4px">Add multiple URLs for front, back, sides, box, etc.</p>
+      </div>
+      <div class="fg">
+        <label>Additional Notes</label>
+        <textarea id="lNotes" placeholder="Any extra details about the phone..."></textarea>
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:14px">
+        <input type="checkbox" id="agreeTerms" style="margin-top:3px;accent-color:var(--orange)">
+        <label for="agreeTerms" style="font-size:11px;color:#374151;line-height:1.4;cursor:pointer">I agree to the <a href="#terms" style="color:var(--orange);font-weight:700">Terms & Conditions</a>. I confirm this phone is mine, the information is accurate, and I understand Valmont Gadgets is not responsible for any disputes arising from this listing.</label>
+      </div>
+      <button class="submit-btn" id="submitListingBtn">Submit Listing</button>
+      <p style="font-size:11px;color:#6b7280;margin-top:10px;text-align:center">Your listing will be reviewed by Valmont before going live. Usually approved within a few hours.</p>
+    </div>
+  </div>
+</div>
+
+<!-- INTEREST MODAL (creates a lead for the seller) -->
+<div class="modal-overlay" id="interestModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-hd">
+      <h2>Send your interest</h2>
+      <button type="button" class="close" id="closeInterestModal" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-bd">
+      <p style="font-size:13px;color:#6b7280;margin-bottom:14px">Your message goes to the seller&rsquo;s Valmont dashboard as a lead. Valmont does not share your phone number publicly.</p>
+      <div class="fg">
+        <label for="interestListingName">Listing</label>
+        <input id="interestListingName" type="text" readonly tabindex="-1" value="">
+      </div>
+      <div class="fg">
+        <label for="interestMessage">Message to the seller</label>
+        <textarea id="interestMessage" maxlength="600" placeholder="e.g. I have an iPhone 14 128GB in Grade A, I can add cash. When can we meet in Accra?"></textarea>
+      </div>
+      <button type="button" class="submit-btn" id="sendInterestBtn">Send to seller</button>
+      <p id="interestErr" style="color:var(--red);font-size:12px;font-weight:700;margin-top:10px;min-height:16px" role="alert" aria-live="polite"></p>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><span>✅</span><span id="toastMsg">Done!</span></div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- QUICK ACTION FLOATING BUTTON -->
+<!-- ══════════════════════════════════════════ -->
+<div id="quickActions" style="position:fixed;bottom:80px;right:16px;z-index:50">
+  <button type="button" id="quickListBtn" style="background:linear-gradient(135deg,#ff8c00,#e67e00);color:#fff;border:0;border-radius:14px;padding:14px 20px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(255,140,0,.35);display:flex;align-items:center;gap:8px">
+    <span style="font-size:18px">➕</span> Sell or swap my phone
+  </button>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- PROMOTION REQUEST MODAL -->
+<!-- ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="promoModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-hd">
+      <h2>&#11088; Promote your listing</h2>
+      <button type="button" class="close" id="closePromoModal" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-bd">
+      <p style="font-size:13px;color:#6b7280;margin-bottom:16px">A promoted listing sits at the top of the Swap page with a &#11088; badge for the period you choose. Our team confirms your MoMo or card payment before the boost switches on.</p>
+
+      <div style="background:#f9fafb;border-radius:10px;padding:14px;margin-bottom:16px">
+        <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:4px">Listing</div>
+        <div style="font-size:14px;font-weight:800;color:var(--navy)" id="promoTargetName">&mdash;</div>
+      </div>
+
+      <div class="fg">
+        <label>Choose a period</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="promoPlans" role="radiogroup" aria-label="Promotion period">
+          <button type="button" class="ad-plan on" data-hours="24" data-price="15" role="radio" aria-checked="true">
+            <span style="display:block;font-size:22px;font-weight:900;color:var(--navy)">GH&#8353; 15</span>
+            <span style="display:block;font-size:12px;font-weight:700;color:#6b7280">24 hours</span>
+          </button>
+          <button type="button" class="ad-plan" data-hours="72" data-price="35" role="radio" aria-checked="false">
+            <span style="display:block;font-size:22px;font-weight:900;color:var(--navy)">GH&#8353; 35</span>
+            <span style="display:block;font-size:12px;font-weight:700;color:#6b7280">3 days</span>
+          </button>
+          <button type="button" class="ad-plan" data-hours="168" data-price="60" role="radio" aria-checked="false">
+            <span style="display:block;font-size:22px;font-weight:900;color:var(--navy)">GH&#8353; 60</span>
+            <span style="display:block;font-size:12px;font-weight:700;color:#6b7280">7 days</span>
+          </button>
+          <button type="button" class="ad-plan" data-hours="720" data-price="150" role="radio" aria-checked="false">
+            <span style="display:block;font-size:22px;font-weight:900;color:var(--navy)">GH&#8353; 150</span>
+            <span style="display:block;font-size:12px;font-weight:700;color:#6b7280">30 days</span>
+          </button>
+        </div>
+      </div>
+
+      <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:12px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:#374151;margin-bottom:4px">
+          <span>Price shown by Valmont:</span><span id="promoSummaryPrice">GH&#8353; 15</span>
+        </div>
+        <div style="font-size:11px;color:#92400e;line-height:1.5">The amount is calculated by our database &mdash; the page only sends the period you picked. Pay with MoMo or card on <b>Valmont Pay</b> or at the Accra store; the boost activates once payment is recorded.</div>
+      </div>
+
+      <button type="button" class="submit-btn" id="submitPromoBtn" style="background:linear-gradient(135deg,#047857,#10b981)">Send promotion request</button>
+      <p id="promoErr" style="color:var(--red);font-size:12px;font-weight:700;margin-top:10px;min-height:16px" role="alert" aria-live="polite"></p>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Promotion period cards */
+  .ad-plan{
+    background:#fff;border:2px solid #e5e7eb;border-radius:12px;padding:14px;text-align:center;
+    cursor:pointer;transition:border-color .2s,background .2s;font:inherit;
+  }
+  .ad-plan:hover{border-color:var(--orange)}
+  .ad-plan.on{border-color:var(--orange);background:#fff7ed;box-shadow:0 0 0 1px var(--orange)}
+  .ad-plan:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+</style>
+
+<!-- FOOTER -->
+<footer class="vg-footer vg-footer--panel" aria-label="Footer">
+  <div class="vg-footer-inner">
+    <a href="https://whatsapp.com/channel/0029Vb9DIKG8V0terg2V4K2Y" target="_blank" rel="noopener" class="vg-community-banner">
+      <span class="vg-community-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L3 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-93.8-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 89.4-184.5 184.6-184.5 46 0 89.3 18 121.9 50.6 32.6 32.5 50.5 75.9 50.5 122.1-.1 101.8-94.9 184.5-184.6 184.5zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg></span>
+      <span class="vg-community-text"><span class="vg-community-title">Join our WhatsApp Channel</span><span class="vg-community-sub">Swap alerts & new listings — straight to your WhatsApp.</span></span>
+      <span class="vg-community-cta">Follow Channel&#160;&#8594;</span>
+    </a>
+    <div class="vg-footer-grid">
+      <div>
+        <p class="vg-foot-brand">Valmont Gadgets</p>
+        <p class="vg-foot-text">Ghana's trusted marketplace for certified smartphones, executive laptops, and premium accessories.</p>
+      </div>
+      <div>
+        <p class="vg-foot-title">Explore</p>
+        <ul class="vg-foot-links">
+          <li><a href="/">Shop Home (Inbox)</a></li>
+          <li><a href="used.html">UK & US Used</a></li>
+          <li><a href="swap.html">Swap & Sell</a></li>
+          <li><a href="drop.html">Daily Drop</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="vg-foot-title">Contact</p>
+        <a href="https://wa.me/233542451578" target="_blank" rel="noopener" class="vg-contact-wa">💬 WhatsApp Support →</a>
+      </div>
+    </div>
+    <div class="vg-footer-bottom"><span>© 2026 Valmont Gadgets</span><span>Accra, Ghana</span></div>
+  </div>
+</footer>
+
+<a href="https://wa.me/233542451578" target="_blank" rel="noopener" class="whatsapp-float" aria-label="WhatsApp">
+  <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 fill-current" viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L3 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-93.8-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 89.4-184.5 184.6-184.5 46 0 89.3 18 121.9 50.6 32.6 32.5 50.5 75.9 50.5 122.1-.1 101.8-94.9 184.5-184.6 184.5zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
+</a>
+
+<script src="assets/js/security.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/db-adapter.js"></script>
+<script src="assets/js/swap-page.js"></script>
+</body>
+</html>

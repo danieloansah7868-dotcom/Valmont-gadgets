@@ -4,6 +4,7 @@ Allow: /
 # Private / non-content routes — no SEO value, should never be indexed.
 Disallow: /admin.html
 Disallow: /admin-login.html
+Disallow: /admin-control.html
 
 # Social & messaging scrapers need CSS/JS/images to build link previews.
 User-agent: Twitterbot
