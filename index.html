@@ -2001,6 +2001,19 @@
     #flashProductsRow > div > div:first-of-type { height:130px; }
     #flashProductsRow h5 { white-space:normal; min-height:32px; font-size:12px; }
     #flashProductsRow .flash-add { display:flex; width:100%; margin-top:9px; align-items:center; justify-content:center; gap:6px; border:0; border-radius:7px; padding:9px; background:#ff8c00; color:#fff; font-size:10px; font-weight:800; text-transform:uppercase; }
+
+    /* Desktop storefront. The hero row was previously hidden at every viewport,
+       which left large screens rendering the same stripped-down mobile feed. */
+    @media (min-width:768px) {
+      #customer-store-view > .grid:first-of-type { display:grid; }
+      .vg-counter-grid { grid-template-columns:2fr minmax(0,1fr) minmax(0,1fr) minmax(0,1fr); }
+      .vg-lead, .vg-tile { min-height:180px; }
+      #store-feed { padding:20px; }
+    }
+    @media (min-width:1024px) {
+      #productGrid { grid-template-columns:repeat(6,minmax(0,1fr)); }
+    }
+
     @media (max-width:767px) {
       body { background:#fff; }
       header { position:sticky; background:#fff !important; border-bottom:1px solid #e5e7eb !important; box-shadow:0 2px 8px rgba(0,0,0,.05); padding:9px 12px !important; }
