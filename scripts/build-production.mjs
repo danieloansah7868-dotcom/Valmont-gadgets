@@ -97,6 +97,7 @@ for (const file of publicFiles) {
   await cp(join(ROOT, file), join(OUT, file));
 }
 await cp(join(ROOT, 'uploads'), join(OUT, 'uploads'), { recursive: true });
+await cp(join(ROOT, 'assets', 'images'), join(OUT, 'assets', 'images'), { recursive: true });
 
 for (const file of ['manifest.json', 'logo.svg', 'logo.png', 'favicon.svg', 'favicon.png']) {
   precache.add(`/${file}`);
