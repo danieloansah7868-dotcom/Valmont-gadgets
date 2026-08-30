@@ -120,7 +120,7 @@ tr:hover{background:#f9fafb}
 <!-- ══════════════════════════════════════════ -->
 <div id="loginScreen" class="login-wrap">
   <div class="login-card">
-    <div class="lock">🔐</div>
+    <div class="lock"></div>
     <h1>Valmont Admin</h1>
     <p class="sub">This panel has no password of its own — access is decided by PostgreSQL.</p>
     <p id="loginErr" style="color:var(--red);font-size:12px;font-weight:700;min-height:18px;margin-bottom:10px" role="alert" aria-live="polite">Checking your session…</p>
@@ -142,22 +142,22 @@ tr:hover{background:#f9fafb}
     </div>
     <nav>
       <div class="nav-section">Marketplace</div>
-      <button class="nav-item active" data-page="dashboard"><span class="icon">📊</span> Overview</button>
-      <button class="nav-item" data-page="swap"><span class="icon">🔄</span> Swap review</button>
-      <button class="nav-item" data-page="ads"><span class="icon">⭐</span> Promotions</button>
+      <button class="nav-item active" data-page="dashboard"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></span> Overview</button>
+      <button class="nav-item" data-page="swap"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4M7 4L3 8M7 4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg></span> Swap review</button>
+      <button class="nav-item" data-page="ads"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8-4 18-6-6-8-4z"/></svg></span> Promotions</button>
 
       <div class="nav-section">Imported stock</div>
-      <button class="nav-item" data-page="used"><span class="icon">🌍</span> UK/US Used</button>
+      <button class="nav-item" data-page="used"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></span> UK/US Used</button>
 
       <div class="nav-section">Partners</div>
-      <button class="nav-item" data-page="sellers"><span class="icon">👥</span> Sellers</button>
-      <button class="nav-item" data-page="dealers"><span class="icon">🏪</span> Wholesale dealers</button>
-      <button class="nav-item" data-page="orders"><span class="icon">📦</span> Dealer orders</button>
-      <button class="nav-item" data-page="partners"><span class="icon">🤝</span> Store partners</button>
+      <button class="nav-item" data-page="sellers"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span> Sellers</button>
+      <button class="nav-item" data-page="dealers"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5M4 9v11h16V9M9 22V12h6v10"/></svg></span> Wholesale dealers</button>
+      <button class="nav-item" data-page="orders"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18"/></svg></span> Dealer orders</button>
+      <button class="nav-item" data-page="partners"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6M19 8v6"/></svg></span> Store partners</button>
 
       <div class="nav-section">System</div>
-      <button class="nav-item" data-page="logs"><span class="icon">📋</span> Activity log</button>
-      <button class="nav-item" id="logoutAdmin" style="color:#f87171"><span class="icon">🚪</span> Logout</button>
+      <button class="nav-item" data-page="logs"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></span> Activity log</button>
+      <button class="nav-item" id="logoutAdmin" style="color:#f87171"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg></span> Logout</button>
     </nav>
   </aside>
 
@@ -166,7 +166,7 @@ tr:hover{background:#f9fafb}
     <!-- Topbar -->
     <div class="topbar">
       <div style="display:flex;align-items:center;gap:10px">
-        <button id="menuToggle" style="display:none;background:0;border:0;font-size:20px;cursor:pointer">☰</button>
+        <button id="menuToggle" style="display:none;background:0;border:0;font-size:20px;cursor:pointer"></button>
         <h2 id="pageTitle">Dashboard</h2>
       </div>
       <div class="right">

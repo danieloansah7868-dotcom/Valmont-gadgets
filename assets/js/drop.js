@@ -336,7 +336,7 @@
     $('timer').innerHTML = 'Expires at midnight — <b>' + midnightLeft() + '</b> left';
 
     $('missed').innerHTML = dealt.map(function(p,i){
-      return i === chosen ? '' : '<div>✕ ' + p.label + '</div>';
+      return i === chosen ? '' : '<div>' + p.label + '</div>';
     }).join('');
 
     var msg = encodeURIComponent(

@@ -119,6 +119,7 @@ tr:hover{background:#f9fafb}
   .tier-grid{grid-template-columns:repeat(2,1fr)}
 }
 </style>
+  <link rel="stylesheet" href="assets/css/valmontai.css">
 </head>
 <body>
 
@@ -127,7 +128,7 @@ tr:hover{background:#f9fafb}
 <!-- ══════════════════════════════════════════ -->
 <div id="loginScreen" class="login-wrap">
   <div class="login-card">
-    <div class="lock">📦</div>
+    <div class="lock"></div>
     <h1>Valmont Wholesale</h1>
     <p class="sub">Bulk phone prices for verified dealers only</p>
     <div class="fg"><label for="wsEmail">Email</label><input id="wsEmail" type="email" autocomplete="email" placeholder="you@yourshop.com"></div>
@@ -177,17 +178,17 @@ tr:hover{background:#f9fafb}
     </div>
     <nav>
       <div class="nav-section">Overview</div>
-      <button class="nav-item active" data-page="dashboard"><span class="icon">📊</span> Dashboard</button>
-      <button class="nav-item" data-page="catalog"><span class="icon">📱</span> Wholesale Catalog</button>
-      <button class="nav-item" data-page="orders"><span class="icon">📦</span> My Orders</button>
+      <button class="nav-item active" data-page="dashboard"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></span> Dashboard</button>
+      <button class="nav-item" data-page="catalog"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></span> Wholesale Catalog</button>
+      <button class="nav-item" data-page="orders"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 01-8 0"/></svg></span> My Orders</button>
 
       <div class="nav-section">Tools</div>
-      <button class="nav-item" data-page="calculator"><span class="icon">🧮</span> Profit Calculator</button>
-      <button class="nav-item" data-page="pricing"><span class="icon">💰</span> Price List</button>
+      <button class="nav-item" data-page="calculator"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg></span> Profit Calculator</button>
+      <button class="nav-item" data-page="pricing"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span> Price List</button>
 
       <div class="nav-section">Account</div>
-      <button class="nav-item" data-page="profile"><span class="icon">👤</span> My Profile</button>
-      <button class="nav-item" id="logoutBtn" style="color:#f87171"><span class="icon">🚪</span> Logout</button>
+      <button class="nav-item" data-page="profile"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></span> My Profile</button>
+      <button class="nav-item" id="logoutBtn" style="color:#f87171"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg></span> Logout</button>
     </nav>
   </aside>
 
@@ -195,12 +196,12 @@ tr:hover{background:#f9fafb}
   <div class="main">
     <div class="topbar">
       <div style="display:flex;align-items:center;gap:10px">
-        <button id="menuToggle" style="display:none;background:0;border:0;font-size:20px;cursor:pointer">☰</button>
+        <button id="menuToggle" style="display:none;background:0;border:0;font-size:20px;cursor:pointer"></button>
         <h2 id="pageTitle">Dashboard</h2>
       </div>
       <div style="display:flex;gap:10px;align-items:center">
         <span style="font-size:11px;color:#6b7280;font-weight:600" id="dealerName">Dealer</span>
-        <span class="badge badge-gold">⭐ Wholesale</span>
+        <span class="badge badge-gold"> Wholesale</span>
         <a href="/" class="btn btn-outline btn-sm" target="_blank">View Store</a>
       </div>
     </div>
@@ -223,5 +224,6 @@ tr:hover{background:#f9fafb}
 <script src="assets/js/supabase-client.js"></script>
 <script src="assets/js/db-adapter.js"></script>
 <script src="assets/js/wholesale-page.js"></script>
+  <script src="assets/js/valmontai.js" defer=""></script>
 </body>
 </html>
