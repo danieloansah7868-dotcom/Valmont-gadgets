@@ -1,0 +1,430 @@
+/* =====================================================================
+   VALMONT AI — 24/7 Website Assistant Widget
+   ---------------------------------------------------------------------
+   Floating AI chat assistant for valmontgadgets.com
+   Brand tokens: navy #0b1a38 · orange #ff8c00
+   Position: bottom-right (opposite WhatsApp on bottom-left)
+   ===================================================================== */
+
+:root {
+  --vai-navy: #0b1a38;
+  --vai-navy-2: #13264a;
+  --vai-orange: #ff8c00;
+  --vai-orange-dark: #e67e00;
+  --vai-bg: #f5f7fb;
+  --vai-bot-bubble: #ffffff;
+  --vai-user-bubble: #0b1a38;
+  --vai-text: #1f2937;
+  --vai-text-soft: #6b7280;
+  --vai-border: #e5e7eb;
+}
+
+/* Floating toggle button (bottom-right) */
+.valmontai-btn {
+  position: fixed;
+  right: 16px;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--vai-orange) 0%, var(--vai-orange-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  z-index: 9997;
+  box-shadow: 0 8px 20px rgba(255, 140, 0, 0.45);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  padding: 0;
+}
+.valmontai-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 12px 26px rgba(255, 140, 0, 0.55);
+}
+.valmontai-btn:active {
+  transform: scale(0.94);
+}
+.valmontai-btn:focus-visible {
+  outline: 3px solid var(--vai-navy);
+  outline-offset: 3px;
+}
+.valmontai-btn svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.valmontai-btn-icon { display: block; }
+.valmontai-btn-close { display: none; position: absolute; }
+.valmontai-btn.is-open .valmontai-btn-icon { display: none; }
+.valmontai-btn.is-open .valmontai-btn-close { display: block; }
+
+.valmontai-pulse {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--vai-orange);
+  animation: vai-pulse 2s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes vai-pulse {
+  0% { transform: scale(1); opacity: 0.7; }
+  70% { transform: scale(1.25); opacity: 0; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+
+.valmontai-label {
+  position: absolute;
+  right: 68px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--vai-navy);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,.18);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .2s ease;
+}
+.valmontai-label::after {
+  content: '';
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid var(--vai-navy);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+}
+.valmontai-btn.show-label .valmontai-label { opacity: 1; }
+
+/* Chat window */
+.valmontai-panel {
+  position: fixed;
+  right: 16px;
+  bottom: calc(152px + env(safe-area-inset-bottom, 0px));
+  width: calc(100vw - 32px);
+  max-width: 360px;
+  height: 500px;
+  max-height: calc(100vh - 180px);
+  background: var(--vai-bg);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(11, 26, 56, 0.28);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform-origin: bottom right;
+  transform: scale(0.85) translateY(20px);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .25s cubic-bezier(.2,.9,.3,1.2), opacity .2s ease;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  border: 1px solid rgba(11,26,56,.08);
+}
+.valmontai-panel.is-open {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Header */
+.valmontai-header {
+  background: linear-gradient(135deg, var(--vai-navy) 0%, var(--vai-navy-2) 100%);
+  color: #fff;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 3px solid var(--vai-orange);
+  flex-shrink: 0;
+}
+.valmontai-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--vai-orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: 900;
+  font-size: 14px;
+  color: #fff;
+  letter-spacing: 0.5px;
+  border: 2px solid rgba(255,255,255,.25);
+}
+.valmontai-head-text { flex: 1; min-width: 0; }
+.valmontai-head-name {
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.valmontai-status-dot {
+  width: 8px;
+  height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 0 2px rgba(34,197,94,.25);
+}
+.valmontai-head-sub {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255,255,255,.7);
+  margin-top: 2px;
+}
+.valmontai-close {
+  background: rgba(255,255,255,.1);
+  border: none;
+  color: #fff;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .2s ease;
+}
+.valmontai-close:hover { background: rgba(255,255,255,.22); }
+
+/* Messages area */
+.valmontai-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+.valmontai-messages::-webkit-scrollbar { width: 5px; }
+.valmontai-messages::-webkit-scrollbar-thumb { background: rgba(11,26,56,.15); border-radius: 3px; }
+
+.valmontai-msg {
+  display: flex;
+  gap: 8px;
+  max-width: 85%;
+  animation: vai-msg-in .25s ease-out;
+}
+@keyframes vai-msg-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.valmontai-msg-bot { align-self: flex-start; }
+.valmontai-msg-user { align-self: flex-end; flex-direction: row-reverse; }
+
+.valmontai-msg-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--vai-orange);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.valmontai-msg-user .valmontai-msg-avatar {
+  background: var(--vai-navy);
+}
+.valmontai-bubble {
+  padding: 10px 13px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 500;
+  word-wrap: break-word;
+}
+.valmontai-msg-bot .valmontai-bubble {
+  background: var(--vai-bot-bubble);
+  color: var(--vai-text);
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.valmontai-msg-user .valmontai-bubble {
+  background: var(--vai-user-bubble);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.valmontai-bubble a {
+  color: var(--vai-orange);
+  font-weight: 700;
+  text-decoration: underline;
+}
+.valmontai-msg-user .valmontai-bubble a { color: #fdba74; }
+
+.valmontai-time {
+  font-size: 10px;
+  color: var(--vai-text-soft);
+  margin-top: 3px;
+  padding: 0 4px;
+  font-weight: 500;
+}
+
+/* Typing indicator */
+.valmontai-typing {
+  display: none;
+  align-self: flex-start;
+  gap: 8px;
+  align-items: center;
+}
+.valmontai-typing.is-typing { display: flex; }
+.valmontai-typing-dots {
+  background: var(--vai-bot-bubble);
+  padding: 12px 14px;
+  border-radius: 14px;
+  border-bottom-left-radius: 4px;
+  display: flex;
+  gap: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.valmontai-typing-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--vai-text-soft);
+  animation: vai-typing 1.3s infinite ease-in-out;
+}
+.valmontai-typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+.valmontai-typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes vai-typing {
+  0%, 60%, 100% { transform: translateY(0); opacity: .5; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+
+/* Quick replies */
+.valmontai-quick {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 0 12px 8px;
+  flex-shrink: 0;
+}
+.valmontai-quick-btn {
+  background: #fff;
+  border: 1px solid var(--vai-border);
+  color: var(--vai-navy);
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .2s ease;
+  white-space: nowrap;
+}
+.valmontai-quick-btn:hover {
+  background: var(--vai-orange);
+  color: #fff;
+  border-color: var(--vai-orange);
+}
+
+/* Input area */
+.valmontai-input-wrap {
+  padding: 10px 12px;
+  background: #fff;
+  border-top: 1px solid var(--vai-border);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.valmontai-input {
+  flex: 1;
+  border: 1px solid var(--vai-border);
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  background: var(--vai-bg);
+  transition: border-color .2s ease, background .2s ease;
+  color: var(--vai-text);
+}
+.valmontai-input:focus {
+  border-color: var(--vai-orange);
+  background: #fff;
+}
+.valmontai-send {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--vai-orange);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background .2s ease, transform .15s ease;
+}
+.valmontai-send:hover { background: var(--vai-orange-dark); }
+.valmontai-send:active { transform: scale(0.9); }
+.valmontai-send svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.valmontai-footer-note {
+  text-align: center;
+  font-size: 10px;
+  color: var(--vai-text-soft);
+  padding: 6px 12px 8px;
+  background: #fff;
+  font-weight: 500;
+}
+.valmontai-footer-note a {
+  color: var(--vai-orange);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* Desktop adjustments */
+@media (min-width: 768px) {
+  .valmontai-btn {
+    right: 24px;
+    bottom: 24px;
+  }
+  .valmontai-panel {
+    right: 24px;
+    bottom: 96px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .valmontai-btn,
+  .valmontai-panel,
+  .valmontai-msg { transition: none; animation: none; }
+  .valmontai-pulse { animation: none; }
+  .valmontai-typing-dots span { animation: none; }
+}

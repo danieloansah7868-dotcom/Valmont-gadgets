@@ -1727,7 +1727,7 @@
 
   <style>
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
       background-color: #f1f1f2; /* Jumia-style light grey body background */
       color: #333333;
     }
@@ -1844,6 +1844,153 @@
       outline-offset: 2px !important;
     }
 
+    /* ===== VALMONT COUNTER — HERO ENTRY STRIP (Direction A: shop counter) =====
+       Asymmetric grid: one wide navy lead (Trade In) + three narrow divided columns.
+       White panels on #f1f1f2, 1px hairline dividers, 4px radii, Inter 600-900.
+       Orange appears exactly once — on the lead CTA. */
+    .vg-counter { max-width:1184px; margin:12px auto 4px; padding:0 16px; }
+    .vg-counter-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:0; background:#0b1a38; border-radius:4px; overflow:hidden; border:1px solid #0b1a38; }
+    /* 2-column at tablet (lead spans full width, 3 tiles in row below would be tight —
+       keep single column until ≥1180 to match the 4-across rule). */
+    @media (min-width:1180px) {
+      .vg-counter-grid { grid-template-columns:2fr minmax(0,1fr) minmax(0,1fr) minmax(0,1fr); }
+    }
+    .vg-lead, .vg-tile { position:relative; padding:16px 18px; display:flex; flex-direction:column; min-height:138px; }
+    .vg-lead { background:#0b1a38; color:#f8fafc; gap:10px; min-height:160px; }
+    .vg-lead-media { display:none; }
+    @media (min-width:768px) {
+      .vg-lead { flex-direction:row; gap:18px; padding:20px 22px; min-height:164px; align-items:stretch; }
+      .vg-lead-copy { flex:1; display:flex; flex-direction:column; }
+      .vg-lead-media { display:block; width:128px; flex-shrink:0; border-radius:4px; overflow:hidden; background:#13264a; border:1px solid rgba(255,140,0,.25); align-self:center; }
+      .vg-lead-media img { width:100%; height:100%; object-fit:cover; display:block; }
+    }
+    .vg-kicker { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#64748b; }
+    .vg-lead .vg-kicker { color:#ff8c00; }
+    .vg-title { font-size:18px; line-height:1.15; font-weight:900; color:#fff; margin:0; letter-spacing:-.01em; }
+    @media (min-width:768px) { .vg-title { font-size:22px; } }
+    .vg-sub { font-size:12.5px; line-height:1.45; font-weight:500; color:#94a3b8; margin:0; max-width:44ch; }
+    .vg-lead-cta { margin-top:auto; display:inline-flex; align-items:center; gap:6px; background:#ff8c00; color:#0b1a38; font-weight:800; font-size:12.5px; padding:8px 14px; border-radius:4px; text-decoration:none; width:fit-content; border:0; cursor:pointer; letter-spacing:.01em; transition:background .15s ease; }
+    .vg-lead-cta:hover { background:#e67e00; color:#0b1a38; }
+    .vg-lead-cta svg { width:13px; height:13px; }
+    .vg-tile { background:#fff; color:#0b1a38; gap:6px; text-decoration:none; transition:background .12s ease; border:0; cursor:pointer; text-align:left; font:inherit; }
+    a.vg-tile, button.vg-tile { text-decoration:none; }
+    .vg-tile:hover, .vg-tile:focus-within { background:#fafafa; }
+    .vg-tile + .vg-tile { border-top:1px solid #e2e8f0; }
+    @media (min-width:768px) {
+      .vg-tile + .vg-tile { border-top:0; border-left:1px solid rgba(255,255,255,.12); }
+      .vg-tile { background:#0b1a38; color:#f8fafc; padding:18px 18px 16px; min-height:164px; }
+      .vg-tile:hover, .vg-tile:focus-within { background:#13264a; }
+      .vg-tile .vg-kicker { color:#ffb366; }
+      .vg-tile .vg-sub { color:#94a3b8; }
+      .vg-tile .vg-tile-meta { color:#cbd5e1; border-top-color:rgba(255,255,255,.10); }
+      .vg-tile .vg-tile-cta { color:#fff; }
+      .vg-tile .vg-tile-cta svg { stroke:#fff; }
+    }
+    .vg-tile-title { font-size:14.5px; line-height:1.25; font-weight:800; color:inherit; margin:2px 0 0; letter-spacing:-.01em; }
+    .vg-tile-sub { font-size:12px; line-height:1.4; font-weight:500; color:#64748b; margin:0; }
+    .vg-tile-meta { margin-top:auto; padding-top:10px; border-top:1px solid #e2e8f0; font-size:11px; font-weight:700; color:#0b1a38; font-variant-numeric:tabular-nums; letter-spacing:.01em; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .vg-tile-cta { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:800; color:#0b1a38; text-transform:uppercase; letter-spacing:.06em; }
+    .vg-tile-cta svg { width:11px; height:11px; stroke:#0b1a38; stroke-width:2.2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .vg-tile-ico { width:18px; height:18px; color:#0b1a38; stroke-width:1.6; margin-bottom:2px; flex-shrink:0; }
+    @media (min-width:768px) {
+      .vg-tile-ico { color:#ff8c00; stroke-width:1.8; width:20px; height:20px; }
+      .vg-tile-cta { color:#fff; }
+      .vg-tile-cta svg { stroke:#fff; }
+    }
+    /* Daily drop promo — fancy mini-card preview (mobile + desktop) */
+    .vg-drop-promo { display:none; }
+    @media (max-width:767px) {
+      .vg-drop-promo-mobile {
+        display:flex; align-items:stretch; gap:0; padding:0;
+        background:linear-gradient(135deg,#0b1a38 0%, #122649 100%);
+        border:1px solid rgba(255,140,0,.4); border-radius:14px;
+        margin:12px 16px 0; color:#fff; text-decoration:none;
+        overflow:hidden; position:relative;
+        box-shadow:0 8px 22px rgba(11,26,56,.25), 0 0 0 1px rgba(255,140,0,.08);
+      }
+      .vg-drop-promo-mobile::before{
+        content:"";position:absolute;inset:0;
+        background:radial-gradient(180px 90px at 12% 30%, rgba(255,140,0,.25), transparent 65%),
+                   radial-gradient(140px 80px at 90% 80%, rgba(255,213,74,.1), transparent 65%);
+        pointer-events:none;
+      }
+      .vg-drop-promo-mobile .vg-drop-deck{
+        position:relative;width:74px;flex-shrink:0;
+        display:flex;align-items:center;justify-content:center;
+        padding:10px 8px;
+      }
+      .vg-drop-promo-mobile .vg-mini-card{
+        position:absolute;width:28px;height:38px;border-radius:5px;
+        background:
+          radial-gradient(circle at 50% 30%, rgba(255,140,0,.25), transparent 55%),
+          linear-gradient(160deg,#122649 0%, #0a1a38 100%);
+        border:1.5px solid #ff8c00;
+        box-shadow:0 3px 8px rgba(0,0,0,.35), inset 0 0 10px rgba(255,140,0,.18);
+        display:flex;align-items:center;justify-content:center;
+      }
+      .vg-drop-promo-mobile .vg-mini-card::before{
+        content:"";width:14px;height:14px;border-radius:999px;
+        border:1.2px solid rgba(255,140,0,.7);
+        background:radial-gradient(circle,rgba(255,140,0,.2),transparent 70%);
+      }
+      .vg-drop-promo-mobile .vg-mini-card.c1{transform:translate(-8px,2px) rotate(-10deg);z-index:1}
+      .vg-drop-promo-mobile .vg-mini-card.c2{transform:translate(0,0) rotate(0);z-index:2;box-shadow:0 4px 10px rgba(255,140,0,.35),0 3px 8px rgba(0,0,0,.4)}
+      .vg-drop-promo-mobile .vg-mini-card.c3{transform:translate(8px,2px) rotate(10deg);z-index:1}
+      .vg-drop-promo-mobile .vg-mini-card.gold{
+        background:linear-gradient(160deg,#fff9e0,#ffd54a);border-color:#c99700;
+        box-shadow:0 0 14px rgba(255,213,74,.6), 0 3px 8px rgba(0,0,0,.35);
+      }
+      .vg-drop-promo-mobile .vg-mini-card.gold::before{
+        border-color:#c99700;background:radial-gradient(circle,rgba(255,255,255,.6),transparent 70%);
+      }
+      .vg-drop-promo-mobile .vg-drop-copy{flex:1;min-width:0;padding:12px 8px 12px 4px;position:relative;z-index:1}
+      .vg-drop-promo-mobile .vg-drop-kicker{
+        font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:#ff8c00;font-weight:900;
+        display:inline-block;padding:2px 7px;background:rgba(255,140,0,.12);
+        border:1px solid rgba(255,140,0,.3);border-radius:999px;margin-bottom:5px;
+      }
+      .vg-drop-promo-mobile .vg-drop-copy b{
+        color:#fff;font-weight:900;font-size:15px;letter-spacing:-.3px;display:block;line-height:1.1;
+      }
+      .vg-drop-promo-mobile .vg-drop-copy span{
+        color:#94a3b8;font-weight:500;font-size:11px;display:block;margin-top:3px;line-height:1.3;
+      }
+      .vg-drop-promo-mobile .vg-drop-go{
+        align-self:center;padding:0 14px;color:#1a1200;font-weight:900;font-size:11px;
+        white-space:nowrap;background:linear-gradient(180deg,#ffa43a,#ff8c00);
+        border-radius:10px;margin:10px 10px 10px 0;position:relative;z-index:1;
+        display:inline-flex;align-items:center;gap:4px;
+        box-shadow:0 4px 12px rgba(255,140,0,.35);
+      }
+      .vg-drop-promo-mobile .vg-drop-go svg{width:10px;height:10px}
+    }
+    @media (min-width:768px) {
+      .vg-drop-promo-mobile { display:none; }
+      .vg-drop-promo{
+        display:inline-flex;align-items:center;gap:8px;
+        padding:8px 12px 8px 8px;
+        background:linear-gradient(135deg,rgba(255,140,0,.12),rgba(255,213,74,.08));
+        border:1px solid rgba(255,140,0,.4);color:#ff8c00;border-radius:999px;
+        font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;
+        text-decoration:none;width:fit-content;
+        box-shadow:0 0 14px rgba(255,140,0,.12);
+      }
+      .vg-drop-promo .vg-drop-deck{position:relative;width:28px;height:20px;display:inline-block}
+      .vg-drop-promo .vg-mini-card{
+        position:absolute;width:16px;height:22px;border-radius:3px;
+        background:linear-gradient(160deg,#122649,#0a1a38);border:1px solid #ff8c00;
+        box-shadow:0 2px 5px rgba(0,0,0,.25);
+      }
+      .vg-drop-promo .vg-mini-card::before{
+        content:"";position:absolute;inset:4px;border-radius:999px;
+        border:1px solid rgba(255,140,0,.5);background:rgba(255,140,0,.1);
+      }
+      .vg-drop-promo .vg-mini-card.c1{transform:translate(-1px,0) rotate(-12deg);z-index:1}
+      .vg-drop-promo .vg-mini-card.c2{transform:translate(6px,-1px);z-index:2}
+      .vg-drop-promo .vg-mini-card.c3{transform:translate(12px,0) rotate(12deg);z-index:1}
+      .vg-drop-promo svg.arrow{width:10px;height:10px;margin-left:2px}
+    }
+
     /* Storefront reference layout: white navigation, navy flash-deals stage, and compact product cards. */
     .reference-category-strip { max-width:1184px; margin:0 auto 0; padding:10px 16px; gap:10px; justify-content:center; background:#fff; border-bottom:1px solid #e5e7eb; }
     .reference-category-strip .desktop-cat { width:auto; border:0; border-radius:999px; background:#0b1a38; color:#fff; padding:7px 20px; font-size:12px; font-weight:700; line-height:1.2; white-space:nowrap; }
@@ -1892,6 +2039,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="stylesheet" href="mobile-fixes.css">
   <link rel="stylesheet" href="assets/css/community.css">
+  <link rel="stylesheet" href="assets/css/valmontai.css">
 
 
   <!-- PWA Manifest & Service Worker Registration -->
@@ -1941,19 +2089,13 @@
         </a>
       </div>
 
-      <!-- Jumia Centered Search Bar -->
-      <div class="search-container flex-1 max-w-[620px] flex items-center border border-gray-300 rounded-[4px] overflow-hidden bg-white focus-within:border-[#ff8c00] focus-within:shadow-[0_0_0_1px_rgba(255,140,0,0.15)] transition-all">
-        <div class="pl-2 md:pl-3.5 text-gray-400">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.637 10.637Z"></path>
-          </svg>
-        </div>
+      <!-- Search Bar — no icon inside input, orange glass-icon button on the right -->
+      <div class="search-container flex-1 min-w-0 max-w-[620px] flex items-center border border-gray-300 rounded-[4px] overflow-hidden bg-white focus-within:border-[#ff8c00] focus-within:shadow-[0_0_0_1px_rgba(255,140,0,0.15)] transition-all">
         <label for="searchInput" class="sr-only">Search products, brands and categories</label>
-        <input id="searchInput" type="text" placeholder="Search products, brands and categories..." class="w-full px-2 md:px-3 py-1.5 md:py-2.5 text-[16px] md:text-[13px] outline-none bg-white font-medium text-gray-800 placeholder-gray-400">
-        <button id="searchBtn" class="bg-[#ff8c00] text-white px-3 md:px-8 py-1.5 md:py-2.5 font-bold text-[11.5px] md:text-[13px] tracking-wide hover:bg-orange-600 transition flex items-center justify-center shrink-0">
-          <span class="hidden md:inline">SEARCH</span>
-          <svg class="w-4 h-4 md:hidden" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.637 10.637Z"></path>
+        <input id="searchInput" type="text" placeholder="Search products, brands and categories..." class="w-full min-w-0 px-3 md:px-4 py-1.5 md:py-2.5 text-[16px] md:text-[13px] outline-none bg-white font-medium text-gray-800 placeholder-gray-400">
+        <button id="searchBtn" class="bg-[#ff8c00] text-white w-10 md:w-11 h-10 md:h-[42px] flex items-center justify-center shrink-0 hover:bg-orange-600 transition" aria-label="Search">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-[18px] h-[18px]">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
           </svg>
         </button>
       </div>
@@ -2008,34 +2150,32 @@
           <span id="wishlistCountBadge" class="absolute -top-1.5 -right-2 bg-red-500 text-white text-[9px] font-black rounded-full h-4 w-4 flex items-center justify-center hidden">0</span>
         </button>
 
-        <a href="used.html" class="flex items-center gap-1.5 font-semibold text-[14px] text-gray-700 hover:text-[#ff8c00] py-1 transition hidden md:flex" aria-label="UK & US Used Phones">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5.5 h-5.5 text-[#1e40af]">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5a17.92 17.92 0 0 1-8.716-2.247m0 0A9 9 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418"></path>
-          </svg>
-          <span class="tracking-wide">UK/US Used</span>
-        </a>
-
-        <a href="swap.html" class="flex items-center gap-1.5 font-semibold text-[14px] text-gray-700 hover:text-[#ff8c00] py-1 transition hidden md:flex" aria-label="Phone Swap">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5.5 h-5.5 text-[#ff8c00]">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"></path>
-          </svg>
-          <span class="tracking-wide">Swap</span>
-        </a>
-
-        <!-- Desktop Dealer Portal Link -->
-        <a href="partner.html" class="flex items-center gap-1.5 font-semibold text-[14px] text-gray-700 hover:text-[#ff8c00] py-1 transition hidden md:flex" aria-label="Partner Program">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5.5 h-5.5 text-[#7c3aed]">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72L4.318 3.44A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72m-13.5 8.65h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .415.336.75.75.75Z"></path>
-          </svg>
-          <span class="tracking-wide">Partner</span>
-        </a>
-
-        <button id="btnToggleDealer" class="flex items-center gap-1.5 font-semibold text-[14px] text-gray-700 hover:text-[#ff8c00] py-1 transition hidden md:flex" data-store-action="open-dealer">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-6 h-6 text-[#ff8c00]">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5m-3-12h13.5m-13.5 6h13.5m-13.5 6h13.5"></path>
-          </svg>
-          <span id="dealerBtnLabel" class="tracking-wide">Dealer Portal</span>
-        </button>
+        <!-- Desktop Marketplace dropdown: Swap, Used, Wholesale/Dealer rolled into one entry -->
+        <div class="relative group hidden md:block shrink-0">
+          <button class="flex items-center gap-1.5 font-semibold text-[14px] text-gray-700 hover:text-[#ff8c00] py-1 transition whitespace-nowrap" aria-haspopup="true" aria-expanded="false">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5 text-gray-700"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path></svg>
+            <span class="tracking-wide">Marketplace</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 text-gray-400 transition-transform group-hover:rotate-180 duration-150"><path fill-rule="evenodd" d="M12.53 16.28a.75.75 0 0 1-1.06 0l-7.5-7.5a.75.75 0 0 1 1.06-1.06L12 14.69l6.97-6.97a.75.75 0 1 1 1.06 1.06l-7.5 7.5Z" clip-rule="evenodd"></path></svg>
+          </button>
+          <div class="absolute right-0 top-full mt-1.5 w-60 bg-white border border-gray-100 rounded-[4px] shadow-[0_8px_24px_rgba(0,0,0,0.1)] py-2 hidden group-hover:block group-focus-within:block z-50">
+            <a href="swap.html" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4.5 h-4.5 text-gray-400 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"></path></svg>
+              Phone Swap / Trade-in
+            </a>
+            <a href="used.html" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4.5 h-4.5 text-gray-400 shrink-0"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>
+              UK &amp; US Used Phones
+            </a>
+            <a href="partner.html" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4.5 h-4.5 text-gray-400 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.35m-16.5 11.65V9.35m0 0a3 3 0 0 0 3.75-.62A3 3 0 0 0 9.75 9.75c.89 0 1.7-.39 2.25-1.02A3 3 0 0 0 14.25 9.75c.89 0 1.7-.39 2.25-1.02a3 3 0 0 0 3.75.62"></path></svg>
+              Dealer / Wholesale Portal
+            </a>
+            <button id="btnToggleDealer" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 transition border-t border-gray-100 mt-1" data-store-action="open-dealer">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4.5 h-4.5 text-gray-400 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5m-3-12h13.5m-13.5 6h13.5m-13.5 6h13.5"></path></svg>
+              <span id="dealerBtnLabel" class="whitespace-nowrap">Dealer Portal</span>
+            </button>
+          </div>
+        </div>
 
         <!-- Desktop Bag Trigger Button -->
         <button id="cartBtn" class="cart-icon relative flex items-center gap-1.5 font-semibold text-[14px] text-gray-700 hover:text-[#ff8c00] py-1 transition hidden md:flex">
@@ -2048,97 +2188,100 @@
     </div>
   </header>
 
-  <!-- DAILY DROP STRIP -->
-  <div class="max-w-[1200px] mx-auto mt-3 mb-1 px-4 flex flex-col md:flex-row gap-3">
-    <a id="dropStrip" href="/drop.html" class="flex-1 block no-underline" style="text-decoration:none">
-      <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#0b1a38,#122649);
-                  border:1px solid rgba(255,140,0,.45);border-radius:12px;padding:11px 14px;">
-        <span style="font-size:19px;line-height:1">🃏</span>
-        <span style="flex:1;color:#f8fafc;font-size:13.5px;line-height:1.35">
-          <b style="color:#ff8c00">Today's Drop is live</b> — 3 cards, 1 deal.
-          One <b style="color:#ffd54a">Golden Card</b> hidden in the deck.
-        </span>
-        <span style="color:#ff8c00;font-weight:800;font-size:13px;white-space:nowrap">Flip yours →</span>
-      </div>
-    </a>
-    
-    <a href="swap.html" class="flex-1 block no-underline" style="text-decoration:none">
-      <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#ecfdf5,#d1fae5);
-                  border:1px solid #6ee7b7;border-radius:12px;padding:11px 14px;">
-        <span style="font-size:19px;line-height:1">🔄</span>
-        <span style="flex:1;color:#065f46;font-size:13.5px;line-height:1.35">
-          <b style="color:#047857">Phone Swap is live</b> — Trade your phone for an upgrade.
-          <b style="color:#047857">Valmont Certified</b> grading on every swap.
-        </span>
-        <span style="color:#047857;font-weight:800;font-size:13px;white-space:nowrap">Swap now →</span>
-      </div>
-    </a>
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- HERO ENTRY STRIP — Direction A: Shop Counter (recommended, live)
+       Asymmetric 2fr/1fr/1fr/1fr grid ≥768px. One navy panel, no card
+       borders between columns, 1px 20% white hairline dividers. Orange
+       exactly once (lead CTA). Icons are 1.8-stroke SVG; no emoji, no
+       gradients, no shadows, no marketing adjectives, no hardcoded
+       counts. Each card copy ≤ 96 chars; one plain <a href> per tile. -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <a class="vg-drop-promo-mobile" id="dropStrip" href="/drop.html" aria-label="Open today's card drop">
+    <span class="vg-drop-deck" aria-hidden="true">
+      <span class="vg-mini-card c1"></span>
+      <span class="vg-mini-card c2 gold"></span>
+      <span class="vg-mini-card c3"></span>
+    </span>
+    <span class="vg-drop-copy">
+      <span class="vg-drop-kicker">Daily Drop</span>
+      <b>3 cards. 1 Golden hidden.</b>
+      <span>Flip one a day — real discounts on phones & accessories.</span>
+    </span>
+    <span class="vg-drop-go">Flip
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </span>
+  </a>
 
-    <a href="used.html" class="flex-1 block no-underline" style="text-decoration:none">
-      <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#eff6ff,#dbeafe);
-                  border:1px solid #93c5fd;border-radius:12px;padding:11px 14px;">
-        <span style="font-size:19px;line-height:1">🌍</span>
-        <span style="flex:1;color:#1e3a5f;font-size:13.5px;line-height:1.35">
-          <b style="color:#1e40af">UK & US Used Phones</b> — Graded daily stock.
-          <b style="color:#1e40af">Sold out = gone.</b> New arrivals every day.
-        </span>
-        <span style="color:#1e40af;font-weight:800;font-size:13px;white-space:nowrap">Browse →</span>
+  <section class="vg-counter" aria-label="Ways to buy">
+    <div class="vg-counter-grid">
+      <!-- LEAD: Trade-in (Counter card: product photo + headline, not a wrapping link) -->
+      <div class="vg-lead">
+        <div class="vg-lead-copy">
+          <a href="drop.html" class="vg-drop-promo" id="dropStripDesktop" aria-label="Today's Drop">
+            <span class="vg-drop-deck" aria-hidden="true">
+              <span class="vg-mini-card c1"></span>
+              <span class="vg-mini-card c2"></span>
+              <span class="vg-mini-card c3"></span>
+            </span>
+            Today's Drop
+            <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <span class="vg-kicker" style="margin-top:10px">Trade in</span>
+          <h2 class="vg-title">Bring your phone. Cash in 10 minutes.</h2>
+          <p class="vg-sub">We check it at the counter and knock it off your new one.</p>
+          <a href="swap.html" class="vg-lead-cta" aria-label="Get a trade-in quote">Get a quote
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+        <a href="swap.html" class="vg-lead-media" aria-hidden="true" tabindex="-1">
+          <img src="assets/images/products/iphone-13.jpg" alt="iPhone being graded at the Valmont counter" width="256" height="256" fetchpriority="high" loading="eager">
+        </a>
       </div>
-    </a>
-    
-    <button id="installmentCatalogTrigger" type="button" data-open-installments="" class="flex-1 block no-underline text-left" style="text-decoration:none" aria-haspopup="dialog" aria-controls="installmentModal">
-      <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#eef2ff,#e0e7ff);
-                  border:1px solid #c7d2fe;border-radius:12px;padding:11px 14px;">
-        <span style="font-size:19px;line-height:1">💳</span>
-        <span style="flex:1;color:#1e1b4b;font-size:13.5px;line-height:1.35">
-          <b style="color:#4338ca">Buy on Installments</b> — Pay 40% down.
-          Spread the balance over <b style="color:#4338ca">12 weeks</b> or 3 months.
-        </span>
-        <span style="color:#4338ca;font-weight:800;font-size:13px;white-space:nowrap">View Plans →</span>
-      </div>
-    </button>
-  </div>
 
-  <!-- ═══════════════════════════════════════════ -->
-  <!-- WHAT DO YOU WANT TO DO? — Clear entry points -->
-  <!-- ═══════════════════════════════════════════ -->
-  <div class="max-w-[1200px] mx-auto mb-4 px-4">
-    <div style="background:#fff;border-radius:14px;padding:18px 16px;box-shadow:0 2px 10px rgba(0,0,0,.05);border:1px solid #e5e7eb">
-      <h2 style="font-size:15px;font-weight:900;color:#0b1a38;margin:0 0 12px;text-align:center;letter-spacing:-.3px">What do you want to do?</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
-        <!-- Buy -->
-        <a href="#store-feed" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:#fff7ed;border:1.5px solid #fed7aa;border-radius:12px;text-decoration:none;transition:all .15s">
-          <span style="font-size:28px">🛒</span>
-          <span style="font-size:12px;font-weight:800;color:#0b1a38">Buy a Phone</span>
-          <span style="font-size:10px;color:#6b7280;text-align:center">Sealed & genuine with warranty</span>
-        </a>
-        <!-- Sell -->
-        <a href="swap.html" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:#ecfdf5;border:1.5px solid #a7f3d0;border-radius:12px;text-decoration:none;transition:all .15s">
-          <span style="font-size:28px">💰</span>
-          <span style="font-size:12px;font-weight:800;color:#0b1a38">Sell Your Phone</span>
-          <span style="font-size:10px;color:#6b7280;text-align:center">List free, set your price</span>
-        </a>
-        <!-- Swap -->
-        <a href="swap.html" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:12px;text-decoration:none;transition:all .15s">
-          <span style="font-size:28px">🔄</span>
-          <span style="font-size:12px;font-weight:800;color:#0b1a38">Swap / Trade</span>
-          <span style="font-size:10px;color:#6b7280;text-align:center">Trade for an upgrade, free</span>
-        </a>
-        <!-- UK/US Used -->
-        <a href="used.html" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:12px;text-decoration:none;transition:all .15s">
-          <span style="font-size:28px">🌍</span>
-          <span style="font-size:12px;font-weight:800;color:#0b1a38">UK/US Used</span>
-          <span style="font-size:10px;color:#6b7280;text-align:center">Graded daily stock</span>
-        </a>
-        <!-- Dealer -->
-        <button data-store-action="open-dealer" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:#fef3c7;border:1.5px solid #fde68a;border-radius:12px;cursor:pointer;transition:all .15s;border-width:1.5px;border-style:solid">
-          <span style="font-size:28px">🏪</span>
-          <span style="font-size:12px;font-weight:800;color:#0b1a38">Become a Dealer</span>
-          <span style="font-size:10px;color:#6b7280;text-align:center">Wholesale pricing & bulk</span>
-        </button>
-      </div>
+      <!-- TILE 1: UK/US Used (condition card) -->
+      <!-- TILE 1: UK/US Used (condition card) -->
+      <a href="used.html" class="vg-tile" aria-label="Shop graded UK and US used phones">
+        <svg class="vg-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>
+        </svg>
+        <span class="vg-kicker">Graded stock</span>
+        <h3 class="vg-tile-title">UK &amp; US used phones, one by one.</h3>
+        <p class="vg-tile-sub">New stock weekly. Each phone is graded, battery health shown.</p>
+        <span class="vg-tile-meta">
+          <span>Grade A · 91% · 128GB</span>
+          <span class="vg-tile-cta">Browse<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </span>
+      </a>
+
+      <!-- TILE 2: Dealer / Wholesale (cash-in-carton) -->
+      <a href="partner.html" class="vg-tile" aria-label="Dealer and wholesale pricing">
+        <svg class="vg-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 7h13l3 4v6H3zM3 7l-1-3H0"/><path d="M16 11H3"/><circle cx="7" cy="18.5" r="1.8"/><circle cx="15" cy="18.5" r="1.8"/>
+        </svg>
+        <span class="vg-kicker">Dealers</span>
+        <h3 class="vg-tile-title">Buy in bulk, pay by the carton.</h3>
+        <p class="vg-tile-sub">Approved resellers get wholesale prices and pick up in Accra.</p>
+        <span class="vg-tile-meta">
+          <span>Per carton · MoMo / cash</span>
+          <span class="vg-tile-cta">Apply<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </span>
+      </a>
+
+      <!-- TILE 3: Installments (MoMo schedule) -->
+      <button type="button" id="installmentCatalogTrigger" class="vg-tile" data-open-installments="" aria-haspopup="dialog" aria-controls="installmentModal" aria-label="See installment plans">
+        <svg class="vg-tile-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M7 15h3"/>
+        </svg>
+        <span class="vg-kicker">Pay small small</span>
+        <h3 class="vg-tile-title">Pay 40% today, rest over 12 weeks.</h3>
+        <p class="vg-tile-sub">Ghana card + one guarantor. Pay with MoMo each week.</p>
+        <span class="vg-tile-meta">
+          <span>40% · 12 weeks</span>
+          <span class="vg-tile-cta">Plans<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </span>
+      </button>
     </div>
-  </div>
+  </section>
 
   <!-- 3. JUMIA HOME CONTAINER LAYOUT -->
   <main class="max-w-[1200px] mx-auto px-4 py-6 md:py-8 pb-20 md:pb-8">
@@ -2325,32 +2468,32 @@
       </div>
 
       <!-- VALMONT CERTIFIED GRADING BANNER -->
-      <div class="bg-gradient-to-r from-[#ecfdf5] to-[#d1fae5] rounded-[4px] p-4 mb-6 card-shadow border-l-4 border-[#10b981]">
+      <div class="bg-white rounded-[4px] p-4 mb-6 border border-gray-100 border-l-4 border-[#ff8c00]">
         <div class="flex items-center gap-3 mb-3">
-          <span class="text-2xl">🛡️</span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff8c00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shrink-0"><path d="M9 12l2 2 4-4"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           <div>
-            <h3 class="font-extrabold text-[14px] uppercase tracking-wider text-[#065f46]">Valmont Certified — Every Device Inspected</h3>
-            <p class="text-[11px] text-[#047857] font-semibold">Transparent condition grading. No surprises. 30-day swap warranty on all certified devices.</p>
+            <h3 class="font-extrabold text-[14px] uppercase tracking-wider text-[#0b1a38]">Valmont Certified — Every Device Inspected</h3>
+            <p class="text-[11px] text-[#64748b] font-semibold">Clear condition grading. 12-month warranty on all certified devices.</p>
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div class="bg-white rounded-lg p-3 border border-[#a7f3d0]">
+          <div class="bg-[#f8fafc] rounded-[4px] p-3 border border-[#e2e8f0]">
             <div class="flex items-center gap-2 mb-1">
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black bg-[#dcfce7] text-[#166534] uppercase tracking-wider">🟢 Grade A</span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black bg-[#dcfce7] text-[#166534] uppercase tracking-wider">Grade A</span>
             </div>
-            <p class="text-[11px] text-gray-600 font-medium">Pristine condition. No scratches, dents, or marks. Battery health 90%+. Like new.</p>
+            <p class="text-[11px] text-gray-600 font-medium">Pristine. No scratches or dents. Battery 90%+.</p>
           </div>
-          <div class="bg-white rounded-lg p-3 border border-[#93c5fd]">
+          <div class="bg-[#f8fafc] rounded-[4px] p-3 border border-[#e2e8f0]">
             <div class="flex items-center gap-2 mb-1">
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black bg-[#dbeafe] text-[#1e40af] uppercase tracking-wider">🔵 Grade B</span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black bg-[#dbeafe] text-[#1e40af] uppercase tracking-wider">Grade B</span>
             </div>
-            <p class="text-[11px] text-gray-600 font-medium">Excellent condition. Minor surface wear only visible on close inspection. Battery 80%+.</p>
+            <p class="text-[11px] text-gray-600 font-medium">Excellent. Light surface wear only. Battery 80%+.</p>
           </div>
-          <div class="bg-white rounded-lg p-3 border border-[#fde68a]">
+          <div class="bg-[#f8fafc] rounded-[4px] p-3 border border-[#e2e8f0]">
             <div class="flex items-center gap-2 mb-1">
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black bg-[#fef9c3] text-[#854d0e] uppercase tracking-wider">🟡 Grade C</span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black bg-[#fef9c3] text-[#854d0e] uppercase tracking-wider">Grade C</span>
             </div>
-            <p class="text-[11px] text-gray-600 font-medium">Good condition. Visible cosmetic wear — light scratches or scuffs. Fully functional. Battery 70%+.</p>
+            <p class="text-[11px] text-gray-600 font-medium">Good. Visible cosmetic wear. Fully working. Battery 70%+.</p>
           </div>
         </div>
       </div>
@@ -3280,8 +3423,8 @@
       <div>
         <h4 class="font-extrabold text-[12px] uppercase text-gray-400 tracking-widest mb-4">Support Pages</h4>
         <ul class="text-[12px] space-y-2 text-gray-300 font-medium">
-          <li><a href="used.html" class="hover:text-[#ff8c00] font-bold text-[#1e40af]">🇬🇧🇺🇸 UK & US Used Phones — Daily Stock</a></li>
-          <li><a href="swap.html" class="hover:text-[#ff8c00] font-bold text-[#ff8c00]">🔄 Phone Swap — Trade Your Device</a></li>
+          <li><a href="used.html" class="hover:text-[#ff8c00] font-bold text-[#1e40af]"> UK & US Used Phones — Daily Stock</a></li>
+          <li><a href="swap.html" class="hover:text-[#ff8c00] font-bold text-[#ff8c00]"> Phone Swap — Trade Your Device</a></li>
           <li><a href="#faq" class="hover:text-[#ff8c00]" data-store-action="open-dealer">12-Month Official Warranty policy</a></li>
           <li><a href="#" class="hover:text-[#ff8c00]">Express delivery across Greater Accra</a></li>
           <li><a href="#" class="hover:text-[#ff8c00]">Secure payments on delivery with MoMo</a></li>
@@ -3320,11 +3463,11 @@
             <span>Mon - Sun: 8AM - 9PM</span>
           </li>
         </ul>
-        <a href="https://wa.me/233542451578" target="_blank" rel="noopener" class="vg-contact-wa">💬 WhatsApp Support →</a>
+        <a href="https://wa.me/233542451578" target="_blank" rel="noopener" class="vg-contact-wa">WhatsApp Support →</a>
       </div>
     </div>
     <div class="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-center text-gray-400 text-[11px] font-semibold">
-      <span>© 2026 VALMONT GADGETS — ALL RIGHTS RESERVED</span>
+      <span>&copy; 2026 VALMONT GADGETS — ALL RIGHTS RESERVED</span>
       <span>Accra, Ghana</span>
     </div>
   </footer>
@@ -3512,7 +3655,7 @@
           <!-- Installment Plan Summary -->
           <div id="installmentSummary" class="hidden mb-5 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-3.5 shadow-sm">
             <div class="flex items-center gap-2 mb-2">
-              <span class="text-lg">💳</span>
+              <span class="text-lg"></span>
               <h3 class="font-black text-[12px] uppercase text-blue-900 tracking-wider">Buy on Installments</h3>
             </div>
             <div class="grid grid-cols-2 gap-3">
@@ -3551,7 +3694,7 @@
             Add to Bag
           </button>
           <button id="detailInstallmentBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] tracking-wider uppercase py-2.5 rounded-[4px] transition flex items-center justify-center gap-1.5 hidden">
-            <span>💳 Apply for Installment Plan</span>
+            <span>Apply for Installment Plan</span>
           </button>
           <button id="detailExpressDelivery" class="w-full border border-[#0b1a38] bg-white text-[#0b1a38] hover:bg-[#f5f8fc] font-bold text-[11px] tracking-wider uppercase py-2.5 rounded-[4px] transition flex items-center justify-center gap-1.5">
             Valmont Express Delivery (+30%)
@@ -3880,12 +4023,6 @@
       <span>Swap</span>
     </a>
 
-    <!-- UK/US Used -->
-    <a href="used.html" class="bottom-nav-item" id="navUsed">
-      <span class="icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5a17.92 17.92 0 0 1-8.716-2.247m0 0A9 9 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418"></path></svg></span>
-      <span>Used</span>
-    </a>
-
     <!-- Saved / Wishlist -->
     <button class="bottom-nav-item" id="navSaved" data-store-action="open-wishlist">
       <span class="icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"></path></svg></span>
@@ -3897,7 +4034,7 @@
     <a href="account.html" class="bottom-nav-item" id="navAccount">
       <span class="icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"></path></svg></span>
       <span id="mobileAccountLabel">Account</span>
-      <span class="account-signed-check" aria-hidden="true">✓</span>
+      <span class="account-signed-check" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
     </a>
 
     <!-- Bag -->
@@ -4110,6 +4247,7 @@
   </div>
   <script src="assets/js/security.js" defer=""></script>
 <script src="assets/js/page-init.js" defer=""></script>
+<script src="assets/js/valmontai.js" defer=""></script>
 
 
 </body></html>
