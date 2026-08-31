@@ -201,7 +201,7 @@
     }
 
     // Wholesale / dealer access
-    if (/\b(wholesale|dealer price|dealer account|bulk price|buy in bulk)\b/.test(q)) {
+    if (/\b(wholesale|dealers?|dealer prices?|dealer accounts?|bulk prices?|buy in bulk)\b/.test(q)) {
       return {
         reply: `Wholesale access is available to approved Valmont dealers. <a href="/wholesale.html">Open the Wholesale Portal</a> to sign in or apply for access.`
       };
