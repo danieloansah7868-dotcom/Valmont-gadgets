@@ -161,8 +161,8 @@
     }
 
     // Customer accounts and order tracking
-    if (/\b(my account|sign in|log in|login|register|create account|track (?:my )?order|order history|my orders|reset (?:my )?password|forgot password|address book)\b/.test(q)) {
-      return { reply: `Open <a href="/account.html">My Account</a> to sign in, create an account, manage addresses, view orders or reset your password.` };
+    if (/\b(my account|sign in|log in|login|register|create account|track (?:my )?order|order history|my orders|my purchases?|purchase history|last purchas(?:e|ed)|last order|what (?:did|have) i (?:buy|bought|purchase|purchased)|recent orders?|recent purchases?|items? i (?:bought|purchased)|reset (?:my )?password|forgot password|address book)\b/.test(q)) {
+      return { reply: `Your purchases are private, so I cannot display them in this public chat. Open <a href="/account.html">My Account</a> and sign in to securely view your latest purchase, complete order history, status and delivery details.` };
     }
 
     // Business owners may need wholesale access, a partner page, or a complete
@@ -338,10 +338,11 @@
       return { reply: "Thank you for visiting Valmont Gadgets. Feel free to chat again anytime!" };
     }
 
-    // Fallback — WhatsApp contact per Rule 7
+    // Unknown intent: ask a useful clarifying question instead of pretending
+    // to understand or immediately sending every shopper away to WhatsApp.
     return {
-      reply: `For more information on that, please WhatsApp us at <a href="${WHATSAPP_LINK}" target="_blank" rel="noopener">${WHATSAPP}</a>. In the meantime, feel free to ask about our phones, laptops, accessories, delivery, or warranty.`,
-      quick: true
+      reply: `I’m not certain what you want me to do. Is this about <strong>a product, your orders, delivery, installments, Swap & Sell, wholesale, a partner page, or building a website</strong>? Reply with one option and I’ll take you to the right place.`,
+      quick: false
     };
   }
 
