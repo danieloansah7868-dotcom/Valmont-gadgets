@@ -425,6 +425,7 @@
 
     let isOpen = false;
     let greeted = false;
+    let lastHelpfulReply = '';
 
     function addBubble(text, who) {
       const wrap = el('div', 'valmontai-msg ' + (who === 'user' ? 'valmontai-msg-user' : 'valmontai-msg-bot'));
@@ -443,6 +444,12 @@
 
     function renderQuick(showAll) {
       quickEl.innerHTML = '';
+      const dismiss = el('button', 'valmontai-quick-close', '×');
+      dismiss.type = 'button';
+      dismiss.setAttribute('aria-label', 'Hide suggested questions');
+      dismiss.title = 'Hide suggestions';
+      dismiss.addEventListener('click', () => { quickEl.innerHTML = ''; });
+      quickEl.appendChild(dismiss);
       const items = showAll ? QUICK_REPLIES : QUICK_REPLIES.slice(0, 4);
       items.forEach(label => {
         const b = el('button', 'valmontai-quick-btn', label);
@@ -480,7 +487,11 @@
       addBubble(text.replace(/</g, '&lt;'), 'user');
       input.value = '';
       quickEl.innerHTML = '';
-      const res = getResponse(text);
+      const isContextFollowUp = /^(explain( it)?( well| better)?|tell me more|more details|how does (that|it) work|what do you mean)$/.test(text.toLowerCase().replace(/[?!.,]/g, '').trim());
+      const res = isContextFollowUp && lastHelpfulReply
+        ? { reply: `Of course. Here is the information we were discussing:<br>${lastHelpfulReply}<br>If you tell me which option or part you mean, I can direct you to the exact page.`, quick: false }
+        : getResponse(text);
+      lastHelpfulReply = res.reply;
       botReply(res.reply, res.quick);
     }
 

@@ -317,11 +317,31 @@
 
 /* Quick replies */
 .valmontai-quick {
+  position: relative;
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
-  padding: 0 12px 8px;
+  padding: 0 42px 8px 12px;
   flex-shrink: 0;
+}
+.valmontai-quick:empty { display: none; }
+.valmontai-quick-close {
+  position: absolute;
+  top: 1px;
+  right: 12px;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--vai-border);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--vai-text-soft);
+  font: 700 18px/1 inherit;
+  cursor: pointer;
+}
+.valmontai-quick-close:hover,
+.valmontai-quick-close:focus-visible {
+  color: var(--vai-navy);
+  border-color: var(--vai-orange);
 }
 .valmontai-quick-btn {
   background: #fff;
