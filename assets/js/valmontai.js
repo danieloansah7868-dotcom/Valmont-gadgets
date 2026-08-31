@@ -165,6 +165,14 @@
       return { reply: `Open <a href="/account.html">My Account</a> to sign in, create an account, manage addresses, view orders or reset your password.` };
     }
 
+    // Business owners may need wholesale access, a partner page, or a complete
+    // website. Do not confuse the word "shop" here with store navigation.
+    if (/\b(i have|i own|i run|my) (?:a )?(?:physical |retail |phone |electronics )?(?:shop|store|business)\b|\b(?:shop|store|business) owner\b/.test(q)) {
+      return {
+        reply: `Great — Valmont has three options for an existing business:<br><strong>Wholesale:</strong> apply for approved dealer pricing in the <a href="/wholesale.html">Wholesale Portal</a>.<br><strong>Partner:</strong> get a Valmont store page through the <a href="/partner.html">Partner programme</a>.<br><strong>Your own website:</strong> launch under your own brand with <a href="${VALMONTWEB}" target="_blank" rel="noopener">ValmontWeb</a>.<br>Which one would you like to explore?`
+      };
+    }
+
     // Partner programme
     if (/\b(partner program|partner programme|become a partner|store page|phone shop|grow my business)\b/.test(q)) {
       return { reply: `The <a href="/partner.html">Valmont Partner programme</a> is for phone businesses that want a Valmont store page and business-growth tools. Review the options and submit the partner application on that page.` };
