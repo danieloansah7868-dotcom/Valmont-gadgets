@@ -72,6 +72,43 @@
   const WHATSAPP = '0542451578';
   const WHATSAPP_LINK = 'https://wa.me/233542451578';
 
+  // ---------- LIVE CATALOGUE HELPERS ----------
+  const money = new Intl.NumberFormat('en-GH', {
+    style: 'currency', currency: 'GHS', maximumFractionDigits: 0
+  });
+  const SEARCH_STOP_WORDS = new Set([
+    'a', 'an', 'and', 'are', 'can', 'do', 'for', 'have', 'how', 'i', 'in',
+    'is', 'it', 'me', 'of', 'on', 'please', 'price', 'show', 'the', 'to',
+    'want', 'what', 'with', 'you', 'your'
+  ]);
+
+  function liveCatalog() {
+    return Array.isArray(window.VALMONT_CATALOG) ? window.VALMONT_CATALOG : [];
+  }
+
+  function productMatches(query) {
+    const tokens = query.split(/\s+/).filter((word) => word.length > 1 && !SEARCH_STOP_WORDS.has(word));
+    if (!tokens.length) return [];
+    return liveCatalog().map((product) => {
+      const haystack = `${product.name} ${product.category} ${product.specs || ''} ${(product.tags || []).join(' ')}`.toLowerCase();
+      const score = tokens.reduce((total, token) => total + (haystack.includes(token) ? 1 : 0), 0);
+      return { product, score };
+    }).filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score || a.product.retail - b.product.retail);
+  }
+
+  function productReply(matches, query) {
+    if (!matches.length) return null;
+    const meaningful = query.split(/\s+/).filter((word) => word.length > 2 && !SEARCH_STOP_WORDS.has(word)).length;
+    const bestScore = matches[0].score;
+    if (meaningful > 1 && bestScore < Math.min(2, meaningful)) return null;
+    const items = matches.slice(0, 4).map(({ product }) => {
+      const price = Number.isFinite(Number(product.retail)) ? money.format(Number(product.retail)) : 'price available on request';
+      return `<strong>${product.name}</strong> — ${price}${product.stock ? ` · ${product.stock}` : ''}`;
+    });
+    return `Here ${items.length === 1 ? 'is the closest match' : 'are the closest matches'} in our current catalogue:<br>${items.join('<br>')}<br>Use the store search to open a product, or ask me about a specific model.`;
+  }
+
   // ---------- RESPONSE ENGINE ----------
   function getResponse(text) {
     const q = text.toLowerCase().trim()
@@ -93,6 +130,49 @@
       return {
         reply: `You can reach us on WhatsApp at <a href="${WHATSAPP_LINK}" target="_blank" rel="noopener">${WHATSAPP}</a> for further assistance.`
       };
+    }
+
+    // Explain the complete site when the shopper asks what Valmont offers.
+    if (/\b(what (?:can|do) (?:you|valmont)|what (?:is|does) valmont|services|help me with|what do you sell)\b/.test(q)) {
+      return {
+        reply: `Valmont Gadgets sells phones, laptops, audio, gaming gear and accessories. The site also includes installment plans, UK/US used phones, Swap & Sell listings, Daily Drop rewards, approved-dealer wholesale access, order tracking, and ValmontWeb website services. Tell me which one you need.`,
+        quick: true
+      };
+    }
+
+    // Daily Drop
+    if (/\b(daily drop|today s drop|flip (?:a )?card|golden card|reward card)\b/.test(q)) {
+      return { reply: `Daily Drop lets a signed-in customer flip one card each day for a chance to reveal a real offer. <a href="/drop.html">Open today's Daily Drop</a>.` };
+    }
+
+    // Swap & Sell marketplace
+    if (/\b(swap|trade[ -]?in|trade my phone|sell my phone|list my phone|phone listing)\b/.test(q)) {
+      return { reply: `Use <a href="/swap.html">Swap & Sell</a> to list a phone, receive interest and arrange a public meetup. Valmont provides the marketplace but is not a party to user-to-user transactions. Check the IMEI, inspect the device and never send an unsafe deposit.` };
+    }
+
+    // UK/US used stock
+    if (/\b(uk used|us used|used phone|preowned|pre owned|second hand|battery health|graded phone)\b/.test(q)) {
+      return { reply: `Browse individually graded UK and US used phones on the <a href="/used.html">Used Phones page</a>. Listings show condition and battery information when available; confirm the exact device details before buying.` };
+    }
+
+    // Installment plans
+    if (/\b(installment|instalment|pay small small|payment plan|pay weekly|12 weeks|forty percent|40 percent|40%)\b/.test(q)) {
+      return { reply: `Eligible products can be purchased with 40% paid today and the balance spread over 12 weeks. A Ghana Card and one guarantor are required. Open an eligible product and choose the installment option to review the plan.` };
+    }
+
+    // Customer accounts and order tracking
+    if (/\b(my account|sign in|log in|login|register|create account|track (?:my )?order|order history|my orders|reset (?:my )?password|forgot password|address book)\b/.test(q)) {
+      return { reply: `Open <a href="/account.html">My Account</a> to sign in, create an account, manage addresses, view orders or reset your password.` };
+    }
+
+    // Partner programme
+    if (/\b(partner program|partner programme|become a partner|store page|phone shop|grow my business)\b/.test(q)) {
+      return { reply: `The <a href="/partner.html">Valmont Partner programme</a> is for phone businesses that want a Valmont store page and business-growth tools. Review the options and submit the partner application on that page.` };
+    }
+
+    // Returns, problems and after-sales support. Do not invent a return window.
+    if (/\b(return|refund|exchange|faulty|damaged|problem with|repair|after sales)\b/.test(q)) {
+      return { reply: `Returns and warranty support depend on the product, condition and order details. Keep your receipt and packaging, then contact Valmont on <a href="${WHATSAPP_LINK}" target="_blank" rel="noopener">WhatsApp ${WHATSAPP}</a> with your order number so the team can review the correct remedy.` };
     }
 
     // ValmontWeb / website-building enquiries. Keep this before the generic
@@ -146,6 +226,13 @@
       return {
         reply: "You can add any item to your cart and pay with Mobile Money or Card directly on the website via Valmont Pay. We deliver nationwide across Ghana."
       };
+    }
+
+    // Search the actual storefront catalogue rather than relying on stale,
+    // hardcoded product answers. This covers model, brand, category and spec.
+    if (/\b(price|cost|stock|available|find|show|looking for|need|want|phone|iphone|samsung|pixel|laptop|macbook|ipad|watch|airpod|audio|gaming|charger|case|accessor|router|camera)\b/.test(q)) {
+      const answer = productReply(productMatches(q), q);
+      if (answer) return { reply: answer, quick: true };
     }
 
     // Categories / navigation / where to find
