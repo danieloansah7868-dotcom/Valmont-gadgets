@@ -16,28 +16,26 @@ This is not a promise that the full supplier network exists today. It is a roadm
 
 Keep the first version deliberately simple:
 
-1. Sell Valmont's available products normally.
+1. Sell Valmont's own available products normally.
 2. Let interested dealers apply through the existing partner/wholesale pages.
-3. Build branded websites for clients through ValmontWeb.
-4. Handle special sourcing manually through WhatsApp when practical.
-5. Confirm stock and price before accepting payment.
+3. Build branded websites for clients who already have products or services through ValmontWeb.
+4. Do not advertise supplier matching, managed sourcing or dropshipping yet.
 
-No automated supplier marketplace, split payments or dropshipping platform is required at launch.
+No automated supplier marketplace, supply guarantee, split payments or dropshipping platform is part of the current launch.
 
 ## Honest launch pitch
 
-### We connect the supply. You build the brand.
+### Have something to sell? Build it under your own brand.
 
-Want to sell gadgets under your own name? Valmont can help you source available phones, laptops and accessories, while ValmontWeb builds a professional online store for your brand.
-
-Start with a website and a carefully selected catalogue. When a customer is ready to order, contact Valmont to confirm current availability and dealer pricing.
+Already have products or services? ValmontWeb can build a professional website under your own business name so customers can discover what you offer and contact or order from you online.
 
 **Your website. Your customers. Your brand.**
 
-Suggested calls to action:
+Suggested call to action:
 
 - **Build My Store** → `https://valmontweb.com/?utm_source=valmont_gadgets&utm_medium=wholesale&utm_campaign=reseller_growth`
-- **Apply as a Dealer** → `/partner.html`
+
+The future tagline **“We connect the supply. You build the brand.”** must not be used as a current service promise until the supplier network and operating process are actually available.
 
 ## Solo-founder operating process
 
