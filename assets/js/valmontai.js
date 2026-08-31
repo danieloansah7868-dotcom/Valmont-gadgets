@@ -68,6 +68,7 @@
   ];
 
   const WEBSITE = 'https://valmontgadgets.com';
+  const VALMONTWEB = 'https://valmontweb.com/?utm_source=valmont_gadgets&utm_medium=ai_assistant&utm_campaign=website_enquiry';
   const WHATSAPP = '0542451578';
   const WHATSAPP_LINK = 'https://wa.me/233542451578';
 
@@ -94,8 +95,32 @@
       };
     }
 
+    // ValmontWeb / website-building enquiries. Keep this before the generic
+    // "website" navigation rule so "build my own site" is not mistaken for
+    // somebody asking for the Valmont Gadgets shop URL.
+    if (/\b(valmont\s*web|web\s*design|website\s*design|build(?:ing)?\s+(?:me\s+)?(?:my|a|an|your|our|own)?\s*(?:web\s*site|website|site|online\s*store)|(?:create|make|launch|start|need|want|get)\s+(?:me\s+)?(?:my|a|an|your|our|own)?\s*(?:web\s*site|website|site|online\s*store)|(?:own|business)\s+(?:web\s*site|website|site|online\s*store))\b/.test(q)) {
+      return {
+        reply: `Yes. If you already have a product, service or business, ValmontWeb can build a professional website under your own brand. <a href="${VALMONTWEB}" target="_blank" rel="noopener">Visit ValmontWeb to get started</a>. Your website. Your customers. Your brand.`
+      };
+    }
+
+    // Be accurate about the supplier concept: it is a future upgrade, not a
+    // service Valmont currently promises to website clients.
+    if (/\b(supplier|suppliers|dropship|dropshipping|provide (?:me )?(?:with )?(?:stock|products)|source (?:my )?(?:stock|products))\b/.test(q)) {
+      return {
+        reply: `Valmont does not currently provide an automated supplier or dropshipping service. If you already have something to sell, ValmontWeb can build your website. For existing Valmont dealer and wholesale enquiries, please <a href="${WHATSAPP_LINK}" target="_blank" rel="noopener">contact us on WhatsApp</a>.`
+      };
+    }
+
+    // Wholesale / dealer access
+    if (/\b(wholesale|dealer price|dealer account|bulk price|buy in bulk)\b/.test(q)) {
+      return {
+        reply: `Wholesale access is available to approved Valmont dealers. <a href="/wholesale.html">Open the Wholesale Portal</a> to sign in or apply for access.`
+      };
+    }
+
     // Warranty
-    if (/\b(warranty|guarantee|warranty|cover(ed)?)\b/.test(q)) {
+    if (/\b(warranty|guarantee|cover(ed)?)\b/.test(q)) {
       return { reply: "All genuine phones and laptops come with a 12-month warranty." };
     }
 
