@@ -68,8 +68,46 @@
   ];
 
   const WEBSITE = 'https://valmontgadgets.com';
+  const VALMONTWEB = 'https://valmontweb.com/?utm_source=valmont_gadgets&utm_medium=ai_assistant&utm_campaign=website_enquiry';
   const WHATSAPP = '0542451578';
   const WHATSAPP_LINK = 'https://wa.me/233542451578';
+
+  // ---------- LIVE CATALOGUE HELPERS ----------
+  const money = new Intl.NumberFormat('en-GH', {
+    style: 'currency', currency: 'GHS', maximumFractionDigits: 0
+  });
+  const SEARCH_STOP_WORDS = new Set([
+    'a', 'an', 'and', 'are', 'can', 'do', 'for', 'have', 'how', 'i', 'in',
+    'is', 'it', 'me', 'of', 'on', 'please', 'price', 'show', 'the', 'to',
+    'want', 'what', 'with', 'you', 'your'
+  ]);
+
+  function liveCatalog() {
+    return Array.isArray(window.VALMONT_CATALOG) ? window.VALMONT_CATALOG : [];
+  }
+
+  function productMatches(query) {
+    const tokens = query.split(/\s+/).filter((word) => word.length > 1 && !SEARCH_STOP_WORDS.has(word));
+    if (!tokens.length) return [];
+    return liveCatalog().map((product) => {
+      const haystack = `${product.name} ${product.category} ${product.specs || ''} ${(product.tags || []).join(' ')}`.toLowerCase();
+      const score = tokens.reduce((total, token) => total + (haystack.includes(token) ? 1 : 0), 0);
+      return { product, score };
+    }).filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score || a.product.retail - b.product.retail);
+  }
+
+  function productReply(matches, query) {
+    if (!matches.length) return null;
+    const meaningful = query.split(/\s+/).filter((word) => word.length > 2 && !SEARCH_STOP_WORDS.has(word)).length;
+    const bestScore = matches[0].score;
+    if (meaningful > 1 && bestScore < Math.min(2, meaningful)) return null;
+    const items = matches.slice(0, 4).map(({ product }) => {
+      const price = Number.isFinite(Number(product.retail)) ? money.format(Number(product.retail)) : 'price available on request';
+      return `<strong>${product.name}</strong> — ${price}${product.stock ? ` · ${product.stock}` : ''}`;
+    });
+    return `Here ${items.length === 1 ? 'is the closest match' : 'are the closest matches'} in our current catalogue:<br>${items.join('<br>')}<br>Use the store search to open a product, or ask me about a specific model.`;
+  }
 
   // ---------- RESPONSE ENGINE ----------
   function getResponse(text) {
@@ -94,8 +132,83 @@
       };
     }
 
+    // Explain the complete site when the shopper asks what Valmont offers.
+    if (/\b(what (?:can|do) (?:you|valmont)|what (?:is|does) valmont|services|help me with|what do you sell)\b/.test(q)) {
+      return {
+        reply: `Valmont Gadgets sells phones, laptops, audio, gaming gear and accessories. The site also includes installment plans, UK/US used phones, Swap & Sell listings, Daily Drop rewards, approved-dealer wholesale access, order tracking, and ValmontWeb website services. Tell me which one you need.`,
+        quick: true
+      };
+    }
+
+    // Daily Drop
+    if (/\b(daily drop|today s drop|flip (?:a )?card|golden card|reward card)\b/.test(q)) {
+      return { reply: `Daily Drop lets a signed-in customer flip one card each day for a chance to reveal a real offer. <a href="/drop.html">Open today's Daily Drop</a>.` };
+    }
+
+    // Swap & Sell marketplace
+    if (/\b(swap|trade[ -]?in|trade my phone|sell my phone|list my phone|phone listing)\b/.test(q)) {
+      return { reply: `Use <a href="/swap.html">Swap & Sell</a> to list a phone, receive interest and arrange a public meetup. Valmont provides the marketplace but is not a party to user-to-user transactions. Check the IMEI, inspect the device and never send an unsafe deposit.` };
+    }
+
+    // UK/US used stock
+    if (/\b(uk used|us used|used phone|preowned|pre owned|second hand|battery health|graded phone)\b/.test(q)) {
+      return { reply: `Browse individually graded UK and US used phones on the <a href="/used.html">Used Phones page</a>. Listings show condition and battery information when available; confirm the exact device details before buying.` };
+    }
+
+    // Installment plans
+    if (/\b(installment|instalment|pay small small|payment plan|pay weekly|12 weeks|forty percent|40 percent|40%)\b/.test(q)) {
+      return { reply: `Eligible products can be purchased with 40% paid today and the balance spread over 12 weeks. A Ghana Card and one guarantor are required. Open an eligible product and choose the installment option to review the plan.` };
+    }
+
+    // Customer accounts and order tracking
+    if (/\b(my account|sign in|log in|login|register|create account|track (?:my )?order|order history|my orders|my purchases?|purchase history|last purchas(?:e|ed)|last order|what (?:did|have) i (?:buy|bought|purchase|purchased)|recent orders?|recent purchases?|items? i (?:bought|purchased)|reset (?:my )?password|forgot password|address book)\b/.test(q)) {
+      return { reply: `Your purchases are private, so I cannot display them in this public chat. Open <a href="/account.html">My Account</a> and sign in to securely view your latest purchase, complete order history, status and delivery details.` };
+    }
+
+    // Business owners may need wholesale access, a partner page, or a complete
+    // website. Do not confuse the word "shop" here with store navigation.
+    if (/\b(i have|i own|i run|my) (?:a )?(?:physical |retail |phone |electronics )?(?:shop|store|business)\b|\b(?:shop|store|business) owner\b/.test(q)) {
+      return {
+        reply: `Great — Valmont has three options for an existing business:<br><strong>Wholesale:</strong> apply for approved dealer pricing in the <a href="/wholesale.html">Wholesale Portal</a>.<br><strong>Partner:</strong> get a Valmont store page through the <a href="/partner.html">Partner programme</a>.<br><strong>Your own website:</strong> launch under your own brand with <a href="${VALMONTWEB}" target="_blank" rel="noopener">ValmontWeb</a>.<br>Which one would you like to explore?`
+      };
+    }
+
+    // Partner programme
+    if (/\b(partner program|partner programme|become a partner|store page|phone shop|grow my business)\b/.test(q)) {
+      return { reply: `The <a href="/partner.html">Valmont Partner programme</a> is for phone businesses that want a Valmont store page and business-growth tools. Review the options and submit the partner application on that page.` };
+    }
+
+    // Returns, problems and after-sales support. Do not invent a return window.
+    if (/\b(return|refund|exchange|faulty|damaged|problem with|repair|after sales)\b/.test(q)) {
+      return { reply: `Returns and warranty support depend on the product, condition and order details. Keep your receipt and packaging, then contact Valmont on <a href="${WHATSAPP_LINK}" target="_blank" rel="noopener">WhatsApp ${WHATSAPP}</a> with your order number so the team can review the correct remedy.` };
+    }
+
+    // ValmontWeb / website-building enquiries. Keep this before the generic
+    // "website" navigation rule so "build my own site" is not mistaken for
+    // somebody asking for the Valmont Gadgets shop URL.
+    if (/\b(valmont\s*web|web\s*design|website\s*design|build(?:ing)?\s+(?:me\s+)?(?:my|a|an|your|our|own)?\s*(?:web\s*site|website|site|online\s*store)|(?:create|make|launch|start|need|want|get)\s+(?:me\s+)?(?:my|a|an|your|our|own)?\s*(?:web\s*site|website|site|online\s*store)|(?:own|business)\s+(?:web\s*site|website|site|online\s*store))\b/.test(q)) {
+      return {
+        reply: `Yes. If you already have a product, service or business, ValmontWeb can build a professional website under your own brand. <a href="${VALMONTWEB}" target="_blank" rel="noopener">Visit ValmontWeb to get started</a>. Your website. Your customers. Your brand.`
+      };
+    }
+
+    // Be accurate about the supplier concept: it is a future upgrade, not a
+    // service Valmont currently promises to website clients.
+    if (/\b(supplier|suppliers|dropship|dropshipping|provide (?:me )?(?:with )?(?:stock|products)|source (?:my )?(?:stock|products))\b/.test(q)) {
+      return {
+        reply: `Valmont does not currently provide an automated supplier or dropshipping service. If you already have something to sell, ValmontWeb can build your website. For existing Valmont dealer and wholesale enquiries, please <a href="${WHATSAPP_LINK}" target="_blank" rel="noopener">contact us on WhatsApp</a>.`
+      };
+    }
+
+    // Wholesale / dealer access
+    if (/\b(wholesale|dealers?|dealer prices?|dealer accounts?|bulk prices?|buy in bulk)\b/.test(q)) {
+      return {
+        reply: `Wholesale access is available to approved Valmont dealers. <a href="/wholesale.html">Open the Wholesale Portal</a> to sign in or apply for access.`
+      };
+    }
+
     // Warranty
-    if (/\b(warranty|guarantee|warranty|cover(ed)?)\b/.test(q)) {
+    if (/\b(warranty|guarantee|cover(ed)?)\b/.test(q)) {
       return { reply: "All genuine phones and laptops come with a 12-month warranty." };
     }
 
@@ -121,6 +234,13 @@
       return {
         reply: "You can add any item to your cart and pay with Mobile Money or Card directly on the website via Valmont Pay. We deliver nationwide across Ghana."
       };
+    }
+
+    // Search the actual storefront catalogue rather than relying on stale,
+    // hardcoded product answers. This covers model, brand, category and spec.
+    if (/\b(price|cost|stock|available|find|show|looking for|need|want|phone|iphone|samsung|pixel|laptop|macbook|ipad|watch|airpod|audio|gaming|charger|case|accessor|router|camera)\b/.test(q)) {
+      const answer = productReply(productMatches(q), q);
+      if (answer) return { reply: answer, quick: true };
     }
 
     // Categories / navigation / where to find
@@ -218,10 +338,11 @@
       return { reply: "Thank you for visiting Valmont Gadgets. Feel free to chat again anytime!" };
     }
 
-    // Fallback — WhatsApp contact per Rule 7
+    // Unknown intent: ask a useful clarifying question instead of pretending
+    // to understand or immediately sending every shopper away to WhatsApp.
     return {
-      reply: `For more information on that, please WhatsApp us at <a href="${WHATSAPP_LINK}" target="_blank" rel="noopener">${WHATSAPP}</a>. In the meantime, feel free to ask about our phones, laptops, accessories, delivery, or warranty.`,
-      quick: true
+      reply: `I’m not certain what you want me to do. Is this about <strong>a product, your orders, delivery, installments, Swap & Sell, wholesale, a partner page, or building a website</strong>? Reply with one option and I’ll take you to the right place.`,
+      quick: false
     };
   }
 
@@ -305,6 +426,7 @@
 
     let isOpen = false;
     let greeted = false;
+    let lastHelpfulReply = '';
 
     function addBubble(text, who) {
       const wrap = el('div', 'valmontai-msg ' + (who === 'user' ? 'valmontai-msg-user' : 'valmontai-msg-bot'));
@@ -323,6 +445,12 @@
 
     function renderQuick(showAll) {
       quickEl.innerHTML = '';
+      const dismiss = el('button', 'valmontai-quick-close', '×');
+      dismiss.type = 'button';
+      dismiss.setAttribute('aria-label', 'Hide suggested questions');
+      dismiss.title = 'Hide suggestions';
+      dismiss.addEventListener('click', () => { quickEl.innerHTML = ''; });
+      quickEl.appendChild(dismiss);
       const items = showAll ? QUICK_REPLIES : QUICK_REPLIES.slice(0, 4);
       items.forEach(label => {
         const b = el('button', 'valmontai-quick-btn', label);
@@ -360,7 +488,11 @@
       addBubble(text.replace(/</g, '&lt;'), 'user');
       input.value = '';
       quickEl.innerHTML = '';
-      const res = getResponse(text);
+      const isContextFollowUp = /^(explain( it)?( well| better)?|tell me more|more details|how does (that|it) work|what do you mean)$/.test(text.toLowerCase().replace(/[?!.,]/g, '').trim());
+      const res = isContextFollowUp && lastHelpfulReply
+        ? { reply: `Of course. Here is the information we were discussing:<br>${lastHelpfulReply}<br>If you tell me which option or part you mean, I can direct you to the exact page.`, quick: false }
+        : getResponse(text);
+      lastHelpfulReply = res.reply;
       botReply(res.reply, res.quick);
     }
 

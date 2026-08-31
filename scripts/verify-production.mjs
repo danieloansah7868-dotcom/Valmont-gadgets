@@ -74,10 +74,10 @@ const pageNames = [
 // the fingerprinted bundles; a page that quietly drops db-adapter.js would fall
 // back to no data at all, which is exactly how a "working" demo ships broken.
 const platformRuntimes = {
-  'swap.html': ['security', 'supabase-client', 'db-adapter', 'swap-page'],
-  'used.html': ['security', 'supabase-client', 'db-adapter', 'used-page'],
-  'wholesale.html': ['security', 'supabase-client', 'db-adapter', 'wholesale-page'],
-  'partner.html': ['security', 'supabase-client', 'db-adapter', 'partner-page'],
+  'swap.html': ['security', 'supabase-client', 'db-adapter', 'swap-page', 'valmontai'],
+  'used.html': ['security', 'supabase-client', 'db-adapter', 'used-page', 'valmontai'],
+  'wholesale.html': ['security', 'supabase-client', 'db-adapter', 'wholesale-page', 'valmontai'],
+  'partner.html': ['security', 'supabase-client', 'db-adapter', 'partner-page', 'valmontai'],
   'admin-control.html': ['security', 'supabase-client', 'admin-control-page'],
 };
 for (const page of pageNames) {

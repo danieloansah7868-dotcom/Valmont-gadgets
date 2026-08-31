@@ -110,6 +110,17 @@ tr:hover{background:#f9fafb}
 .retail-price{color:#9ca3af;text-decoration:line-through;font-weight:600;font-size:11px}
 .save-badge{background:#dcfce7;color:#166534;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px}
 
+/* ── ValmontWeb reseller growth pitch ── */
+.web-pitch{margin-top:18px;padding:18px;border-radius:12px;background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;text-align:left}
+.web-pitch .eyebrow{font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--orange);margin-bottom:7px}
+.web-pitch h2{font-size:17px;line-height:1.2;font-weight:900;margin-bottom:7px;color:#fff;text-align:left}
+.web-pitch p{font-size:11px;line-height:1.55;color:#cbd5e1;margin-bottom:12px}
+.web-pitch .web-cta{display:flex;align-items:center;justify-content:center;width:100%;padding:10px 12px;border-radius:8px;background:var(--orange);color:#fff;text-decoration:none;font-size:12px;font-weight:900}
+.sidebar-web-pitch{margin:18px 12px;padding:14px;border:1px solid rgba(255,140,0,.35);border-radius:10px;background:rgba(255,255,255,.05)}
+.sidebar-web-pitch strong{display:block;color:#fff;font-size:12px;line-height:1.35;margin-bottom:5px}
+.sidebar-web-pitch p{font-size:10px;line-height:1.45;color:#94a3b8;margin-bottom:10px}
+.sidebar-web-pitch a{display:block;padding:8px;border-radius:7px;background:var(--orange);color:#fff;text-align:center;text-decoration:none;font-size:10px;font-weight:900}
+
 @media(max-width:768px){
   .sidebar{transform:translateX(-100%);width:280px}.sidebar.open{transform:translateX(0)}
   .main{margin-left:0}
@@ -140,6 +151,13 @@ tr:hover{background:#f9fafb}
       <button type="button" class="btn btn-outline" style="width:100%;justify-content:center;padding:10px;font-size:12px" id="openApplyBtn">Apply for wholesale access</button>
       <p style="font-size:11px;color:#9ca3af;margin-top:8px">Need a login first? <a href="account.html" style="color:#1e40af;font-weight:800">Create a free Valmont account</a></p>
     </div>
+
+    <section class="web-pitch" aria-labelledby="webPitchTitle">
+      <div class="eyebrow">Bring your business online with ValmontWeb</div>
+      <h2 id="webPitchTitle">Have something to sell? Build it under your own brand.</h2>
+      <p>Launch a professional website for your products or services with ValmontWeb. Your website. Your customers. Your brand.</p>
+      <a class="web-cta" href="https://valmontweb.com/?utm_source=valmont_gadgets&amp;utm_medium=wholesale&amp;utm_campaign=reseller_growth" target="_blank" rel="noopener noreferrer">Build My Store →</a>
+    </section>
 
     <!-- Dealer application. The database ties it to the signed-in user id, so
          an approval can never be claimed by whoever typed the form. -->
@@ -190,6 +208,11 @@ tr:hover{background:#f9fafb}
       <button class="nav-item" data-page="profile"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></span> My Profile</button>
       <button class="nav-item" id="logoutBtn" style="color:#f87171"><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg></span> Logout</button>
     </nav>
+    <div class="sidebar-web-pitch">
+      <strong>Have something to sell? Build your brand online.</strong>
+      <p>Launch your own professional website with ValmontWeb.</p>
+      <a href="https://valmontweb.com/?utm_source=valmont_gadgets&amp;utm_medium=wholesale_dashboard&amp;utm_campaign=reseller_growth" target="_blank" rel="noopener noreferrer">Build My Store →</a>
+    </div>
   </aside>
 
   <!-- MAIN -->

@@ -21,6 +21,12 @@ module.exports = {
         panel: '#12234a',
         gold: '#ff8c00',
       },
+      // Half-step icon sizes used throughout the storefront. Without these,
+      // SVGs fall back to their large browser-default dimensions.
+      spacing: {
+        '4.5': '1.125rem',
+        '5.5': '1.375rem',
+      },
     },
   },
   plugins: [],

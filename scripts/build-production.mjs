@@ -39,6 +39,7 @@ const assetSources = new Map([
   ['tailwind.min.css', 'tailwind.min.css'],
   ['mobile-fixes.css', 'mobile-fixes.css'],
   ['assets/css/community.css', 'assets/css/community.css'],
+  ['assets/css/valmontai.css', 'assets/css/valmontai.css'],
   ['assets/js/account.js', 'assets/js/account.js'],
   ['assets/js/admin.js', 'assets/js/admin.js'],
   ['assets/js/admin-login.js', 'assets/js/admin-login.js'],
@@ -55,6 +56,7 @@ const assetSources = new Map([
   ['assets/js/db-adapter.js', 'assets/js/db-adapter.js'],
   ['assets/js/swap-page.js', 'assets/js/swap-page.js'],
   ['assets/js/used-page.js', 'assets/js/used-page.js'],
+  ['assets/js/valmontai.js', 'assets/js/valmontai.js'],
   ['assets/js/wholesale-page.js', 'assets/js/wholesale-page.js'],
   ['assets/js/partner-page.js', 'assets/js/partner-page.js'],
   ['assets/js/admin-control-page.js', 'assets/js/admin-control-page.js'],
@@ -95,6 +97,7 @@ for (const file of publicFiles) {
   await cp(join(ROOT, file), join(OUT, file));
 }
 await cp(join(ROOT, 'uploads'), join(OUT, 'uploads'), { recursive: true });
+await cp(join(ROOT, 'assets', 'images'), join(OUT, 'assets', 'images'), { recursive: true });
 
 for (const file of ['manifest.json', 'logo.svg', 'logo.png', 'favicon.svg', 'favicon.png']) {
   precache.add(`/${file}`);
