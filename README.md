@@ -53,6 +53,13 @@ Set secrets in the hosting platform, never in source control:
 
 Do not configure `VALMONTPAY_GATEWAY_URL` in production; it exists for isolated tests only. Rotate a secret immediately if it appears in logs, chat, an artifact, or Git history.
 
+## Future upgrades
+
+These concepts are documented for later and are **not promises of currently available services**:
+
+- [ValmontAI authenticated action assistant](docs/FUTURE_VALMONTAI_ACTION_ASSISTANT.md)
+- [Supplier and managed-orders network](docs/FUTURE_SUPPLIER_NETWORK.md)
+
 ## Release and operations
 
 - [Production migration, release, verification, incident response, and rollback runbook](docs/PRODUCTION_RUNBOOK.md)
