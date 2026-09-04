@@ -10,3 +10,6 @@ src/data/generated-pages.json
 sitemap.xml
 c/
 brand/
+# Root bundles are produced by npm run build on Vercel.
+tailwind.min.css
+shop.min.js
