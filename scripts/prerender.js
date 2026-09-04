@@ -22,6 +22,8 @@ const GRID_START = '<!-- PRERENDER:PRODUCTS:START -->';
 const GRID_END = '<!-- PRERENDER:PRODUCTS:END -->';
 const LD_START = '<!-- PRERENDER:PRODUCT-JSONLD:START -->';
 const LD_END = '<!-- PRERENDER:PRODUCT-JSONLD:END -->';
+const HOME_LD_START = '<!-- PRERENDER:HOME-JSONLD:START -->';
+const HOME_LD_END = '<!-- PRERENDER:HOME-JSONLD:END -->';
 
 /** Evaluate the inert public catalog against an isolated window object. */
 function loadProducts() {
@@ -394,12 +396,15 @@ function main() {
   const extraBlock = homepageExtraLd.map(b =>
     `<script type="application/ld+json">\n${JSON.stringify(b, null, 2)}\n</script>`
   ).join('\n');
-  // Idempotently inject the homepage-only JSON-LD set. Remove any previous
-  // BreadcrumbList / WebSite / ElectronicsStore / FAQPage blocks so we do
-  // not accumulate duplicates on rebuild.
-  html = html.replace(/<script type="application\/ld\+json">[\s\S]*?"(?:BreadcrumbList|WebSite|ElectronicsStore|FAQPage)"[\s\S]*?<\/script>\s*/g, '');
-  html = html.replace(/<script type="application\/ld\+json">[\s\S]*?"@type":\s*\[(?:"ElectronicsStore"|"LocalBusiness"|"[\w]+")[\s\S]*?<\/script>\s*/g, '');
-  html = html.replace('</head>', extraBlock + '\n</head>');
+  // Keep generated homepage schema within explicit markers. This is
+  // idempotent and cannot consume the adjacent product JSON-LD block.
+  html = replaceBlock(
+    html,
+    HOME_LD_START,
+    HOME_LD_END,
+    `\n  ${extraBlock}\n  `,
+    'homepage JSON-LD'
+  );
 
   fs.writeFileSync(file, html);
   console.log(
