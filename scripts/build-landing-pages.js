@@ -155,11 +155,6 @@ const SCRIPT_TAGS = (() => {
   // bootstrap to auto-select the category/brand filter from the URL.
   return m.filter(s => /(analytics|storefront|catalog\.min|password-reset|security|page-init|valmontai)/.test(s) || /src="app\.js"/.test(s));
 })();
-const STYLE_LINKS = (() => {
-  const m = homepage.match(/<link[^>]+rel="stylesheet"[^>]*>/g) || [];
-  return m;
-})();
-
 // headInner does NOT contain the closing </head> — we append anything that
 // can't find an existing tag to the END of head, and close it in the template.
 function appendToHead(head, tag) {
@@ -486,11 +481,14 @@ function renderPage(ctx, brandProductIdMap, validBrands) {
     </div>
   </main>`;
 
-  // Script tag ordering must match index.html. We keep CSS <link>s, icon
-  // sprite and header chrome from the homepage, inject our own <main>, then
-  // append footer + scripts + bootstrap.
-  const cssLinks = (homepage.match(/<link[^>]+rel=["']stylesheet["'][^>]*>/g) || []).join('\n');
-  const otherHeadLinks = (homepage.match(/<link[^>]+rel=["'](?:icon|apple-touch-icon|manifest|preconnect)[^>]*>/g) || []).join('\n');
+  // Script tag ordering must match index.html. The icon sprite and header
+  // chrome come from the homepage, we inject our own <main>, then append
+  // footer + scripts + bootstrap.
+  //
+  // NOTE: stylesheet / icon / manifest <link>s are deliberately NOT injected
+  // here. `head` is derived from TPL.headInner — index.html's real <head> — so
+  // it already carries every one of them. Injecting a second copy emitted
+  // duplicate <link> tags on all 22 landing pages.
   const metaEquiv = (homepage.match(/<meta\s+(?:http-equiv|name)=["'](?:X-Content-Type|X-Frame|X-XSS|Referrer-Policy|theme-color|mobile-web-app-capable|apple-mobile-web-app|viewport|ga-measurement|meta-pixel)[^>]*>/g) || []).join('\n');
 
   const html = `<!DOCTYPE html>
@@ -499,8 +497,6 @@ function renderPage(ctx, brandProductIdMap, validBrands) {
   <base href="/">
   ${metaEquiv}
   ${head}
-  ${otherHeadLinks}
-  ${cssLinks}
 </head>${TPL.bodyStartTag}
   <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true" focusable="false">
     <symbol id="i-star" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></symbol>
