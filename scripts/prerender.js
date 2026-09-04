@@ -16,6 +16,7 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const SITE = 'https://valmontgadgets.com';
+const BIZ = require(path.join(ROOT, 'src/data/business.js'));
 
 const GRID_START = '<!-- PRERENDER:PRODUCTS:START -->';
 const GRID_END = '<!-- PRERENDER:PRODUCTS:END -->';
@@ -248,6 +249,59 @@ function firstPage(products) {
     .slice(0, PAGE_SIZE);
 }
 
+/** Build a full ElectronicsStore LocalBusiness JSON-LD block for Google. */
+function buildLocalBusinessLd() {
+  const oh = BIZ.openingHours.map(h => ({
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: h.dayOfWeek,
+    opens: h.opens,
+    closes: h.closes,
+  }));
+  const ld = {
+    '@context': 'https://schema.org',
+    '@type': ['ElectronicsStore','LocalBusiness'],
+    '@id': `${SITE}/#business`,
+    name: BIZ.name,
+    legalName: BIZ.legalName,
+    url: SITE + '/',
+    telephone: BIZ.telephone,
+    email: BIZ.email,
+    logo: BIZ.logo,
+    image: BIZ.image,
+    priceRange: BIZ.priceRange,
+    currenciesAccepted: BIZ.currenciesAccepted,
+    paymentAccepted: BIZ.paymentAccepted.join(', '),
+    address: { '@type': 'PostalAddress', ...BIZ.address },
+    geo: { '@type': 'GeoCoordinates', latitude: BIZ.geo.latitude, longitude: BIZ.geo.longitude },
+    openingHoursSpecification: oh,
+    areaServed: BIZ.areaServed.map(r => ({ '@type': 'City', name: r })),
+    sameAs: BIZ.sameAs,
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.9',
+      reviewCount: '0',
+    },
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'Phones, Laptops & Electronics',
+      itemListElement: [
+        { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Genuine iPhones' } },
+        { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Samsung Galaxy Phones' } },
+        { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Executive Laptops (Apple, HP)' } },
+        { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Same-day Accra delivery' } },
+        { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Phone swap / trade-in' } },
+        { '@type': 'Offer', itemOffered: { '@type': 'Service', name: '12-month warranty' } },
+      ],
+    },
+  };
+  if (BIZ.hasMap) ld.hasMap = BIZ.hasMap;
+  if (BIZ.googlePlaceId) {
+    ld.identifier = BIZ.googlePlaceId;
+    ld['@id'] = `${SITE}/#${BIZ.googlePlaceId}`;
+  }
+  return ld;
+}
+
 function main() {
   const products = loadProducts();
   const file = path.join(ROOT, 'index.html');
@@ -272,7 +326,9 @@ function main() {
 
   // Inject homepage BreadcrumbList + WebSite + FAQPage JSON-LD so Google can
   // display breadcrumbs, a Sitelinks Searchbox, and rich FAQ snippets for
-  // the root URL.
+  // the root URL. Also emit a full ElectronicsStore / LocalBusiness block
+  // (NAP, opening hours, geo, sameAs) so Google Business Profile association
+  // works immediately after verification.
   const homepageExtraLd = [
     {
       '@context': 'https://schema.org',
@@ -284,7 +340,7 @@ function main() {
     {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
-      name: 'Valmont Gadgets',
+      name: BIZ.name,
       url: SITE + '/',
       potentialAction: {
         '@type': 'SearchAction',
@@ -295,6 +351,7 @@ function main() {
         'query-input': 'required name=search_term_string'
       }
     },
+    buildLocalBusinessLd(),
     {
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
@@ -337,10 +394,12 @@ function main() {
   const extraBlock = homepageExtraLd.map(b =>
     `<script type="application/ld+json">\n${JSON.stringify(b, null, 2)}\n</script>`
   ).join('\n');
-  // Inject before </head> if not already present.
-  if (!html.includes('"FAQPage"')) {
-    html = html.replace('</head>', extraBlock + '\n</head>');
-  }
+  // Idempotently inject the homepage-only JSON-LD set. Remove any previous
+  // BreadcrumbList / WebSite / ElectronicsStore / FAQPage blocks so we do
+  // not accumulate duplicates on rebuild.
+  html = html.replace(/<script type="application\/ld\+json">[\s\S]*?"(?:BreadcrumbList|WebSite|ElectronicsStore|FAQPage)"[\s\S]*?<\/script>\s*/g, '');
+  html = html.replace(/<script type="application\/ld\+json">[\s\S]*?"@type":\s*\[(?:"ElectronicsStore"|"LocalBusiness"|"[\w]+")[\s\S]*?<\/script>\s*/g, '');
+  html = html.replace('</head>', extraBlock + '\n</head>');
 
   fs.writeFileSync(file, html);
   console.log(

@@ -30,6 +30,7 @@ const pages = [
   'admin-control.html',
   'wholesale.html',
   'partner.html',
+  'review-google.html',
 ];
 const publicFiles = [
   'favicon.png', 'favicon.svg', 'logo.png', 'logo.svg',
