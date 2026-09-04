@@ -228,6 +228,21 @@ function patchFile(file) {
     }
   }
 
+  // 9. Add a "Review us on Google" link next to the WhatsApp Support link in
+  //    the Contact Info footer column. One per homepage.
+  if (isHomepage && !html.includes('data-review-google-link')) {
+    const waMarker = 'class="vg-contact-wa"';
+    const waIdx = html.indexOf(waMarker);
+    if (waIdx !== -1) {
+      const closingA = html.indexOf('</a>', waIdx);
+      if (closingA !== -1) {
+        const reviewLink = '\n        <a href="/review-google.html" data-review-google-link class="vg-contact-wa" style="background:#1a73e8;margin-top:8px">Review us on Google →</a>';
+        html = html.slice(0, closingA + 4) + reviewLink + html.slice(closingA + 4);
+        changed = true;
+      }
+    }
+  }
+
   if (changed) {
     fs.writeFileSync(fp, html);
     console.log(`rewired ${file}`);

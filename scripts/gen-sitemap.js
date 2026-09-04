@@ -50,6 +50,7 @@ let services = [
   { loc: `${SITE}/swap.html`,      priority: '0.8', changefreq: 'weekly'  },
   { loc: `${SITE}/drop.html`,      priority: '0.7', changefreq: 'daily'   },
   { loc: `${SITE}/partner.html`,   priority: '0.6', changefreq: 'monthly' },
+  { loc: `${SITE}/review-google.html`, priority: '0.3', changefreq: 'monthly' },
 ];
 try {
   // eslint-disable-next-line global-require
