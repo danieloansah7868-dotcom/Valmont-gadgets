@@ -752,17 +752,156 @@ document.addEventListener('submit', event => {
       </div>`;
     }
 
+    // Synonym expansion: maps colloquial Ghanaian search terms to the
+    // categories they usually mean. This is a SCORE BOOST, not a hard
+    // filter — exact matches in product name/specs still rank first.
+    // Sourced from src/data/keywords.js (also used on SEO landing pages).
+    const SEARCH_SYNONYM_MAP = {
+      phone: { categories: ['iphones','samsung','android'], boostTerms: ['iphone','samsung','galaxy','android','phone'] },
+      phones: { categories: ['iphones','samsung','android'], boostTerms: ['iphone','samsung','galaxy','phone'] },
+      foni: { categories: ['iphones','samsung','android'], boostTerms: ['iphone','phone'] },
+      ifon: { categories: ['iphones'], boostTerms: ['iphone'] },
+      iphone: { categories: ['iphones'], boostTerms: ['iphone'] },
+      iphones: { categories: ['iphones'], boostTerms: ['iphone'] },
+      apple: { categories: ['iphones','tablets','laptops','audio'], boostTerms: ['iphone','ipad','macbook','airpod','apple'] },
+      samsung: { categories: ['samsung'], boostTerms: ['samsung','galaxy'] },
+      galaxy: { categories: ['samsung'], boostTerms: ['galaxy','samsung'] },
+      s24: { categories: ['samsung'], boostTerms: ['s24','galaxy'] },
+      s23: { categories: ['samsung'], boostTerms: ['s23','galaxy'] },
+      android: { categories: ['android','samsung'], boostTerms: ['android','galaxy','pixel','oneplus','xiaomi'] },
+      pixel: { categories: ['android'], boostTerms: ['pixel','google'] },
+      xiaomi: { categories: ['android'], boostTerms: ['xiaomi','redmi'] },
+      redmi: { categories: ['android'], boostTerms: ['redmi','xiaomi'] },
+      oneplus: { categories: ['android'], boostTerms: ['oneplus'] },
+      tecno: { categories: ['android'], boostTerms: ['tecno'] },
+      infinix: { categories: ['android'], boostTerms: ['infinix'] },
+      ipad: { categories: ['tablets'], boostTerms: ['ipad'] },
+      tablet: { categories: ['tablets'], boostTerms: ['ipad','tablet'] },
+      tablet: { categories: ['tablets'], boostTerms: ['ipad','tablet'] },
+      laptop: { categories: ['laptops'], boostTerms: ['laptop','macbook','hp','dell'] },
+      laptops: { categories: ['laptops'], boostTerms: ['laptop','macbook','hp','dell'] },
+      macbook: { categories: ['laptops'], boostTerms: ['macbook','apple'] },
+      mac: { categories: ['laptops'], boostTerms: ['macbook','apple'] },
+      hp: { categories: ['laptops'], boostTerms: ['hp','spectre','elitebook'] },
+      dell: { categories: ['laptops'], boostTerms: ['dell','xps'] },
+      airpod: { categories: ['audio'], boostTerms: ['airpod'] },
+      airpods: { categories: ['audio'], boostTerms: ['airpod'] },
+      earpiece: { categories: ['audio'], boostTerms: ['airpod','earbud','headset','headphone'] },
+      earbud: { categories: ['audio'], boostTerms: ['airpod','earbud'] },
+      headset: { categories: ['audio'], boostTerms: ['headset','headphone','airpod'] },
+      headphone: { categories: ['audio'], boostTerms: ['headphone','headset','sony'] },
+      headphones: { categories: ['audio'], boostTerms: ['headphone','headset','sony'] },
+      speaker: { categories: ['audio'], boostTerms: ['jbl','speaker','bluetooth'] },
+      jbl: { categories: ['audio'], boostTerms: ['jbl','speaker'] },
+      sony: { categories: ['audio','gaming'], boostTerms: ['sony','wh-1000xm','playstation','ps5'] },
+      watch: { categories: ['smartwatches'], boostTerms: ['watch','apple watch','galaxy watch'] },
+      smartwatch: { categories: ['smartwatches'], boostTerms: ['watch','apple watch','galaxy watch'] },
+      iwatch: { categories: ['smartwatches'], boostTerms: ['watch','apple watch'] },
+      ps5: { categories: ['gaming'], boostTerms: ['ps5','playstation'] },
+      playstation: { categories: ['gaming'], boostTerms: ['ps5','playstation'] },
+      nintendo: { categories: ['gaming'], boostTerms: ['nintendo','switch'] },
+      switch: { categories: ['gaming'], boostTerms: ['nintendo','switch'] },
+      charger: { categories: ['chargers'], boostTerms: ['charger','adapter','usb-c','cable','power'] },
+      chargers: { categories: ['chargers'], boostTerms: ['charger','adapter','usb-c','cable'] },
+      cable: { categories: ['chargers','phone_acc'], boostTerms: ['cable','usb','charger'] },
+      'power bank': { categories: ['chargers'], boostTerms: ['power bank','powerbank','anker'] },
+      powerbank: { categories: ['chargers'], boostTerms: ['power bank','powerbank','anker'] },
+      anker: { categories: ['chargers','laptop_acc','travel_acc'], boostTerms: ['anker','power','charger'] },
+      'usb c': { categories: ['chargers','phone_acc','laptop_acc'], boostTerms: ['usb-c','type c','cable','charger'] },
+      'type c': { categories: ['chargers','phone_acc','laptop_acc'], boostTerms: ['usb-c','type c','cable'] },
+      case: { categories: ['phone_acc'], boostTerms: ['case','magsafe','spigen'] },
+      pouch: { categories: ['phone_acc'], boostTerms: ['case','pouch'] },
+      'screen protector': { categories: ['phone_acc'], boostTerms: ['tempered glass','protector','glass'] },
+      magsafe: { categories: ['phone_acc','chargers'], boostTerms: ['magsafe','case','charger','apple'] },
+      spigen: { categories: ['phone_acc'], boostTerms: ['spigen','case'] },
+      battery: { categories: ['phone_parts'], boostTerms: ['battery','replacement'] },
+      'screen replacement': { categories: ['phone_parts'], boostTerms: ['screen','replacement'] },
+      gevey: { categories: ['phone_parts'], boostTerms: ['gevey','r-sim','sim unlock'] },
+      'sim pin': { categories: ['phone_parts'], boostTerms: ['sim ejector'] },
+      router: { categories: ['networking'], boostTerms: ['router','wifi','tp-link','archer'] },
+      wifi: { categories: ['networking'], boostTerms: ['router','wifi','mesh','deco'] },
+      'wi-fi': { categories: ['networking'], boostTerms: ['router','wifi','mesh'] },
+      mesh: { categories: ['networking'], boostTerms: ['mesh','deco','tp-link'] },
+      'tplink': { categories: ['networking','smart_home'], boostTerms: ['tp-link','tapo','archer','deco'] },
+      'tp-link': { categories: ['networking','smart_home'], boostTerms: ['tp-link','tapo','archer','deco'] },
+      tapo: { categories: ['smart_home'], boostTerms: ['tapo','camera','bulb'] },
+      bulb: { categories: ['smart_home'], boostTerms: ['bulb','smart bulb'] },
+      camera: { categories: ['smart_home','cameras'], boostTerms: ['camera','tapo','c210','security','ring'] },
+      'security camera': { categories: ['smart_home'], boostTerms: ['camera','security','tapo'] },
+      'ring light': { categories: ['cameras','travel_acc'], boostTerms: ['ring light','tripod','creator'] },
+      microphone: { categories: ['cameras','travel_acc'], boostTerms: ['mic','lavalier','microphone'] },
+      'car mount': { categories: ['travel_acc'], boostTerms: ['car mount','car charger','magsafe'] },
+      mouse: { categories: ['laptop_acc'], boostTerms: ['mouse','logitech','mx'] },
+      'laptop stand': { categories: ['laptop_acc'], boostTerms: ['stand','ugreen'] },
+      hub: { categories: ['laptop_acc'], boostTerms: ['hub','usb-c','anker'] },
+      'uk used': { categories: ['iphones','samsung','android'], boostTerms: ['uk used','used','grade'] },
+      'used phone': { categories: ['iphones','samsung','android'], boostTerms: ['used','uk used'] },
+      'london used': { categories: ['iphones','samsung','android'], boostTerms: ['uk used','used'] },
+      'home used': { categories: ['iphones','samsung','android'], boostTerms: ['used'] },
+      swap: { categories: ['iphones','samsung','android'], boostTerms: ['swap','trade in'] },
+      'trade in': { categories: ['iphones','samsung','android'], boostTerms: ['swap','trade in'] },
+      momo: { boostTerms: ['momo','mobile money'] },
+      installment: { boostTerms: ['installment','hire purchase'] },
+    };
+
+    function expandQuery(raw) {
+      const q = String(raw || '').trim().toLowerCase();
+      if (!q) return { terms: [], categoryHints: [] };
+      const terms = new Set();
+      const categoryHints = new Set();
+      // Look for exact phrase matches first (e.g. "power bank", "uk used").
+      Object.keys(SEARCH_SYNONYM_MAP).forEach(key => {
+        if (key.includes(' ') && q.includes(key)) {
+          SEARCH_SYNONYM_MAP[key].categories.forEach(c => categoryHints.add(c));
+          SEARCH_SYNONYM_MAP[key].boostTerms.forEach(t => terms.add(t));
+        }
+      });
+      // Single-word matches.
+      q.split(/\s+/).forEach(word => {
+        if (SEARCH_SYNONYM_MAP[word]) {
+          (SEARCH_SYNONYM_MAP[word].categories || []).forEach(c => categoryHints.add(c));
+          (SEARCH_SYNONYM_MAP[word].boostTerms || []).forEach(t => terms.add(t));
+        }
+        terms.add(word);
+      });
+      return { terms: [...terms], categoryHints: [...categoryHints] };
+    }
+
+    function productSearchScore(product, q) {
+      if (!q) return 1;
+      const { terms, categoryHints } = expandQuery(q);
+      const hay = `${product.name} ${product.specs || ''} ${product.brand || ''} ${product.category}`.toLowerCase();
+      let score = 0;
+      if (hay.includes(q.toLowerCase())) score += 100; // exact substring = strongest
+      terms.forEach(t => {
+        if (hay.includes(t)) score += 10;
+        if (product.name.toLowerCase().includes(t)) score += 15; // name match beats specs
+      });
+      if (categoryHints.includes(product.category)) score += 20; // category hint boost
+      return score;
+    }
+
     function renderProducts() {
       document.querySelector('.product-pagination')?.remove();
-      let filtered = PRODUCTS.filter(p => {
-        const matchesCategory = activeFilter === 'all' || p.category === activeFilter;
-        const normalizedSearch = searchQuery.trim().toLowerCase().replace(/\biphones\b/g, 'iphone').replace(/\bmacbooks\b/g, 'macbook').replace(/\bairpods\b/g, 'airpod').replace(/\blaptops\b/g, 'laptop').replace(/\baccessories\b/g, 'accessory');
-        const categoryMatch = (normalizedSearch === 'iphone' && p.category === 'iphones') || (normalizedSearch === 'laptop' && p.category === 'laptops') || (normalizedSearch === 'accessory' && ['chargers', 'phone_acc', 'laptop_acc', 'travel_acc'].includes(p.category)) || (normalizedSearch === 'audio' && p.category === 'audio');
-        const matchesSearch = normalizedSearch === '' || p.name.toLowerCase().includes(normalizedSearch) || p.specs.toLowerCase().includes(normalizedSearch) || categoryMatch;
-        const price = Number(p.retail || 0);
-        const matchesPrice = activePriceFilter === 'all' || (activePriceFilter === 'under-5000' && price < 5000) || (activePriceFilter === '5000-15000' && price >= 5000 && price <= 15000) || (activePriceFilter === 'above-15000' && price > 15000);
-        return matchesCategory && matchesSearch && matchesPrice;
-      });
+      const q = searchQuery.trim();
+      let filtered = PRODUCTS.map(p => ({ p, score: productSearchScore(p, q) }))
+        .filter(({ p, score }) => {
+          const matchesCategory = activeFilter === 'all' || p.category === activeFilter;
+          const matchesSearch = q === '' || score > 0;
+          const price = Number(p.retail || 0);
+          const matchesPrice = activePriceFilter === 'all' || (activePriceFilter === 'under-5000' && price < 5000) || (activePriceFilter === '5000-15000' && price >= 5000 && price <= 15000) || (activePriceFilter === 'above-15000' && price > 15000);
+          return matchesCategory && matchesSearch && matchesPrice;
+        })
+        .sort((a, b) => {
+          if (q) return b.score - a.score;
+          return 0;
+        })
+        .map(({ p }) => p);
+
+      // Apply sort AFTER search scoring.
+      if (activeSort === 'price-asc') filtered.sort((a,b) => a.retail - b.retail);
+      if (activeSort === 'price-desc') filtered.sort((a,b) => b.retail - a.retail);
+      if (activeSort === 'popular' && !q) filtered.sort((a,b) => (b.reviews_count || 0) - (a.reviews_count || 0));
 
       if (activeSort === 'price-asc') filtered.sort((a,b) => a.retail - b.retail);
       if (activeSort === 'price-desc') filtered.sort((a,b) => b.retail - a.retail);

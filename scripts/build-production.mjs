@@ -8,7 +8,7 @@
  * references, and generates a content-versioned service worker.
  */
 import { createHash } from 'node:crypto';
-import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, rm, writeFile, stat, readdir } from 'node:fs/promises';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
@@ -59,6 +59,8 @@ const assetSources = new Map([
   ['assets/js/valmontai.js', 'assets/js/valmontai.js'],
   ['assets/js/wholesale-page.js', 'assets/js/wholesale-page.js'],
   ['assets/js/partner-page.js', 'assets/js/partner-page.js'],
+  ['assets/js/seo-links.js', 'assets/js/seo-links.js'],
+  ['assets/js/landing-bootstrap.js', 'assets/js/landing-bootstrap.js'],
   ['assets/js/admin-control-page.js', 'assets/js/admin-control-page.js'],
   ['assets/js/vendor/supabase-2.112.1.min.js', 'assets/js/vendor/supabase-2.112.1.min.js'],
   // Production uses the generated/minified storefront, never app.js directly.
@@ -67,6 +69,7 @@ const assetSources = new Map([
 
 const digest = (input, length = 16) => createHash('sha256').update(input).digest('hex').slice(0, length);
 const posix = (value) => value.replaceAll('\\', '/');
+async function statSafe(p) { try { return await stat(p); } catch { return null; } }
 
 await rm(OUT, { recursive: true, force: true });
 await mkdir(BUILD_ASSETS, { recursive: true });
@@ -98,6 +101,42 @@ for (const file of publicFiles) {
 }
 await cp(join(ROOT, 'uploads'), join(OUT, 'uploads'), { recursive: true });
 await cp(join(ROOT, 'assets', 'images'), join(OUT, 'assets', 'images'), { recursive: true });
+// SEO landing pages: generated /c/<slug>/ and /brand/<slug>/ trees.
+// We have to fingerprint asset refs inside them too, so copy after rewriting.
+async function walkHtml(dir) {
+  const out = [];
+  const s = await statSafe(dir);
+  if (!s) return out;
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...await walkHtml(full));
+    else if (entry.isFile() && entry.name.endsWith('.html')) out.push(full);
+  }
+  return out;
+}
+const landingPages = [];
+for (const dir of ['c', 'brand']) {
+  const srcDir = join(ROOT, dir);
+  const files = await walkHtml(srcDir);
+  for (const file of files) {
+    const rel = relative(ROOT, file);
+    landingPages.push(rel);
+    let html = await readFile(file, 'utf8');
+    for (const [sourceRef, outputRef] of Object.entries(manifest)) {
+      html = html.replaceAll(`src="${sourceRef}"`, `src="${outputRef}"`);
+      html = html.replaceAll(`href="${sourceRef}"`, `href="${outputRef}"`);
+      // Landing pages reference assets with absolute /assets/js/... paths.
+      html = html.replaceAll(`src="/${sourceRef}"`, `src="${outputRef}"`);
+      html = html.replaceAll(`href="/${sourceRef}"`, `href="${outputRef}"`);
+    }
+    const outFile = join(OUT, rel);
+    await mkdir(dirname(outFile), { recursive: true });
+    await writeFile(outFile, html);
+  }
+}
+// Add landing pages to the validated list so the inline-script / missing-asset
+// assertions below run for them too.
+pages.push(...landingPages);
 
 for (const file of ['manifest.json', 'logo.svg', 'logo.png', 'favicon.svg', 'favicon.png']) {
   precache.add(`/${file}`);
@@ -207,9 +246,9 @@ for (const page of pages) {
     }
   }
   for (const script of document.querySelectorAll('script:not([src])')) {
-    if (script.type !== 'application/ld+json') {
-      // Blocked by script-src 'self'; the only tolerated inline script is the
-      // JSON-LD structured data above.
+    if (script.type !== 'application/ld+json' && script.type !== 'application/json') {
+      // Blocked by script-src 'self'; the only tolerated inline script is
+      // JSON-LD structured data and JSON data blocks (e.g. landing config).
       throw new Error(`${page}: executable inline script`);
     }
   }
