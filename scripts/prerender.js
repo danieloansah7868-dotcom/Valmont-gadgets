@@ -270,6 +270,78 @@ function main() {
     `$1${products.length} Products$2`
   );
 
+  // Inject homepage BreadcrumbList + WebSite + FAQPage JSON-LD so Google can
+  // display breadcrumbs, a Sitelinks Searchbox, and rich FAQ snippets for
+  // the root URL.
+  const homepageExtraLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE + '/' }
+      ]
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'Valmont Gadgets',
+      url: SITE + '/',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: SITE + '/?q={search_term_string}'
+        },
+        'query-input': 'required name=search_term_string'
+      }
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'Do you offer same-day delivery in Accra?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Yes — Valmont Gadgets offers same-day delivery within Accra on most in-stock orders placed before 3pm. You can also pay on delivery or via Mobile Money.'
+          }
+        },
+        {
+          '@type': 'Question',
+          name: 'Are the phones genuine and sealed?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'All phones sold at Valmont Gadgets are genuine. We sell brand-new sealed units as well as carefully inspected UK-used devices, each covered by our 12-month in-store warranty.'
+          }
+        },
+        {
+          '@type': 'Question',
+          name: 'What payment methods do you accept?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'We accept Mobile Money (MoMo), cash on delivery within Accra, and bank transfer. Swap / trade-in is also available on selected devices.'
+          }
+        },
+        {
+          '@type': 'Question',
+          name: 'Do you sell laptops and accessories too?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Yes. In addition to phones we stock executive laptops (HP, Apple, Dell, Lenovo), smartwatches, chargers, power banks, phone cases, screen protectors, cameras and smart-home devices — all with the same 12-month warranty.'
+          }
+        }
+      ]
+    }
+  ];
+  const extraBlock = homepageExtraLd.map(b =>
+    `<script type="application/ld+json">\n${JSON.stringify(b, null, 2)}\n</script>`
+  ).join('\n');
+  // Inject before </head> if not already present.
+  if (!html.includes('"FAQPage"')) {
+    html = html.replace('</head>', extraBlock + '\n</head>');
+  }
+
   fs.writeFileSync(file, html);
   console.log(
     `Prerendered ${Math.min(PAGE_SIZE, products.length)} product cards ` +
