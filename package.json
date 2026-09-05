@@ -12,6 +12,7 @@
     "landing-pages": "node scripts/build-landing-pages.js",
     "rewire-links": "node scripts/rewire-internal-links.js",
     "build:production": "node scripts/build-production.mjs",
+    "audit": "node scripts/verify-hydration.js && node scripts/audit.js",
     "verify": "node scripts/verify-hydration.js && node scripts/audit.js && node scripts/verify-production.mjs",
     "test": "node scripts/test-valmontpay.mjs",
     "test:browser": "node scripts/test-browser-security.mjs",
