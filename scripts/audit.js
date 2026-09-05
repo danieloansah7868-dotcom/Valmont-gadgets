@@ -43,7 +43,39 @@ const lds = qa('script[type="application/ld+json"]').map((s) => {
   try { return JSON.parse(s.textContent); } catch (e) { return { __bad: e.message }; }
 });
 check(!lds.some((l) => l.__bad), 'all JSON-LD parses', lds.find((l) => l.__bad)?.__bad || 'ok');
-check(lds.some((l) => l['@type'] === 'Store'), 'Store JSON-LD');
+
+// PR #68 switched the business schema to a multi-typed store block
+// (["ElectronicsStore","LocalBusiness"]) to tie the site to a Google
+// Business Profile. Accept any business/store node — whether it uses a
+// single @type or the array form — then verify NAP against the single
+// source of truth in src/data/business.js so Google never sees a
+// conflicting name, phone number or address.
+const BIZ = require(path.join(ROOT, 'src', 'data', 'business.js'));
+const BUSINESS_TYPES = ['Store', 'ElectronicsStore', 'LocalBusiness'];
+const typeList = (t) => (Array.isArray(t) ? t : (t ? [t] : []));
+const isBusinessNode = (node) =>
+  node && typeof node === 'object' && typeList(node['@type']).some((t) => BUSINESS_TYPES.includes(t));
+// Business node may be top-level (homepage block) or nested inside @graph.
+const graphNode = lds.find((l) => Array.isArray(l['@graph']))?.['@graph']?.find(isBusinessNode);
+const business = lds.find(isBusinessNode) || graphNode;
+check(
+  !!business,
+  'business JSON-LD (Store/ElectronicsStore/LocalBusiness)',
+  business ? typeList(business['@type']).join(' + ') : 'no store node found',
+);
+if (business) {
+  check(business.name === BIZ.name, 'business name matches business.js', business.name);
+  check(business.telephone === BIZ.telephone, 'business telephone matches business.js', business.telephone);
+  check(
+    business.address
+      && business.address.addressLocality === BIZ.address.addressLocality
+      && business.address.addressRegion === BIZ.address.addressRegion
+      && business.address.addressCountry === BIZ.address.addressCountry,
+    'business address matches business.js',
+    business.address ? `${business.address.addressLocality}, ${business.address.addressRegion}, ${business.address.addressCountry}` : 'no address',
+  );
+}
+
 const graph = lds.find((l) => Array.isArray(l['@graph']));
 const products = graph ? graph['@graph'].filter((n) => n['@type'] === 'Product') : [];
 check(products.length > 0, 'Product JSON-LD', `${products.length} products`);

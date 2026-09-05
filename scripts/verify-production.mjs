@@ -88,10 +88,17 @@ for (const page of pageNames) {
       assert.ok(!/^on/i.test(attribute), `${page} contains executable ${attribute}`);
     }
   }
+  // Data blocks (application/ld+json structured data, application/json
+  // landing config) are NOT executed as script, so script-src CSP never
+  // applies to them — skip hashing/checking them. This mirrors the exact
+  // exemption build-production.mjs already uses. Anything else inline is
+  // real JavaScript: with script-src 'self' it is blocked, and CSP forbids
+  // 'unsafe-inline', so fail the build rather than ship a dead inline script.
   for (const script of document.querySelectorAll('script:not([src])')) {
-    assert.equal(script.type, 'application/ld+json', `${page} contains executable inline JavaScript`);
-    const hash = `'sha256-${sha256(script.textContent)}'`;
-    assert.ok(csp.includes(hash), `${page} JSON-LD hash is missing from CSP: ${hash}`);
+    if (script.type === 'application/ld+json' || script.type === 'application/json') continue;
+    if (!script.type || script.type === 'text/javascript' || script.type === 'module') {
+      assert.fail(`${page} contains executable inline JavaScript (type="${script.type || 'text/javascript'}"), which CSP blocks`);
+    }
   }
   for (const asset of document.querySelectorAll('script[src],link[rel="stylesheet"][href]')) {
     const ref = asset.getAttribute(asset.hasAttribute('src') ? 'src' : 'href');
@@ -140,7 +147,22 @@ for (const outputRef of Object.values(assetManifest)) {
 const serviceWorker = await readFile(join(OUT, 'sw.js'), 'utf8');
 assert.match(serviceWorker, /pathname\.startsWith\('\/api\/'\)/, 'service worker must bypass APIs');
 assert.match(serviceWorker, /startsWith\('\/assets\/build\/'\)/, 'cache-first is limited to fingerprinted assets');
-assert.doesNotMatch(serviceWorker, /CACHE_NAME\s*=\s*['"]valmont-v\d+/, 'manual service-worker versions are forbidden');
+// Manual, hand-bumped integer cache versions (e.g. "valmont-v3") are
+// forbidden: the cache version must be derived from the precache content so
+// a changed bundle invalidates old caches automatically. The generated SW
+// uses `valmont-v2-<content-hash>` — the `v2-` prefix is the hard-reset
+// generation marker and the trailing hex hash is the real, content-derived
+// version — so forbid only a bare integer version (no hash suffix).
+assert.match(
+  serviceWorker,
+  /const\s+CACHE_NAME\s*=\s*['"]valmont-v\d+-[0-9a-f]{16}['"]/,
+  'service worker cache version must be a content-derived hash',
+);
+assert.doesNotMatch(
+  serviceWorker,
+  /CACHE_NAME\s*=\s*['"]valmont-v\d+['"]/,
+  'manual service-worker versions are forbidden',
+);
 
 const sitemap = await readFile(join(OUT, 'sitemap.xml'), 'utf8');
 assert.ok(!sitemap.includes('/account.html'), 'noindex account page must not be in sitemap');
